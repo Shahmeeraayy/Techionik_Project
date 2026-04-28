@@ -1,0 +1,51 @@
+# OS / Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Logs
+*.log
+.run-logs/
+.runlogs/
+
+# Environment files
+.env
+.env.*
+!.env.example
+app/.env
+app/.env.*
+!app/.env.example
+app/backend/.env
+app/backend/.env.*
+!app/backend/.env.example
+
+# Frontend (Vite/Node)
+app/node_modules/
+app/dist/
+app/.vite/
+app/.cache/
+app/coverage/
+app/npm-debug.log*
+app/yarn-debug.log*
+app/yarn-error.log*
+app/pnpm-debug.log*
+
+# Backend (Python)
+app/backend/.venv/
+app/backend/venv/
+app/backend/**/__pycache__/
+app/backend/**/*.py[cod]
+app/backend/.pytest_cache/
+app/backend/.mypy_cache/
+app/backend/.ruff_cache/
+
+# Local databases / test artifacts
+app/backend/project_local.db
+app/backend/*.db
+app/backend/*.sqlite3
+app/backend/tests/*.sqlite3
+
+# Build / temp
+*.tmp
+*.temp
