@@ -223,17 +223,20 @@ type SearchableSelectOption = {
 
 const ADMIN_JOBS_STORAGE_KEY = 'sm_dispatch_admin_jobs';
 const JOB_EXPORT_COLUMNS = [
+    'JobId',
     'JobCode',
     'Dealership',
+    'Location',
     'Service',
     'Vehicle',
     'Urgency',
     'Technician',
+    'RankingScore',
     'JobStatus',
-    'AppointmentDate',
-    'Time',
-    'CreatedAt',
-    'UpdatedAt',
+    'CreatedDate',
+    'CreatedTime',
+    'LastUpdatedDate',
+    'LastUpdatedTime',
 ];
 const ADMIN_REFRESH_EVENT = 'sm-dispatch:admin-refresh';
 const displayFontStyle: CSSProperties = {
@@ -484,6 +487,19 @@ const resolveServiceRuleId = (
     );
     const matched = serviceCatalog.find((row) => normalizedCandidates.has(normalizeText(row.name)));
     return matched?.id || '';
+};
+
+const getJobLocationLabel = (
+    job: Pick<Job, 'dealership_code' | 'dealership_name'>,
+    dealershipOptions: DealershipOption[],
+) => {
+    const normalizedName = normalizeText(job.dealership_name);
+    const matchedDealership = dealershipOptions.find((row) => (
+        row.code === (job.dealership_code || '')
+        || normalizeText(row.name) === normalizedName
+    ));
+
+    return matchedDealership?.city?.trim() || 'Location not specified';
 };
 
 const applyDispatchRankingToJob = (
@@ -1993,17 +2009,20 @@ export default function JobsPage() {
     );
 
     const getJobExportRows = (jobsToExport: Job[]) => jobsToExport.map((job) => ({
+        JobId: job.job_id,
         JobCode: job.job_code,
         Dealership: job.dealership_name,
+        Location: getJobLocationLabel(job, dealershipOptions),
         Service: job.service_name,
         Vehicle: job.vehicle_summary,
         Urgency: job.urgency,
         Technician: job.assigned_technician_name || '',
+        RankingScore: job.ranking_score ?? 0,
         JobStatus: job.job_status,
-        AppointmentDate: formatJobDate(job.created_at),
-        Time: formatJobTime(job.created_at),
-        CreatedAt: job.created_at,
-        UpdatedAt: job.updated_at,
+        CreatedDate: formatJobDate(job.created_at),
+        CreatedTime: formatJobTime(job.created_at),
+        LastUpdatedDate: formatJobDate(job.updated_at),
+        LastUpdatedTime: formatJobTime(job.updated_at),
     }));
 
     const handleExport = (selectedColumns: string[], format: ExportFormat = 'csv') => {
@@ -2182,7 +2201,7 @@ export default function JobsPage() {
                             onClick={() => setExportModalOpen(true)}
                         >
                             <Download className="h-4 w-4 text-slate-300" />
-                            Export CSV
+                            Export CSV / Excel
                         </Button>
                     </div>
                 </div>
@@ -2472,7 +2491,7 @@ export default function JobsPage() {
                     <div className="relative flex-1 min-w-[300px]">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                         <Input
-                            placeholder="Search by Job ID, Dealership, Technician, or Service..."
+                            placeholder="Search by job ID, dealership, technician name, or service type..."
                             className="h-11 rounded-2xl border-white/10 bg-white/[0.04] pl-9 text-white placeholder:text-slate-500 transition-all shadow-none focus-visible:border-cyan-300/35 focus-visible:ring-cyan-300/15"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
@@ -2682,7 +2701,7 @@ export default function JobsPage() {
                     </div>
                 ) : (
                     <div className="relative flex-1 overflow-auto">
-                        <Table className="min-w-[1220px]">
+                        <Table className="min-w-[1540px]">
                             <TableHeader className="sticky top-0 z-10 border-b border-white/10 bg-[linear-gradient(180deg,rgba(11,25,42,0.98),rgba(10,20,35,0.92))] backdrop-blur-xl">
                                 <TableRow className="border-white/0 hover:bg-transparent">
                                     <TableHead className="w-[48px] pl-5">
@@ -2703,20 +2722,21 @@ export default function JobsPage() {
                                             <ArrowUpDown className="ml-2 h-3.5 w-3.5" />
                                         </Button>
                                     </TableHead>
-                                    <TableHead className="w-[260px] text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Job Details</TableHead>
-                                    <TableHead className="w-[220px] text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Dealership</TableHead>
+                                    <TableHead className="w-[250px] text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Service Type</TableHead>
+                                    <TableHead className="w-[260px] text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Dealership / Location</TableHead>
                                     <TableHead className="w-[220px] text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Vehicle</TableHead>
-                                    <TableHead className="w-[220px] text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Technician</TableHead>
+                                    <TableHead className="w-[240px] text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Assigned Technician</TableHead>
                                     <TableHead className="w-[130px] text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Urgency</TableHead>
-                                    <TableHead className="w-[140px] text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Ranking</TableHead>
+                                    <TableHead className="w-[160px] text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Ranking Score</TableHead>
                                     <TableHead className="w-[160px] text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Status</TableHead>
-                                    <TableHead className="w-[160px] text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Created</TableHead>
-                                    <TableHead className="w-[160px] text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Updated</TableHead>
+                                    <TableHead className="w-[170px] text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Created Date / Time</TableHead>
+                                    <TableHead className="w-[170px] text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Last Updated</TableHead>
                                     <TableHead className="w-[240px] pr-5 text-right text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {data.map((job, index) => {
+                                    const locationLabel = getJobLocationLabel(job, dealershipOptions);
                                     const primaryTechnicianName = job.assigned_technician_name?.trim()
                                         ? job.assigned_technician_name
                                         : null;
@@ -2758,8 +2778,10 @@ export default function JobsPage() {
                                             </TableCell>
                                             <TableCell className="py-4">
                                                 <div className="flex flex-col gap-1.5">
-                                                    <div className="text-base font-semibold text-white">{job.service_name}</div>
-                                                    <OverflowText text={job.vehicle_summary} className="max-w-[16rem] text-sm text-slate-300" />
+                                                    <OverflowText text={job.service_name} className="max-w-[14rem] text-base font-semibold text-white" />
+                                                    <div className="text-xs text-slate-500">
+                                                        {job.service_names.length > 1 ? `${job.service_names.length} catalog services linked` : 'Primary dispatch service'}
+                                                    </div>
                                                 </div>
                                             </TableCell>
                                             <TableCell className="py-4">
@@ -2769,7 +2791,10 @@ export default function JobsPage() {
                                                     </div>
                                                     <div className="min-w-0">
                                                         <OverflowText text={job.dealership_name} className="max-w-[12rem] text-sm font-semibold text-white" />
-                                                        <div className="mt-1 text-xs text-slate-500">Live partner destination</div>
+                                                        <div className="mt-1 inline-flex items-center gap-1 text-xs text-slate-500">
+                                                            <MapPin className="h-3 w-3" />
+                                                            {locationLabel}
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </TableCell>
@@ -2817,7 +2842,7 @@ export default function JobsPage() {
                                                             type="button"
                                                             className="inline-flex items-center gap-2 rounded-full border border-emerald-300/20 bg-emerald-300/[0.1] px-3 py-1 text-xs font-semibold text-emerald-100 transition-colors hover:bg-emerald-300/15"
                                                         >
-                                                            Rank {job.ranking_score ?? 0}
+                                                            Score {job.ranking_score ?? 0}
                                                             <ChevronDown className="h-3.5 w-3.5 text-emerald-200" />
                                                         </button>
                                                     </PopoverTrigger>
