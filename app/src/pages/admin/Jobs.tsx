@@ -752,28 +752,28 @@ const appendAuditLog = (
 function StatusBadge({ status, type }: { status: string; type: 'job' | 'invoice' | 'urgency' }) {
     const styles: Record<string, string> = {
         // Job Status
-        admin_preview: 'border-violet-300/20 bg-violet-300/12 text-violet-100',
-        pending_admin_confirmation: 'border-violet-300/20 bg-violet-300/12 text-violet-100',
-        pending: 'border-indigo-300/20 bg-indigo-300/12 text-indigo-100',
-        scheduled: 'border-blue-300/20 bg-blue-300/12 text-blue-100',
-        in_progress: 'border-amber-300/20 bg-amber-300/12 text-amber-100',
-        completed: 'border-emerald-300/20 bg-emerald-300/12 text-emerald-100',
-        cancelled: 'border-slate-300/20 bg-slate-300/10 text-slate-300 font-medium',
-        unknown: 'border-zinc-300/20 bg-zinc-300/10 text-zinc-200',
+        admin_preview: 'border-violet-300/20 bg-[linear-gradient(135deg,rgba(167,139,250,0.15),rgba(76,29,149,0.18))] text-violet-50 shadow-[0_10px_24px_rgba(76,29,149,0.18)]',
+        pending_admin_confirmation: 'border-fuchsia-300/20 bg-[linear-gradient(135deg,rgba(217,70,239,0.15),rgba(112,26,117,0.18))] text-fuchsia-50 shadow-[0_10px_24px_rgba(112,26,117,0.18)]',
+        pending: 'border-indigo-300/20 bg-[linear-gradient(135deg,rgba(99,102,241,0.16),rgba(49,46,129,0.18))] text-indigo-50 shadow-[0_10px_24px_rgba(49,46,129,0.16)]',
+        scheduled: 'border-blue-300/20 bg-[linear-gradient(135deg,rgba(56,189,248,0.16),rgba(30,64,175,0.18))] text-blue-50 shadow-[0_10px_24px_rgba(30,64,175,0.16)]',
+        in_progress: 'border-amber-300/20 bg-[linear-gradient(135deg,rgba(251,191,36,0.16),rgba(146,64,14,0.18))] text-amber-50 shadow-[0_10px_24px_rgba(146,64,14,0.16)]',
+        completed: 'border-emerald-300/20 bg-[linear-gradient(135deg,rgba(52,211,153,0.16),rgba(6,95,70,0.18))] text-emerald-50 shadow-[0_10px_24px_rgba(6,95,70,0.16)]',
+        cancelled: 'border-slate-300/20 bg-[linear-gradient(135deg,rgba(148,163,184,0.12),rgba(51,65,85,0.18))] text-slate-200 font-medium',
+        unknown: 'border-zinc-300/20 bg-[linear-gradient(135deg,rgba(161,161,170,0.12),rgba(39,39,42,0.18))] text-zinc-100',
 
         // Invoice State
-        draft: 'border-slate-300/20 bg-slate-300/10 text-slate-300',
-        pending_approval: 'border-orange-300/20 bg-orange-300/12 text-orange-100',
-        approved: 'border-blue-300/20 bg-blue-300/12 text-blue-100',
-        synced: 'border-green-300/20 bg-green-300/12 text-green-100',
-        failed: 'border-red-300/20 bg-red-300/12 text-red-100',
-        void: 'border-slate-300/20 bg-slate-300/10 text-slate-400 line-through',
+        draft: 'border-slate-300/20 bg-[linear-gradient(135deg,rgba(148,163,184,0.12),rgba(51,65,85,0.18))] text-slate-200',
+        pending_approval: 'border-orange-300/20 bg-[linear-gradient(135deg,rgba(251,146,60,0.15),rgba(124,45,18,0.18))] text-orange-50',
+        approved: 'border-blue-300/20 bg-[linear-gradient(135deg,rgba(96,165,250,0.15),rgba(30,58,138,0.18))] text-blue-50',
+        synced: 'border-green-300/20 bg-[linear-gradient(135deg,rgba(74,222,128,0.15),rgba(20,83,45,0.18))] text-green-50',
+        failed: 'border-red-300/20 bg-[linear-gradient(135deg,rgba(248,113,113,0.15),rgba(127,29,29,0.18))] text-red-50',
+        void: 'border-slate-300/20 bg-[linear-gradient(135deg,rgba(148,163,184,0.12),rgba(51,65,85,0.18))] text-slate-400 line-through',
 
         // Urgency
-        low: 'border-slate-300/20 bg-slate-300/10 text-slate-300',
-        normal: 'border-blue-300/20 bg-blue-300/12 text-blue-100',
-        high: 'border-orange-300/20 bg-orange-300/12 text-orange-100',
-        critical: 'border-red-300/20 bg-red-300/12 text-red-100 animate-pulse',
+        low: 'border-slate-300/20 bg-[linear-gradient(135deg,rgba(148,163,184,0.12),rgba(51,65,85,0.18))] text-slate-200',
+        normal: 'border-blue-300/20 bg-[linear-gradient(135deg,rgba(96,165,250,0.15),rgba(30,58,138,0.18))] text-blue-50',
+        high: 'border-orange-300/20 bg-[linear-gradient(135deg,rgba(251,146,60,0.15),rgba(124,45,18,0.18))] text-orange-50',
+        critical: 'border-red-300/20 bg-[linear-gradient(135deg,rgba(248,113,113,0.15),rgba(127,29,29,0.18))] text-red-50 animate-pulse',
 
     };
 
@@ -786,7 +786,7 @@ function StatusBadge({ status, type }: { status: string; type: 'job' | 'invoice'
     };
 
     return (
-        <Badge variant="outline" className={cn('capitalize font-medium border shadow-sm backdrop-blur-sm', styles[status] || 'border-white/10 bg-white/[0.05] text-white')}>
+        <Badge variant="outline" className={cn('h-8 rounded-full px-3 capitalize font-medium border shadow-sm backdrop-blur-md', styles[status] || 'border-white/10 bg-white/[0.05] text-white')}>
             {labels[status] || status.replace('_', ' ')}
         </Badge>
     );
@@ -2702,7 +2702,7 @@ export default function JobsPage() {
                 ) : (
                     <div className="relative flex-1 overflow-auto">
                         <Table className="min-w-[1320px]">
-                            <TableHeader className="sticky top-0 z-10 border-b border-white/10 bg-[linear-gradient(180deg,rgba(11,25,42,0.98),rgba(10,20,35,0.92))] backdrop-blur-xl">
+                            <TableHeader className="sticky top-0 z-10 border-b border-white/10 bg-[linear-gradient(180deg,rgba(9,24,40,0.98),rgba(8,19,33,0.94))] backdrop-blur-xl">
                                 <TableRow className="border-white/0 hover:bg-transparent">
                                     <TableHead className="w-[48px] pl-5">
                                         <Checkbox
@@ -2750,9 +2750,9 @@ export default function JobsPage() {
                                         <TableRow
                                             key={job.job_id}
                                             className={cn(
-                                                'group border-b border-white/6 bg-transparent transition-colors hover:bg-white/[0.045]',
-                                                index % 2 === 1 && 'bg-white/[0.015]',
-                                                job.attention_flag && 'bg-red-400/[0.045] hover:bg-red-400/[0.08]',
+                                                'group border-b border-white/6 bg-transparent transition-all duration-200 hover:bg-white/[0.04]',
+                                                index % 2 === 1 && 'bg-white/[0.012]',
+                                                job.attention_flag && 'bg-red-400/[0.035] hover:bg-red-400/[0.07]',
                                             )}
                                         >
                                             <TableCell className="relative pl-5">
@@ -2768,25 +2768,25 @@ export default function JobsPage() {
                                                 <button
                                                     type="button"
                                                     onClick={() => navigate(`/admin/jobs/${job.job_id}`)}
-                                                    className="text-left"
+                                                    className="group/id rounded-2xl px-1 py-1 text-left transition-colors"
                                                 >
-                                                    <div className="text-sm font-semibold text-white transition-colors group-hover:text-cyan-100" style={displayFontStyle}>
+                                                    <div className="text-sm font-semibold text-white transition-colors group-hover:text-cyan-100 group-hover/id:text-cyan-100" style={displayFontStyle}>
                                                         {job.job_code}
                                                     </div>
                                                     <div className="mt-1 max-w-[9rem] truncate text-xs text-slate-500">{job.job_id}</div>
                                                 </button>
                                             </TableCell>
                                             <TableCell className="py-4">
-                                                <div className="flex flex-col gap-1.5">
+                                                <div className="rounded-[20px] border border-white/6 bg-white/[0.025] px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
                                                     <OverflowText text={job.service_name} className="max-w-[12rem] text-base font-semibold text-white" />
-                                                    <div className="text-xs text-slate-500">
+                                                    <div className="mt-1 text-xs text-slate-500">
                                                         {job.service_names.length > 1 ? `${job.service_names.length} catalog services linked` : 'Primary dispatch service'}
                                                     </div>
                                                 </div>
                                             </TableCell>
                                             <TableCell className="py-4">
-                                                <div className="flex items-start gap-3">
-                                                    <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] text-cyan-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+                                                <div className="flex items-start gap-3 rounded-[20px] border border-white/6 bg-white/[0.025] px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+                                                    <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-cyan-300/12 bg-cyan-300/[0.08] text-cyan-100 shadow-[0_14px_24px_rgba(8,145,178,0.12)]">
                                                         <Building2Icon className="h-4 w-4" />
                                                     </div>
                                                     <div className="min-w-0">
@@ -2799,9 +2799,9 @@ export default function JobsPage() {
                                                 </div>
                                             </TableCell>
                                             <TableCell className="py-4">
-                                                <div className="space-y-1">
+                                                <div className="rounded-[20px] border border-white/6 bg-white/[0.025] px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
                                                     <OverflowText text={job.vehicle_summary} className="max-w-[11rem] text-sm font-medium text-slate-100" />
-                                                    <div className="text-xs text-slate-500">Dispatch-ready vehicle profile</div>
+                                                    <div className="mt-1 text-xs text-slate-500">Dispatch-ready vehicle profile</div>
                                                 </div>
                                             </TableCell>
                                             <TableCell className="py-4">
@@ -2826,7 +2826,7 @@ export default function JobsPage() {
                                                         </div>
                                                     </div>
                                                 ) : (
-                                                    <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3 py-2 text-xs font-medium text-slate-400">
+                                                    <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-[linear-gradient(135deg,rgba(148,163,184,0.08),rgba(30,41,59,0.18))] px-3 py-2 text-xs font-medium text-slate-300">
                                                         <User className="h-3.5 w-3.5" />
                                                         Unassigned
                                                     </div>
@@ -2840,7 +2840,7 @@ export default function JobsPage() {
                                                     <PopoverTrigger asChild>
                                                         <button
                                                             type="button"
-                                                            className="inline-flex items-center gap-2 rounded-full border border-emerald-300/20 bg-emerald-300/[0.1] px-3 py-1 text-xs font-semibold text-emerald-100 transition-colors hover:bg-emerald-300/15"
+                                                            className="inline-flex h-8 items-center gap-2 rounded-full border border-emerald-300/20 bg-[linear-gradient(135deg,rgba(16,185,129,0.18),rgba(5,150,105,0.08))] px-3 py-1 text-xs font-semibold text-emerald-50 shadow-[0_12px_24px_rgba(16,185,129,0.12)] transition-colors hover:bg-emerald-300/15"
                                                         >
                                                             Score {job.ranking_score ?? 0}
                                                             <ChevronDown className="h-3.5 w-3.5 text-emerald-200" />
@@ -2879,13 +2879,13 @@ export default function JobsPage() {
                                                 </div>
                                             </TableCell>
                                             <TableCell className="py-4 pr-5 text-right align-top">
-                                                <div className="flex flex-col items-end gap-2">
+                                                <div className="inline-flex flex-col items-end gap-2 rounded-[22px] border border-white/6 bg-white/[0.025] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
                                                     {(job.job_status === 'admin_preview' || job.job_status === 'pending_admin_confirmation') && Boolean(
                                                         (job.pending_assigned_technician_name ?? job.assigned_technician_name)?.trim()
                                                     ) ? (
                                                         <Button
                                                             size="sm"
-                                                            className="h-8 w-[148px] rounded-2xl bg-[linear-gradient(135deg,#24c4cb,#2d9fe5)] px-3 text-xs text-white shadow-[0_18px_34px_rgba(36,196,203,0.22)] hover:brightness-105"
+                                                            className="h-8 w-[148px] rounded-2xl bg-[linear-gradient(135deg,#36d6dd,#2d9fe5)] px-3 text-xs text-white shadow-[0_16px_28px_rgba(36,196,203,0.28)] hover:brightness-105"
                                                             onClick={() => void handleConfirmJob(job)}
                                                         >
                                                             <Check className="mr-2 h-3.5 w-3.5" />
@@ -2896,9 +2896,10 @@ export default function JobsPage() {
                                                         <Button
                                                             size="sm"
                                                             variant="outline"
-                                                            className="h-8 w-[148px] rounded-2xl border-cyan-300/20 bg-cyan-300/10 px-3 text-xs text-cyan-100 hover:bg-cyan-300/15 hover:text-white"
+                                                            className="h-8 w-[148px] rounded-2xl border-cyan-300/20 bg-[linear-gradient(135deg,rgba(34,211,238,0.16),rgba(8,145,178,0.10))] px-3 text-xs text-cyan-50 hover:bg-cyan-300/15 hover:text-white"
                                                             onClick={() => handlePushToQueue(job)}
                                                         >
+                                                            <ArrowRight className="mr-2 h-3.5 w-3.5" />
                                                             Push to Queue
                                                         </Button>
                                                     ) : null}
@@ -2906,7 +2907,7 @@ export default function JobsPage() {
                                                         <Button
                                                             size="sm"
                                                             variant="outline"
-                                                            className="h-8 w-[148px] rounded-2xl border-white/10 bg-white/[0.03] px-3 text-xs text-slate-100 hover:bg-white/[0.08] hover:text-white"
+                                                            className="h-8 w-[148px] rounded-2xl border-white/10 bg-[linear-gradient(135deg,rgba(148,163,184,0.10),rgba(30,41,59,0.16))] px-3 text-xs text-slate-100 hover:bg-white/[0.08] hover:text-white"
                                                             onClick={() => handleAssignTechnician(job)}
                                                         >
                                                             <User className="mr-2 h-3.5 w-3.5" />
