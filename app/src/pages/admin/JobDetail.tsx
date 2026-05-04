@@ -17,11 +17,11 @@ import {
     History,
     AlertCircle,
     Loader2,
-    CheckSquare,
-    X,
     RefreshCw,
-    Search,
-    Code
+    Code,
+    Trash2,
+    Send,
+    Save,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -56,12 +56,24 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { toast } from 'sonner';
 import { formatPhoneForDisplay, formatUsPhoneInput, phoneExampleFormat, toUsPhoneFormat } from '@/lib/phone';
-import { fetchAdminJobs, getStoredAdminToken, updateAdminJob, type BackendAdminJob } from '@/lib/backend-api';
+import {
+    confirmAdminJob,
+    deleteAdminJob,
+    fetchAdminJobs,
+    fetchAdminTechnicians,
+    getStoredAdminToken,
+    updateAdminJob,
+    updateAdminJobAssignment,
+    type BackendAdminJob,
+    type BackendTechnicianListItem,
+} from '@/lib/backend-api';
 
 // --- Types ---
 
-type JobStatus = 'pending' | 'scheduled' | 'in_progress' | 'completed' | 'cancelled';
+type JobStatus = 'admin_preview' | 'pending_admin_confirmation' | 'pending' | 'scheduled' | 'in_progress' | 'delayed' | 'completed' | 'cancelled' | 'refused';
 type InvoiceState = 'draft' | 'pending_approval' | 'creating' | 'approved' | 'synced' | 'failed' | 'needs_manual_verification' | 'not_started';
 type Urgency = 'low' | 'normal' | 'high' | 'critical';
 
@@ -128,6 +140,8 @@ interface JobDetail {
 
     allowed_actions: string[];
     timeline: TimelineEvent[];
+    source_system?: string | null;
+    source_metadata?: Record<string, unknown> | null;
 }
 
 // --- Mock Data ---
@@ -177,22 +191,28 @@ const MOCK_JOB: JobDetail = {
     ]
 };
 
-const ELIGIBLE_TECHS: Technician[] = [
-    { id: 't1', name: 'Jolianne', zone: 'North', skillMatch: true, status: 'available', workload: 20 },
-    { id: 't2', name: 'Victor', zone: 'North', skillMatch: true, status: 'busy', workload: 80 },
-    { id: 't3', name: 'Maxime', zone: 'East', skillMatch: false, status: 'available', workload: 10 },
-];
+const INTERNAL_NOTES_STORAGE_KEY = 'sm_dispatch_admin_job_internal_notes';
 
 function normalizeJobStatus(status?: string | null): JobStatus {
     switch ((status || '').toLowerCase()) {
+        case 'admin_preview':
+        case 'pending_review':
+            return 'admin_preview';
+        case 'pending_admin_confirmation':
+        case 'ready_for_tech':
+            return 'pending_admin_confirmation';
         case 'scheduled':
             return 'scheduled';
         case 'in_progress':
             return 'in_progress';
+        case 'delayed':
+            return 'delayed';
         case 'completed':
             return 'completed';
         case 'cancelled':
             return 'cancelled';
+        case 'refused':
+            return 'refused';
         default:
             return 'pending';
     }
@@ -235,13 +255,16 @@ function normalizeUrgency(source: BackendAdminJob): Urgency {
 function buildAllowedActions(source: BackendAdminJob): string[] {
     const normalizedStatus = normalizeJobStatus(source.status);
     if (normalizedStatus === 'completed' || normalizedStatus === 'cancelled') {
-        return [];
+        return ['delete_job'];
     }
+    const isAdminReview = normalizedStatus === 'admin_preview' || normalizedStatus === 'pending_admin_confirmation';
     return [
-        ...(!source.assigned_technician_id ? ['assign_tech'] : []),
+        'assign_tech',
+        ...(isAdminReview || source.pre_assigned_technician_id || source.assigned_technician_id ? ['push_to_queue', 'confirm_job'] : []),
         'edit_details',
         'approve_invoice',
         'cancel_job',
+        'delete_job',
     ];
 }
 
@@ -333,6 +356,43 @@ function mapBackendJobToDetail(source: BackendAdminJob): JobDetail {
         },
         allowed_actions: buildAllowedActions(source),
         timeline: buildTimeline(source),
+        source_system: source.source_system,
+        source_metadata: source.source_metadata ?? null,
+    };
+}
+
+function getStoredInternalNotes(): Record<string, string> {
+    try {
+        const raw = localStorage.getItem(INTERNAL_NOTES_STORAGE_KEY);
+        return raw ? JSON.parse(raw) as Record<string, string> : {};
+    } catch {
+        return {};
+    }
+}
+
+function setStoredInternalNote(jobId: string, note: string) {
+    try {
+        const notes = getStoredInternalNotes();
+        notes[jobId] = note;
+        localStorage.setItem(INTERNAL_NOTES_STORAGE_KEY, JSON.stringify(notes));
+    } catch {
+        // Notes are UI-local until a backend notes endpoint exists.
+    }
+}
+
+function mapTechnicianToAssignmentOption(row: BackendTechnicianListItem, job: JobDetail): Technician {
+    const serviceNeedle = job.dealership.service_names.join(' ').toLowerCase();
+    const skillMatch = row.skills.some((skill) => serviceNeedle.includes(skill.name.toLowerCase()));
+    const zone = row.zones.map((item) => item.name).join(', ') || 'Any zone';
+    const workload = Math.min(100, Math.max(0, row.current_jobs_count * 20));
+
+    return {
+        id: row.id,
+        name: row.name || row.full_name || row.email,
+        zone,
+        skillMatch,
+        status: row.effective_availability ? 'available' : row.on_leave_now ? 'offline' : 'busy',
+        workload,
     };
 }
 
@@ -343,9 +403,13 @@ function StatusBadge({ status, type }: { status: string; type: 'job' | 'invoice'
         // Job Status
         pending: 'bg-orange-100 text-orange-700 border-orange-200',
         scheduled: 'bg-blue-100 text-blue-700 border-blue-200',
+        admin_preview: 'bg-purple-50 text-purple-700 border-purple-200',
+        pending_admin_confirmation: 'bg-indigo-50 text-indigo-700 border-indigo-200',
         in_progress: 'bg-blue-500 text-white border-blue-600',
+        delayed: 'bg-amber-100 text-amber-800 border-amber-200',
         completed: 'bg-green-100 text-green-700 border-green-200',
         cancelled: 'bg-gray-100 text-gray-700 border-gray-200',
+        refused: 'bg-red-50 text-red-700 border-red-200',
 
         // Invoice State
         not_started: 'bg-gray-100 text-gray-500 border-gray-200',
@@ -365,7 +429,7 @@ function StatusBadge({ status, type }: { status: string; type: 'job' | 'invoice'
     };
 
     const labels: Record<string, string> = {
-        pending: 'Pending', scheduled: 'Scheduled', in_progress: 'In Progress', completed: 'Completed', cancelled: 'Cancelled',
+        pending: 'Pending', scheduled: 'Scheduled', admin_preview: 'Pending', pending_admin_confirmation: 'Pending Confirmation', in_progress: 'In Progress', delayed: 'Delayed', completed: 'Completed', cancelled: 'Cancelled', refused: 'Refused',
         not_started: 'Not Started', draft: 'Draft', pending_approval: 'Needs Approval', creating: 'Creating...', approved: 'Approved', synced: 'Synced', failed: 'Failed', needs_manual_verification: 'Verify Manually',
         low: 'Low', normal: 'Normal', high: 'High', critical: 'Critical'
     };
@@ -446,6 +510,9 @@ export default function JobDetailPage() {
     const [loadError, setLoadError] = useState<string | null>(null);
     const [assignModalOpen, setAssignModalOpen] = useState(false);
     const [invoiceModalOpen, setInvoiceModalOpen] = useState(false);
+    const [eligibleTechnicians, setEligibleTechnicians] = useState<Technician[]>([]);
+    const [internalNote, setInternalNote] = useState('');
+    const [actionBusy, setActionBusy] = useState<string | null>(null);
 
     // Edit State
     const [isEditing, setIsEditing] = useState(false);
@@ -494,7 +561,9 @@ export default function JobDetailPage() {
                 if (!matchedJob) {
                     throw new Error('Job not found.');
                 }
-                setJob(mapBackendJobToDetail(matchedJob));
+                const detail = mapBackendJobToDetail(matchedJob);
+                setJob(detail);
+                setInternalNote(getStoredInternalNotes()[detail.job_id] || '');
             })
             .catch((error) => {
                 const message = error instanceof Error ? error.message : 'Unable to load job details.';
@@ -519,6 +588,27 @@ export default function JobDetailPage() {
             setEditForm(buildEditFormFromJob(job));
         }
     }, [job]);
+
+    useEffect(() => {
+        const token = getStoredAdminToken();
+        if (!token || !job) return;
+
+        void fetchAdminTechnicians(token)
+            .then((rows) => {
+                const options = rows
+                    .filter((row) => row.status === 'active')
+                    .map((row) => mapTechnicianToAssignmentOption(row, job))
+                    .sort((a, b) => {
+                        const availabilityRank = Number(b.status === 'available') - Number(a.status === 'available');
+                        if (availabilityRank !== 0) return availabilityRank;
+                        const skillRank = Number(b.skillMatch) - Number(a.skillMatch);
+                        if (skillRank !== 0) return skillRank;
+                        return a.workload - b.workload;
+                    });
+                setEligibleTechnicians(options);
+            })
+            .catch(() => setEligibleTechnicians([]));
+    }, [job?.job_id, job?.dealership.service_type]);
 
     if (loading || !job) {
         return (
@@ -550,18 +640,32 @@ export default function JobDetailPage() {
     }
 
     // Action Handlers
-    const handleAssignTech = (techId: string) => {
-        setAssignModalOpen(false);
-        setJob((prev) => prev ? ({
-            ...prev,
-            status: 'scheduled',
-            assigned_technician_name: 'Jolianne',
-            technician: { id: techId, name: 'Jolianne', phone: '+1(555) 999-8888', status: 'assigned' },
-            timeline: [
-                { id: Date.now().toString(), type: 'TECH_ASSIGNED', title: 'Technician Assigned', actor: 'ADMIN', timestamp: 'Just now', description: 'Assigned Jolianne to job.' },
-                ...prev.timeline
-            ]
-        }) : null);
+    const handleAssignTech = async (techId: string) => {
+        if (!job) return;
+        const token = getStoredAdminToken();
+        if (!token) {
+            toast.error('Admin session missing. Please login again.');
+            return;
+        }
+
+        const selectedTech = eligibleTechnicians.find((tech) => tech.id === techId);
+        setActionBusy(`assign-${techId}`);
+        try {
+            const updated = await updateAdminJobAssignment(token, job.job_id, { assigned_technician_id: techId });
+            setJob((prev) => prev ? ({
+                ...mapBackendJobToDetail(updated),
+                timeline: [
+                    { id: Date.now().toString(), type: prev.technician ? 'TECH_REASSIGNED' : 'TECH_ASSIGNED', title: prev.technician ? 'Technician Reassigned' : 'Technician Assigned', actor: 'ADMIN', timestamp: 'Just now', description: `Assigned ${selectedTech?.name || 'technician'} to job.` },
+                    ...prev.timeline
+                ]
+            }) : null);
+            toast.success('Technician assigned.');
+            setAssignModalOpen(false);
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : 'Failed to assign technician.');
+        } finally {
+            setActionBusy(null);
+        }
     };
 
     const handleSaveDetails = async () => {
@@ -569,13 +673,13 @@ export default function JobDetailPage() {
 
         const formattedDealershipPhone = toUsPhoneFormat(editForm.dealershipPhone);
         if (!formattedDealershipPhone || formattedDealershipPhone !== editForm.dealershipPhone.trim()) {
-            alert(`Phone must be in this format: ${phoneExampleFormat}.`);
+            toast.error(`Phone must be in this format: ${phoneExampleFormat}.`);
             return;
         }
 
         const token = getStoredAdminToken();
         if (!token) {
-            alert('Admin session missing. Please login again.');
+            toast.error('Admin session missing. Please login again.');
             return;
         }
 
@@ -588,7 +692,7 @@ export default function JobDetailPage() {
             ),
         );
         if (serviceNames.length === 0) {
-            alert('At least one service is required.');
+            toast.error('At least one service is required.');
             return;
         }
 
@@ -622,9 +726,10 @@ export default function JobDetailPage() {
                 ],
             }) : null);
             setIsEditing(false);
+            toast.success('Job details updated.');
         } catch (error) {
             const message = error instanceof Error ? error.message : 'Failed to update job details.';
-            alert(message);
+            toast.error(message);
         }
     };
 
@@ -657,6 +762,63 @@ export default function JobDetailPage() {
                 invoice: { ...prev.invoice, pdf_url: '#' }
             }) : null);
         }, 2000);
+    };
+
+    const handlePushToQueue = async () => {
+        if (!job) return;
+        const token = getStoredAdminToken();
+        if (!token) {
+            toast.error('Admin session missing. Please login again.');
+            return;
+        }
+
+        setActionBusy('push');
+        try {
+            const updated = await confirmAdminJob(token, job.job_id);
+            setJob((prev) => prev ? ({
+                ...mapBackendJobToDetail(updated),
+                timeline: [
+                    { id: Date.now().toString(), type: 'STATUS_CHANGED', title: 'Pushed to Queue', actor: 'ADMIN', timestamp: 'Just now', description: 'Job was promoted into the live technician queue.' },
+                    ...prev.timeline,
+                ],
+            }) : null);
+            toast.success('Job pushed to technician queue.');
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : 'Assign a technician before pushing this job.');
+        } finally {
+            setActionBusy(null);
+        }
+    };
+
+    const handleDeleteJob = async () => {
+        if (!job || !window.confirm(`Delete ${job.job_code}? This cannot be undone.`)) return;
+        const token = getStoredAdminToken();
+        if (!token) {
+            toast.error('Admin session missing. Please login again.');
+            return;
+        }
+
+        setActionBusy('delete');
+        try {
+            await deleteAdminJob(token, job.job_id);
+            toast.success('Job deleted.');
+            navigate('/admin/jobs');
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : 'Failed to delete job.');
+            setActionBusy(null);
+        }
+    };
+
+    const handleSaveInternalNote = () => {
+        setStoredInternalNote(job.job_id, internalNote);
+        setJob((prev) => prev ? ({
+            ...prev,
+            timeline: [
+                { id: Date.now().toString(), type: 'DETAILS_UPDATED', title: 'Internal Note Updated', actor: 'ADMIN', timestamp: 'Just now', description: 'Admin-only internal notes were saved.' },
+                ...prev.timeline,
+            ],
+        }) : null);
+        toast.success('Internal note saved.');
     };
 
     return (
@@ -701,17 +863,30 @@ export default function JobDetailPage() {
                         </div>
                     )}
 
-                    {!isEditing && job.allowed_actions.includes('assign_tech') && !job.technician && (
+                    {!isEditing && job.allowed_actions.includes('push_to_queue') && (
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-9 gap-2 border-[#2F8E92]/30 text-[#2F8E92] hover:bg-[#2F8E92]/10"
+                            onClick={handlePushToQueue}
+                            disabled={actionBusy === 'push'}
+                        >
+                            {actionBusy === 'push' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                            Push to Queue
+                        </Button>
+                    )}
+
+                    {!isEditing && job.allowed_actions.includes('assign_tech') && (
                         <Dialog open={assignModalOpen} onOpenChange={setAssignModalOpen}>
                             <DialogTrigger asChild>
                                 <Button className="bg-[#2F8E92] hover:bg-[#267276] text-white">
-                                    <User className="w-4 h-4 mr-2" /> Assign Technician
+                                    <User className="w-4 h-4 mr-2" /> {job.technician ? 'Reassign Technician' : 'Assign Technician'}
                                 </Button>
                             </DialogTrigger>
                             <DialogContent className="max-w-2xl">
                                 <DialogHeader>
                                     <DialogTitle>Assign Technician</DialogTitle>
-                                    <DialogDescription>Select an available technician for {job.job_code}.</DialogDescription>
+                                    <DialogDescription>Available technicians are ranked by availability, service compatibility, and workload.</DialogDescription>
                                 </DialogHeader>
                                 <div className="py-4">
                                     <Table>
@@ -724,7 +899,13 @@ export default function JobDetailPage() {
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
-                                            {ELIGIBLE_TECHS.map(tech => (
+                                            {eligibleTechnicians.length === 0 ? (
+                                                <TableRow>
+                                                    <TableCell colSpan={4} className="py-8 text-center text-sm text-muted-foreground">
+                                                        No active technicians are available to display.
+                                                    </TableCell>
+                                                </TableRow>
+                                            ) : eligibleTechnicians.map(tech => (
                                                 <TableRow key={tech.id}>
                                                     <TableCell className="font-medium">
                                                         <div className="flex items-center gap-2">
@@ -743,7 +924,9 @@ export default function JobDetailPage() {
                                                         </div>
                                                     </TableCell>
                                                     <TableCell className="text-right">
-                                                        <Button size="sm" onClick={() => handleAssignTech(tech.id)}>Assign</Button>
+                                                        <Button size="sm" onClick={() => handleAssignTech(tech.id)} disabled={actionBusy === `assign-${tech.id}`}>
+                                                            {actionBusy === `assign-${tech.id}` ? 'Assigning...' : 'Assign'}
+                                                        </Button>
                                                     </TableCell>
                                                 </TableRow>
                                             ))}
@@ -754,9 +937,9 @@ export default function JobDetailPage() {
                         </Dialog>
                     )}
 
-                    {!isEditing && job.allowed_actions.includes('cancel_job') && (
-                        <Button variant="outline" className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200">
-                            Cancel Job
+                    {!isEditing && job.allowed_actions.includes('delete_job') && (
+                        <Button variant="outline" className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200" onClick={handleDeleteJob} disabled={actionBusy === 'delete'}>
+                            Delete Job
                         </Button>
                     )}
 
@@ -771,7 +954,10 @@ export default function JobDetailPage() {
                             <DropdownMenuItem onClick={() => setIsEditing(true)}>Edit Details</DropdownMenuItem>
                             <DropdownMenuItem>View Logs</DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem className="text-red-600">Delete Job</DropdownMenuItem>
+                            <DropdownMenuItem className="text-red-600" onClick={handleDeleteJob}>
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Delete Job
+                            </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
                 </div>
@@ -898,7 +1084,7 @@ export default function JobDetailPage() {
                                                 <div className="text-xs text-muted-foreground">{formatPhoneForDisplay(job.technician.phone)} • Active now</div>
                                             </div>
                                         </div>
-                                        <Button variant="outline" size="sm" className="bg-background hover:bg-muted text-foreground border-border">Reassign</Button>
+                                        <Button variant="outline" size="sm" className="bg-background hover:bg-muted text-foreground border-border" onClick={() => setAssignModalOpen(true)}>Reassign</Button>
                                     </div>
                                 ) : (
                                     <div className="flex items-center justify-between bg-muted/30 p-4 rounded-lg border border-dashed border-border">
@@ -908,6 +1094,67 @@ export default function JobDetailPage() {
                                         </div>
                                     </div>
                                 )}
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="shadow-sm border-border bg-card">
+                        <CardHeader>
+                            <CardTitle className="text-lg font-semibold flex items-center gap-2 text-foreground">
+                                <FileText className="w-5 h-5 text-muted-foreground" />
+                                Source Intake
+                            </CardTitle>
+                            <CardDescription>
+                                Original intake context preserved with the job record.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="grid gap-4 md:grid-cols-2">
+                                <div>
+                                    <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">Source</h4>
+                                    <div className="text-sm font-medium text-foreground">{job.source_system || 'Admin/manual entry'}</div>
+                                </div>
+                                <div>
+                                    <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">Reference</h4>
+                                    <div className="text-sm font-medium text-foreground">
+                                        {typeof job.source_metadata?.intake_id === 'string'
+                                            ? job.source_metadata.intake_id
+                                            : typeof job.source_metadata?.source_record_id === 'string'
+                                                ? job.source_metadata.source_record_id
+                                                : job.job_code}
+                                    </div>
+                                </div>
+                            </div>
+                            {job.source_metadata ? (
+                                <div className="rounded-lg border border-border bg-muted/40 p-3">
+                                    <pre className="max-h-44 overflow-auto whitespace-pre-wrap text-xs text-muted-foreground">
+                                        {JSON.stringify(job.source_metadata, null, 2)}
+                                    </pre>
+                                </div>
+                            ) : null}
+                        </CardContent>
+                    </Card>
+
+                    <Card className="shadow-sm border-border bg-card">
+                        <CardHeader>
+                            <CardTitle className="text-lg font-semibold flex items-center gap-2 text-foreground">
+                                <Shield className="w-5 h-5 text-muted-foreground" />
+                                Internal Notes
+                            </CardTitle>
+                            <CardDescription>Admin-only notes are not shown in the technician queue.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                            <Textarea
+                                className="min-h-28 resize-y bg-background"
+                                placeholder="Add dispatch context, customer caveats, or team handoff notes..."
+                                value={internalNote}
+                                onChange={(event) => setInternalNote(event.target.value)}
+                            />
+                            <div className="flex justify-end">
+                                <Button size="sm" className="gap-2 bg-[#2F8E92] hover:bg-[#267276]" onClick={handleSaveInternalNote}>
+                                    <Save className="h-4 w-4" />
+                                    Save Note
+                                </Button>
                             </div>
                         </CardContent>
                     </Card>

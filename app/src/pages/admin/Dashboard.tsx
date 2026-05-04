@@ -63,7 +63,7 @@ type ActivityRow = {
   description: string;
   timestamp: string;
   badge: string;
-  tone: 'info' | 'success' | 'warning';
+  tone: 'info' | 'success' | 'warning' | 'critical';
 };
 
 type DashboardSnapshot = {

@@ -9,6 +9,7 @@ import {
     ArrowUpDown,
     ChevronLeft,
     ChevronRight,
+    ChevronDown,
     ChevronsLeft,
     ChevronsRight,
     AlertCircle,
@@ -2044,9 +2045,9 @@ export default function JobsPage() {
                             ? 'Sorted by job ID'
                             : 'Sorted by rank';
     const JobDetailsSortIcon =
-        jobSortMode === 'newest'
+        jobSortMode === 'created_newest'
             ? ArrowDown
-            : jobSortMode === 'oldest'
+            : jobSortMode === 'created_oldest'
                 ? ArrowUp
                 : ArrowUpDown;
     const summaryCards = [
