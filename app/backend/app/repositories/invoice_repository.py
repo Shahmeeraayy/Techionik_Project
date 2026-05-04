@@ -111,7 +111,7 @@ class InvoiceRepository:
             return []
         return self.db.query(InvoiceApprovalDraft).filter(InvoiceApprovalDraft.job_id.in_(ids)).all()
 
-    def upsert_pending_approval_draft(self, job_id: UUID, line_items: list[dict]) -> InvoiceApprovalDraft:
+    def upsert_pending_approval_draft(self, job_id: UUID, line_items: List[dict]) -> InvoiceApprovalDraft:
         row = self.get_pending_approval_draft(job_id)
         if row is None:
             row = InvoiceApprovalDraft(job_id=job_id, line_items=line_items)
