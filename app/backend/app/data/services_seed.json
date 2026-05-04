@@ -1,0 +1,659 @@
+[
+  {
+    "code": "PPF-ALA-AILES-COMP-2",
+    "name": "PPF ailes complètes (2)",
+    "category": "PPF",
+    "default_price": 400.0,
+    "approval_required": false,
+    "status": "active",
+    "notes": null
+  },
+  {
+    "code": "PPF-ALA-CAPOT-12",
+    "name": "PPF bande de capot 12\"",
+    "category": "PPF",
+    "default_price": 120.0,
+    "approval_required": false,
+    "status": "active",
+    "notes": null
+  },
+  {
+    "code": "PPF-ALA-CAPOT-18",
+    "name": "PPF bande de capot 18\"",
+    "category": "PPF",
+    "default_price": 170.0,
+    "approval_required": false,
+    "status": "active",
+    "notes": null
+  },
+  {
+    "code": "PPF-ALA-TOIT-12",
+    "name": "PPF bande de toit 12\"",
+    "category": "PPF",
+    "default_price": 100.0,
+    "approval_required": false,
+    "status": "active",
+    "notes": null
+  },
+  {
+    "code": "PPF-ALA-TOIT-4",
+    "name": "PPF bande de toit 4\"",
+    "category": "PPF",
+    "default_price": 40.0,
+    "approval_required": false,
+    "status": "active",
+    "notes": null
+  },
+  {
+    "code": "PPF-ALA-TOIT-6",
+    "name": "PPF bande de toit 6\"",
+    "category": "PPF",
+    "default_price": 50.0,
+    "approval_required": false,
+    "status": "active",
+    "notes": null
+  },
+  {
+    "code": "PPF-ALA-TOIT-8",
+    "name": "PPF bande de toit 8\"",
+    "category": "PPF",
+    "default_price": 75.0,
+    "approval_required": false,
+    "status": "active",
+    "notes": null
+  },
+  {
+    "code": "PPF-OPT-BANDE-AR",
+    "name": "PPF bande pare-chocs arrière (à partir de)",
+    "category": "PPF",
+    "default_price": 50.0,
+    "approval_required": false,
+    "status": "active",
+    "notes": null
+  },
+  {
+    "code": "FORDDN-SVC-PPF-BANDE-AR",
+    "name": "PPF bande pare-chocs arrière – Donnacona Ford",
+    "category": "PPF",
+    "default_price": 50.0,
+    "approval_required": false,
+    "status": "active",
+    "notes": null
+  },
+  {
+    "code": "HONDA-DON-SVC-PPF-BANDE-AR",
+    "name": "PPF bande pare-chocs arrière – Honda",
+    "category": "PPF",
+    "default_price": 50.0,
+    "approval_required": false,
+    "status": "active",
+    "notes": null
+  },
+  {
+    "code": "PPF-ALA-BAS-CAISSES-12",
+    "name": "PPF bas de caisses 12\"",
+    "category": "PPF",
+    "default_price": 375.0,
+    "approval_required": false,
+    "status": "active",
+    "notes": null
+  },
+  {
+    "code": "PPF-ALA-BAS-CAISSES-8",
+    "name": "PPF bas de caisses 8\"",
+    "category": "PPF",
+    "default_price": 240.0,
+    "approval_required": false,
+    "status": "active",
+    "notes": null
+  },
+  {
+    "code": "PPF-PKG-CAPOT12-AILES",
+    "name": "PPF capot 12\" + ailes",
+    "category": "PPF",
+    "default_price": 135.0,
+    "approval_required": false,
+    "status": "active",
+    "notes": null
+  },
+  {
+    "code": "FORDDN-SVC-PPF-CAPOT12-AILES",
+    "name": "PPF capot 12\" + ailes – Donnacona Ford",
+    "category": "PPF",
+    "default_price": 135.0,
+    "approval_required": false,
+    "status": "active",
+    "notes": null
+  },
+  {
+    "code": "FORDDN-SVC-PPF-CAPOT12-F150",
+    "name": "PPF capot 12\" + ailes – F-150",
+    "category": "PPF",
+    "default_price": 175.0,
+    "approval_required": false,
+    "status": "active",
+    "notes": null
+  },
+  {
+    "code": "FORDDN-SVC-PPF-CAPOT12-F250",
+    "name": "PPF capot 12\" + ailes – F-250",
+    "category": "PPF",
+    "default_price": 225.0,
+    "approval_required": false,
+    "status": "active",
+    "notes": null
+  },
+  {
+    "code": "FORDDN-SVC-PPF-CAPOT12-COMBO-F150",
+    "name": "PPF capot 12\" + ailes + pare-chocs avant (combo) – F-150",
+    "category": "PPF",
+    "default_price": 150.0,
+    "approval_required": false,
+    "status": "active",
+    "notes": null
+  },
+  {
+    "code": "FORDDN-SVC-PPF-CAPOT12-COMBO-F250",
+    "name": "PPF capot 12\" + ailes + pare-chocs avant (combo) – F-250",
+    "category": "PPF",
+    "default_price": 200.0,
+    "approval_required": false,
+    "status": "active",
+    "notes": null
+  },
+  {
+    "code": "PPF-PKG-CAPOT12-AILES-POINTE",
+    "name": "PPF capot 12\" + ailes + pointes (à partir de)",
+    "category": "PPF",
+    "default_price": 185.0,
+    "approval_required": false,
+    "status": "active",
+    "notes": null
+  },
+  {
+    "code": "FORDDN-SVC-PPF-CAPOT16-AUTRE",
+    "name": "PPF capot 16\" + ailes (autre)",
+    "category": "PPF",
+    "default_price": 175.0,
+    "approval_required": false,
+    "status": "active",
+    "notes": null
+  },
+  {
+    "code": "PPF-PKG-CAPOT16-AILES",
+    "name": "PPF capot 16\" + ailes (base)",
+    "category": "PPF",
+    "default_price": 185.0,
+    "approval_required": false,
+    "status": "active",
+    "notes": null
+  },
+  {
+    "code": "HONDA-DON-SVC-PPF-16-CRVHRV",
+    "name": "PPF capot 16\" + ailes – CRV/HRV/Ridgeline/Prologue",
+    "category": "PPF",
+    "default_price": 170.0,
+    "approval_required": false,
+    "status": "active",
+    "notes": null
+  },
+  {
+    "code": "FORDDN-SVC-PPF-CAPOT16-F150",
+    "name": "PPF capot 16\" + ailes – F-150",
+    "category": "PPF",
+    "default_price": 225.0,
+    "approval_required": false,
+    "status": "active",
+    "notes": null
+  },
+  {
+    "code": "FORDDN-SVC-PPF-CAPOT16-F250",
+    "name": "PPF capot 16\" + ailes – F-250",
+    "category": "PPF",
+    "default_price": 250.0,
+    "approval_required": false,
+    "status": "active",
+    "notes": null
+  },
+  {
+    "code": "HONDA-DON-SVC-PPF-16-ODY",
+    "name": "PPF capot 16\" + ailes – Odyssey",
+    "category": "PPF",
+    "default_price": 180.0,
+    "approval_required": false,
+    "status": "active",
+    "notes": null
+  },
+  {
+    "code": "FORDDN-SVC-PPF-CAPOT16-COMBO-F150",
+    "name": "PPF capot 16\" + ailes + pare-chocs avant (combo) – F-150",
+    "category": "PPF",
+    "default_price": 200.0,
+    "approval_required": false,
+    "status": "active",
+    "notes": null
+  },
+  {
+    "code": "FORDDN-SVC-PPF-CAPOT16-COMBO-F250",
+    "name": "PPF capot 16\" + ailes + pare-chocs avant (combo) – F-250",
+    "category": "PPF",
+    "default_price": 200.0,
+    "approval_required": false,
+    "status": "active",
+    "notes": null
+  },
+  {
+    "code": "PPF-PKG-CAPOT16-AILES-POINTE",
+    "name": "PPF capot 16\" + ailes + pointe (à partir de)",
+    "category": "PPF",
+    "default_price": 200.0,
+    "approval_required": false,
+    "status": "active",
+    "notes": null
+  },
+  {
+    "code": "FORDDN-SVC-PPF-CAPOT16-AUTRE-POINTE",
+    "name": "PPF capot 16\" + ailes + pointe (autre)",
+    "category": "PPF",
+    "default_price": 200.0,
+    "approval_required": false,
+    "status": "active",
+    "notes": null
+  },
+  {
+    "code": "PPF-PKG-CAPOT24-POINTE",
+    "name": "PPF capot 24\" + pointe",
+    "category": "PPF",
+    "default_price": 225.0,
+    "approval_required": false,
+    "status": "active",
+    "notes": null
+  },
+  {
+    "code": "HONDA-DON-SVC-PPF-CIVIC-24",
+    "name": "PPF capot 24\" + pointe – Civic",
+    "category": "PPF",
+    "default_price": 225.0,
+    "approval_required": false,
+    "status": "active",
+    "notes": null
+  },
+  {
+    "code": "FORDDN-SVC-PPF-CAPOT24-POINTE",
+    "name": "PPF capot 24\" + pointe – Donnacona Ford",
+    "category": "PPF",
+    "default_price": 225.0,
+    "approval_required": false,
+    "status": "active",
+    "notes": null
+  },
+  {
+    "code": "PPF-ALA-CAPOT-COMP",
+    "name": "PPF capot complet (à partir de)",
+    "category": "PPF",
+    "default_price": 325.0,
+    "approval_required": false,
+    "status": "active",
+    "notes": null
+  },
+  {
+    "code": "PPF-ALA-POIGNEES",
+    "name": "PPF intérieur de poignées (ch.)",
+    "category": "PPF",
+    "default_price": 10.0,
+    "approval_required": false,
+    "status": "active",
+    "notes": null
+  },
+  {
+    "code": "PPF-OPT-MIROIRS",
+    "name": "PPF miroirs (2)",
+    "category": "PPF",
+    "default_price": 50.0,
+    "approval_required": false,
+    "status": "active",
+    "notes": null
+  },
+  {
+    "code": "FORDDN-SVC-PPF-MIROIRS",
+    "name": "PPF miroirs – Donnacona Ford",
+    "category": "PPF",
+    "default_price": 50.0,
+    "approval_required": false,
+    "status": "active",
+    "notes": null
+  },
+  {
+    "code": "HONDA-DON-SVC-PPF-MIROIRS",
+    "name": "PPF miroirs – Honda",
+    "category": "PPF",
+    "default_price": 50.0,
+    "approval_required": false,
+    "status": "active",
+    "notes": null
+  },
+  {
+    "code": "PPF-ALA-MONTANT-PB",
+    "name": "PPF montant de pare-brise (ch.)",
+    "category": "PPF",
+    "default_price": 30.0,
+    "approval_required": false,
+    "status": "active",
+    "notes": null
+  },
+  {
+    "code": "FORDDN-SVC-PPF-PARECHOCS-AV-AUTRE",
+    "name": "PPF pare-chocs avant – autre modèle",
+    "category": "PPF",
+    "default_price": 325.0,
+    "approval_required": false,
+    "status": "active",
+    "notes": null
+  },
+  {
+    "code": "PPF-OPT-PARECHOCS-AV",
+    "name": "PPF pare-chocs avant (base)",
+    "category": "PPF",
+    "default_price": 350.0,
+    "approval_required": false,
+    "status": "active",
+    "notes": null
+  },
+  {
+    "code": "FORDDN-SVC-PPF-PARECHOCS-AV-F150",
+    "name": "PPF pare-chocs avant – F-150",
+    "category": "PPF",
+    "default_price": 250.0,
+    "approval_required": false,
+    "status": "active",
+    "notes": null
+  },
+  {
+    "code": "FORDDN-SVC-PPF-PARECHOCS-AV-F250",
+    "name": "PPF pare-chocs avant – F-250",
+    "category": "PPF",
+    "default_price": 300.0,
+    "approval_required": false,
+    "status": "active",
+    "notes": null
+  },
+  {
+    "code": "HONDA-DON-SVC-PPF-PARECHOCS-AV",
+    "name": "PPF pare-chocs avant – Honda",
+    "category": "PPF",
+    "default_price": 325.0,
+    "approval_required": false,
+    "status": "active",
+    "notes": null
+  },
+  {
+    "code": "PPF-ALA-PHARES-AJOUT",
+    "name": "PPF phares (ajout)",
+    "category": "PPF",
+    "default_price": 70.0,
+    "approval_required": false,
+    "status": "active",
+    "notes": null
+  },
+  {
+    "code": "PPF-ALA-PHARES-SEUL",
+    "name": "PPF phares (seul)",
+    "category": "PPF",
+    "default_price": 110.0,
+    "approval_required": false,
+    "status": "active",
+    "notes": null
+  },
+  {
+    "code": "PPF-ALA-SEUIL-COFFRE",
+    "name": "PPF seuil de coffre",
+    "category": "PPF",
+    "default_price": 45.0,
+    "approval_required": false,
+    "status": "active",
+    "notes": null
+  },
+  {
+    "code": "PPF-ALA-SEUIL-PORTE",
+    "name": "PPF seuil de porte (ch.)",
+    "category": "PPF",
+    "default_price": 25.0,
+    "approval_required": false,
+    "status": "active",
+    "notes": null
+  },
+  {
+    "code": "PPF-OPT-TOIT12-AJOUT",
+    "name": "PPF toit 12\" (ajout)",
+    "category": "PPF",
+    "default_price": 90.0,
+    "approval_required": false,
+    "status": "active",
+    "notes": null
+  },
+  {
+    "code": "FORDDN-SVC-PPF-TOIT12-AJOUT",
+    "name": "PPF toit 12\" (ajout) – Donnacona Ford",
+    "category": "PPF",
+    "default_price": 90.0,
+    "approval_required": false,
+    "status": "active",
+    "notes": null
+  },
+  {
+    "code": "HONDA-DON-SVC-PPF-TOIT12-AJOUT",
+    "name": "PPF toit 12\" (ajout) – Honda",
+    "category": "PPF",
+    "default_price": 90.0,
+    "approval_required": false,
+    "status": "active",
+    "notes": null
+  },
+  {
+    "code": "PPF-OPT-TOIT12-SEUL",
+    "name": "PPF toit 12\" (seul)",
+    "category": "PPF",
+    "default_price": 115.0,
+    "approval_required": false,
+    "status": "active",
+    "notes": null
+  },
+  {
+    "code": "FORDDN-SVC-PPF-TOIT12-SEUL",
+    "name": "PPF toit 12\" (seul) – Donnacona Ford",
+    "category": "PPF",
+    "default_price": 115.0,
+    "approval_required": false,
+    "status": "active",
+    "notes": null
+  },
+  {
+    "code": "HONDA-DON-SVC-PPF-TOIT12-SEUL",
+    "name": "PPF toit 12\" (seul) – Honda",
+    "category": "PPF",
+    "default_price": 115.0,
+    "approval_required": false,
+    "status": "active",
+    "notes": null
+  },
+  {
+    "code": "TEINTE-BANDE-PB",
+    "name": "Bande pare-brise teintée",
+    "category": "Window Tint",
+    "default_price": 50.0,
+    "approval_required": false,
+    "status": "active",
+    "notes": null
+  },
+  {
+    "code": "FORDDN-SVC-TINT-BANDE-PB",
+    "name": "Bande pare-brise teintée (Ford)",
+    "category": "Window Tint",
+    "default_price": 50.0,
+    "approval_required": false,
+    "status": "active",
+    "notes": null
+  },
+  {
+    "code": "TEINTE-COMP-LIMO",
+    "name": "Teintage complet – arrière limo",
+    "category": "Window Tint",
+    "default_price": 240.0,
+    "approval_required": false,
+    "status": "active",
+    "notes": null
+  },
+  {
+    "code": "FORDDN-SVC-TINT-COMP-LIMO",
+    "name": "Teintage complet – arrière limo (Ford)",
+    "category": "Window Tint",
+    "default_price": 240.0,
+    "approval_required": false,
+    "status": "active",
+    "notes": null
+  },
+  {
+    "code": "TEINTE-COMP-STD",
+    "name": "Teintage complet – standard",
+    "category": "Window Tint",
+    "default_price": 225.0,
+    "approval_required": false,
+    "status": "active",
+    "notes": null
+  },
+  {
+    "code": "FORDDN-SVC-TINT-COMP-STD",
+    "name": "Teintage complet – standard (Ford)",
+    "category": "Window Tint",
+    "default_price": 225.0,
+    "approval_required": false,
+    "status": "active",
+    "notes": null
+  },
+  {
+    "code": "TEINTE-AR-LIMO",
+    "name": "Teintage vitres arrière – limo",
+    "category": "Window Tint",
+    "default_price": 200.0,
+    "approval_required": false,
+    "status": "active",
+    "notes": null
+  },
+  {
+    "code": "FORDDN-SVC-TINT-AR-LIMO",
+    "name": "Teintage vitres arrière – limo (Ford)",
+    "category": "Window Tint",
+    "default_price": 200.0,
+    "approval_required": false,
+    "status": "active",
+    "notes": null
+  },
+  {
+    "code": "TEINTE-AR-STD",
+    "name": "Teintage vitres arrière – standard",
+    "category": "Window Tint",
+    "default_price": 185.0,
+    "approval_required": false,
+    "status": "active",
+    "notes": null
+  },
+  {
+    "code": "FORDDN-SVC-TINT-AR-STD",
+    "name": "Teintage vitres arrière – standard (Ford)",
+    "category": "Window Tint",
+    "default_price": 185.0,
+    "approval_required": false,
+    "status": "active",
+    "notes": null
+  },
+  {
+    "code": "TEINTE-AV-CER",
+    "name": "Teintage vitres avant – céramique",
+    "category": "Window Tint",
+    "default_price": 100.0,
+    "approval_required": false,
+    "status": "active",
+    "notes": null
+  },
+  {
+    "code": "FORDDN-SVC-TINT-AV-CER",
+    "name": "Teintage vitres avant – céramique (Ford)",
+    "category": "Window Tint",
+    "default_price": 100.0,
+    "approval_required": false,
+    "status": "active",
+    "notes": null
+  },
+  {
+    "code": "TEINTE-AV-STD",
+    "name": "Teintage vitres avant – standard",
+    "category": "Window Tint",
+    "default_price": 90.0,
+    "approval_required": false,
+    "status": "active",
+    "notes": null
+  },
+  {
+    "code": "FORDDN-SVC-TINT-AV-STD",
+    "name": "Teintage vitres avant – standard (Ford)",
+    "category": "Window Tint",
+    "default_price": 90.0,
+    "approval_required": false,
+    "status": "active",
+    "notes": null
+  },
+  {
+    "code": "AUDI-SVC-2WAY",
+    "name": "Démarreur 2-Way – Audi",
+    "category": "Remote Starter",
+    "default_price": 480.0,
+    "approval_required": false,
+    "status": "active",
+    "notes": null
+  },
+  {
+    "code": "AUDI-SVC-2WAY-S3RS3-2526",
+    "name": "Démarreur 2-Way – Audi S3/RS3 2025-2026",
+    "category": "Remote Starter",
+    "default_price": 580.0,
+    "approval_required": false,
+    "status": "active",
+    "notes": null
+  },
+  {
+    "code": "AUDI-SVC-MYCAR2",
+    "name": "Démarreur MyCar 2 – Audi",
+    "category": "Remote Starter",
+    "default_price": 590.0,
+    "approval_required": false,
+    "status": "active",
+    "notes": null
+  },
+  {
+    "code": "AUDI-SVC-MYCAR-S3RS3-2526",
+    "name": "Démarreur MyCar – Audi S3/RS3 2025-2026",
+    "category": "Remote Starter",
+    "default_price": 690.0,
+    "approval_required": false,
+    "status": "active",
+    "notes": null
+  },
+  {
+    "code": "AUDI-SVC-DOMINO",
+    "name": "Domino repérage – Audi",
+    "category": "Remote Starter",
+    "default_price": 320.0,
+    "approval_required": false,
+    "status": "active",
+    "notes": null
+  },
+  {
+    "code": "AUDI-SVC-PB-MO",
+    "name": "Remplacement de pare-brise – Audi",
+    "category": "Remote Starter",
+    "default_price": 200.0,
+    "approval_required": false,
+    "status": "active",
+    "notes": null
+  }
+]
