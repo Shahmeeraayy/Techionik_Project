@@ -1,8 +1,8 @@
-﻿# SM2 Dispatch - Technician Module (FastAPI)
+# SM2 Dispatch - Technician Module (FastAPI)
 
 ## Stack
 - **Framework**: FastAPI
-- **Database**: Neon/PostgreSQL
+- **Database**: Supabase/PostgreSQL
 - **ORM**: SQLAlchemy
 - **Validation**: Pydantic
 - **Architecture**: Clean Service-Repository Layer
@@ -59,6 +59,8 @@
    - Core schema only: `python scripts/migrate.py`
    - Include dev seed data: `python scripts/migrate.py --with-seed`
 4. Run app: `uvicorn app.main:app --reload --host 0.0.0.0 --port 8000`
+
+See `SUPABASE_SETUP.md` for the recommended Supabase connection flow.
 
 ## Migration Notes
 - `001_technician_module.sql` and `002_admin_technician_profile.sql` are core schema migrations.
