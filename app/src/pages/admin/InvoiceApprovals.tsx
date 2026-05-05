@@ -19,6 +19,7 @@ import {
     Sparkles,
     Clock3,
     MapPin,
+    Calendar,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { exportArrayData, selectColumnsForExport, type ExportFormat } from '@/lib/export';
@@ -618,6 +619,8 @@ export default function InvoiceApprovalsPage() {
         exportArrayData(exportData, queueTab === 'approval' ? 'invoice_approval_queue_export' : 'invoice_blocked_queue_export', format);
     };
 
+    const activeQueueCount = queueTab === 'approval' ? filteredInvoices.length : filteredBlockedInvoices.length;
+
     const summaryCards = [
         {
             key: 'pending',
@@ -796,23 +799,30 @@ export default function InvoiceApprovalsPage() {
                                     ))}
                                     </SelectContent>
                             </Select>
-                            <div className="relative">
-                                <Input
-                                    type="date"
-                                    value={filterFromDate}
-                                    onChange={(event) => setFilterFromDate(event.target.value)}
-                                    className="h-11 w-[164px] rounded-2xl border-white/10 bg-white/[0.04] text-white shadow-none"
-                                    aria-label="Filter approvals from date"
-                                />
-                            </div>
-                            <div className="relative">
-                                <Input
-                                    type="date"
-                                    value={filterToDate}
-                                    onChange={(event) => setFilterToDate(event.target.value)}
-                                    className="h-11 w-[164px] rounded-2xl border-white/10 bg-white/[0.04] text-white shadow-none"
-                                    aria-label="Filter approvals to date"
-                                />
+                            <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2">
+                                <Calendar className="h-4 w-4 text-slate-400" />
+                                <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-2 rounded-xl border border-white/8 bg-white/[0.03] px-2 py-1">
+                                        <span className="text-[11px] font-medium uppercase tracking-[0.18em] text-slate-500">From</span>
+                                        <Input
+                                            type="date"
+                                            value={filterFromDate}
+                                            onChange={(event) => setFilterFromDate(event.target.value)}
+                                            className="h-7 w-[132px] border-0 bg-transparent p-0 text-sm text-white shadow-none focus-visible:ring-0"
+                                            aria-label="Filter approvals from date"
+                                        />
+                                    </div>
+                                    <div className="flex items-center gap-2 rounded-xl border border-white/8 bg-white/[0.03] px-2 py-1">
+                                        <span className="text-[11px] font-medium uppercase tracking-[0.18em] text-slate-500">To</span>
+                                        <Input
+                                            type="date"
+                                            value={filterToDate}
+                                            onChange={(event) => setFilterToDate(event.target.value)}
+                                            className="h-7 w-[132px] border-0 bg-transparent p-0 text-sm text-white shadow-none focus-visible:ring-0"
+                                            aria-label="Filter approvals to date"
+                                        />
+                                    </div>
+                                </div>
                             </div>
                             <Badge variant="outline" className="h-11 rounded-2xl border-amber-300/20 bg-amber-300/10 px-4 text-amber-100">
                                 {queueTab === 'approval' ? `Approval queue (${filteredInvoices.length})` : `Blocked queue (${filteredBlockedInvoices.length})`}
@@ -868,11 +878,17 @@ export default function InvoiceApprovalsPage() {
                 <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(47,142,146,0.12),transparent_28%),radial-gradient(circle_at_bottom_left,rgba(245,158,11,0.08),transparent_26%)]" />
                 <div className="relative flex items-center justify-between border-b border-white/10 px-5 py-4">
                     <div>
-                        <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Approval board</div>
-                        <div className="mt-1 text-sm text-slate-300">Completed jobs currently staged for invoice creation.</div>
+                        <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">
+                            {queueTab === 'approval' ? 'Approval Queue' : 'Blocked Queue'}
+                        </div>
+                        <div className="mt-1 text-sm text-slate-300">
+                            {queueTab === 'approval'
+                                ? 'Completed jobs currently staged for invoice creation.'
+                                : 'Invoices with validation issues that must be fixed before approval.'}
+                        </div>
                     </div>
                     <Badge variant="outline" className="h-9 rounded-full border-white/10 bg-white/[0.04] px-3 text-slate-300">
-                        {filteredInvoices.length} visible
+                        {activeQueueCount} visible
                     </Badge>
                 </div>
                 {loading ? (

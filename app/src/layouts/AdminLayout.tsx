@@ -38,7 +38,7 @@ const navItems = [
   { path: '/admin', label: 'Dashboard', icon: LayoutDashboard },
   { path: '/admin/jobs', label: 'Jobs', icon: ClipboardList },
   { path: '/admin/intake', label: 'Intake Queue', icon: Inbox },
-  { path: '/admin/invoice-approvals', label: 'Invoice Approvals', icon: FileCheck },
+  { path: '/admin/approvals', label: 'Invoice Approvals', icon: FileCheck },
   { path: '/admin/invoice-history', label: 'Invoice History', icon: ScrollText },
   { path: '/admin/technicians', label: 'Technicians', icon: Users },
   { path: '/admin/technician-accounts', label: 'Tech Accounts', icon: UserCog },
