@@ -39,6 +39,7 @@ type TechnicianAccount = {
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
+  lastLoginAt?: string;
 };
 
 type TechnicianSignupRequest = {
@@ -47,6 +48,8 @@ type TechnicianSignupRequest = {
   email: string;
   phone?: string;
   password: string;
+  status?: 'pending' | 'approved' | 'rejected';
+  rejectionReason?: string;
   requestedAt: string;
   updatedAt: string;
 };
@@ -73,6 +76,7 @@ export type TechnicianAccountSummary = {
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
+  lastLoginAt?: string;
 };
 
 export type TechnicianSignupRequestSummary = {
@@ -80,6 +84,8 @@ export type TechnicianSignupRequestSummary = {
   name: string;
   email: string;
   phone?: string;
+  status?: 'pending' | 'approved' | 'rejected';
+  rejectionReason?: string;
   requestedAt: string;
   updatedAt: string;
 };
@@ -121,12 +127,13 @@ interface AuthContextType {
   hasBackendTechnicianToken: boolean;
   technicianAccounts: TechnicianAccountSummary[];
   pendingTechnicianRequests: TechnicianSignupRequestSummary[];
+  rejectedTechnicianRequests: TechnicianSignupRequestSummary[];
   pendingTechnicianPasswordResetRequests: TechnicianPasswordResetRequestSummary[];
   syncAdminData: () => Promise<void>;
   login: (email: string, password: string, role?: UserRole, options?: { remember?: boolean }) => Promise<void>;
   requestTechnicianSignup: (input: TechnicianSignupInput) => Promise<void>;
   approveTechnicianSignupRequest: (requestId: string) => Promise<void>;
-  rejectTechnicianSignupRequest: (requestId: string) => Promise<void>;
+  rejectTechnicianSignupRequest: (requestId: string, reason?: string) => Promise<void>;
   resolveTechnicianPasswordResetRequest: (requestId: string, remarks?: string) => Promise<void>;
   updateTechnicianAccount: (id: string, input: TechnicianAccountUpdateInput) => Promise<void>;
   setTechnicianAccountActive: (id: string, isActive: boolean) => Promise<void>;
@@ -138,6 +145,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const AUTH_STORAGE_KEY = 'sm_dispatch_auth_user';
 const TECHNICIANS_STORAGE_KEY = 'sm_dispatch_technician_accounts';
 const TECHNICIAN_SIGNUP_REQUESTS_STORAGE_KEY = 'sm_dispatch_technician_signup_requests';
+const TECHNICIAN_REJECTED_SIGNUP_REQUESTS_STORAGE_KEY = 'sm_dispatch_technician_rejected_signup_requests';
 const ADMIN_EMAIL = currentUser.email.toLowerCase();
 
 const DEFAULT_TECHNICIAN_ACCOUNTS: TechnicianAccount[] = [
@@ -188,6 +196,7 @@ function toTechnicianSummary(account: TechnicianAccount): TechnicianAccountSumma
     isActive: account.isActive,
     createdAt: account.createdAt,
     updatedAt: account.updatedAt,
+    lastLoginAt: account.lastLoginAt,
   };
 }
 
@@ -197,6 +206,8 @@ function toSignupRequestSummary(request: TechnicianSignupRequest): TechnicianSig
     name: request.name,
     email: request.email,
     phone: request.phone,
+    status: request.status,
+    rejectionReason: request.rejectionReason,
     requestedAt: request.requestedAt,
     updatedAt: request.updatedAt,
   };
@@ -242,6 +253,7 @@ function mapBackendTechnicianAccounts(
       isActive: row.status === 'active',
       createdAt: prev?.createdAt ?? new Date().toISOString(),
       updatedAt: new Date().toISOString(),
+      lastLoginAt: prev?.lastLoginAt,
     };
   });
 }
@@ -252,6 +264,8 @@ function mapBackendPendingRequests(
     name: string;
     email: string;
     phone?: string | null;
+    status?: 'pending' | 'approved' | 'rejected';
+    rejection_reason?: string | null;
     requested_at: string;
     updated_at: string;
   }>,
@@ -262,6 +276,8 @@ function mapBackendPendingRequests(
     email: normalizeEmail(row.email),
     phone: row.phone ?? undefined,
     password: '',
+    status: row.status ?? 'pending',
+    rejectionReason: row.rejection_reason ?? undefined,
     requestedAt: row.requested_at,
     updatedAt: row.updated_at,
   }));
@@ -348,6 +364,7 @@ function parseStoredTechnicians(): TechnicianAccount[] {
         isActive: typeof item.isActive === 'boolean' ? item.isActive : true,
         createdAt: item.createdAt,
         updatedAt: item.updatedAt,
+        lastLoginAt: typeof item.lastLoginAt === 'string' ? item.lastLoginAt : undefined,
       };
     })
     .filter((item): item is TechnicianAccount => item !== null)
@@ -383,6 +400,44 @@ function parseStoredSignupRequests(): TechnicianSignupRequest[] {
         email: normalizeEmail(item.email),
         phone: item.phone,
         password: item.password,
+        status: item.status,
+        rejectionReason: item.rejectionReason,
+        requestedAt: item.requestedAt,
+        updatedAt: item.updatedAt,
+      };
+    })
+    .filter((item): item is TechnicianSignupRequest => item !== null)
+    .filter((item, index, list) =>
+      list.findIndex((candidate) => candidate.id === item.id) === index
+    );
+}
+
+function parseStoredRejectedSignupRequests(): TechnicianSignupRequest[] {
+  const parsed = safeParseJSON<Partial<TechnicianSignupRequest>[]>(TECHNICIAN_REJECTED_SIGNUP_REQUESTS_STORAGE_KEY, []);
+  if (!Array.isArray(parsed) || parsed.length === 0) {
+    return [];
+  }
+
+  return parsed
+    .map((item): TechnicianSignupRequest | null => {
+      if (
+        typeof item?.id !== 'string'
+        || typeof item?.name !== 'string'
+        || typeof item?.email !== 'string'
+        || typeof item?.requestedAt !== 'string'
+        || typeof item?.updatedAt !== 'string'
+      ) {
+        return null;
+      }
+
+      return {
+        id: item.id,
+        name: item.name,
+        email: normalizeEmail(item.email),
+        phone: item.phone,
+        password: typeof item.password === 'string' ? item.password : '',
+        status: 'rejected',
+        rejectionReason: typeof item.rejectionReason === 'string' ? item.rejectionReason : undefined,
         requestedAt: item.requestedAt,
         updatedAt: item.updatedAt,
       };
@@ -398,6 +453,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [authStorageScope, setAuthStorageScope] = useState<StorageScope>('local');
   const [technicianAccounts, setTechnicianAccounts] = useState<TechnicianAccount[]>(DEFAULT_TECHNICIAN_ACCOUNTS);
   const [pendingTechnicianRequests, setPendingTechnicianRequests] = useState<TechnicianSignupRequest[]>([]);
+  const [rejectedTechnicianRequests, setRejectedTechnicianRequests] = useState<TechnicianSignupRequest[]>([]);
   const [pendingTechnicianPasswordResetRequests, setPendingTechnicianPasswordResetRequests] = useState<TechnicianPasswordResetRequest[]>([]);
   const [hasBackendAdminToken, setHasBackendAdminToken] = useState<boolean>(false);
   const [hasBackendTechnicianToken, setHasBackendTechnicianToken] = useState<boolean>(false);
@@ -410,6 +466,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setAuthStorageScope(restoredUser.scope);
       setTechnicianAccounts(parseStoredTechnicians());
       setPendingTechnicianRequests(parseStoredSignupRequests());
+      setRejectedTechnicianRequests(parseStoredRejectedSignupRequests());
       setPendingTechnicianPasswordResetRequests([]);
 
       const adminToken = getStoredAdminToken();
@@ -422,6 +479,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(null);
       setTechnicianAccounts(DEFAULT_TECHNICIAN_ACCOUNTS);
       setPendingTechnicianRequests([]);
+      setRejectedTechnicianRequests([]);
       setPendingTechnicianPasswordResetRequests([]);
       setHasBackendAdminToken(false);
       setHasBackendTechnicianToken(false);
@@ -436,14 +494,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    const [backendTechnicians, backendPending, backendPasswordResetRequests] = await Promise.all([
+    const [backendTechnicians, backendPending, backendRejected, backendPasswordResetRequests] = await Promise.all([
       fetchAdminTechnicians(token),
       fetchAdminTechnicianSignupRequests(token, 'pending'),
+      fetchAdminTechnicianSignupRequests(token, 'rejected'),
       fetchAdminTechnicianPasswordResetRequests(token, 'PENDING'),
     ]);
 
     setTechnicianAccounts((prev) => mapBackendTechnicianAccounts(backendTechnicians, prev));
     setPendingTechnicianRequests(mapBackendPendingRequests(backendPending));
+    setRejectedTechnicianRequests(mapBackendPendingRequests(backendRejected));
     setPendingTechnicianPasswordResetRequests(mapBackendPasswordResetRequests(backendPasswordResetRequests));
   }, []);
 
@@ -488,6 +548,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     safeSetItem(TECHNICIAN_SIGNUP_REQUESTS_STORAGE_KEY, JSON.stringify(pendingTechnicianRequests));
   }, [pendingTechnicianRequests]);
+
+  useEffect(() => {
+    safeSetItem(TECHNICIAN_REJECTED_SIGNUP_REQUESTS_STORAGE_KEY, JSON.stringify(rejectedTechnicianRequests));
+  }, [rejectedTechnicianRequests]);
 
   useEffect(() => {
     if (!hasBackendAdminToken || user?.role !== 'admin') {
@@ -568,6 +632,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isActive: backendProfile.status === 'active',
         createdAt: nowIso,
         updatedAt: nowIso,
+        lastLoginAt: nowIso,
       };
 
       setAuthStorageScope(nextStorageScope);
@@ -638,6 +703,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         email,
         phone,
         password,
+        status: 'pending',
         requestedAt: now,
         updatedAt: now,
       },
@@ -682,10 +748,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setPendingTechnicianRequests((prev) => prev.filter((item) => item.id !== requestId));
   }, [pendingTechnicianRequests, refreshBackendAdminData, technicianAccounts]);
 
-  const rejectTechnicianSignupRequest = useCallback(async (requestId: string) => {
+  const rejectTechnicianSignupRequest = useCallback(async (requestId: string, reason?: string) => {
     const token = getStoredAdminToken();
     if (token) {
-      await rejectAdminTechnicianSignupRequest(token, requestId);
+      await rejectAdminTechnicianSignupRequest(token, requestId, reason);
       await refreshBackendAdminData();
       return;
     }
@@ -696,6 +762,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     setPendingTechnicianRequests((prev) => prev.filter((item) => item.id !== requestId));
+    setRejectedTechnicianRequests((prev) => [
+      {
+        ...request,
+        status: 'rejected',
+        rejectionReason: reason?.trim() || undefined,
+        updatedAt: new Date().toISOString(),
+      },
+      ...prev,
+    ]);
   }, [pendingTechnicianRequests, refreshBackendAdminData]);
 
   const resolveTechnicianPasswordResetRequest = useCallback(async (requestId: string, remarks?: string) => {
@@ -741,6 +816,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               phone,
               password: nextPassword ? nextPassword : item.password,
               updatedAt: new Date().toISOString(),
+              lastLoginAt: item.lastLoginAt,
             }
             : item
         ))
@@ -789,6 +865,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       phone,
       password: nextPassword ? nextPassword : existing.password,
       updatedAt: now,
+      lastLoginAt: existing.lastLoginAt,
     };
 
     setTechnicianAccounts((prev) =>
@@ -819,6 +896,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       ...existing,
       isActive,
       updatedAt: new Date().toISOString(),
+      lastLoginAt: existing.lastLoginAt,
     };
 
     setTechnicianAccounts((prev) =>
@@ -864,6 +942,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     hasBackendTechnicianToken,
     technicianAccounts: technicianAccounts.map(toTechnicianSummary),
     pendingTechnicianRequests: pendingTechnicianRequests.map(toSignupRequestSummary),
+    rejectedTechnicianRequests: rejectedTechnicianRequests.map(toSignupRequestSummary),
     pendingTechnicianPasswordResetRequests: pendingTechnicianPasswordResetRequests.map(toPasswordResetRequestSummary),
     syncAdminData,
     login,

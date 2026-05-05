@@ -14,6 +14,8 @@ import {
   CheckCircle2,
   XCircle,
   KeyRound,
+  Send,
+  Ban,
 } from 'lucide-react';
 import {
   useAuth,
@@ -42,6 +44,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { formatPhoneForDisplay, formatUsPhoneInput } from '@/lib/phone';
 import { cn } from '@/lib/utils';
 
@@ -49,8 +52,9 @@ type EditFormState = {
   name: string;
   email: string;
   phone: string;
-  password: string;
 };
+
+type AccountTab = 'active' | 'pending' | 'rejected';
 
 const formatDateTime = (value: string) => {
   const parsed = new Date(value);
@@ -88,6 +92,7 @@ export default function TechnicianAccountsPage() {
   const {
     technicianAccounts,
     pendingTechnicianRequests,
+    rejectedTechnicianRequests,
     pendingTechnicianPasswordResetRequests,
     syncAdminData,
     updateTechnicianAccount,
@@ -97,13 +102,16 @@ export default function TechnicianAccountsPage() {
     resolveTechnicianPasswordResetRequest,
   } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeTab, setActiveTab] = useState<AccountTab>('active');
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
+  const [selectedPendingRequest, setSelectedPendingRequest] = useState<TechnicianSignupRequestSummary | null>(null);
+  const [rejectionReason, setRejectionReason] = useState('');
   const [selectedAccount, setSelectedAccount] = useState<TechnicianAccountSummary | null>(null);
   const [form, setForm] = useState<EditFormState>({
     name: '',
     email: '',
     phone: '',
-    password: '',
   });
   const [formError, setFormError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -145,6 +153,7 @@ export default function TechnicianAccountsPage() {
 
   const activeCount = technicianAccounts.filter((item) => item.isActive).length;
   const pendingCount = pendingTechnicianRequests.length;
+  const rejectedCount = rejectedTechnicianRequests.length;
   const pendingPasswordResetCount = pendingTechnicianPasswordResetRequests.length;
   const hasSearchQuery = searchQuery.trim().length > 0;
 
@@ -174,6 +183,19 @@ export default function TechnicianAccountsPage() {
     );
   }, [pendingTechnicianRequests, searchQuery]);
 
+  const filteredRejectedRequests = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) {
+      return rejectedTechnicianRequests;
+    }
+
+    return rejectedTechnicianRequests.filter((request) =>
+      request.name.toLowerCase().includes(query)
+      || request.email.toLowerCase().includes(query)
+      || (request.phone ?? '').toLowerCase().includes(query)
+    );
+  }, [rejectedTechnicianRequests, searchQuery]);
+
   const filteredPendingPasswordResetRequests = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
     if (!query) {
@@ -193,7 +215,6 @@ export default function TechnicianAccountsPage() {
       name: account.name,
       email: account.email,
       phone: account.phone ?? '',
-      password: '',
     });
     setFormError(null);
     setEditDialogOpen(true);
@@ -212,7 +233,6 @@ export default function TechnicianAccountsPage() {
         name: form.name,
         email: form.email,
         phone: form.phone,
-        password: form.password || undefined,
       });
       await runSync();
       setEditDialogOpen(false);
@@ -256,25 +276,32 @@ export default function TechnicianAccountsPage() {
   };
 
   const handleRejectRequest = async (request: TechnicianSignupRequestSummary) => {
-    if (!window.confirm(`Reject signup request for ${request.name}?`)) {
+    setSelectedPendingRequest(request);
+    setRejectionReason('');
+    setRejectDialogOpen(true);
+  };
+
+  const handleConfirmRejectRequest = async () => {
+    if (!selectedPendingRequest) {
       return;
     }
 
     try {
-      await rejectTechnicianSignupRequest(request.id);
+      await rejectTechnicianSignupRequest(selectedPendingRequest.id, rejectionReason.trim() || undefined);
       await runSync();
+      setRejectDialogOpen(false);
+      setSelectedPendingRequest(null);
+      setRejectionReason('');
+      setActiveTab('rejected');
     } catch (error) {
       window.alert(error instanceof Error ? error.message : 'Unable to reject signup request.');
     }
   };
 
-  const handleOpenPasswordResetAccount = (request: TechnicianPasswordResetRequestSummary) => {
-    const account = technicianAccounts.find((item) => item.id === request.technicianId);
-    if (!account) {
-      window.alert('Technician account not found.');
-      return;
-    }
-    openEditDialog(account);
+  const handleSendResetLink = (payload: { email: string; name: string }) => {
+    const subject = encodeURIComponent('SM2 electronics technician password reset');
+    const body = encodeURIComponent(`Hello ${payload.name},\n\nThis is your technician account password reset message from SM2 electronics. Please use the secure reset flow provided by the admin team to complete your password reset.\n\nIf you did not request this, please contact support.\n`);
+    window.location.href = `mailto:${payload.email}?subject=${subject}&body=${body}`;
   };
 
   const handleResolvePasswordResetRequest = async (request: TechnicianPasswordResetRequestSummary) => {
@@ -542,12 +569,15 @@ export default function TechnicianAccountsPage() {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => handleOpenPasswordResetAccount(request)}
+                        onClick={() => handleSendResetLink({
+                          email: request.technicianEmail,
+                          name: request.technicianName ?? 'Technician',
+                        })}
                         disabled={isRefreshing}
                         className="border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
                       >
-                        <Pencil className="w-4 h-4 mr-1" />
-                        Set Password
+                        <Send className="w-4 h-4 mr-1" />
+                        Send Reset Link
                       </Button>
                       <Button
                         size="sm"
@@ -570,204 +600,190 @@ export default function TechnicianAccountsPage() {
 
       <Card className={sectionCardClass}>
         <div className={sectionHeaderClass}>
-          <h2 className="text-base font-semibold text-white flex items-center gap-2">
-            <UserPlus className="w-4 h-4 text-amber-300" />
-            Pending Signup Requests
-            <Badge variant="secondary" className="border border-amber-300/20 bg-amber-300/10 text-amber-100">
-              {filteredPendingRequests.length}
-            </Badge>
-          </h2>
-          <p className="text-sm text-slate-300 mt-1">
-            Approve requests to create technician accounts and allow login.
-          </p>
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <h2 className="flex items-center gap-2 text-base font-semibold text-white">
+                <UserCog className="w-4 h-4 text-cyan-200" />
+                Technician Account Console
+              </h2>
+              <p className="mt-1 text-sm text-slate-300">
+                Security and access management for technician credentials, approvals, and account lifecycle state.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {([
+                { key: 'active', label: 'Active Accounts', count: filteredAccounts.length },
+                { key: 'pending', label: 'Pending Approval', count: filteredPendingRequests.length },
+                { key: 'rejected', label: 'Rejected', count: filteredRejectedRequests.length },
+              ] as Array<{ key: AccountTab; label: string; count: number }>).map((tab) => (
+                <Button
+                  key={tab.key}
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setActiveTab(tab.key)}
+                  className={cn(
+                    'rounded-full border-white/10 px-3 text-slate-200',
+                    activeTab === tab.key ? 'bg-cyan-300/12 text-cyan-100' : 'bg-white/[0.03] hover:bg-white/[0.08]',
+                  )}
+                >
+                  {tab.label} ({tab.count})
+                </Button>
+              ))}
+            </div>
+          </div>
         </div>
         <div className="overflow-hidden rounded-[20px] border border-white/8 bg-black/10">
-        <div className="flex items-start justify-between gap-3 border-b border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0))] px-6 py-5">
-          <div className="space-y-2">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Signup Queue</div>
-            <div className="text-sm text-slate-200">Pending technician account requests awaiting approval or rejection.</div>
-          </div>
-          <Badge variant="outline" className="rounded-full border-white/10 bg-white/[0.04] px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-slate-300">
-            {filteredPendingRequests.length} visible
-          </Badge>
-        </div>
-        <Table>
-          <TableHeader className="sticky top-0 z-10 border-b border-white/10 bg-[linear-gradient(180deg,rgba(11,25,42,0.98),rgba(10,20,35,0.92))] backdrop-blur-xl">
-            <TableRow className="border-white/0 hover:bg-transparent">
-              <TableHead className="pl-6 w-[220px] text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Technician</TableHead>
-              <TableHead className="w-[260px] text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Contact</TableHead>
-              <TableHead className="w-[220px] text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Requested At</TableHead>
-              <TableHead className="text-right pr-6 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredPendingRequests.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={4} className="h-28 text-center text-sm text-slate-400">
-                  {hasSearchQuery ? 'No pending signup requests match your search.' : 'No pending signup requests.'}
-                </TableCell>
-              </TableRow>
-            ) : (
-              filteredPendingRequests.map((request) => (
-                <TableRow key={request.id} className="border-white/6 hover:bg-white/[0.045]">
-                  <TableCell className="pl-6">
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-full bg-amber-300/12 text-amber-100 flex items-center justify-center">
-                        <UserPlus className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <p className="font-semibold text-white">{request.name}</p>
-                        <p className="text-xs text-slate-500 font-mono">{request.id}</p>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="space-y-1">
-                      <div className="text-sm text-slate-200 flex items-center gap-2">
-                        <Mail className="w-3.5 h-3.5 text-slate-500" />
-                        <span>{request.email}</span>
-                      </div>
-                      <div className="text-sm text-slate-400 flex items-center gap-2">
-                        <Phone className="w-3.5 h-3.5 text-slate-500" />
-                        <span>{request.phone ? formatPhoneForDisplay(request.phone) : 'Not set'}</span>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="text-sm text-slate-300 flex items-center gap-2">
-                      <Calendar className="w-3.5 h-3.5 text-slate-500" />
-                      <span>{formatDateTime(request.requestedAt)}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="pr-6">
-                    <div className="flex items-center justify-end gap-2">
-                      <Button
-                        size="sm"
-                        className="bg-emerald-600 hover:bg-emerald-700"
-                        onClick={() => handleApproveRequest(request)}
-                        disabled={isRefreshing}
-                      >
-                        <CheckCircle2 className="w-4 h-4 mr-1" />
-                        Approve
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => handleRejectRequest(request)}
-                        disabled={isRefreshing}
-                      >
-                        <XCircle className="w-4 h-4 mr-1" />
-                        Reject
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-        </div>
-      </Card>
-
-      <Card className={sectionCardClass}>
-        <div className={sectionHeaderClass}>
-          <h2 className="text-base font-semibold text-white flex items-center gap-2">
-            <UserCog className="w-4 h-4 text-cyan-200" />
-            Active Technician Accounts
-            <Badge variant="secondary" className="border border-cyan-300/20 bg-cyan-300/10 text-cyan-100">
-              {filteredAccounts.length}
+          <div className="flex items-start justify-between gap-3 border-b border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0))] px-6 py-5">
+            <div className="space-y-2">
+              <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">
+                {activeTab === 'active' ? 'Account Board' : activeTab === 'pending' ? 'Approval Queue' : 'Rejected Queue'}
+              </div>
+              <div className="text-sm text-slate-200">
+                {activeTab === 'active'
+                  ? 'All active and inactive technician accounts with edit, reset, and access controls.'
+                  : activeTab === 'pending'
+                    ? 'Pending technician signups waiting for approval or rejection.'
+                    : 'Rejected technician signup requests with recorded reasons.'}
+              </div>
+            </div>
+            <Badge variant="outline" className="rounded-full border-white/10 bg-white/[0.04] px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-slate-300">
+              {activeTab === 'active' ? filteredAccounts.length : activeTab === 'pending' ? filteredPendingRequests.length : filteredRejectedRequests.length} visible
             </Badge>
-          </h2>
-        </div>
-        <div className="overflow-hidden rounded-[20px] border border-white/8 bg-black/10">
-        <div className="flex items-start justify-between gap-3 border-b border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0))] px-6 py-5">
-          <div className="space-y-2">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Account Board</div>
-            <div className="text-sm text-slate-200">Live technician accounts with contact identity and activation state.</div>
           </div>
-          <Badge variant="outline" className="rounded-full border-white/10 bg-white/[0.04] px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-slate-300">
-            {filteredAccounts.length} visible
-          </Badge>
-        </div>
-        <Table>
-          <TableHeader className="sticky top-0 z-10 border-b border-white/10 bg-[linear-gradient(180deg,rgba(11,25,42,0.98),rgba(10,20,35,0.92))] backdrop-blur-xl">
-            <TableRow className="border-white/0 hover:bg-transparent">
-              <TableHead className="pl-6 w-[220px] text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Account</TableHead>
-              <TableHead className="w-[260px] text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Contact</TableHead>
-              <TableHead className="w-[110px] text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Status</TableHead>
-              <TableHead className="w-[220px] text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Last Updated</TableHead>
-              <TableHead className="text-right pr-6 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredAccounts.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={5} className="h-40 text-center text-sm text-slate-400">
-                  {hasSearchQuery ? 'No technician accounts match your search.' : 'No technician accounts available yet.'}
-                </TableCell>
+          <Table>
+            <TableHeader className="sticky top-0 z-10 border-b border-white/10 bg-[linear-gradient(180deg,rgba(11,25,42,0.98),rgba(10,20,35,0.92))] backdrop-blur-xl">
+              <TableRow className="border-white/0 hover:bg-transparent">
+                <TableHead className="pl-6 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Name</TableHead>
+                <TableHead className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Email</TableHead>
+                <TableHead className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Phone</TableHead>
+                <TableHead className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Account Status</TableHead>
+                <TableHead className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Signup Date</TableHead>
+                <TableHead className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Last Login</TableHead>
+                <TableHead className="pr-6 text-right text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Actions</TableHead>
               </TableRow>
-            ) : (
-              filteredAccounts.map((account) => (
-                <TableRow key={account.id} className="border-white/6 hover:bg-white/[0.045]">
-                  <TableCell className="pl-6">
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-full bg-cyan-300/12 text-cyan-100 flex items-center justify-center">
-                        <UserCog className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <p className="font-semibold text-white">{account.name}</p>
-                        <p className="text-xs text-slate-500 font-mono">{account.id}</p>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="space-y-1">
-                      <div className="text-sm text-slate-200 flex items-center gap-2">
-                        <Mail className="w-3.5 h-3.5 text-slate-500" />
-                        <span>{account.email}</span>
-                      </div>
-                      <div className="text-sm text-slate-400 flex items-center gap-2">
-                        <Phone className="w-3.5 h-3.5 text-slate-500" />
-                        <span>{account.phone ? formatPhoneForDisplay(account.phone) : 'Not set'}</span>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    {account.isActive ? (
-                      <Badge className="border border-emerald-300/20 bg-emerald-300/12 text-emerald-100 hover:bg-emerald-300/12">Active</Badge>
-                    ) : (
-                      <Badge variant="outline" className="border-white/10 bg-white/[0.03] text-slate-400">Inactive</Badge>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <div className="text-sm text-slate-300 flex items-center gap-2">
-                      <Calendar className="w-3.5 h-3.5 text-slate-500" />
-                      <span>{formatDateTime(account.updatedAt)}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="pr-6">
-                    <div className="flex items-center justify-end gap-2">
-                      <Button variant="outline" size="sm" onClick={() => openEditDialog(account)} className="border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]">
-                        <Pencil className="w-4 h-4 mr-1" />
-                        Edit
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant={account.isActive ? 'destructive' : 'default'}
-                        onClick={() => handleToggleActive(account)}
-                        className={!account.isActive ? 'bg-emerald-600 hover:bg-emerald-700' : undefined}
-                        disabled={isRefreshing}
-                      >
-                        {account.isActive ? <ShieldOff className="w-4 h-4 mr-1" /> : <ShieldCheck className="w-4 h-4 mr-1" />}
-                        {account.isActive ? 'Deactivate' : 'Activate'}
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {activeTab === 'active' ? (
+                filteredAccounts.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="h-40 text-center text-sm text-slate-400">
+                      {hasSearchQuery ? 'No technician accounts match your search.' : 'No technician accounts available yet.'}
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredAccounts.map((account) => (
+                    <TableRow key={account.id} className="border-white/6 hover:bg-white/[0.045]">
+                      <TableCell className="pl-6">
+                        <div>
+                          <p className="font-semibold text-white">{account.name}</p>
+                          <p className="text-xs text-slate-500 font-mono">{account.id}</p>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-slate-200">{account.email}</TableCell>
+                      <TableCell className="text-slate-400">{account.phone ? formatPhoneForDisplay(account.phone) : 'Not set'}</TableCell>
+                      <TableCell>
+                        {account.isActive ? (
+                          <Badge className="border border-emerald-300/20 bg-emerald-300/12 text-emerald-100 hover:bg-emerald-300/12">Active</Badge>
+                        ) : (
+                          <Badge variant="outline" className="border-white/10 bg-white/[0.03] text-slate-400">Inactive</Badge>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-slate-300">{formatDateTime(account.createdAt)}</TableCell>
+                      <TableCell className="text-slate-400">{account.lastLoginAt ? formatDateTime(account.lastLoginAt) : 'No login recorded'}</TableCell>
+                      <TableCell className="pr-6">
+                        <div className="flex items-center justify-end gap-2">
+                          <Button variant="outline" size="sm" onClick={() => openEditDialog(account)} className="border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]">
+                            <Pencil className="w-4 h-4 mr-1" />
+                            Edit
+                          </Button>
+                          <Button variant="outline" size="sm" onClick={() => handleSendResetLink({ email: account.email, name: account.name })} className="border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]">
+                            <Send className="w-4 h-4 mr-1" />
+                            Reset Link
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant={account.isActive ? 'destructive' : 'default'}
+                            onClick={() => handleToggleActive(account)}
+                            className={!account.isActive ? 'bg-emerald-600 hover:bg-emerald-700' : undefined}
+                            disabled={isRefreshing}
+                          >
+                            {account.isActive ? <ShieldOff className="w-4 h-4 mr-1" /> : <ShieldCheck className="w-4 h-4 mr-1" />}
+                            {account.isActive ? 'Deactivate' : 'Activate'}
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )
+              ) : activeTab === 'pending' ? (
+                filteredPendingRequests.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="h-28 text-center text-sm text-slate-400">
+                      {hasSearchQuery ? 'No pending signup requests match your search.' : 'No pending signup requests.'}
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredPendingRequests.map((request) => (
+                    <TableRow key={request.id} className="border-white/6 hover:bg-white/[0.045]">
+                      <TableCell className="pl-6">
+                        <div>
+                          <p className="font-semibold text-white">{request.name}</p>
+                          <p className="text-xs text-slate-500 font-mono">{request.id}</p>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-slate-200">{request.email}</TableCell>
+                      <TableCell className="text-slate-400">{request.phone ? formatPhoneForDisplay(request.phone) : 'Not set'}</TableCell>
+                      <TableCell><Badge className="border border-amber-300/20 bg-amber-300/12 text-amber-100 hover:bg-amber-300/12">Pending Approval</Badge></TableCell>
+                      <TableCell className="text-slate-300">{formatDateTime(request.requestedAt)}</TableCell>
+                      <TableCell className="text-slate-400">Not invited yet</TableCell>
+                      <TableCell className="pr-6">
+                        <div className="flex items-center justify-end gap-2">
+                          <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700" onClick={() => handleApproveRequest(request)} disabled={isRefreshing}>
+                            <CheckCircle2 className="w-4 h-4 mr-1" />
+                            Approve
+                          </Button>
+                          <Button size="sm" variant="destructive" onClick={() => handleRejectRequest(request)} disabled={isRefreshing}>
+                            <Ban className="w-4 h-4 mr-1" />
+                            Reject
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )
+              ) : (
+                filteredRejectedRequests.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="h-28 text-center text-sm text-slate-400">
+                      {hasSearchQuery ? 'No rejected requests match your search.' : 'No rejected signup requests.'}
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredRejectedRequests.map((request) => (
+                    <TableRow key={request.id} className="border-white/6 hover:bg-white/[0.045]">
+                      <TableCell className="pl-6">
+                        <div>
+                          <p className="font-semibold text-white">{request.name}</p>
+                          <p className="text-xs text-slate-500 font-mono">{request.id}</p>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-slate-200">{request.email}</TableCell>
+                      <TableCell className="text-slate-400">{request.phone ? formatPhoneForDisplay(request.phone) : 'Not set'}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="border-rose-300/20 bg-rose-300/10 text-rose-100">Rejected</Badge>
+                      </TableCell>
+                      <TableCell className="text-slate-300">{formatDateTime(request.requestedAt)}</TableCell>
+                      <TableCell className="text-slate-400">{request.rejectionReason || 'No reason recorded'}</TableCell>
+                      <TableCell className="pr-6 text-right text-sm text-slate-400">
+                        Rejected {formatDateTime(request.updatedAt)}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )
+              )}
+            </TableBody>
+          </Table>
         </div>
       </Card>
 
@@ -775,7 +791,7 @@ export default function TechnicianAccountsPage() {
         <DialogContent className="sm:max-w-lg border-white/10 bg-[linear-gradient(180deg,rgba(9,24,39,0.98),rgba(6,17,29,0.98))] text-slate-100">
           <DialogHeader>
             <DialogTitle className="text-white">Edit Technician Account</DialogTitle>
-            <DialogDescription className="text-slate-300">Update profile details or set a new password for this account.</DialogDescription>
+            <DialogDescription className="text-slate-300">Update profile details for this account.</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-2">
@@ -809,19 +825,6 @@ export default function TechnicianAccountsPage() {
                 className="border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500"
               />
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="tech-account-password" className="text-slate-200">New Password (optional)</Label>
-              <Input
-                id="tech-account-password"
-                type="password"
-                placeholder="Leave blank to keep current password"
-                value={form.password}
-                onChange={(event) => setForm((prev) => ({ ...prev, password: event.target.value }))}
-                className="border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500"
-              />
-            </div>
-
             {formError && (
               <p className="text-sm text-rose-300">{formError}</p>
             )}
@@ -832,6 +835,33 @@ export default function TechnicianAccountsPage() {
             <Button onClick={handleSaveEdit} disabled={isSaving} className="bg-[#2F8E92] hover:bg-[#27797d]">
               <Power className="w-4 h-4 mr-1" />
               {isSaving ? 'Saving...' : 'Save Changes'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
+        <DialogContent className="sm:max-w-lg border-white/10 bg-[linear-gradient(180deg,rgba(9,24,39,0.98),rgba(6,17,29,0.98))] text-slate-100">
+          <DialogHeader>
+            <DialogTitle className="text-white">Reject Signup Request</DialogTitle>
+            <DialogDescription className="text-slate-300">
+              Add an optional rejection reason for {selectedPendingRequest?.name}. It will be stored with the rejected request.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2 py-2">
+            <Label htmlFor="rejection-reason" className="text-slate-200">Rejection Reason (optional)</Label>
+            <Textarea
+              id="rejection-reason"
+              value={rejectionReason}
+              onChange={(event) => setRejectionReason(event.target.value)}
+              placeholder="Explain why the signup was rejected."
+              className="min-h-[120px] border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" className="border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]" onClick={() => setRejectDialogOpen(false)}>Cancel</Button>
+            <Button variant="destructive" onClick={handleConfirmRejectRequest}>
+              Confirm Rejection
             </Button>
           </DialogFooter>
         </DialogContent>

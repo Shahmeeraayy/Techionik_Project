@@ -41,7 +41,7 @@ const navItems = [
   { path: '/admin/approvals', label: 'Invoice Approvals', icon: FileCheck },
   { path: '/admin/invoices', label: 'Invoice History', icon: ScrollText },
   { path: '/admin/technicians', label: 'Technicians', icon: Users },
-  { path: '/admin/technician-accounts', label: 'Tech Accounts', icon: UserCog },
+  { path: '/admin/accounts', label: 'Tech Accounts', icon: UserCog },
   { path: '/admin/locations', label: 'Locations', icon: Building2 },
   { path: '/admin/services', label: 'Services', icon: Wrench },
   { path: '/admin/reports', label: 'Reports', icon: BarChart3 },
@@ -109,7 +109,7 @@ function Sidebar({
               >
                 <Icon className={cn('w-5 h-5 transition-colors', isActive ? 'text-primary dark:text-cyan-300' : 'text-muted-foreground group-hover:text-foreground dark:text-slate-500 dark:group-hover:text-slate-200')} />
                 <span className="flex-1">{item.label}</span>
-                {item.path === '/admin/technician-accounts' && pendingPasswordResetCount > 0 ? (
+                {item.path === '/admin/accounts' && pendingPasswordResetCount > 0 ? (
                   <span className="rounded-full bg-rose-100 px-2 py-0.5 text-xs font-semibold text-rose-700">
                     {pendingPasswordResetCount}
                   </span>

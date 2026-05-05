@@ -1601,7 +1601,7 @@ export default function TechniciansPage() {
                                                                 </DropdownMenuItem>
                                                             ) : null}
                                                             <DropdownMenuSeparator />
-                                                            <DropdownMenuItem onClick={() => navigate('/admin/technician-accounts')}>
+                                                            <DropdownMenuItem onClick={() => navigate('/admin/accounts')}>
                                                                 Open Technician Accounts
                                                             </DropdownMenuItem>
                                                         </DropdownMenuContent>
@@ -1671,7 +1671,7 @@ export default function TechniciansPage() {
                                             <Button
                                                 variant="outline"
                                                 size="sm"
-                                                onClick={() => navigate('/admin/technician-accounts')}
+                                                onClick={() => navigate('/admin/accounts')}
                                                 className="border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
                                             >
                                                 Technician Accounts

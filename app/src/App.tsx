@@ -150,6 +150,7 @@ function App() {
                     <Route path="locations" element={<DealershipsPage />} />
                     <Route path="technicians" element={<TechniciansPage />} />
                     <Route path="technician-accounts" element={<TechnicianAccountsPage />} />
+                    <Route path="accounts" element={<TechnicianAccountsPage />} />
                     <Route path="dealerships" element={<DealershipsPage />} />
                     <Route path="services" element={<ServicesPage />} />
                     <Route path="reports" element={<ReportsPage />} />
