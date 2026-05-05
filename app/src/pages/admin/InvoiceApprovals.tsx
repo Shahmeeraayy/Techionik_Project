@@ -17,6 +17,8 @@ import {
     Pencil,
     X,
     Sparkles,
+    Clock3,
+    MapPin,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { exportArrayData, selectColumnsForExport, type ExportFormat } from '@/lib/export';
@@ -69,13 +71,14 @@ import {
 
 const INVOICE_APPROVAL_EXPORT_COLUMNS = [
     'JobCode',
-    'Dealership',
+    'Location',
     'Technician',
     'Service',
-    'Vehicle',
-    'CompletedAt',
+    'SubmittedDate',
+    'TimeInQueue',
     'EstimatedTotal',
     'InvoiceState',
+    'BlockingReasons',
 ];
 
 const displayFontStyle: CSSProperties = {
@@ -128,6 +131,8 @@ type ServiceCatalogOption = {
     default_price: number;
 };
 
+type QueueTab = 'approval' | 'blocked';
+
 const toNumber = (value: string | number | null | undefined): number => {
     if (typeof value === 'number') return Number.isFinite(value) ? value : 0;
     if (typeof value === 'string') {
@@ -149,7 +154,51 @@ const formatTaxCodeLabel = (taxCode: string, taxRate: number) => {
     return `${normalizedCode} (${percentage})`;
 };
 
+const getApprovalLocationLabel = (
+    invoice: Pick<BackendPendingInvoiceApproval, 'bill_to' | 'ship_to' | 'dealership_name'>,
+) => {
+    const preferred = invoice.bill_to?.city || invoice.ship_to?.city || '';
+    const trimmed = preferred.trim();
+    return trimmed || invoice.dealership_name;
+};
+
+const getBlockedLocationLabel = (
+    invoice: Pick<BackendPendingInvoiceApprovalIssue, 'dealership_name'>,
+) => invoice.dealership_name;
+
+const toLocalDateValue = (value?: string | null) => {
+    if (!value) return '';
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) return '';
+    const year = parsed.getFullYear();
+    const month = String(parsed.getMonth() + 1).padStart(2, '0');
+    const day = String(parsed.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};
+
+const formatQueueDuration = (value?: string | null) => {
+    if (!value) return 'N/A';
+    const started = new Date(value).getTime();
+    if (Number.isNaN(started)) return 'N/A';
+    const diffMs = Date.now() - started;
+    const diffMinutes = Math.max(0, Math.floor(diffMs / 60000));
+    if (diffMinutes < 60) return `${diffMinutes}m`;
+    const hours = Math.floor(diffMinutes / 60);
+    const minutes = diffMinutes % 60;
+    if (hours < 24) return minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`;
+    const days = Math.floor(hours / 24);
+    const remainingHours = hours % 24;
+    return remainingHours > 0 ? `${days}d ${remainingHours}h` : `${days}d`;
+};
+
 function StatusBadge({ status }: { status: string }) {
+    if (status === 'blocked') {
+        return (
+            <Badge variant="outline" className="rounded-full border-red-300/20 bg-red-300/12 text-red-100 backdrop-blur-sm">
+                Blocked
+            </Badge>
+        );
+    }
     if (status === 'creating') {
         return (
             <Badge variant="outline" className="animate-pulse rounded-full border-cyan-300/20 bg-cyan-300/12 text-cyan-100 backdrop-blur-sm">
@@ -169,9 +218,12 @@ export default function InvoiceApprovalsPage() {
     const [invoices, setInvoices] = useState<PendingInvoice[]>([]);
     const [loading, setLoading] = useState(true);
     const [blockedInvoices, setBlockedInvoices] = useState<BlockedInvoice[]>([]);
+    const [queueTab, setQueueTab] = useState<QueueTab>('approval');
     const [searchQuery, setSearchQuery] = useState('');
     const [filterDealership, setFilterDealership] = useState<string>('all');
     const [filterTechnician, setFilterTechnician] = useState<string>('all');
+    const [filterFromDate, setFilterFromDate] = useState('');
+    const [filterToDate, setFilterToDate] = useState('');
     const [selectedInvoice, setSelectedInvoice] = useState<ApprovalDrawerInvoice | null>(null);
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
@@ -231,38 +283,62 @@ export default function InvoiceApprovalsPage() {
 
     const dealershipOptions = useMemo(() => Array.from(
         new Set(
-            invoices
-                .map((invoice) => invoice.dealership_name.trim())
+            [...invoices.map((invoice) => getApprovalLocationLabel(invoice)), ...blockedInvoices.map((invoice) => getBlockedLocationLabel(invoice))]
+                .map((location) => location.trim())
                 .filter((dealership) => dealership.length > 0),
         ),
     ).sort((a, b) => a.localeCompare(b)), [invoices]);
 
     const technicianOptions = useMemo(() => Array.from(
         new Set(
-            invoices
+            [...invoices, ...blockedInvoices]
                 .map((invoice) => (invoice.technician_name || '').trim())
                 .filter((technician) => technician.length > 0),
         ),
-    ).sort((a, b) => a.localeCompare(b)), [invoices]);
+    ).sort((a, b) => a.localeCompare(b)), [blockedInvoices, invoices]);
+
+    const matchesCommonFilters = (
+        query: string,
+        location: string,
+        technicianName: string,
+        submittedAt?: string | null,
+    ) => {
+        const matchesLocation =
+            filterDealership === 'all' ||
+            location.toLowerCase() === filterDealership.toLowerCase();
+        const matchesTechnician =
+            filterTechnician === 'all' ||
+            technicianName.toLowerCase() === filterTechnician.toLowerCase();
+        const localDate = toLocalDateValue(submittedAt);
+        const matchesFromDate = !filterFromDate || (localDate !== '' && localDate >= filterFromDate);
+        const matchesToDate = !filterToDate || (localDate !== '' && localDate <= filterToDate);
+        return matchesLocation && matchesTechnician && matchesFromDate && matchesToDate;
+    };
 
     const filteredInvoices = useMemo(() => invoices.filter((invoice) => {
         const query = searchQuery.toLowerCase().trim();
         const technicianName = invoice.technician_name || '';
+        const locationLabel = getApprovalLocationLabel(invoice);
         const matchesSearch =
             query.length === 0 ||
             invoice.job_code.toLowerCase().includes(query) ||
-            invoice.dealership_name.toLowerCase().includes(query) ||
+            locationLabel.toLowerCase().includes(query) ||
             technicianName.toLowerCase().includes(query) ||
-            invoice.vehicle_summary.toLowerCase().includes(query) ||
             invoice.service_summary.toLowerCase().includes(query);
-        const matchesDealership =
-            filterDealership === 'all' ||
-            invoice.dealership_name.toLowerCase() === filterDealership.toLowerCase();
-        const matchesTechnician =
-            filterTechnician === 'all' ||
-            technicianName.toLowerCase() === filterTechnician.toLowerCase();
-        return matchesSearch && matchesDealership && matchesTechnician;
-    }), [filterDealership, filterTechnician, invoices, searchQuery]);
+        return matchesSearch && matchesCommonFilters(query, locationLabel, technicianName, invoice.completed_at);
+    }), [filterDealership, filterFromDate, filterTechnician, filterToDate, invoices, searchQuery]);
+
+    const filteredBlockedInvoices = useMemo(() => blockedInvoices.filter((invoice) => {
+        const query = searchQuery.toLowerCase().trim();
+        const technicianName = invoice.technician_name || '';
+        const locationLabel = getBlockedLocationLabel(invoice);
+        const matchesSearch =
+            query.length === 0 ||
+            invoice.job_code.toLowerCase().includes(query) ||
+            locationLabel.toLowerCase().includes(query) ||
+            technicianName.toLowerCase().includes(query);
+        return matchesSearch && matchesCommonFilters(query, locationLabel, technicianName, invoice.completed_at);
+    }), [blockedInvoices, filterDealership, filterFromDate, filterTechnician, filterToDate, searchQuery]);
 
     const visibleEstimatedTotal = useMemo(
         () => filteredInvoices.reduce((sum, invoice) => sum + toNumber(invoice.estimated_total), 0),
@@ -278,6 +354,8 @@ export default function InvoiceApprovalsPage() {
         setSearchQuery('');
         setFilterDealership('all');
         setFilterTechnician('all');
+        setFilterFromDate('');
+        setFilterToDate('');
     };
 
     const serviceNameOptions = useMemo(() => {
@@ -509,20 +587,35 @@ export default function InvoiceApprovalsPage() {
         }
     };
 
-    const getInvoiceApprovalExportRows = () => filteredInvoices.map((invoice) => ({
-        JobCode: invoice.job_code,
-        Dealership: invoice.dealership_name,
-        Technician: invoice.technician_name || '',
-        Service: invoice.service_summary,
-        Vehicle: invoice.vehicle_summary,
-        CompletedAt: invoice.completed_at || '',
-        EstimatedTotal: toNumber(invoice.estimated_total),
-        InvoiceState: invoice.invoice_state,
-    }));
+    const getInvoiceApprovalExportRows = () => (
+        queueTab === 'approval'
+            ? filteredInvoices.map((invoice) => ({
+                JobCode: invoice.job_code,
+                Location: getApprovalLocationLabel(invoice),
+                Technician: invoice.technician_name || '',
+                Service: invoice.service_summary,
+                SubmittedDate: invoice.completed_at ? new Date(invoice.completed_at).toLocaleString() : '',
+                TimeInQueue: formatQueueDuration(invoice.completed_at),
+                EstimatedTotal: toNumber(invoice.estimated_total),
+                InvoiceState: invoice.invoice_state,
+                BlockingReasons: '',
+            }))
+            : filteredBlockedInvoices.map((invoice) => ({
+                JobCode: invoice.job_code,
+                Location: getBlockedLocationLabel(invoice),
+                Technician: invoice.technician_name || '',
+                Service: invoice.service_summary,
+                SubmittedDate: invoice.completed_at ? new Date(invoice.completed_at).toLocaleString() : '',
+                TimeInQueue: formatQueueDuration(invoice.completed_at),
+                EstimatedTotal: 0,
+                InvoiceState: 'blocked',
+                BlockingReasons: invoice.blocking_reasons.join(' | '),
+            }))
+    );
 
     const handleExport = (selectedColumns: string[], format: ExportFormat = 'csv') => {
         const exportData = selectColumnsForExport(getInvoiceApprovalExportRows(), selectedColumns);
-        exportArrayData(exportData, 'invoice_approvals_export', format);
+        exportArrayData(exportData, queueTab === 'approval' ? 'invoice_approval_queue_export' : 'invoice_blocked_queue_export', format);
     };
 
     const summaryCards = [
@@ -616,7 +709,7 @@ export default function InvoiceApprovalsPage() {
                             onClick={() => setExportModalOpen(true)}
                         >
                             <Download className="h-4 w-4 text-slate-300" />
-                            Export CSV
+                            Export CSV / Excel
                         </Button>
                     </div>
                 </div>
@@ -625,8 +718,8 @@ export default function InvoiceApprovalsPage() {
             <ColumnExportDialog
                 open={exportModalOpen}
                 onOpenChange={setExportModalOpen}
-                title="Export Invoice Approvals"
-                description="Select the pending-approval columns you want in your CSV."
+                title={queueTab === 'approval' ? 'Export Approval Queue' : 'Export Blocked Queue'}
+                description="Select the invoice approval columns you want in your export."
                 availableColumns={INVOICE_APPROVAL_EXPORT_COLUMNS}
                 onConfirm={handleExport}
             />
@@ -664,7 +757,7 @@ export default function InvoiceApprovalsPage() {
                         <div className="relative min-w-0 flex-1">
                             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
                             <Input
-                                placeholder="Search by Job Code, Dealership, Technician, or service..."
+                                placeholder="Search by job ID, location, technician name, or service..."
                                 className="h-11 rounded-2xl border-white/10 bg-white/[0.04] pl-9 text-white placeholder:text-slate-500 shadow-none focus-visible:border-cyan-300/35 focus-visible:ring-cyan-300/15"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -679,10 +772,10 @@ export default function InvoiceApprovalsPage() {
                                     </div>
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="all">All dealerships</SelectItem>
-                                    {dealershipOptions.map((dealership) => (
-                                        <SelectItem key={dealership} value={dealership}>
-                                            {dealership}
+                                    <SelectItem value="all">All locations</SelectItem>
+                                    {dealershipOptions.map((location) => (
+                                        <SelectItem key={location} value={location}>
+                                            {location}
                                         </SelectItem>
                                     ))}
                                 </SelectContent>
@@ -701,12 +794,30 @@ export default function InvoiceApprovalsPage() {
                                             {technician}
                                         </SelectItem>
                                     ))}
-                                </SelectContent>
+                                    </SelectContent>
                             </Select>
+                            <div className="relative">
+                                <Input
+                                    type="date"
+                                    value={filterFromDate}
+                                    onChange={(event) => setFilterFromDate(event.target.value)}
+                                    className="h-11 w-[164px] rounded-2xl border-white/10 bg-white/[0.04] text-white shadow-none"
+                                    aria-label="Filter approvals from date"
+                                />
+                            </div>
+                            <div className="relative">
+                                <Input
+                                    type="date"
+                                    value={filterToDate}
+                                    onChange={(event) => setFilterToDate(event.target.value)}
+                                    className="h-11 w-[164px] rounded-2xl border-white/10 bg-white/[0.04] text-white shadow-none"
+                                    aria-label="Filter approvals to date"
+                                />
+                            </div>
                             <Badge variant="outline" className="h-11 rounded-2xl border-amber-300/20 bg-amber-300/10 px-4 text-amber-100">
-                                All pending ({filteredInvoices.length})
+                                {queueTab === 'approval' ? `Approval queue (${filteredInvoices.length})` : `Blocked queue (${filteredBlockedInvoices.length})`}
                             </Badge>
-                            {(searchQuery || filterDealership !== 'all' || filterTechnician !== 'all') ? (
+                            {(searchQuery || filterDealership !== 'all' || filterTechnician !== 'all' || filterFromDate || filterToDate) ? (
                                 <Button
                                     variant="ghost"
                                     size="sm"
@@ -718,6 +829,36 @@ export default function InvoiceApprovalsPage() {
                                 </Button>
                             ) : null}
                         </div>
+                    </div>
+                    <div className="mt-4 flex flex-wrap items-center gap-2">
+                        <Button
+                            type="button"
+                            variant={queueTab === 'approval' ? 'secondary' : 'outline'}
+                            className={cn(
+                                'h-10 rounded-2xl px-4',
+                                queueTab === 'approval' ? 'border-cyan-300/25 bg-cyan-500/10 text-cyan-100' : 'border-white/10 bg-white/[0.03] text-slate-200 hover:bg-white/[0.08]',
+                            )}
+                            onClick={() => setQueueTab('approval')}
+                        >
+                            Approval Queue
+                            <Badge variant="outline" className="ml-2 h-6 rounded-full border-current/15 bg-white/10 px-2 text-[10px] text-current">
+                                {filteredInvoices.length}
+                            </Badge>
+                        </Button>
+                        <Button
+                            type="button"
+                            variant={queueTab === 'blocked' ? 'secondary' : 'outline'}
+                            className={cn(
+                                'h-10 rounded-2xl px-4',
+                                queueTab === 'blocked' ? 'border-red-300/25 bg-red-500/10 text-red-100' : 'border-white/10 bg-white/[0.03] text-slate-200 hover:bg-white/[0.08]',
+                            )}
+                            onClick={() => setQueueTab('blocked')}
+                        >
+                            Blocked Queue
+                            <Badge variant="outline" className="ml-2 h-6 rounded-full border-current/15 bg-white/10 px-2 text-[10px] text-current">
+                                {filteredBlockedInvoices.length}
+                            </Badge>
+                        </Button>
                     </div>
                 </div>
             </div>
@@ -740,7 +881,7 @@ export default function InvoiceApprovalsPage() {
                             <Skeleton key={i} className="h-16 w-full rounded-[20px] bg-white/[0.05]" />
                         ))}
                     </div>
-                ) : filteredInvoices.length === 0 ? (
+                ) : queueTab === 'approval' && filteredInvoices.length === 0 ? (
                     <div className="flex flex-1 flex-col items-center justify-center px-6 py-20 text-center">
                         <div className="mb-5 flex h-20 w-20 items-center justify-center rounded-[28px] border border-white/10 bg-white/[0.04] shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
                             <CheckCircle2 className="h-8 w-8 text-cyan-200/80" />
@@ -749,7 +890,7 @@ export default function InvoiceApprovalsPage() {
                             No approvals in this view
                         </h3>
                         <p className="mt-3 max-w-md text-sm leading-6 text-slate-400" style={bodyFontStyle}>
-                            {blockedInvoices.length > 0
+                            {filteredBlockedInvoices.length > 0
                                 ? 'Completed jobs exist, but they are blocked from invoice approval until required data is fixed.'
                                 : 'Adjust your filters or refresh the queue to widen the current approval scope.'}
                         </p>
@@ -761,23 +902,46 @@ export default function InvoiceApprovalsPage() {
                             Reset filters
                         </Button>
                     </div>
+                ) : queueTab === 'blocked' && filteredBlockedInvoices.length === 0 ? (
+                    <div className="flex flex-1 flex-col items-center justify-center px-6 py-20 text-center">
+                        <div className="mb-5 flex h-20 w-20 items-center justify-center rounded-[28px] border border-white/10 bg-white/[0.04] shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
+                            <ShieldAlert className="h-8 w-8 text-red-200/80" />
+                        </div>
+                        <h3 className="text-2xl font-semibold tracking-[-0.03em] text-white" style={displayFontStyle}>
+                            No blocked invoices in this view
+                        </h3>
+                        <p className="mt-3 max-w-md text-sm leading-6 text-slate-400" style={bodyFontStyle}>
+                            The blocked queue is clear for the current filters.
+                        </p>
+                        <Button
+                            variant="outline"
+                            className="mt-6 h-11 rounded-2xl border-white/10 bg-white/[0.03] px-5 text-slate-100 hover:bg-white/[0.08] hover:text-white"
+                            onClick={clearFilters}
+                        >
+                            Reset filters
+                        </Button>
+                    </div>
                 ) : (
                     <div className="overflow-auto">
-                        <Table className="min-w-[1120px]">
+                        <Table className={cn('min-w-[1120px]', queueTab === 'blocked' && 'min-w-[1240px]')}>
                             <TableHeader className="sticky top-0 z-10 border-b border-white/10 bg-[linear-gradient(180deg,rgba(11,25,42,0.98),rgba(10,20,35,0.92))] backdrop-blur-xl">
                                 <TableRow className="border-white/0 hover:bg-transparent">
-                                    <TableHead className="w-[210px] pl-6 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Job Code</TableHead>
-                                    <TableHead className="w-[220px] text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Dealership</TableHead>
-                                    <TableHead className="w-[210px] text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Technician</TableHead>
-                                    <TableHead className="w-[170px] text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Completed At</TableHead>
-                                    <TableHead className="w-[260px] text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Service</TableHead>
-                                    <TableHead className="w-[150px] text-right text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Est. Total</TableHead>
-                                    <TableHead className="w-[160px] text-center text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Status</TableHead>
+                                    <TableHead className="w-[170px] pl-6 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Job ID</TableHead>
+                                    <TableHead className="w-[190px] text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Location</TableHead>
+                                    <TableHead className="w-[190px] text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Technician</TableHead>
+                                    <TableHead className="w-[240px] text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Service Type</TableHead>
+                                    <TableHead className="w-[150px] text-right text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Total Value</TableHead>
+                                    <TableHead className="w-[170px] text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Submitted Date</TableHead>
+                                    <TableHead className="w-[130px] text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Time in Queue</TableHead>
+                                    {queueTab === 'blocked' ? (
+                                        <TableHead className="w-[280px] text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Blocking Reasons</TableHead>
+                                    ) : null}
+                                    <TableHead className="w-[150px] text-center text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Status</TableHead>
                                     <TableHead className="w-[110px] pr-6 text-right text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Action</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {filteredInvoices.map((inv, index) => (
+                                {(queueTab === 'approval' ? filteredInvoices : filteredBlockedInvoices).map((inv, index) => (
                                     <TableRow
                                         key={inv.job_id}
                                         className={cn(
@@ -791,13 +955,13 @@ export default function InvoiceApprovalsPage() {
                                                 <div className="text-base font-semibold tracking-[-0.03em] text-white transition-colors group-hover:text-cyan-100" style={displayFontStyle}>
                                                     {inv.job_code}
                                                 </div>
-                                                <div className="text-xs text-slate-500">Invoice queue record</div>
+                                                <div className="text-xs text-slate-500">{inv.job_id}</div>
                                             </div>
                                         </TableCell>
                                         <TableCell className="py-4">
                                             <div className="space-y-1">
-                                                <OverflowText text={inv.dealership_name} className="max-w-[14rem] text-sm font-medium text-slate-100" />
-                                                <div className="text-xs text-slate-500">{inv.vehicle_summary}</div>
+                                                <OverflowText text={queueTab === 'approval' ? getApprovalLocationLabel(inv as PendingInvoice) : getBlockedLocationLabel(inv as BlockedInvoice)} className="max-w-[14rem] text-sm font-medium text-slate-100" />
+                                                <div className="text-xs text-slate-500">{inv.dealership_name}</div>
                                             </div>
                                         </TableCell>
                                         <TableCell className="py-4">
@@ -812,23 +976,42 @@ export default function InvoiceApprovalsPage() {
                                             </div>
                                         </TableCell>
                                         <TableCell className="py-4">
-                                            <div className="space-y-1">
-                                                <div className="text-sm font-medium text-slate-100">
-                                                    {inv.completed_at ? new Date(inv.completed_at).toLocaleDateString() : '-'}
-                                                </div>
-                                                <div className="text-[11px] uppercase tracking-[0.18em] text-slate-600">Completion date</div>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell className="py-4">
                                             <OverflowText text={inv.service_summary} className="max-w-[240px] text-sm text-slate-300" />
                                         </TableCell>
                                         <TableCell className="py-4 text-right">
                                             <div className="text-lg font-semibold tracking-[-0.04em] text-amber-100" style={displayFontStyle}>
-                                                ${toNumber(inv.estimated_total).toFixed(2)}
+                                                ${queueTab === 'approval' ? toNumber((inv as PendingInvoice).estimated_total).toFixed(2) : '0.00'}
                                             </div>
                                         </TableCell>
+                                        <TableCell className="py-4">
+                                            <div className="space-y-1">
+                                                <div className="text-sm font-medium text-slate-100">
+                                                    {inv.completed_at ? new Date(inv.completed_at).toLocaleDateString() : '-'}
+                                                </div>
+                                                <div className="text-[11px] text-slate-500">
+                                                    {inv.completed_at ? new Date(inv.completed_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : 'No timestamp'}
+                                                </div>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell className="py-4">
+                                            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-2 text-xs font-medium text-slate-300">
+                                                <Clock3 className="h-3.5 w-3.5 text-cyan-200" />
+                                                {formatQueueDuration(inv.completed_at)}
+                                            </div>
+                                        </TableCell>
+                                        {queueTab === 'blocked' ? (
+                                            <TableCell className="py-4">
+                                                <div className="flex flex-wrap gap-2">
+                                                    {(inv as BlockedInvoice).blocking_reasons.map((reason) => (
+                                                        <Badge key={`${inv.job_id}-${reason}`} variant="outline" className="rounded-full border-red-300/20 bg-red-300/10 text-red-100">
+                                                            {reason}
+                                                        </Badge>
+                                                    ))}
+                                                </div>
+                                            </TableCell>
+                                        ) : null}
                                         <TableCell className="py-4 text-center">
-                                            <StatusBadge status={inv.invoice_state} />
+                                            <StatusBadge status={queueTab === 'approval' ? (inv as PendingInvoice).invoice_state : 'blocked'} />
                                         </TableCell>
                                         <TableCell className="py-4 pr-6 text-right">
                                             <Button
@@ -847,7 +1030,7 @@ export default function InvoiceApprovalsPage() {
                 )}
             </div>
 
-            {blockedInvoices.length > 0 && (
+            {false && blockedInvoices.length > 0 && (
                 <section className="relative overflow-hidden rounded-[32px] border border-amber-300/20 bg-[linear-gradient(135deg,rgba(48,28,14,0.94),rgba(24,16,11,0.98))] px-5 py-5 shadow-[0_28px_90px_rgba(0,0,0,0.28)]">
                     <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-300/70 to-transparent" />
                     <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
@@ -966,8 +1149,16 @@ export default function InvoiceApprovalsPage() {
                                     )}
                                     <section className="grid grid-cols-2 gap-4 rounded-xl border border-cyan-500/15 bg-slate-900/80 p-4 shadow-[0_0_0_1px_rgba(34,211,238,0.04)]">
                                         <div>
+                                            <h4 className="mb-1 text-xs font-semibold uppercase tracking-wider text-slate-400">Location</h4>
+                                            <div className="font-medium text-slate-100">{getApprovalLocationLabel(selectedInvoice)}</div>
+                                        </div>
+                                        <div>
                                             <h4 className="mb-1 text-xs font-semibold uppercase tracking-wider text-slate-400">Dealership</h4>
                                             <OverflowText text={selectedInvoice.dealership_name} className="max-w-[15rem] font-medium text-slate-100" />
+                                        </div>
+                                        <div>
+                                            <h4 className="mb-1 text-xs font-semibold uppercase tracking-wider text-slate-400">Service</h4>
+                                            <OverflowText text={selectedInvoice.service_summary} className="max-w-[15rem] font-medium text-slate-100" />
                                         </div>
                                         <div>
                                             <h4 className="mb-1 text-xs font-semibold uppercase tracking-wider text-slate-400">Vehicle</h4>
@@ -978,9 +1169,9 @@ export default function InvoiceApprovalsPage() {
                                             <div className="font-medium text-slate-100">{selectedInvoice.technician_name || 'Unassigned'}</div>
                                         </div>
                                         <div>
-                                            <h4 className="mb-1 text-xs font-semibold uppercase tracking-wider text-slate-400">Completed</h4>
+                                            <h4 className="mb-1 text-xs font-semibold uppercase tracking-wider text-slate-400">Completion Timestamp</h4>
                                             <div className="font-medium text-slate-100">
-                                                {selectedInvoice.completed_at ? new Date(selectedInvoice.completed_at).toLocaleDateString() : '-'}
+                                                {selectedInvoice.completed_at ? new Date(selectedInvoice.completed_at).toLocaleString() : '-'}
                                             </div>
                                         </div>
                                     </section>

@@ -143,6 +143,7 @@ function App() {
                     <Route path="jobs" element={<JobsPage />} />
                     <Route path="jobs/:jobId" element={<JobDetailPage />} />
                     <Route path="invoice-approvals" element={<InvoiceApprovalsPage />} />
+                    <Route path="approvals" element={<InvoiceApprovalsPage />} />
                     <Route path="intake" element={<IntakeQueuePage />} />
                     <Route path="invoice-history" element={<InvoiceHistoryPage />} />
                     <Route path="technicians" element={<TechniciansPage />} />
