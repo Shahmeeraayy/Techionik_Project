@@ -20,6 +20,7 @@ import {
   Eye,
   UserCog,
   Inbox,
+  MessageSquareText,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -40,6 +41,7 @@ const navItems = [
   { path: '/admin/intake', label: 'Intake Queue', icon: Inbox },
   { path: '/admin/approvals', label: 'Invoice Approvals', icon: FileCheck },
   { path: '/admin/invoices', label: 'Invoice History', icon: ScrollText },
+  { path: '/admin/chat', label: 'Platform Chat', icon: MessageSquareText },
   { path: '/admin/technicians', label: 'Technicians', icon: Users },
   { path: '/admin/accounts', label: 'Technician Accounts', icon: UserCog },
   { path: '/admin/locations', label: 'Locations', icon: Building2 },
@@ -52,10 +54,12 @@ function Sidebar({
   isOpen,
   onClose,
   pendingPasswordResetCount,
+  unreadChatCount,
 }: {
   isOpen: boolean;
   onClose: () => void;
   pendingPasswordResetCount: number;
+  unreadChatCount: number;
 }) {
   const location = useLocation();
   const activeItem = location.pathname;
@@ -109,6 +113,11 @@ function Sidebar({
               >
                 <Icon className={cn('w-5 h-5 transition-colors', isActive ? 'text-primary dark:text-cyan-300' : 'text-muted-foreground group-hover:text-foreground dark:text-slate-500 dark:group-hover:text-slate-200')} />
                 <span className="flex-1">{item.label}</span>
+                {item.path === '/admin/chat' && unreadChatCount > 0 ? (
+                  <span className="rounded-full bg-cyan-100 px-2 py-0.5 text-xs font-semibold text-cyan-700">
+                    {unreadChatCount}
+                  </span>
+                ) : null}
                 {item.path === '/admin/accounts' && pendingPasswordResetCount > 0 ? (
                   <span className="rounded-full bg-rose-100 px-2 py-0.5 text-xs font-semibold text-rose-700">
                     {pendingPasswordResetCount}
@@ -172,7 +181,42 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
   const { pendingTechnicianPasswordResetRequests } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [lastUpdated, setLastUpdated] = useState('Updated 2 min ago');
+  const [unreadChatCount, setUnreadChatCount] = useState(0);
   const hideHeaderRefreshControls = location.pathname.startsWith('/admin');
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const syncUnreadCount = () => {
+      const raw = window.sessionStorage.getItem('sm_admin_chat_unread_count');
+      const next = raw ? Number(raw) : 0;
+      setUnreadChatCount(Number.isFinite(next) ? next : 0);
+    };
+
+    syncUnreadCount();
+
+    const handleUnreadEvent = (event: Event) => {
+      const customEvent = event as CustomEvent<{ count?: number }>;
+      const next = customEvent.detail?.count;
+      if (typeof next === 'number' && Number.isFinite(next)) {
+        setUnreadChatCount(next);
+        return;
+      }
+      syncUnreadCount();
+    };
+
+    const handleFocus = () => syncUnreadCount();
+
+    window.addEventListener('sm-chat-unread-count', handleUnreadEvent as EventListener);
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      window.removeEventListener('sm-chat-unread-count', handleUnreadEvent as EventListener);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, []);
 
   const headerTitle = (() => {
     const pathname = location.pathname;
@@ -201,6 +245,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
           isOpen={sidebarOpen}
           onClose={() => setSidebarOpen(false)}
           pendingPasswordResetCount={pendingTechnicianPasswordResetRequests.length}
+          unreadChatCount={unreadChatCount}
         />
 
         {/* Main content */}

@@ -21,6 +21,7 @@ import ServicesPage from '@/pages/admin/Services';
 import ReportsPage from '@/pages/admin/Reports';
 import SettingsPage from '@/pages/admin/Settings';
 import InvoiceHistoryPage from '@/pages/admin/InvoiceHistory';
+import PlatformChatPage from '@/pages/admin/PlatformChat';
 
 // Admin Preview Mode
 import TechnicianPreview from '@/pages/admin/TechnicianPreview';
@@ -147,6 +148,7 @@ function App() {
                     <Route path="intake" element={<IntakeQueuePage />} />
                     <Route path="invoices" element={<InvoiceHistoryPage />} />
                     <Route path="invoice-history" element={<InvoiceHistoryPage />} />
+                    <Route path="chat" element={<PlatformChatPage />} />
                     <Route path="locations" element={<DealershipsPage />} />
                     <Route path="technicians" element={<TechniciansPage />} />
                     <Route path="technician-accounts" element={<TechnicianAccountsPage />} />
