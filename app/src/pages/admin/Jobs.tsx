@@ -250,10 +250,10 @@ type JobsMetricTone = 'cyan' | 'violet' | 'blue';
 
 function jobsMetricCardClasses(tone: JobsMetricTone): string {
     return cn(
-        'group relative overflow-hidden rounded-[26px] border px-5 py-5 text-left transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_24px_60px_rgba(0,0,0,0.28)]',
-        tone === 'cyan' && 'border-cyan-400/20 bg-[linear-gradient(180deg,rgba(8,31,45,0.96),rgba(7,23,34,0.96))] hover:border-cyan-300/35',
-        tone === 'violet' && 'border-violet-400/20 bg-[linear-gradient(180deg,rgba(28,20,49,0.96),rgba(19,17,34,0.96))] hover:border-violet-300/35',
-        tone === 'blue' && 'border-blue-400/20 bg-[linear-gradient(180deg,rgba(10,26,50,0.96),rgba(8,20,36,0.96))] hover:border-blue-300/35',
+        'group relative overflow-hidden rounded-[22px] border px-5 py-5 text-left transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(0,0,0,0.22)]',
+        tone === 'cyan' && 'border-cyan-400/14 bg-[linear-gradient(180deg,rgba(9,28,41,0.98),rgba(8,21,32,0.98))] hover:border-cyan-300/24',
+        tone === 'violet' && 'border-violet-400/14 bg-[linear-gradient(180deg,rgba(25,21,40,0.98),rgba(20,18,32,0.98))] hover:border-violet-300/24',
+        tone === 'blue' && 'border-blue-400/14 bg-[linear-gradient(180deg,rgba(10,24,43,0.98),rgba(8,19,33,0.98))] hover:border-blue-300/24',
     );
 }
 
@@ -264,9 +264,9 @@ function jobsMetricTopLineClasses(tone: JobsMetricTone): string {
 }
 
 function jobsMetricIconClasses(tone: JobsMetricTone): string {
-    if (tone === 'violet') return 'border border-violet-300/20 bg-violet-300/12 text-violet-100';
-    if (tone === 'blue') return 'border border-blue-300/20 bg-blue-300/12 text-blue-100';
-    return 'border border-cyan-300/20 bg-cyan-300/12 text-cyan-100';
+    if (tone === 'violet') return 'border border-violet-300/14 bg-violet-300/10 text-violet-100';
+    if (tone === 'blue') return 'border border-blue-300/14 bg-blue-300/10 text-blue-100';
+    return 'border border-cyan-300/14 bg-cyan-300/10 text-cyan-100';
 }
 
 const getStoredAdminJobsSnapshot = () => {
@@ -2126,17 +2126,17 @@ export default function JobsPage() {
     return (
         <div className="relative flex h-full flex-col space-y-6" style={bodyFontStyle}>
 
-            <section className="relative overflow-hidden rounded-[30px] border border-white/10 bg-[linear-gradient(135deg,rgba(7,25,42,0.98),rgba(6,18,32,0.98))] shadow-[0_28px_100px_rgba(0,0,0,0.32)]">
-                <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] bg-[size:120px_120px] opacity-20" />
+            <section className="relative overflow-hidden rounded-[26px] border border-white/8 bg-[linear-gradient(135deg,rgba(8,24,39,0.985),rgba(7,18,31,0.985))] shadow-[0_22px_72px_rgba(0,0,0,0.28)]">
+                <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:120px_120px] opacity-16" />
                 <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-200/70 to-transparent" />
-                <div className="pointer-events-none absolute left-8 top-8 h-40 w-40 rounded-full bg-cyan-400/10 blur-3xl" />
-                <div className="pointer-events-none absolute right-10 top-10 h-44 w-44 rounded-full bg-blue-400/8 blur-3xl" />
-                <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(47,142,146,0.14),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(245,158,11,0.12),transparent_26%)]" />
+                <div className="pointer-events-none absolute left-8 top-8 h-36 w-36 rounded-full bg-cyan-400/8 blur-3xl" />
+                <div className="pointer-events-none absolute right-10 top-10 h-40 w-40 rounded-full bg-blue-400/6 blur-3xl" />
+                <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(47,142,146,0.10),transparent_26%),radial-gradient(circle_at_bottom_right,rgba(59,130,246,0.08),transparent_22%)]" />
 
-                <div className="relative flex flex-col gap-6 p-6 xl:flex-row xl:items-end xl:justify-between xl:p-8">
+                <div className="relative flex flex-col gap-6 p-6 xl:flex-row xl:items-end xl:justify-between xl:p-7">
                     <div>
                         <div
-                            className="inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-100"
+                            className="inline-flex items-center gap-2 rounded-full border border-cyan-300/14 bg-cyan-300/[0.08] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.26em] text-cyan-100"
                             style={displayFontStyle}
                         >
                             <Sparkles className="h-3.5 w-3.5" />
@@ -2144,7 +2144,7 @@ export default function JobsPage() {
                         </div>
 
                         <h1
-                            className="mt-5 text-[2.35rem] font-semibold leading-none tracking-[-0.06em] text-white md:text-[2.8rem]"
+                            className="mt-4 text-[2.1rem] font-semibold leading-[0.94] tracking-[-0.05em] text-white md:text-[2.45rem]"
                             style={displayFontStyle}
                         >
                             Jobs
@@ -2153,21 +2153,21 @@ export default function JobsPage() {
                             </span>
                         </h1>
 
-                        <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-300 sm:text-[15px]">
+                        <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-300 sm:text-[14px]">
                             Monitor dispatch, review queue movement, and take action on technician assignment and admin confirmation from one cleaner control view.
                         </p>
 
-                        <div className="mt-6 flex flex-wrap items-center gap-3">
-                            <Badge variant="outline" className="h-8 rounded-full border-cyan-300/20 bg-cyan-300/10 px-4 text-cyan-100">
+                        <div className="mt-5 flex flex-wrap items-center gap-2.5">
+                            <Badge variant="outline" className="h-8 rounded-full border-cyan-300/14 bg-cyan-300/[0.08] px-4 text-cyan-100">
                                 <History className="mr-1.5 h-3.5 w-3.5" />
                                 Live sync every 30s
                             </Badge>
-                            <Badge variant="outline" className="h-8 rounded-full border-emerald-300/20 bg-emerald-300/10 px-4 text-emerald-100">
+                            <Badge variant="outline" className="h-8 rounded-full border-emerald-300/14 bg-emerald-300/[0.08] px-4 text-emerald-100">
                                 <Activity className="mr-1.5 h-3.5 w-3.5" />
                                 Backend live
                             </Badge>
                             {selectedRows.size > 0 ? (
-                                <Badge variant="outline" className="h-8 rounded-full border-white/10 bg-white/[0.04] px-4 text-white">
+                                <Badge variant="outline" className="h-8 rounded-full border-white/8 bg-white/[0.04] px-4 text-white">
                                     <Users className="mr-1.5 h-3.5 w-3.5" />
                                     {selectedRows.size} selected
                                 </Badge>
@@ -2179,7 +2179,7 @@ export default function JobsPage() {
                         <Button
                             variant="outline"
                             size="sm"
-                            className="h-11 gap-2 rounded-2xl border-white/10 bg-white/[0.04] px-4 text-slate-100 shadow-none hover:bg-white/[0.08] hover:text-white"
+                            className="h-10 gap-2 rounded-2xl border-white/8 bg-white/[0.04] px-4 text-slate-100 shadow-none hover:bg-white/[0.08] hover:text-white"
                             onClick={() => refreshJobs({ showErrorToast: true, background: false })}
                             disabled={loading}
                         >
@@ -2188,7 +2188,7 @@ export default function JobsPage() {
                         </Button>
                         <Button
                             size="sm"
-                            className="h-11 gap-2 rounded-2xl bg-gradient-to-r from-[#0ca6a6] to-[#149fcb] px-4 text-white shadow-[0_18px_44px_rgba(12,166,166,0.22)] hover:from-[#11b5b5] hover:to-[#1aaedf]"
+                            className="h-10 gap-2 rounded-2xl bg-gradient-to-r from-[#0ca6a6] to-[#149fcb] px-4 text-white shadow-[0_14px_32px_rgba(12,166,166,0.2)] hover:from-[#11b5b5] hover:to-[#1aaedf]"
                             onClick={() => setCreateJobOpen(true)}
                         >
                             <Plus className="h-4 w-4" />
@@ -2197,7 +2197,7 @@ export default function JobsPage() {
                         <Button
                             variant="outline"
                             size="sm"
-                            className="h-11 gap-2 rounded-2xl border-white/10 bg-white/[0.04] px-4 text-slate-100 shadow-none hover:bg-white/[0.08] hover:text-white"
+                            className="h-10 gap-2 rounded-2xl border-white/8 bg-white/[0.04] px-4 text-slate-100 shadow-none hover:bg-white/[0.08] hover:text-white"
                             onClick={() => setExportModalOpen(true)}
                         >
                             <Download className="h-4 w-4 text-slate-300" />
@@ -2449,7 +2449,7 @@ export default function JobsPage() {
                 onConfirm={handleExport}
             />
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
                 {summaryCards.map((card) => {
                     const Icon = card.icon;
                     return (
@@ -2460,21 +2460,21 @@ export default function JobsPage() {
                             <div className={cn('pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent to-transparent', jobsMetricTopLineClasses(card.tone))} />
                             <div className="flex items-start justify-between gap-3">
                                 <div className="min-w-0">
-                                    <div className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
+                                    <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
                                         {card.label}
                                     </div>
-                                    <div className="mt-3 text-[2.65rem] font-semibold leading-none tracking-[-0.06em] text-white" style={displayFontStyle}>
+                                    <div className="mt-3 text-[2.4rem] font-semibold leading-none tracking-[-0.05em] text-white" style={displayFontStyle}>
                                         {card.value}
                                     </div>
-                                    <p className="mt-4 text-sm leading-6 text-slate-400">{card.description}</p>
+                                    <p className="mt-3 text-sm leading-6 text-slate-400">{card.description}</p>
                                 </div>
-                                <div className={cn('flex h-11 w-11 items-center justify-center rounded-2xl', jobsMetricIconClasses(card.tone))}>
-                                    <Icon className="h-5 w-5" />
+                                <div className={cn('flex h-10 w-10 items-center justify-center rounded-2xl', jobsMetricIconClasses(card.tone))}>
+                                    <Icon className="h-4.5 w-4.5" />
                                 </div>
                             </div>
-                            <div className="mt-6 flex items-center justify-between">
+                            <div className="mt-5 flex items-center justify-between border-t border-white/6 pt-4">
                                 <span className="text-sm font-medium text-slate-300">Operational view</span>
-                                <ArrowRight className="h-4 w-4 text-white/45 transition-transform duration-200 group-hover:translate-x-1 group-hover:text-white" />
+                                <ArrowRight className="h-4 w-4 text-white/40 transition-transform duration-200 group-hover:translate-x-1 group-hover:text-white" />
                             </div>
                         </div>
                     );
@@ -2482,17 +2482,17 @@ export default function JobsPage() {
             </div>
 
             {/* 2. Filter Bar (Enterprise Grade) */}
-            <div className="relative overflow-hidden rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(8,23,38,0.98),rgba(7,18,31,0.98))] shadow-[0_28px_90px_rgba(0,0,0,0.3)]">
+            <div className="relative overflow-hidden rounded-[24px] border border-white/8 bg-[linear-gradient(180deg,rgba(9,22,38,0.985),rgba(7,18,30,0.985))] shadow-[0_20px_60px_rgba(0,0,0,0.24)]">
                 <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-200/60 to-transparent" />
-                <div className="absolute inset-x-0 top-0 h-14 bg-gradient-to-r from-[#2F8E92]/6 via-transparent to-blue-500/5 pointer-events-none" />
-                <div className="relative p-4 md:p-5 space-y-4">
+                <div className="absolute inset-x-0 top-0 h-12 bg-gradient-to-r from-[#2F8E92]/5 via-transparent to-blue-500/4 pointer-events-none" />
+                <div className="relative space-y-4 p-4 md:p-5">
                     <div className="flex flex-col lg:flex-row gap-4">
                     {/* Search */}
                     <div className="relative flex-1 min-w-[300px]">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                         <Input
                             placeholder="Search by job ID, dealership, technician name, or service type..."
-                            className="h-11 rounded-2xl border-white/10 bg-white/[0.04] pl-9 text-white placeholder:text-slate-500 transition-all shadow-none focus-visible:border-cyan-300/35 focus-visible:ring-cyan-300/15"
+                            className="h-10 rounded-2xl border-white/8 bg-white/[0.035] pl-9 text-white placeholder:text-slate-500 transition-all shadow-none focus-visible:border-cyan-300/30 focus-visible:ring-cyan-300/12"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                         />
@@ -2501,7 +2501,7 @@ export default function JobsPage() {
                     {/* Filters */}
                     <div className="flex items-center gap-2 overflow-x-auto pb-2 lg:pb-0">
                         <Select value={urgencyFilter} onValueChange={setUrgencyFilter}>
-                            <SelectTrigger className="h-11 w-[170px] rounded-2xl border-white/10 bg-white/[0.04] text-white shadow-none">
+                            <SelectTrigger className="h-10 w-[170px] rounded-2xl border-white/8 bg-white/[0.035] text-white shadow-none">
                                 <div className="flex items-center gap-2">
                                     <Clock className="w-3.5 h-3.5 text-slate-400" />
                                     <SelectValue placeholder="Urgency" />
@@ -2522,7 +2522,7 @@ export default function JobsPage() {
                                 type="date"
                                 value={dateFilter}
                                 onChange={(event) => setDateFilter(event.target.value)}
-                                className="h-11 w-[180px] rounded-2xl border-white/10 bg-white/[0.04] pl-9 text-white shadow-none"
+                                className="h-10 w-[180px] rounded-2xl border-white/8 bg-white/[0.035] pl-9 text-white shadow-none"
                                 aria-label="Filter by date"
                             />
                         </div>
@@ -2532,7 +2532,7 @@ export default function JobsPage() {
                                 variant="ghost"
                                 size="sm"
                                 onClick={clearFilters}
-                                className="h-11 rounded-2xl px-3 text-rose-200 hover:bg-rose-400/10 hover:text-rose-100"
+                                className="h-10 rounded-2xl px-3 text-rose-200 hover:bg-rose-400/10 hover:text-rose-100"
                             >
                                 <X className="w-4 h-4 mr-1" /> Clear
                             </Button>
@@ -2541,7 +2541,7 @@ export default function JobsPage() {
                 </div>
                     <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                         <div className="flex flex-wrap items-center gap-2">
-                            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs font-semibold text-slate-400 shadow-none">
+                            <div className="inline-flex items-center gap-2 rounded-full border border-white/8 bg-white/[0.03] px-3 py-1.5 text-xs font-semibold text-slate-400 shadow-none">
                                 <SlidersHorizontal className="h-3.5 w-3.5" />
                                 Queue Filters
                             </div>
@@ -2556,7 +2556,7 @@ export default function JobsPage() {
                                         size="sm"
                                         onClick={() => handleQuickFilterChipClick(filter.key)}
                                         className={cn(
-                                            'h-9 rounded-2xl border-white/10 bg-white/[0.03] px-3 text-slate-200 hover:bg-white/[0.08] shadow-none',
+                                            'h-9 rounded-2xl border-white/8 bg-white/[0.03] px-3 text-slate-200 hover:bg-white/[0.08] shadow-none',
                                             isActive && filter.activeClassName,
                                         )}
                                     >
@@ -2591,7 +2591,7 @@ export default function JobsPage() {
                                         }}
                                         className={cn(
                                             'h-9 rounded-2xl px-3 text-slate-200 shadow-none',
-                                            statusFilter === option.key ? 'bg-cyan-500/10 border-cyan-300/25 text-cyan-100' : 'border-white/10 bg-white/[0.03] hover:bg-white/[0.08]',
+                                            statusFilter === option.key ? 'bg-cyan-500/[0.12] border-cyan-300/25 text-cyan-100' : 'border-white/8 bg-white/[0.03] hover:bg-white/[0.08]',
                                         )}
                                     >
                                         {option.label}
@@ -2600,7 +2600,7 @@ export default function JobsPage() {
                             </div>
                             <div className="flex flex-wrap items-center gap-2 text-xs">
                                 <Select value={jobSortMode} onValueChange={(value) => handleSortModeChange(value as JobSortMode)}>
-                                    <SelectTrigger className="h-9 w-[180px] rounded-2xl border-white/10 bg-white/[0.04] text-white shadow-none">
+                                    <SelectTrigger className="h-9 w-[180px] rounded-2xl border-white/8 bg-white/[0.035] text-white shadow-none">
                                         <div className="flex items-center gap-2 text-sm">
                                             <TrendingUp className="w-3.5 h-3.5 text-slate-400" />
                                             <SelectValue placeholder="Sort by" />
@@ -2615,11 +2615,11 @@ export default function JobsPage() {
                                         <SelectItem value="job_id">Job ID</SelectItem>
                                     </SelectContent>
                                 </Select>
-                                <Badge variant="outline" className="h-8 rounded-full border-white/10 bg-white/[0.03] text-slate-400">
+                                <Badge variant="outline" className="h-8 rounded-full border-white/8 bg-white/[0.03] text-slate-400">
                                     {jobSortBadgeLabel}
                                 </Badge>
                                 {activeFilterCount > 0 ? (
-                                    <Badge variant="outline" className="h-8 rounded-full border-white/10 bg-white/[0.03] text-white">
+                                    <Badge variant="outline" className="h-8 rounded-full border-white/8 bg-white/[0.03] text-white">
                                         {activeFilterCount} active filter{activeFilterCount === 1 ? '' : 's'}
                                     </Badge>
                                 ) : null}
@@ -2630,18 +2630,18 @@ export default function JobsPage() {
             </div>
 
             {/* 3. Jobs Table */}
-            <div className="relative flex min-h-[620px] flex-1 flex-col overflow-hidden rounded-[32px] border border-white/10 bg-[linear-gradient(180deg,rgba(8,22,39,0.98),rgba(5,15,28,0.99))] shadow-[0_34px_110px_rgba(0,0,0,0.34)]">
+            <div className="relative flex min-h-[620px] flex-1 flex-col overflow-hidden rounded-[28px] border border-white/8 bg-[linear-gradient(180deg,rgba(8,22,38,0.985),rgba(6,15,27,0.99))] shadow-[0_24px_72px_rgba(0,0,0,0.28)]">
                 <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/70 to-transparent" />
-                <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(47,142,146,0.12),transparent_28%),radial-gradient(circle_at_bottom_left,rgba(59,130,246,0.08),transparent_26%)]" />
+                <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(47,142,146,0.10),transparent_26%),radial-gradient(circle_at_bottom_left,rgba(59,130,246,0.06),transparent_24%)]" />
 
-                <div className="relative flex flex-col gap-4 border-b border-white/10 px-5 py-5 lg:flex-row lg:items-start lg:justify-between">
+                <div className="relative flex flex-col gap-4 border-b border-white/8 px-5 py-5 lg:flex-row lg:items-start lg:justify-between">
                     <div className="space-y-3">
-                        <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">
+                        <div className="inline-flex items-center gap-2 rounded-full border border-white/8 bg-white/[0.03] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-400">
                             <Activity className="h-3.5 w-3.5 text-cyan-200" />
                             Dispatch Queue
                         </div>
                         <div className="space-y-2">
-                            <h2 className="text-[1.45rem] font-semibold tracking-[-0.04em] text-white" style={displayFontStyle}>
+                            <h2 className="text-[1.35rem] font-semibold tracking-[-0.03em] text-white" style={displayFontStyle}>
                                 Jobs at operational depth
                             </h2>
                             <p className="max-w-2xl text-sm leading-6 text-slate-400" style={bodyFontStyle}>
@@ -2650,16 +2650,16 @@ export default function JobsPage() {
                         </div>
                     </div>
                     <div className="flex flex-wrap items-center gap-2 text-xs">
-                        <Badge variant="outline" className="h-9 rounded-full border-white/10 bg-white/[0.04] px-3 text-slate-300">
+                        <Badge variant="outline" className="h-9 rounded-full border-white/8 bg-white/[0.035] px-3 text-slate-300">
                             <ClipboardList className="mr-1.5 h-3.5 w-3.5 text-cyan-200" />
                             {pagination.total} total jobs
                         </Badge>
-                        <Badge variant="outline" className="h-9 rounded-full border-white/10 bg-white/[0.04] px-3 text-slate-300">
+                        <Badge variant="outline" className="h-9 rounded-full border-white/8 bg-white/[0.035] px-3 text-slate-300">
                             <ShieldCheck className="mr-1.5 h-3.5 w-3.5 text-emerald-200" />
                             Queue synced
                         </Badge>
                         {selectedRows.size > 0 ? (
-                            <Badge variant="outline" className="h-9 rounded-full border-cyan-300/20 bg-cyan-300/10 px-3 text-cyan-100">
+                            <Badge variant="outline" className="h-9 rounded-full border-cyan-300/16 bg-cyan-300/[0.08] px-3 text-cyan-100">
                                 <Users className="mr-1.5 h-3.5 w-3.5" />
                                 {selectedRows.size} selected
                             </Badge>
