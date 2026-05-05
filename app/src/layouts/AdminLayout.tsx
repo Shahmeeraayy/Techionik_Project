@@ -78,24 +78,24 @@ function Sidebar({
       {/* Sidebar */}
       <aside
         className={cn(
-          'admin-sidebar fixed lg:sticky top-0 left-0 z-50 h-screen w-64 bg-background border-r border-border',
+          'admin-sidebar fixed lg:sticky top-0 left-0 z-50 h-screen w-72 bg-background border-r border-border',
           'flex flex-col transition-transform duration-300 ease-in-out',
           isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         )}
       >
         {/* Logo */}
-        <div className="flex items-center gap-3 px-6 py-5 border-b border-border flex-shrink-0">
-          <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center shadow-sm">
+        <div className="flex items-center gap-3 px-6 py-6 border-b border-border flex-shrink-0">
+          <div className="w-10 h-10 rounded-2xl bg-[linear-gradient(135deg,#2F8E92,#63d7db)] flex items-center justify-center shadow-[0_18px_40px_rgba(47,142,146,0.24)]">
             <Shield className="w-5 h-5 text-primary-foreground" />
           </div>
           <div>
-            <h1 className="font-semibold text-foreground leading-tight">SM2 electronics</h1>
-            <p className="text-xs text-muted-foreground font-medium">Operational Center</p>
+            <h1 className="font-semibold text-foreground leading-tight tracking-[-0.03em]">SM2 electronics</h1>
+            <p className="text-xs text-muted-foreground font-medium uppercase tracking-[0.22em]">Operational Center</p>
           </div>
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 overflow-y-auto py-6 px-3 space-y-1">
+        <nav className="flex-1 overflow-y-auto py-6 px-4 space-y-1.5">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeItem === item.path || (item.path !== '/admin' && activeItem.startsWith(item.path));
@@ -106,16 +106,23 @@ function Sidebar({
                 to={item.path}
                 onClick={onClose}
                 className={cn(
-                  'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 w-full text-left group',
+                  'flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-medium transition-all duration-200 w-full text-left group',
                   isActive
-                    ? 'bg-muted text-primary shadow-sm dark:bg-slate-800/75 dark:text-cyan-300 dark:shadow-[inset_0_0_0_1px_rgba(45,212,191,0.18)]'
-                    : 'text-muted-foreground hover:bg-muted hover:text-foreground dark:text-slate-400 dark:hover:bg-slate-800/55 dark:hover:text-slate-100'
+                    ? 'bg-muted text-primary shadow-sm dark:bg-[linear-gradient(135deg,rgba(18,43,60,0.92),rgba(15,31,53,0.92))] dark:text-cyan-200 dark:shadow-[0_18px_34px_rgba(6,11,24,0.24),inset_0_0_0_1px_rgba(99,219,228,0.18)]'
+                    : 'text-muted-foreground hover:bg-muted hover:text-foreground dark:text-slate-400 dark:hover:bg-white/[0.05] dark:hover:text-slate-100'
                 )}
               >
-                <Icon className={cn('w-5 h-5 transition-colors', isActive ? 'text-primary dark:text-cyan-300' : 'text-muted-foreground group-hover:text-foreground dark:text-slate-500 dark:group-hover:text-slate-200')} />
+                <div className={cn(
+                  'flex h-9 w-9 items-center justify-center rounded-xl border transition-all duration-200',
+                  isActive
+                    ? 'border-cyan-300/20 bg-cyan-300/10 text-cyan-200'
+                    : 'border-white/6 bg-white/[0.03] text-slate-500 group-hover:border-white/10 group-hover:bg-white/[0.06] group-hover:text-slate-200',
+                )}>
+                  <Icon className="w-4.5 h-4.5" />
+                </div>
                 <span className="flex-1">{item.label}</span>
                 {item.path === '/admin/chat' && unreadChatCount > 0 ? (
-                  <span className="rounded-full bg-cyan-100 px-2 py-0.5 text-xs font-semibold text-cyan-700">
+                  <span className="rounded-full bg-cyan-100 px-2 py-0.5 text-xs font-semibold text-cyan-700 shadow-[0_10px_20px_rgba(34,211,238,0.18)]">
                     {unreadChatCount}
                   </span>
                 ) : null}
@@ -142,8 +149,8 @@ function UserMenu() {
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className="flex items-center gap-3 p-1.5 pl-3 pr-2 rounded-full border border-border bg-background hover:bg-muted transition-all shadow-sm">
-            <Avatar className="w-8 h-8 border border-border">
+          <button className="flex items-center gap-3 p-1.5 pl-3 pr-2 rounded-full border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] transition-all shadow-[0_14px_34px_rgba(2,6,23,0.18)] backdrop-blur-sm">
+            <Avatar className="w-8 h-8 border border-white/10">
               <AvatarImage src={user?.avatar} alt={user?.name} />
               <AvatarFallback className="bg-muted text-primary text-xs font-bold">
                 {user?.name?.split(' ').map(n => n[0]).join('').substring(0, 2)}
@@ -265,10 +272,11 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
         />
 
         {/* Main content */}
-        <main className="flex-1 min-w-0 flex flex-col min-h-screen">
+        <main className="flex-1 min-w-0 flex flex-col min-h-screen lg:p-4">
           {/* Top Header - Sticky */}
-          <header className="admin-topbar sticky top-0 z-30 bg-background/80 backdrop-blur-md border-b border-border px-4 sm:px-8 py-3 flex items-center justify-between shadow-sm">
-            <div className="flex items-center gap-4">
+          <div className="admin-page-frame flex min-h-screen flex-col overflow-hidden rounded-none lg:rounded-[32px]">
+          <header className="admin-topbar sticky top-0 z-30 bg-background/80 backdrop-blur-md border-b border-border px-5 sm:px-8 py-4 flex items-center justify-between shadow-sm">
+            <div className="flex items-center gap-4 min-w-0">
               <Button
                 variant="ghost"
                 size="icon"
@@ -279,14 +287,15 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
               </Button>
 
               <div className="flex flex-col">
-                <h1 className="text-xl font-bold text-foreground tracking-tight">{headerTitle}</h1>
+                <p className="hidden sm:block text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">Dispatch Workspace</p>
+                <h1 className="text-xl font-bold text-foreground tracking-[-0.04em]">{headerTitle}</h1>
               </div>
             </div>
 
             <div className="flex items-center gap-3 sm:gap-6">
               {!hideHeaderRefreshControls && (
                 <>
-                  <span className="hidden sm:block text-xs font-medium text-muted-foreground bg-muted px-3 py-1.5 rounded-full">
+                  <span className="hidden sm:block text-xs font-medium text-muted-foreground bg-white/[0.04] px-3 py-1.5 rounded-full border border-white/8">
                     {lastUpdated}
                   </span>
 
@@ -300,7 +309,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
                     <RefreshCw className="w-4 h-4" />
                   </Button>
 
-                  <div className="h-6 w-px bg-border hidden sm:block"></div>
+                  <div className="h-6 w-px bg-border/60 hidden sm:block"></div>
                 </>
               )}
 
@@ -310,6 +319,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
 
           <div className="admin-content flex-1 p-4 lg:p-8 overflow-y-auto">
             {children}
+          </div>
           </div>
         </main>
       </div>
