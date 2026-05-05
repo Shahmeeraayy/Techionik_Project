@@ -834,7 +834,7 @@ export default function InvoiceHistoryPage() {
                 <div className="relative flex items-center justify-between border-b border-white/10 px-5 py-4">
                     <div>
                         <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Invoice ledger</div>
-                        <div className="mt-1 text-sm text-slate-300">Searchable invoice records with lifecycle status, dates, and downloadable detail.</div>
+                        <div className="mt-1 text-sm text-slate-300">Searchable invoice records with lifecycle status, dates, downloadable detail, and row-level admin actions.</div>
                     </div>
                     <Badge variant="outline" className="h-9 rounded-full border-white/10 bg-white/[0.04] px-3 text-slate-300">
                         {filteredHistory.length} visible
@@ -843,25 +843,6 @@ export default function InvoiceHistoryPage() {
                 {loading ? (
                     <div className="p-5 space-y-3">
                         {[1, 2, 3, 4, 5].map(i => <Skeleton key={i} className="h-16 w-full rounded-[20px] bg-white/[0.05]" />)}
-                    </div>
-                ) : filteredHistory.length === 0 ? (
-                    <div className="flex flex-1 flex-col items-center justify-center px-6 py-24 text-center">
-                        <div className="mb-5 flex h-20 w-20 items-center justify-center rounded-[28px] border border-white/10 bg-white/[0.04] shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
-                            <FileText className="h-8 w-8 text-cyan-200/80" />
-                        </div>
-                        <h3 className="text-2xl font-semibold tracking-[-0.03em] text-white" style={displayFontStyle}>
-                            No invoices in this view
-                        </h3>
-                        <p className="mt-3 max-w-md text-sm leading-6 text-slate-400" style={bodyFontStyle}>
-                            Adjust the history filters or refresh the dataset to widen the visible invoice ledger.
-                        </p>
-                        <Button
-                            variant="outline"
-                            className="mt-6 h-11 rounded-2xl border-white/10 bg-white/[0.03] px-5 text-slate-100 hover:bg-white/[0.08] hover:text-white"
-                            onClick={clearFilters}
-                        >
-                            Reset filters
-                        </Button>
                     </div>
                 ) : (
                     <div className="overflow-auto">
@@ -880,7 +861,36 @@ export default function InvoiceHistoryPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {filteredHistory.map((inv, index) => {
+                                {filteredHistory.length === 0 ? (
+                                    <TableRow className="border-white/0 hover:bg-transparent">
+                                        <TableCell colSpan={9} className="px-6 py-16">
+                                            <div className="flex flex-col items-center justify-center text-center">
+                                                <div className="mb-5 flex h-20 w-20 items-center justify-center rounded-[28px] border border-white/10 bg-white/[0.04] shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
+                                                    <FileText className="h-8 w-8 text-cyan-200/80" />
+                                                </div>
+                                                <h3 className="text-2xl font-semibold tracking-[-0.03em] text-white" style={displayFontStyle}>
+                                                    No invoices in this view
+                                                </h3>
+                                                <p className="mt-3 max-w-md text-sm leading-6 text-slate-400" style={bodyFontStyle}>
+                                                    Adjust the history filters or refresh the dataset to widen the visible invoice ledger.
+                                                </p>
+                                                <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+                                                    <Badge variant="outline" className="border-white/10 bg-white/[0.03] px-3 py-1 text-slate-300">PDF download</Badge>
+                                                    <Badge variant="outline" className="border-white/10 bg-white/[0.03] px-3 py-1 text-slate-300">Send email</Badge>
+                                                    <Badge variant="outline" className="border-white/10 bg-white/[0.03] px-3 py-1 text-slate-300">Mark paid</Badge>
+                                                    <Badge variant="outline" className="border-white/10 bg-white/[0.03] px-3 py-1 text-slate-300">Void with reason</Badge>
+                                                </div>
+                                                <Button
+                                                    variant="outline"
+                                                    className="mt-6 h-11 rounded-2xl border-white/10 bg-white/[0.03] px-5 text-slate-100 hover:bg-white/[0.08] hover:text-white"
+                                                    onClick={clearFilters}
+                                                >
+                                                    Reset filters
+                                                </Button>
+                                            </div>
+                                        </TableCell>
+                                    </TableRow>
+                                ) : filteredHistory.map((inv, index) => {
                                     const displayStatus = resolveInvoiceDisplayStatus(inv);
                                     return (
                                         <TableRow
