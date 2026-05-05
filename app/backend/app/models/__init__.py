@@ -1,5 +1,6 @@
 from .admin_credential_settings import AdminCredentialSettings
 from .audit_log import AuditLog
+from .chat_message import ChatMessage
 from .dealership import Dealership
 from .invoice import Invoice, InvoiceLineItem
 from .invoice_approval_draft import InvoiceApprovalDraft

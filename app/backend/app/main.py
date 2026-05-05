@@ -7,6 +7,7 @@ import logging
 
 from .api import deps
 from .api.endpoints import (
+    admin_chat,
     admin_jobs,
     admin_dealerships,
     admin_email_change_requests,
@@ -19,6 +20,7 @@ from .api.endpoints import (
     invoices,
     signup_requests,
     technician_password_reset_requests,
+    technician_chat,
     technician_profile,
     technician_time_off,
 )
@@ -75,6 +77,7 @@ app.add_middleware(
 )
 
 app.include_router(admin_technicians.router)
+app.include_router(admin_chat.router)
 app.include_router(admin_jobs.router)
 app.include_router(admin_dealerships.router)
 app.include_router(admin_email_change_requests.router)
@@ -83,6 +86,7 @@ app.include_router(admin_services.router)
 app.include_router(admin_services.catalog_router)
 app.include_router(admin_settings.router)
 app.include_router(technician_profile.router)
+app.include_router(technician_chat.router)
 app.include_router(technician_time_off.router)
 app.include_router(auth.router)
 app.include_router(invoices.router)

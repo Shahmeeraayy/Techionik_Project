@@ -51,6 +51,11 @@ class Technician(Base):
         back_populates="technician",
         cascade="all, delete-orphan",
     )
+    chat_messages = relationship(
+        "ChatMessage",
+        back_populates="technician",
+        cascade="all, delete-orphan",
+    )
 
     __table_args__ = (
         CheckConstraint(

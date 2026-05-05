@@ -26,6 +26,7 @@ class TimeOffEntryType(str, Enum):
 
 class AuditEntityType(str, Enum):
     TECHNICIAN = "technician"
+    CHAT_MESSAGE = "chat_message"
     DEALERSHIP = "dealership"
     TECHNICIAN_ZONE = "technician_zone"
     TECHNICIAN_SKILL = "technician_skill"

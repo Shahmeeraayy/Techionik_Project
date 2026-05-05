@@ -9,14 +9,12 @@ import {
   Paperclip,
   Search,
   Send,
-  Users,
   Megaphone,
   X,
   Phone,
   Video,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -33,225 +31,130 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-
-type Contact = {
-  id: string;
-  name: string;
-  avatar?: string;
-  jobStatus: 'Available' | 'In Progress' | 'Offline' | 'Out of Office';
-  unreadCount: number;
-  preview: string;
-  lastMessageAt: string;
-  online: boolean;
-};
-
-type AttachmentItem = {
-  id: string;
-  name: string;
-  sizeLabel: string;
-  kind: 'image' | 'document';
-  previewUrl?: string;
-};
-
-type ChatMessage = {
-  id: string;
-  conversationId: string;
-  sender: 'admin' | 'technician' | 'broadcast';
-  text: string;
-  timestamp: string;
-  status: 'sent' | 'delivered' | 'read';
-  attachments?: AttachmentItem[];
-};
+import {
+  broadcastAdminChatMessage,
+  fetchAdminChatConversations,
+  fetchAdminChatMessages,
+  getStoredAdminToken,
+  markAdminChatConversationRead,
+  sendAdminChatMessage,
+  type BackendAdminChatConversation,
+  type BackendChatAttachment,
+  type BackendChatMessage,
+} from '@/lib/backend-api';
 
 const CHAT_UNREAD_STORAGE_KEY = 'sm_admin_chat_unread_count';
 
-const sampleContacts: Contact[] = [
-  {
-    id: 'tech-1',
-    name: 'John Doe',
-    jobStatus: 'In Progress',
-    unreadCount: 2,
-    preview: 'I reached the dealership and started diagnostics.',
-    lastMessageAt: '4:45 pm',
-    online: true,
-  },
-  {
-    id: 'tech-2',
-    name: 'Travis Barker',
-    jobStatus: 'Available',
-    unreadCount: 0,
-    preview: 'Ready for the next dispatch.',
-    lastMessageAt: '3:18 pm',
-    online: true,
-  },
-  {
-    id: 'tech-3',
-    name: 'Kate Rose',
-    jobStatus: 'Out of Office',
-    unreadCount: 1,
-    preview: 'Returning tomorrow at 8:00 AM.',
-    lastMessageAt: '1:22 pm',
-    online: false,
-  },
-];
-
-const sampleMessages: ChatMessage[] = [
-  {
-    id: 'm-1',
-    conversationId: 'tech-1',
-    sender: 'technician',
-    text: "I'm on site now and working through the no-start issue.",
-    timestamp: '10:37 am',
-    status: 'read',
-  },
-  {
-    id: 'm-2',
-    conversationId: 'tech-1',
-    sender: 'admin',
-    text: 'Copy that. Keep me posted if you need approval for extra service lines.',
-    timestamp: '10:41 am',
-    status: 'read',
-  },
-  {
-    id: 'm-3',
-    conversationId: 'tech-1',
-    sender: 'technician',
-    text: 'Here are the photos from the inspection bay.',
-    timestamp: '11:19 am',
-    status: 'read',
-    attachments: [
-      {
-        id: 'a-1',
-        name: 'bay-01.jpg',
-        sizeLabel: '1.2 MB',
-        kind: 'image',
-      },
-      {
-        id: 'a-2',
-        name: 'bay-02.jpg',
-        sizeLabel: '980 KB',
-        kind: 'image',
-      },
-      {
-        id: 'a-3',
-        name: 'intake.pdf',
-        sizeLabel: '340 KB',
-        kind: 'document',
-      },
-    ],
-  },
-  {
-    id: 'm-4',
-    conversationId: 'tech-1',
-    sender: 'admin',
-    text: 'Looks good. Please complete the service notes once the battery test is finished.',
-    timestamp: '12:25 pm',
-    status: 'delivered',
-  },
-];
-
-function formatMessageStatus(status: ChatMessage['status']) {
-  if (status === 'read') {
+function formatMessageStatus(message: BackendChatMessage) {
+  if (message.read_at) {
     return <CheckCheck className="h-3.5 w-3.5 text-cyan-300" />;
   }
-  if (status === 'delivered') {
+  if (message.delivered_at) {
     return <CheckCheck className="h-3.5 w-3.5 text-slate-400" />;
   }
   return <Check className="h-3.5 w-3.5 text-slate-500" />;
 }
 
-function getAttachmentIcon(kind: AttachmentItem['kind']) {
-  return kind === 'image' ? ImageIcon : File;
+function getAttachmentIcon(mimeType: string) {
+  return mimeType.startsWith('image/') ? ImageIcon : File;
+}
+
+async function fileToAttachment(file: File): Promise<BackendChatAttachment> {
+  const dataUrl = await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ''));
+    reader.onerror = () => reject(new Error(`Failed to read ${file.name}`));
+    reader.readAsDataURL(file);
+  });
+
+  return {
+    id: `${file.name}-${file.size}-${Date.now()}`,
+    name: file.name,
+    mime_type: file.type || 'application/octet-stream',
+    size_bytes: file.size,
+    data_url: dataUrl,
+  };
+}
+
+function AttachmentCard({ attachment }: { attachment: BackendChatAttachment }) {
+  const AttachmentIcon = getAttachmentIcon(attachment.mime_type);
+  const sizeLabel = attachment.size_bytes >= 1024 * 1024
+    ? `${(attachment.size_bytes / (1024 * 1024)).toFixed(1)} MB`
+    : `${Math.max(1, Math.round(attachment.size_bytes / 1024))} KB`;
+
+  return (
+    <a
+      href={attachment.data_url}
+      target="_blank"
+      rel="noreferrer"
+      className="overflow-hidden rounded-2xl border border-black/10 bg-white/95"
+    >
+      {attachment.mime_type.startsWith('image/') ? (
+        <div className="aspect-[1/0.9] overflow-hidden bg-slate-950">
+          <img src={attachment.data_url} alt={attachment.name} className="h-full w-full object-cover" />
+        </div>
+      ) : (
+        <div className="flex aspect-[1/0.9] items-center justify-center bg-slate-100 text-slate-700">
+          <AttachmentIcon className="h-7 w-7" />
+        </div>
+      )}
+      <div className="space-y-1 px-3 py-2">
+        <p className="truncate text-xs font-medium text-slate-800">{attachment.name}</p>
+        <p className="text-[11px] text-slate-500">{sizeLabel}</p>
+      </div>
+    </a>
+  );
 }
 
 export default function PlatformChatPage() {
-  const { technicianAccounts } = useAuth();
-  const [contacts, setContacts] = useState<Contact[]>([]);
-  const [messages, setMessages] = useState<ChatMessage[]>(sampleMessages);
-  const [selectedConversationId, setSelectedConversationId] = useState<string>('tech-1');
+  const [contacts, setContacts] = useState<BackendAdminChatConversation[]>([]);
+  const [messages, setMessages] = useState<BackendChatMessage[]>([]);
+  const [selectedConversationId, setSelectedConversationId] = useState<string>('');
   const [contactSearch, setContactSearch] = useState('');
   const [historySearch, setHistorySearch] = useState('');
   const [draftMessage, setDraftMessage] = useState('');
-  const [pendingAttachments, setPendingAttachments] = useState<AttachmentItem[]>([]);
+  const [pendingAttachments, setPendingAttachments] = useState<BackendChatAttachment[]>([]);
   const [broadcastOpen, setBroadcastOpen] = useState(false);
   const [broadcastDraft, setBroadcastDraft] = useState('');
+  const [broadcastAttachments, setBroadcastAttachments] = useState<BackendChatAttachment[]>([]);
   const [notificationEnabled, setNotificationEnabled] = useState(false);
+  const [loadingContacts, setLoadingContacts] = useState(true);
+  const [loadingMessages, setLoadingMessages] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const broadcastInputRef = useRef<HTMLInputElement | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    if (technicianAccounts.length > 0) {
-      const seeded = technicianAccounts.map((account, index) => ({
-        id: account.id,
-        name: account.name,
-        avatar: account.avatar,
-        jobStatus: (['Available', 'In Progress', 'Offline', 'Out of Office'] as const)[index % 4],
-        unreadCount: index === 0 ? 2 : 0,
-        preview: index === 0 ? 'I reached the dealership and started diagnostics.' : 'No unread messages.',
-        lastMessageAt: index === 0 ? '4:45 pm' : '1:15 pm',
-        online: index % 3 !== 2,
-      }));
-      setContacts(seeded);
-      setSelectedConversationId(seeded[0]?.id ?? 'tech-1');
-      return;
-    }
-
-    setContacts(sampleContacts);
-  }, [technicianAccounts]);
+  const seenMessageIdsRef = useRef<Set<string>>(new Set());
 
   const selectedContact = useMemo(
-    () => contacts.find((contact) => contact.id === selectedConversationId) ?? contacts[0] ?? sampleContacts[0],
+    () => contacts.find((contact) => contact.technician_id === selectedConversationId) ?? null,
     [contacts, selectedConversationId],
   );
 
-  const filteredContacts = useMemo(() => {
-    const query = contactSearch.trim().toLowerCase();
-    if (!query) {
-      return contacts;
-    }
-    return contacts.filter((contact) => contact.name.toLowerCase().includes(query));
-  }, [contactSearch, contacts]);
-
   const visibleMessages = useMemo(() => {
-    const thread = messages.filter((message) => message.conversationId === selectedConversationId);
     const query = historySearch.trim().toLowerCase();
-    if (!query) {
-      return thread;
-    }
-    return thread.filter((message) => (
-      message.text.toLowerCase().includes(query)
-      || message.attachments?.some((attachment) => attachment.name.toLowerCase().includes(query))
+    if (!query) return messages;
+    return messages.filter((message) => (
+      (message.text || '').toLowerCase().includes(query)
+      || message.attachments.some((attachment) => attachment.name.toLowerCase().includes(query))
     ));
-  }, [historySearch, messages, selectedConversationId]);
+  }, [historySearch, messages]);
 
   const totalUnreadCount = useMemo(
-    () => contacts.reduce((sum, contact) => sum + contact.unreadCount, 0),
+    () => contacts.reduce((sum, contact) => sum + contact.unread_count, 0),
     [contacts],
   );
 
-  useEffect(() => {
+  const syncUnreadBadge = (count: number) => {
     if (typeof window === 'undefined') return;
-    window.sessionStorage.setItem(CHAT_UNREAD_STORAGE_KEY, String(totalUnreadCount));
-    window.dispatchEvent(new CustomEvent('sm-chat-unread-count', { detail: { count: totalUnreadCount } }));
-  }, [totalUnreadCount]);
-
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [visibleMessages.length, selectedConversationId]);
-
-  useEffect(() => {
-    if (!selectedContact) return;
-    setContacts((prev) => prev.map((contact) => (
-      contact.id === selectedContact.id ? { ...contact, unreadCount: 0 } : contact
-    )));
-  }, [selectedContact?.id]);
+    window.sessionStorage.setItem(CHAT_UNREAD_STORAGE_KEY, String(count));
+    window.dispatchEvent(new CustomEvent('sm-chat-unread-count', { detail: { count } }));
+  };
 
   const handleEnableNotifications = async () => {
     if (typeof window === 'undefined' || !('Notification' in window)) {
       toast.error('Browser notifications are not supported in this browser.');
       return;
     }
-
     const permission = await Notification.requestPermission();
     if (permission === 'granted') {
       setNotificationEnabled(true);
@@ -261,123 +164,192 @@ export default function PlatformChatPage() {
     }
   };
 
-  const handleFileSelection = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const fetchContacts = async (search = contactSearch, preserveSelection = true) => {
+    const token = getStoredAdminToken();
+    if (!token) {
+      setContacts([]);
+      setLoadingContacts(false);
+      syncUnreadBadge(0);
+      return;
+    }
+
+    const rows = await fetchAdminChatConversations(token, search.trim() || undefined);
+    setContacts(rows);
+    syncUnreadBadge(rows.reduce((sum, row) => sum + row.unread_count, 0));
+
+    if (!preserveSelection || !selectedConversationId || !rows.some((row) => row.technician_id === selectedConversationId)) {
+      setSelectedConversationId(rows[0]?.technician_id ?? '');
+    }
+  };
+
+  const fetchThread = async (technicianId: string, silent = false) => {
+    if (!technicianId) {
+      setMessages([]);
+      return;
+    }
+
+    const token = getStoredAdminToken();
+    if (!token) {
+      setMessages([]);
+      return;
+    }
+
+    if (!silent) setLoadingMessages(true);
+
+    const thread = await fetchAdminChatMessages(token, technicianId);
+    setMessages(thread);
+    await markAdminChatConversationRead(token, technicianId);
+
+    const nextIds = new Set(thread.map((message) => message.id));
+    const unseenIncoming = thread.filter((message) => (
+      message.sender_role === 'technician' && !seenMessageIdsRef.current.has(message.id)
+    ));
+
+    if (unseenIncoming.length > 0) {
+      const latest = unseenIncoming[unseenIncoming.length - 1];
+      if (typeof document !== 'undefined' && document.hidden && notificationEnabled && 'Notification' in window) {
+        new Notification(selectedContact?.technician_name ?? 'Technician', {
+          body: latest.text || 'New attachment received',
+        });
+      } else if (seenMessageIdsRef.current.size > 0) {
+        toast.message(`New message from ${selectedContact?.technician_name ?? 'technician'}`, {
+          description: latest.text || latest.attachments[0]?.name || 'Attachment received',
+        });
+      }
+    }
+
+    seenMessageIdsRef.current = nextIds;
+    setLoadingMessages(false);
+  };
+
+  useEffect(() => {
+    void (async () => {
+      setLoadingContacts(true);
+      try {
+        await fetchContacts('', false);
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : 'Failed to load conversations.');
+      } finally {
+        setLoadingContacts(false);
+      }
+    })();
+  }, []);
+
+  useEffect(() => {
+    if (!selectedConversationId) return;
+    void fetchThread(selectedConversationId);
+  }, [selectedConversationId]);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [visibleMessages.length]);
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      void fetchContacts(contactSearch, true);
+      if (selectedConversationId) {
+        void fetchThread(selectedConversationId, true);
+      }
+    }, 3000);
+    const onFocus = () => {
+      void fetchContacts(contactSearch, true);
+      if (selectedConversationId) {
+        void fetchThread(selectedConversationId, true);
+      }
+    };
+    window.addEventListener('focus', onFocus);
+    return () => {
+      window.clearInterval(intervalId);
+      window.removeEventListener('focus', onFocus);
+    };
+  }, [contactSearch, notificationEnabled, selectedConversationId, selectedContact?.technician_name]);
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      void fetchContacts(contactSearch, true);
+    }, 250);
+    return () => window.clearTimeout(timeoutId);
+  }, [contactSearch]);
+
+  useEffect(() => {
+    syncUnreadBadge(totalUnreadCount);
+  }, [totalUnreadCount]);
+
+  const handleFileSelection = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+    target: 'thread' | 'broadcast',
+  ) => {
     const files = Array.from(event.target.files ?? []);
-    const nextAttachments: AttachmentItem[] = [];
+    const nextAttachments: BackendChatAttachment[] = [];
 
     for (const file of files) {
       if (file.size > 10 * 1024 * 1024) {
         toast.error(`${file.name} exceeds the 10MB limit.`);
         continue;
       }
-
-      const isImage = file.type.startsWith('image/');
-      nextAttachments.push({
-        id: `${file.name}-${file.size}-${Date.now()}`,
-        name: file.name,
-        sizeLabel: `${(file.size / (1024 * 1024)).toFixed(1)} MB`,
-        kind: isImage ? 'image' : 'document',
-        previewUrl: isImage ? URL.createObjectURL(file) : undefined,
-      });
-    }
-
-    setPendingAttachments((prev) => [...prev, ...nextAttachments]);
-    if (event.target) {
-      event.target.value = '';
-    }
-  };
-
-  const pushSimulatedReply = (conversationId: string) => {
-    window.setTimeout(() => {
-      const reply: ChatMessage = {
-        id: `reply-${Date.now()}`,
-        conversationId,
-        sender: 'technician',
-        text: 'Received. I’ll update the job thread once this step is complete.',
-        timestamp: new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }).toLowerCase(),
-        status: 'read',
-      };
-
-      setMessages((prev) => [...prev, reply]);
-      setContacts((prev) => prev.map((contact) => (
-        contact.id === conversationId
-          ? {
-              ...contact,
-              preview: reply.text,
-              lastMessageAt: reply.timestamp,
-              unreadCount: conversationId === selectedConversationId ? 0 : contact.unreadCount + 1,
-            }
-          : contact
-      )));
-
-      if (typeof document !== 'undefined' && document.hidden && notificationEnabled && 'Notification' in window) {
-        new Notification(selectedContact?.name ?? 'Technician', {
-          body: reply.text,
-        });
-      } else {
-        toast.message(`New message from ${selectedContact?.name ?? 'technician'}`, {
-          description: reply.text,
-        });
+      if (!(file.type.startsWith('image/') || file.type === 'application/pdf')) {
+        toast.error(`${file.name} must be an image or PDF file.`);
+        continue;
       }
-    }, 1200);
-  };
-
-  const handleSendMessage = () => {
-    const content = draftMessage.trim();
-    if (!content && pendingAttachments.length === 0) {
-      return;
+      nextAttachments.push(await fileToAttachment(file));
     }
 
-    const nextMessage: ChatMessage = {
-      id: `msg-${Date.now()}`,
-      conversationId: selectedConversationId,
-      sender: 'admin',
-      text: content,
-      timestamp: new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }).toLowerCase(),
-      status: 'sent',
-      attachments: pendingAttachments.length > 0 ? pendingAttachments : undefined,
-    };
+    if (target === 'thread') {
+      setPendingAttachments((prev) => [...prev, ...nextAttachments]);
+    } else {
+      setBroadcastAttachments((prev) => [...prev, ...nextAttachments]);
+    }
 
-    setMessages((prev) => [...prev, nextMessage]);
-    setContacts((prev) => prev.map((contact) => (
-      contact.id === selectedConversationId
-        ? { ...contact, preview: content || `${pendingAttachments.length} attachment${pendingAttachments.length === 1 ? '' : 's'}`, lastMessageAt: nextMessage.timestamp }
-        : contact
-    )));
-    setDraftMessage('');
-    setPendingAttachments([]);
-    pushSimulatedReply(selectedConversationId);
+    event.target.value = '';
   };
 
-  const handleBroadcast = () => {
+  const handleSendMessage = async () => {
+    const token = getStoredAdminToken();
+    const content = draftMessage.trim();
+    if (!token || !selectedConversationId || (!content && pendingAttachments.length === 0)) return;
+
+    try {
+      const sent = await sendAdminChatMessage(token, selectedConversationId, {
+        text: content || undefined,
+        attachments: pendingAttachments,
+      });
+      setMessages((prev) => [...prev, sent]);
+      seenMessageIdsRef.current.add(sent.id);
+      setDraftMessage('');
+      setPendingAttachments([]);
+      await fetchContacts(contactSearch, true);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to send message.');
+    }
+  };
+
+  const handleBroadcast = async () => {
+    const token = getStoredAdminToken();
     const content = broadcastDraft.trim();
-    if (!content) return;
+    if (!token || (!content && broadcastAttachments.length === 0)) return;
 
-    const timeLabel = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }).toLowerCase();
-    const broadcastMessages = contacts.map((contact) => ({
-      id: `broadcast-${contact.id}-${Date.now()}`,
-      conversationId: contact.id,
-      sender: 'broadcast' as const,
-      text: content,
-      timestamp: timeLabel,
-      status: 'delivered' as const,
-    }));
-
-    setMessages((prev) => [...prev, ...broadcastMessages]);
-    setContacts((prev) => prev.map((contact) => ({
-      ...contact,
-      preview: content,
-      lastMessageAt: timeLabel,
-    })));
-    setBroadcastDraft('');
-    setBroadcastOpen(false);
-    toast.success(`Broadcast sent to ${contacts.length} technician${contacts.length === 1 ? '' : 's'}.`);
+    try {
+      await broadcastAdminChatMessage(token, {
+        text: content || undefined,
+        attachments: broadcastAttachments,
+      });
+      setBroadcastDraft('');
+      setBroadcastAttachments([]);
+      setBroadcastOpen(false);
+      await fetchContacts(contactSearch, true);
+      if (selectedConversationId) {
+        await fetchThread(selectedConversationId, true);
+      }
+      toast.success('Broadcast sent to technicians.');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to send broadcast.');
+    }
   };
 
   const handleComposerKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault();
-      handleSendMessage();
+      void handleSendMessage();
     }
   };
 
@@ -400,7 +372,7 @@ export default function PlatformChatPage() {
                 </span>
               </h1>
               <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-300 sm:text-[15px]">
-                Real-time admin to technician messaging, broadcast announcements, and thread history without leaving the platform.
+                Real technician messaging with persisted history, delivery state, and broadcast announcements inside the dispatch platform.
               </p>
             </div>
             <div className="flex flex-wrap items-center justify-end gap-3">
@@ -446,46 +418,56 @@ export default function PlatformChatPage() {
             </div>
             <ScrollArea className="h-[920px]">
               <div className="space-y-1 p-3">
-                {filteredContacts.map((contact) => (
+                {loadingContacts ? (
+                  <div className="space-y-2 p-2">
+                    {Array.from({ length: 5 }).map((_, index) => (
+                      <div key={index} className="h-20 animate-pulse rounded-2xl bg-white/[0.05]" />
+                    ))}
+                  </div>
+                ) : contacts.length === 0 ? (
+                  <div className="px-5 py-12 text-center text-sm text-slate-400">
+                    No technician conversations found yet.
+                  </div>
+                ) : contacts.map((contact) => (
                   <button
-                    key={contact.id}
+                    key={contact.technician_id}
                     type="button"
-                    onClick={() => setSelectedConversationId(contact.id)}
+                    onClick={() => setSelectedConversationId(contact.technician_id)}
                     className={cn(
                       'flex w-full items-start gap-3 rounded-2xl border px-3 py-3 text-left transition',
-                      selectedConversationId === contact.id
+                      selectedConversationId === contact.technician_id
                         ? 'border-cyan-300/20 bg-cyan-300/10'
                         : 'border-transparent bg-white/[0.02] hover:border-white/10 hover:bg-white/[0.04]',
                     )}
                   >
                     <div className="relative">
                       <Avatar className="h-11 w-11 border border-white/10">
-                        <AvatarImage src={contact.avatar} alt={contact.name} />
+                        <AvatarImage src={contact.technician_avatar || undefined} alt={contact.technician_name} />
                         <AvatarFallback className="bg-white/[0.06] text-slate-100">
-                          {contact.name.split(' ').map((chunk) => chunk[0]).join('').slice(0, 2)}
+                          {contact.technician_name.split(' ').map((chunk) => chunk[0]).join('').slice(0, 2)}
                         </AvatarFallback>
                       </Avatar>
-                      <span className={cn(
-                        'absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-[#091827]',
-                        contact.online ? 'bg-emerald-400' : 'bg-slate-500',
-                      )} />
                     </div>
                     <div className="min-w-0 flex-1 space-y-1">
                       <div className="flex items-center justify-between gap-2">
-                        <p className="truncate text-sm font-semibold text-white">{contact.name}</p>
-                        <span className="shrink-0 text-xs text-slate-500">{contact.lastMessageAt}</span>
+                        <p className="truncate text-sm font-semibold text-white">{contact.technician_name}</p>
+                        <span className="shrink-0 text-xs text-slate-500">
+                          {contact.last_message_at ? new Date(contact.last_message_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }).toLowerCase() : '--'}
+                        </span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Badge variant="outline" className="h-5 border-white/10 bg-white/[0.03] px-2 text-[10px] text-slate-300">
-                          {contact.jobStatus}
+                          {contact.technician_status}
                         </Badge>
-                        {contact.unreadCount > 0 ? (
+                        {contact.unread_count > 0 ? (
                           <Badge className="h-5 min-w-5 justify-center rounded-full bg-cyan-400 px-1.5 text-[10px] text-slate-950">
-                            {contact.unreadCount}
+                            {contact.unread_count}
                           </Badge>
                         ) : null}
                       </div>
-                      <p className="truncate text-sm text-slate-400">{contact.preview}</p>
+                      <p className="truncate text-sm text-slate-400">
+                        {contact.last_message_preview || 'No messages yet'}
+                      </p>
                     </div>
                   </button>
                 ))}
@@ -498,22 +480,18 @@ export default function PlatformChatPage() {
               <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
                 <div className="flex items-center gap-4">
                   <Avatar className="h-12 w-12 border border-white/10">
-                    <AvatarImage src={selectedContact?.avatar} alt={selectedContact?.name} />
+                    <AvatarImage src={selectedContact?.technician_avatar || undefined} alt={selectedContact?.technician_name} />
                     <AvatarFallback className="bg-white/[0.06] text-slate-100">
-                      {selectedContact?.name.split(' ').map((chunk) => chunk[0]).join('').slice(0, 2)}
+                      {selectedContact?.technician_name.split(' ').map((chunk) => chunk[0]).join('').slice(0, 2) || 'TC'}
                     </AvatarFallback>
                   </Avatar>
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                      <h2 className="text-xl font-semibold tracking-[-0.04em] text-white">{selectedContact?.name}</h2>
-                      <span className={cn(
-                        'h-2.5 w-2.5 rounded-full',
-                        selectedContact?.online ? 'bg-emerald-400' : 'bg-slate-500',
-                      )} />
-                      <span className="text-sm text-slate-400">{selectedContact?.jobStatus}</span>
+                      <h2 className="text-xl font-semibold tracking-[-0.04em] text-white">{selectedContact?.technician_name || 'Select a technician'}</h2>
+                      <span className="text-sm text-slate-400">{selectedContact?.technician_status || 'No active thread'}</span>
                     </div>
                     <p className="text-sm text-slate-400">
-                      Full message history retained in-platform. Email digest follows Settings if unread for 30 minutes.
+                      Full message history retained in-platform. Browser alerts can notify you when a technician replies.
                     </p>
                   </div>
                 </div>
@@ -540,63 +518,60 @@ export default function PlatformChatPage() {
             <div className="grid min-h-[920px] grid-rows-[1fr_auto] bg-[linear-gradient(180deg,rgba(238,247,248,0.03),rgba(255,255,255,0.01))]">
               <ScrollArea className="h-full">
                 <div className="space-y-4 px-5 py-6">
-                  {visibleMessages.map((message) => (
+                  {loadingMessages ? (
+                    Array.from({ length: 4 }).map((_, index) => (
+                      <div
+                        key={index}
+                        className={cn(
+                          'h-16 w-[65%] animate-pulse rounded-[24px] bg-white/[0.05]',
+                          index % 2 === 0 ? 'ml-0' : 'ml-auto',
+                        )}
+                      />
+                    ))
+                  ) : visibleMessages.length === 0 ? (
+                    <div className="flex min-h-[420px] flex-col items-center justify-center text-center">
+                      <div className="mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-white/[0.05]">
+                        <MessageCircleMore className="h-10 w-10 text-slate-500" />
+                      </div>
+                      <h3 className="text-xl font-semibold text-white">No conversation history yet</h3>
+                      <p className="mt-2 max-w-md text-sm leading-7 text-slate-400">
+                        Send the first real message to start this technician thread. Messages will persist and stay in sync across both sides.
+                      </p>
+                    </div>
+                  ) : visibleMessages.map((message) => (
                     <div
                       key={message.id}
-                      className={cn(
-                        'flex',
-                        message.sender === 'admin' ? 'justify-end' : 'justify-start',
-                      )}
+                      className={cn('flex', message.sender_role === 'admin' ? 'justify-end' : 'justify-start')}
                     >
-                      <div className={cn(
-                        'max-w-[80%] space-y-2',
-                        message.sender === 'admin' ? 'items-end' : 'items-start',
-                      )}>
+                      <div className="max-w-[80%] space-y-2">
                         <div
                           className={cn(
                             'rounded-[24px] border px-4 py-3 shadow-[0_10px_25px_rgba(0,0,0,0.14)]',
-                            message.sender === 'admin'
+                            message.sender_role === 'admin'
                               ? 'border-white/10 bg-white text-slate-900'
-                              : message.sender === 'broadcast'
+                              : message.is_broadcast
                                 ? 'border-cyan-300/20 bg-cyan-300/12 text-cyan-50'
                                 : 'border-white/10 bg-[#070f11] text-white',
                           )}
                         >
                           {message.text ? <p className="text-sm leading-6">{message.text}</p> : null}
-                          {message.attachments?.length ? (
+                          {message.attachments.length > 0 ? (
                             <div className={cn(
                               'mt-3 grid gap-2',
                               message.attachments.length >= 3 ? 'grid-cols-3' : 'grid-cols-2',
                             )}>
-                              {message.attachments.map((attachment) => {
-                                const AttachmentIcon = getAttachmentIcon(attachment.kind);
-                                return (
-                                  <div key={attachment.id} className="overflow-hidden rounded-2xl border border-black/10 bg-white/95">
-                                    {attachment.kind === 'image' ? (
-                                      <div className="flex aspect-[1/0.9] items-center justify-center bg-[linear-gradient(135deg,#1e293b,#334155)] text-white">
-                                        <ImageIcon className="h-7 w-7" />
-                                      </div>
-                                    ) : (
-                                      <div className="flex aspect-[1/0.9] items-center justify-center bg-slate-100 text-slate-700">
-                                        <AttachmentIcon className="h-7 w-7" />
-                                      </div>
-                                    )}
-                                    <div className="space-y-1 px-3 py-2">
-                                      <p className="truncate text-xs font-medium text-slate-800">{attachment.name}</p>
-                                      <p className="text-[11px] text-slate-500">{attachment.sizeLabel}</p>
-                                    </div>
-                                  </div>
-                                );
-                              })}
+                              {message.attachments.map((attachment) => (
+                                <AttachmentCard key={attachment.id} attachment={attachment} />
+                              ))}
                             </div>
                           ) : null}
                         </div>
                         <div className={cn(
-                          'flex items-center gap-2 px-1 text-xs',
-                          message.sender === 'admin' ? 'justify-end text-slate-500' : 'justify-start text-slate-500',
+                          'flex items-center gap-2 px-1 text-xs text-slate-500',
+                          message.sender_role === 'admin' ? 'justify-end' : 'justify-start',
                         )}>
-                          <span>{message.timestamp}</span>
-                          {message.sender === 'admin' ? formatMessageStatus(message.status) : null}
+                          <span>{new Date(message.created_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }).toLowerCase()}</span>
+                          {message.sender_role === 'admin' ? formatMessageStatus(message) : null}
                         </div>
                       </div>
                     </div>
@@ -610,7 +585,7 @@ export default function PlatformChatPage() {
                   <div className="mb-3 flex flex-wrap gap-2">
                     {pendingAttachments.map((attachment) => (
                       <div key={attachment.id} className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-slate-200">
-                        {attachment.kind === 'image' ? <ImageIcon className="h-3.5 w-3.5" /> : <File className="h-3.5 w-3.5" />}
+                        {attachment.mime_type.startsWith('image/') ? <ImageIcon className="h-3.5 w-3.5" /> : <File className="h-3.5 w-3.5" />}
                         <span>{attachment.name}</span>
                         <button
                           type="button"
@@ -631,6 +606,7 @@ export default function PlatformChatPage() {
                     size="icon"
                     onClick={() => fileInputRef.current?.click()}
                     className="h-12 w-12 shrink-0 rounded-full border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
+                    disabled={!selectedConversationId}
                   >
                     <Paperclip className="h-4 w-4" />
                   </Button>
@@ -640,19 +616,21 @@ export default function PlatformChatPage() {
                     accept=".pdf,image/*"
                     multiple
                     className="hidden"
-                    onChange={handleFileSelection}
+                    onChange={(event) => void handleFileSelection(event, 'thread')}
                   />
                   <Textarea
                     value={draftMessage}
                     onChange={(event) => setDraftMessage(event.target.value)}
                     onKeyDown={handleComposerKeyDown}
-                    placeholder="Write a message"
+                    placeholder={selectedConversationId ? 'Write a message' : 'Select a technician to start chatting'}
                     className="min-h-[56px] resize-none rounded-[28px] border-white/10 bg-white/[0.04] px-5 py-4 text-white placeholder:text-slate-500"
+                    disabled={!selectedConversationId}
                   />
                   <Button
                     type="button"
-                    onClick={handleSendMessage}
+                    onClick={() => void handleSendMessage()}
                     className="h-12 w-12 shrink-0 rounded-full bg-[#070f11] text-white shadow-[0_12px_30px_rgba(0,0,0,0.3)] hover:bg-[#0b1418]"
+                    disabled={!selectedConversationId}
                   >
                     <Send className="h-4 w-4" />
                   </Button>
@@ -668,7 +646,7 @@ export default function PlatformChatPage() {
           <DialogHeader>
             <DialogTitle className="text-white">Broadcast Message</DialogTitle>
             <DialogDescription className="text-slate-300">
-              Send a system-wide announcement to every technician conversation at once.
+              Send one persisted announcement to every technician thread at once.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3 py-2">
@@ -678,15 +656,49 @@ export default function PlatformChatPage() {
               placeholder="Write your announcement"
               className="min-h-[160px] border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500"
             />
-            <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-slate-400">
-              Delivery notes: in-app badges update immediately, browser push can alert admins on other tabs, and unread email digest follows Settings preferences.
+            {broadcastAttachments.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {broadcastAttachments.map((attachment) => (
+                  <div key={attachment.id} className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-slate-200">
+                    <span>{attachment.name}</span>
+                    <button
+                      type="button"
+                      onClick={() => setBroadcastAttachments((prev) => prev.filter((item) => item.id !== attachment.id))}
+                      className="rounded-full p-0.5 text-slate-400 hover:bg-white/[0.08] hover:text-white"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+            <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-slate-400">
+              <span>Attachments support images and PDFs up to 10MB each.</span>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
+                onClick={() => broadcastInputRef.current?.click()}
+              >
+                <Paperclip className="mr-2 h-4 w-4" />
+                Add File
+              </Button>
+              <input
+                ref={broadcastInputRef}
+                type="file"
+                accept=".pdf,image/*"
+                multiple
+                className="hidden"
+                onChange={(event) => void handleFileSelection(event, 'broadcast')}
+              />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" className="border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]" onClick={() => setBroadcastOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleBroadcast} className="bg-[#2F8E92] hover:bg-[#267276]">
+            <Button onClick={() => void handleBroadcast()} className="bg-[#2F8E92] hover:bg-[#267276]">
               Send Broadcast
             </Button>
           </DialogFooter>

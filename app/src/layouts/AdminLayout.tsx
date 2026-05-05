@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
+import { fetchAdminChatUnreadCount, getStoredAdminToken } from '@/lib/backend-api';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -189,13 +190,26 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    const syncUnreadCount = () => {
-      const raw = window.sessionStorage.getItem('sm_admin_chat_unread_count');
-      const next = raw ? Number(raw) : 0;
-      setUnreadChatCount(Number.isFinite(next) ? next : 0);
+    const syncUnreadCount = async () => {
+      const token = getStoredAdminToken();
+      if (!token) {
+        const raw = window.sessionStorage.getItem('sm_admin_chat_unread_count');
+        const next = raw ? Number(raw) : 0;
+        setUnreadChatCount(Number.isFinite(next) ? next : 0);
+        return;
+      }
+      try {
+        const response = await fetchAdminChatUnreadCount(token);
+        setUnreadChatCount(response.unread_count);
+        window.sessionStorage.setItem('sm_admin_chat_unread_count', String(response.unread_count));
+      } catch {
+        const raw = window.sessionStorage.getItem('sm_admin_chat_unread_count');
+        const next = raw ? Number(raw) : 0;
+        setUnreadChatCount(Number.isFinite(next) ? next : 0);
+      }
     };
 
-    syncUnreadCount();
+    void syncUnreadCount();
 
     const handleUnreadEvent = (event: Event) => {
       const customEvent = event as CustomEvent<{ count?: number }>;
@@ -204,15 +218,17 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
         setUnreadChatCount(next);
         return;
       }
-      syncUnreadCount();
+      void syncUnreadCount();
     };
 
-    const handleFocus = () => syncUnreadCount();
+    const handleFocus = () => { void syncUnreadCount(); };
+    const intervalId = window.setInterval(() => { void syncUnreadCount(); }, 5000);
 
     window.addEventListener('sm-chat-unread-count', handleUnreadEvent as EventListener);
     window.addEventListener('focus', handleFocus);
 
     return () => {
+      window.clearInterval(intervalId);
       window.removeEventListener('sm-chat-unread-count', handleUnreadEvent as EventListener);
       window.removeEventListener('focus', handleFocus);
     };

@@ -31,6 +31,7 @@ import AvailableJobsPage from '@/pages/technician/AvailableJobs';
 import MyJobsPage from '@/pages/technician/MyJobs';
 import JobHistoryPage from '@/pages/technician/JobHistory';
 import ProfilePage from '@/pages/technician/Profile';
+import TechnicianChatPage from '@/pages/technician/Chat';
 
 function PlaceholderPage({ title }: { title: string }) {
   return <div className="p-4"><h1 className="text-2xl font-bold">{title}</h1><p className="mt-2 text-gray-500">Functionality coming soon.</p></div>;
@@ -71,6 +72,14 @@ function App() {
             element={
               <RequireRole role="admin">
                 <TechnicianPreview view="history" />
+              </RequireRole>
+            }
+          />
+          <Route
+            path="/admin/tech-preview/:techId/chat"
+            element={
+              <RequireRole role="admin">
+                <TechnicianChatPage />
               </RequireRole>
             }
           />
@@ -234,6 +243,14 @@ function App() {
             element={
               <RequireRole role="technician">
                 <ProfilePage />
+              </RequireRole>
+            }
+          />
+          <Route
+            path="/tech/chat"
+            element={
+              <RequireRole role="technician">
+                <TechnicianChatPage />
               </RequireRole>
             }
           />

@@ -149,6 +149,44 @@ export type BackendTechnicianPasswordResetRequestNotificationResponse = {
   message: string;
 };
 
+export type BackendChatAttachment = {
+  id: string;
+  name: string;
+  mime_type: string;
+  size_bytes: number;
+  data_url: string;
+};
+
+export type BackendChatMessage = {
+  id: string;
+  technician_id: string;
+  sender_role: 'admin' | 'technician';
+  sender_id: string;
+  text?: string | null;
+  attachments: BackendChatAttachment[];
+  is_broadcast: boolean;
+  created_at: string;
+  delivered_at?: string | null;
+  read_at?: string | null;
+};
+
+export type BackendAdminChatConversation = {
+  technician_id: string;
+  technician_name: string;
+  technician_email: string;
+  technician_phone?: string | null;
+  technician_avatar?: string | null;
+  technician_status: 'Available' | 'In Progress' | 'Offline' | 'Out of Office' | string;
+  current_jobs_count: number;
+  unread_count: number;
+  last_message_preview?: string | null;
+  last_message_at?: string | null;
+};
+
+export type BackendAdminChatUnreadCount = {
+  unread_count: number;
+};
+
 export type BackendDealership = {
   id: string;
   code: string;
@@ -636,6 +674,70 @@ export async function fetchDevTechnicianToken(payload: {
 
 export async function fetchAdminTechnicians(token: string): Promise<BackendTechnicianListItem[]> {
   return requestJson<BackendTechnicianListItem[]>('/admin/technicians', {
+    token,
+  });
+}
+
+export async function fetchAdminChatConversations(
+  token: string,
+  search?: string,
+): Promise<BackendAdminChatConversation[]> {
+  const suffix = search?.trim() ? `?search=${encodeURIComponent(search.trim())}` : '';
+  return requestJson<BackendAdminChatConversation[]>(`/admin/chat/conversations${suffix}`, {
+    token,
+  });
+}
+
+export async function fetchAdminChatMessages(
+  token: string,
+  technicianId: string,
+): Promise<BackendChatMessage[]> {
+  return requestJson<BackendChatMessage[]>(`/admin/chat/conversations/${technicianId}/messages`, {
+    token,
+  });
+}
+
+export async function sendAdminChatMessage(
+  token: string,
+  technicianId: string,
+  payload: {
+    text?: string;
+    attachments?: BackendChatAttachment[];
+  },
+): Promise<BackendChatMessage> {
+  return requestJson<BackendChatMessage>(`/admin/chat/conversations/${technicianId}/messages`, {
+    method: 'POST',
+    token,
+    body: payload,
+  });
+}
+
+export async function broadcastAdminChatMessage(
+  token: string,
+  payload: {
+    text?: string;
+    attachments?: BackendChatAttachment[];
+  },
+): Promise<BackendChatMessage[]> {
+  return requestJson<BackendChatMessage[]>('/admin/chat/broadcast', {
+    method: 'POST',
+    token,
+    body: payload,
+  });
+}
+
+export async function markAdminChatConversationRead(
+  token: string,
+  technicianId: string,
+): Promise<BackendAdminChatUnreadCount> {
+  return requestJson<BackendAdminChatUnreadCount>(`/admin/chat/conversations/${technicianId}/read`, {
+    method: 'POST',
+    token,
+  });
+}
+
+export async function fetchAdminChatUnreadCount(token: string): Promise<BackendAdminChatUnreadCount> {
+  return requestJson<BackendAdminChatUnreadCount>('/admin/chat/unread-count', {
     token,
   });
 }
@@ -1314,6 +1416,31 @@ export async function savePendingInvoiceApprovalDraft(
 
 export async function fetchTechnicianMeProfile(token: string): Promise<BackendTechnicianProfile> {
   return requestJson<BackendTechnicianProfile>('/technicians/me', { token });
+}
+
+export async function fetchTechnicianChatMessages(token: string): Promise<BackendChatMessage[]> {
+  return requestJson<BackendChatMessage[]>('/technicians/me/chat/messages', { token });
+}
+
+export async function sendTechnicianChatMessage(
+  token: string,
+  payload: {
+    text?: string;
+    attachments?: BackendChatAttachment[];
+  },
+): Promise<BackendChatMessage> {
+  return requestJson<BackendChatMessage>('/technicians/me/chat/messages', {
+    method: 'POST',
+    token,
+    body: payload,
+  });
+}
+
+export async function markTechnicianChatRead(token: string): Promise<{ status: string }> {
+  return requestJson<{ status: string }>('/technicians/me/chat/read', {
+    method: 'POST',
+    token,
+  });
 }
 
 export async function fetchTechnicianJobsFeed(token: string): Promise<BackendTechnicianJobFeed> {
