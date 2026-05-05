@@ -94,26 +94,26 @@ type InvoiceMetricTone = 'amber' | 'cyan' | 'emerald' | 'violet';
 
 function invoiceMetricCardClasses(tone: InvoiceMetricTone): string {
     return cn(
-        'group relative overflow-hidden rounded-[26px] border px-5 py-5 text-left transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_24px_60px_rgba(0,0,0,0.28)]',
-        tone === 'amber' && 'border-amber-400/20 bg-[linear-gradient(180deg,rgba(47,28,13,0.96),rgba(27,18,8,0.96))] hover:border-amber-300/35',
-        tone === 'cyan' && 'border-cyan-400/20 bg-[linear-gradient(180deg,rgba(8,31,45,0.96),rgba(7,23,34,0.96))] hover:border-cyan-300/35',
-        tone === 'emerald' && 'border-emerald-400/20 bg-[linear-gradient(180deg,rgba(12,34,28,0.96),rgba(8,22,18,0.96))] hover:border-emerald-300/35',
-        tone === 'violet' && 'border-violet-400/20 bg-[linear-gradient(180deg,rgba(28,20,49,0.96),rgba(19,17,34,0.96))] hover:border-violet-300/35',
+        'group relative overflow-hidden rounded-[26px] border px-5 py-5 text-left transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_24px_60px_rgba(15,23,42,0.08)] dark:hover:shadow-[0_24px_60px_rgba(0,0,0,0.28)]',
+        tone === 'amber' && 'border-amber-200 bg-[linear-gradient(180deg,#ffffff,#fdf9f4)] hover:border-amber-300 dark:border-amber-400/20 dark:bg-[linear-gradient(180deg,rgba(47,28,13,0.96),rgba(27,18,8,0.96))] dark:hover:border-amber-300/35',
+        tone === 'cyan' && 'border-slate-200 bg-[linear-gradient(180deg,#ffffff,#f8fafc)] hover:border-slate-300 dark:border-cyan-400/20 dark:bg-[linear-gradient(180deg,rgba(8,31,45,0.96),rgba(7,23,34,0.96))] dark:hover:border-cyan-300/35',
+        tone === 'emerald' && 'border-emerald-200 bg-[linear-gradient(180deg,#ffffff,#f7fcfa)] hover:border-emerald-300 dark:border-emerald-400/20 dark:bg-[linear-gradient(180deg,rgba(12,34,28,0.96),rgba(8,22,18,0.96))] dark:hover:border-emerald-300/35',
+        tone === 'violet' && 'border-violet-200 bg-[linear-gradient(180deg,#ffffff,#faf7fd)] hover:border-violet-300 dark:border-violet-400/20 dark:bg-[linear-gradient(180deg,rgba(28,20,49,0.96),rgba(19,17,34,0.96))] dark:hover:border-violet-300/35',
     );
 }
 
 function invoiceMetricTopLineClasses(tone: InvoiceMetricTone): string {
-    if (tone === 'amber') return 'via-amber-300/80';
-    if (tone === 'emerald') return 'via-emerald-300/80';
-    if (tone === 'violet') return 'via-violet-300/80';
-    return 'via-cyan-300/80';
+    if (tone === 'amber') return 'via-amber-400/55 dark:via-amber-300/80';
+    if (tone === 'emerald') return 'via-emerald-400/55 dark:via-emerald-300/80';
+    if (tone === 'violet') return 'via-violet-400/55 dark:via-violet-300/80';
+    return 'via-slate-900/35 dark:via-cyan-300/80';
 }
 
 function invoiceMetricIconClasses(tone: InvoiceMetricTone): string {
-    if (tone === 'amber') return 'border border-amber-300/20 bg-amber-300/12 text-amber-100';
-    if (tone === 'emerald') return 'border border-emerald-300/20 bg-emerald-300/12 text-emerald-100';
-    if (tone === 'violet') return 'border border-violet-300/20 bg-violet-300/12 text-violet-100';
-    return 'border border-cyan-300/20 bg-cyan-300/12 text-cyan-100';
+    if (tone === 'amber') return 'border border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-300/20 dark:bg-amber-300/12 dark:text-amber-100';
+    if (tone === 'emerald') return 'border border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-300/20 dark:bg-emerald-300/12 dark:text-emerald-100';
+    if (tone === 'violet') return 'border border-violet-200 bg-violet-50 text-violet-700 dark:border-violet-300/20 dark:bg-violet-300/12 dark:text-violet-100';
+    return 'border border-slate-200 bg-slate-100 text-slate-700 dark:border-cyan-300/20 dark:bg-cyan-300/12 dark:text-cyan-100';
 }
 
 type PendingInvoice = BackendPendingInvoiceApproval;
@@ -658,60 +658,60 @@ export default function InvoiceApprovalsPage() {
 
     return (
         <div className="flex h-full flex-col gap-6">
-            <section className="relative overflow-hidden rounded-[32px] border border-white/10 bg-[linear-gradient(135deg,rgba(7,24,41,0.98),rgba(5,15,29,0.98))] px-6 py-6 shadow-[0_32px_110px_rgba(0,0,0,0.32)]">
-                <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/70 to-transparent" />
-                <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(47,142,146,0.14),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(245,158,11,0.12),transparent_26%)]" />
+            <section className="relative overflow-hidden rounded-[32px] border border-black/8 bg-[linear-gradient(135deg,#ffffff,#fbfbfb)] px-6 py-6 shadow-[0_32px_110px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-[linear-gradient(135deg,rgba(7,24,41,0.98),rgba(5,15,29,0.98))] dark:shadow-[0_32px_110px_rgba(0,0,0,0.32)]">
+                <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-slate-900/20 to-transparent dark:via-cyan-300/70" />
+                <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(15,23,42,0.05),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(15,23,42,0.03),transparent_26%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(47,142,146,0.14),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(245,158,11,0.12),transparent_26%)]" />
                 <div className="relative flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
                     <div className="max-w-3xl space-y-4">
-                        <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-300">
-                            <Sparkles className="h-3.5 w-3.5 text-cyan-200" />
+                        <div className="inline-flex items-center gap-2 rounded-full border border-black/8 bg-slate-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-700 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300">
+                            <Sparkles className="h-3.5 w-3.5 text-slate-700 dark:text-cyan-200" />
                             Approval Control
                         </div>
                         <div className="space-y-3">
-                            <h1 className="text-[2.35rem] font-semibold leading-none tracking-[-0.06em] text-white md:text-[2.8rem]" style={displayFontStyle}>
+                            <h1 className="text-[2.35rem] font-semibold leading-none tracking-[-0.06em] text-slate-900 dark:text-white md:text-[2.8rem]" style={displayFontStyle}>
                                 Invoice approvals
                                 <br />
                                 at review depth.
                             </h1>
-                            <p className="max-w-2xl text-sm leading-7 text-slate-300 md:text-[15px]" style={bodyFontStyle}>
+                            <p className="max-w-2xl text-sm leading-7 text-slate-600 dark:text-slate-300 md:text-[15px]" style={bodyFontStyle}>
                                 Review pricing, catch blockers, and move completed jobs into invoice generation from one premium approval surface.
                             </p>
                         </div>
                         <div className="flex flex-wrap items-center gap-2">
-                            <Badge variant="outline" className="h-9 rounded-full border-cyan-300/20 bg-cyan-300/10 px-3 text-cyan-100">
+                            <Badge variant="outline" className="h-9 rounded-full border-cyan-200 bg-cyan-50 px-3 text-cyan-700 dark:border-cyan-300/20 dark:bg-cyan-300/10 dark:text-cyan-100">
                                 <Activity className="mr-1.5 h-3.5 w-3.5" />
                                 {filteredInvoices.length} ready for approval
                             </Badge>
-                            <Badge variant="outline" className="h-9 rounded-full border-amber-300/20 bg-amber-300/10 px-3 text-amber-100">
+                            <Badge variant="outline" className="h-9 rounded-full border-amber-200 bg-amber-50 px-3 text-amber-700 dark:border-amber-300/20 dark:bg-amber-300/10 dark:text-amber-100">
                                 <AlertTriangle className="mr-1.5 h-3.5 w-3.5" />
                                 {blockedInvoices.length} blocked
                             </Badge>
-                            <Badge variant="outline" className="h-9 rounded-full border-white/10 bg-white/[0.04] px-3 text-slate-300">
-                                <DollarSign className="mr-1.5 h-3.5 w-3.5 text-emerald-200" />
+                            <Badge variant="outline" className="h-9 rounded-full border-black/8 bg-slate-50 px-3 text-slate-700 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300">
+                                <DollarSign className="mr-1.5 h-3.5 w-3.5 text-emerald-600 dark:text-emerald-200" />
                                 ${visibleEstimatedTotal.toFixed(2)} queue value
                             </Badge>
                         </div>
                     </div>
                     <div className="flex flex-wrap items-center gap-3 xl:justify-end">
-                        <div className="rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-xs font-medium text-slate-400">
+                        <div className="rounded-full border border-black/8 bg-slate-50 px-4 py-2 text-xs font-medium text-slate-600 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-400">
                             Last updated: {new Date().toLocaleTimeString()}
                         </div>
                         <Button
                             variant="outline"
                             size="sm"
-                            className="h-11 gap-2 rounded-2xl border-white/10 bg-white/[0.04] px-4 text-slate-100 hover:bg-white/[0.08] hover:text-white"
+                            className="h-11 gap-2 rounded-2xl border-black/8 bg-white px-4 text-slate-700 hover:bg-slate-50 hover:text-slate-900 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-100 dark:hover:bg-white/[0.08] dark:hover:text-white"
                             onClick={() => void fetchInvoicesData()}
                         >
-                            <RefreshCw className={cn('h-4 w-4 text-slate-300', loading && 'animate-spin')} />
+                            <RefreshCw className={cn('h-4 w-4 text-slate-500 dark:text-slate-300', loading && 'animate-spin')} />
                             Refresh
                         </Button>
                         <Button
                             variant="outline"
                             size="sm"
-                            className="h-11 gap-2 rounded-2xl border-white/10 bg-white/[0.04] px-4 text-slate-100 hover:bg-white/[0.08] hover:text-white"
+                            className="h-11 gap-2 rounded-2xl border-black/8 bg-white px-4 text-slate-700 hover:bg-slate-50 hover:text-slate-900 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-100 dark:hover:bg-white/[0.08] dark:hover:text-white"
                             onClick={() => setExportModalOpen(true)}
                         >
-                            <Download className="h-4 w-4 text-slate-300" />
+                            <Download className="h-4 w-4 text-slate-500 dark:text-slate-300" />
                             Export CSV / Excel
                         </Button>
                     </div>
@@ -738,10 +738,10 @@ export default function InvoiceApprovalsPage() {
                                     <div className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
                                         {card.label}
                                     </div>
-                                    <div className="mt-3 text-[2.15rem] font-semibold leading-none tracking-[-0.06em] text-white" style={displayFontStyle}>
+                                    <div className="mt-3 text-[2.15rem] font-semibold leading-none tracking-[-0.06em] text-slate-900 dark:text-white" style={displayFontStyle}>
                                         {card.value}
                                     </div>
-                                    <p className="mt-4 text-sm leading-6 text-slate-400">{card.description}</p>
+                                    <p className="mt-4 text-sm leading-6 text-slate-500 dark:text-slate-400">{card.description}</p>
                                 </div>
                                 <div className={cn('flex h-11 w-11 items-center justify-center rounded-2xl', invoiceMetricIconClasses(card.tone))}>
                                     <Icon className="h-5 w-5" />
@@ -752,23 +752,23 @@ export default function InvoiceApprovalsPage() {
                 })}
             </div>
 
-            <div className="relative overflow-hidden rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(8,23,38,0.98),rgba(7,18,31,0.98))] shadow-[0_28px_90px_rgba(0,0,0,0.3)]">
-                <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-200/60 to-transparent" />
-                <div className="pointer-events-none absolute inset-x-0 top-0 h-14 bg-gradient-to-r from-[#2F8E92]/6 via-transparent to-amber-500/5" />
+            <div className="relative overflow-hidden rounded-[28px] border border-black/8 bg-[linear-gradient(180deg,#ffffff,#fbfbfb)] shadow-[0_28px_90px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,23,38,0.98),rgba(7,18,31,0.98))] dark:shadow-[0_28px_90px_rgba(0,0,0,0.3)]">
+                <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-slate-900/20 to-transparent dark:via-cyan-200/60" />
+                <div className="pointer-events-none absolute inset-x-0 top-0 h-14 bg-gradient-to-r from-slate-200/55 via-transparent to-slate-100/30 dark:from-[#2F8E92]/6 dark:to-amber-500/5" />
                 <div className="relative p-4 md:p-5">
                     <div className="flex flex-col gap-4 xl:flex-row xl:items-center">
                         <div className="relative min-w-0 flex-1">
                             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
                             <Input
                                 placeholder="Search by job ID, location, technician name, or service..."
-                                className="h-11 rounded-2xl border-white/10 bg-white/[0.04] pl-9 text-white placeholder:text-slate-500 shadow-none focus-visible:border-cyan-300/35 focus-visible:ring-cyan-300/15"
+                                className="h-11 rounded-2xl border-black/8 bg-white pl-9 text-slate-900 placeholder:text-slate-400 shadow-none focus-visible:border-slate-300 focus-visible:ring-slate-200 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-slate-500 dark:focus-visible:border-cyan-300/35 dark:focus-visible:ring-cyan-300/15"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                             />
                         </div>
                         <div className="flex flex-wrap items-center gap-2">
                             <Select value={filterDealership} onValueChange={setFilterDealership}>
-                                <SelectTrigger className="h-11 w-full rounded-2xl border-white/10 bg-white/[0.04] text-white shadow-none sm:w-[180px]">
+                                <SelectTrigger className="h-11 w-full rounded-2xl border-black/8 bg-white text-slate-900 shadow-none sm:w-[180px] dark:border-white/10 dark:bg-white/[0.04] dark:text-white">
                                     <div className="flex items-center gap-2">
                                         <Filter className="h-4 w-4 text-slate-400" />
                                         <SelectValue placeholder="Dealership" />
@@ -784,7 +784,7 @@ export default function InvoiceApprovalsPage() {
                                 </SelectContent>
                             </Select>
                             <Select value={filterTechnician} onValueChange={setFilterTechnician}>
-                                <SelectTrigger className="h-11 w-full rounded-2xl border-white/10 bg-white/[0.04] text-white shadow-none sm:w-[170px]">
+                                <SelectTrigger className="h-11 w-full rounded-2xl border-black/8 bg-white text-slate-900 shadow-none sm:w-[170px] dark:border-white/10 dark:bg-white/[0.04] dark:text-white">
                                     <div className="flex items-center gap-2">
                                         <User className="h-4 w-4 text-slate-400" />
                                         <SelectValue placeholder="Technician" />
@@ -799,32 +799,32 @@ export default function InvoiceApprovalsPage() {
                                     ))}
                                     </SelectContent>
                             </Select>
-                            <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2">
+                            <div className="flex items-center gap-2 rounded-2xl border border-black/8 bg-white px-3 py-2 dark:border-white/10 dark:bg-white/[0.04]">
                                 <Calendar className="h-4 w-4 text-slate-400" />
                                 <div className="flex items-center gap-2">
-                                    <div className="flex items-center gap-2 rounded-xl border border-white/8 bg-white/[0.03] px-2 py-1">
+                                    <div className="flex items-center gap-2 rounded-xl border border-black/8 bg-slate-50 px-2 py-1 dark:border-white/8 dark:bg-white/[0.03]">
                                         <span className="text-[11px] font-medium uppercase tracking-[0.18em] text-slate-500">From</span>
                                         <Input
                                             type="date"
                                             value={filterFromDate}
                                             onChange={(event) => setFilterFromDate(event.target.value)}
-                                            className="h-7 w-[132px] border-0 bg-transparent p-0 text-sm text-white shadow-none focus-visible:ring-0"
+                                            className="h-7 w-[132px] border-0 bg-transparent p-0 text-sm text-slate-900 shadow-none focus-visible:ring-0 dark:text-white"
                                             aria-label="Filter approvals from date"
                                         />
                                     </div>
-                                    <div className="flex items-center gap-2 rounded-xl border border-white/8 bg-white/[0.03] px-2 py-1">
+                                    <div className="flex items-center gap-2 rounded-xl border border-black/8 bg-slate-50 px-2 py-1 dark:border-white/8 dark:bg-white/[0.03]">
                                         <span className="text-[11px] font-medium uppercase tracking-[0.18em] text-slate-500">To</span>
                                         <Input
                                             type="date"
                                             value={filterToDate}
                                             onChange={(event) => setFilterToDate(event.target.value)}
-                                            className="h-7 w-[132px] border-0 bg-transparent p-0 text-sm text-white shadow-none focus-visible:ring-0"
+                                            className="h-7 w-[132px] border-0 bg-transparent p-0 text-sm text-slate-900 shadow-none focus-visible:ring-0 dark:text-white"
                                             aria-label="Filter approvals to date"
                                         />
                                     </div>
                                 </div>
                             </div>
-                            <Badge variant="outline" className="h-11 rounded-2xl border-amber-300/20 bg-amber-300/10 px-4 text-amber-100">
+                            <Badge variant="outline" className="h-11 rounded-2xl border-amber-200 bg-amber-50 px-4 text-amber-700 dark:border-amber-300/20 dark:bg-amber-300/10 dark:text-amber-100">
                                 {queueTab === 'approval' ? `Approval queue (${filteredInvoices.length})` : `Blocked queue (${filteredBlockedInvoices.length})`}
                             </Badge>
                             {(searchQuery || filterDealership !== 'all' || filterTechnician !== 'all' || filterFromDate || filterToDate) ? (
@@ -846,7 +846,7 @@ export default function InvoiceApprovalsPage() {
                             variant={queueTab === 'approval' ? 'secondary' : 'outline'}
                             className={cn(
                                 'h-10 rounded-2xl px-4',
-                                queueTab === 'approval' ? 'border-cyan-300/25 bg-cyan-500/10 text-cyan-100' : 'border-white/10 bg-white/[0.03] text-slate-200 hover:bg-white/[0.08]',
+                                queueTab === 'approval' ? 'border-cyan-200 bg-cyan-50 text-cyan-700 dark:border-cyan-300/25 dark:bg-cyan-500/10 dark:text-cyan-100' : 'border-black/8 bg-white text-slate-700 hover:bg-slate-50 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-200 dark:hover:bg-white/[0.08]',
                             )}
                             onClick={() => setQueueTab('approval')}
                         >
@@ -860,7 +860,7 @@ export default function InvoiceApprovalsPage() {
                             variant={queueTab === 'blocked' ? 'secondary' : 'outline'}
                             className={cn(
                                 'h-10 rounded-2xl px-4',
-                                queueTab === 'blocked' ? 'border-red-300/25 bg-red-500/10 text-red-100' : 'border-white/10 bg-white/[0.03] text-slate-200 hover:bg-white/[0.08]',
+                                queueTab === 'blocked' ? 'border-red-200 bg-red-50 text-red-700 dark:border-red-300/25 dark:bg-red-500/10 dark:text-red-100' : 'border-black/8 bg-white text-slate-700 hover:bg-slate-50 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-200 dark:hover:bg-white/[0.08]',
                             )}
                             onClick={() => setQueueTab('blocked')}
                         >
@@ -873,21 +873,21 @@ export default function InvoiceApprovalsPage() {
                 </div>
             </div>
 
-            <div className="relative flex min-h-[520px] flex-1 flex-col overflow-hidden rounded-[32px] border border-white/10 bg-[linear-gradient(180deg,rgba(8,22,39,0.98),rgba(5,15,28,0.99))] shadow-[0_34px_110px_rgba(0,0,0,0.34)]">
-                <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/70 to-transparent" />
-                <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(47,142,146,0.12),transparent_28%),radial-gradient(circle_at_bottom_left,rgba(245,158,11,0.08),transparent_26%)]" />
-                <div className="relative flex items-center justify-between border-b border-white/10 px-5 py-4">
+            <div className="relative flex min-h-[520px] flex-1 flex-col overflow-hidden rounded-[32px] border border-black/8 bg-white shadow-[0_34px_110px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,22,39,0.98),rgba(5,15,28,0.99))] dark:shadow-[0_34px_110px_rgba(0,0,0,0.34)]">
+                <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-slate-900/20 to-transparent dark:via-cyan-300/70" />
+                <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(15,23,42,0.03),transparent_28%),radial-gradient(circle_at_bottom_left,rgba(15,23,42,0.02),transparent_26%)] dark:bg-[radial-gradient(circle_at_top_right,rgba(47,142,146,0.12),transparent_28%),radial-gradient(circle_at_bottom_left,rgba(245,158,11,0.08),transparent_26%)]" />
+                <div className="relative flex items-center justify-between border-b border-black/8 px-5 py-4 dark:border-white/10">
                     <div>
                         <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">
                             {queueTab === 'approval' ? 'Approval Queue' : 'Blocked Queue'}
                         </div>
-                        <div className="mt-1 text-sm text-slate-300">
+                        <div className="mt-1 text-sm text-slate-600 dark:text-slate-300">
                             {queueTab === 'approval'
                                 ? 'Completed jobs currently staged for invoice creation.'
                                 : 'Invoices with validation issues that must be fixed before approval.'}
                         </div>
                     </div>
-                    <Badge variant="outline" className="h-9 rounded-full border-white/10 bg-white/[0.04] px-3 text-slate-300">
+                    <Badge variant="outline" className="h-9 rounded-full border-black/8 bg-slate-50 px-3 text-slate-600 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300">
                         {activeQueueCount} visible
                     </Badge>
                 </div>
@@ -899,13 +899,13 @@ export default function InvoiceApprovalsPage() {
                     </div>
                 ) : queueTab === 'approval' && filteredInvoices.length === 0 ? (
                     <div className="flex flex-1 flex-col items-center justify-center px-6 py-20 text-center">
-                        <div className="mb-5 flex h-20 w-20 items-center justify-center rounded-[28px] border border-white/10 bg-white/[0.04] shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
-                            <CheckCircle2 className="h-8 w-8 text-cyan-200/80" />
+                        <div className="mb-5 flex h-20 w-20 items-center justify-center rounded-[28px] border border-black/8 bg-slate-50 shadow-[0_18px_44px_rgba(15,23,42,0.06)] dark:border-white/10 dark:bg-white/[0.04] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
+                            <CheckCircle2 className="h-8 w-8 text-slate-700 dark:text-cyan-200/80" />
                         </div>
-                        <h3 className="text-2xl font-semibold tracking-[-0.03em] text-white" style={displayFontStyle}>
+                        <h3 className="text-2xl font-semibold tracking-[-0.03em] text-slate-900 dark:text-white" style={displayFontStyle}>
                             No approvals in this view
                         </h3>
-                        <p className="mt-3 max-w-md text-sm leading-6 text-slate-400" style={bodyFontStyle}>
+                        <p className="mt-3 max-w-md text-sm leading-6 text-slate-500 dark:text-slate-400" style={bodyFontStyle}>
                             {filteredBlockedInvoices.length > 0
                                 ? 'Completed jobs exist, but they are blocked from invoice approval until required data is fixed.'
                                 : 'Adjust your filters or refresh the queue to widen the current approval scope.'}
@@ -920,18 +920,18 @@ export default function InvoiceApprovalsPage() {
                     </div>
                 ) : queueTab === 'blocked' && filteredBlockedInvoices.length === 0 ? (
                     <div className="flex flex-1 flex-col items-center justify-center px-6 py-20 text-center">
-                        <div className="mb-5 flex h-20 w-20 items-center justify-center rounded-[28px] border border-white/10 bg-white/[0.04] shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
-                            <ShieldAlert className="h-8 w-8 text-red-200/80" />
+                        <div className="mb-5 flex h-20 w-20 items-center justify-center rounded-[28px] border border-black/8 bg-slate-50 shadow-[0_18px_44px_rgba(15,23,42,0.06)] dark:border-white/10 dark:bg-white/[0.04] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
+                            <ShieldAlert className="h-8 w-8 text-slate-700 dark:text-red-200/80" />
                         </div>
-                        <h3 className="text-2xl font-semibold tracking-[-0.03em] text-white" style={displayFontStyle}>
+                        <h3 className="text-2xl font-semibold tracking-[-0.03em] text-slate-900 dark:text-white" style={displayFontStyle}>
                             No blocked invoices in this view
                         </h3>
-                        <p className="mt-3 max-w-md text-sm leading-6 text-slate-400" style={bodyFontStyle}>
+                        <p className="mt-3 max-w-md text-sm leading-6 text-slate-500 dark:text-slate-400" style={bodyFontStyle}>
                             The blocked queue is clear for the current filters.
                         </p>
                         <Button
                             variant="outline"
-                            className="mt-6 h-11 rounded-2xl border-white/10 bg-white/[0.03] px-5 text-slate-100 hover:bg-white/[0.08] hover:text-white"
+                            className="mt-6 h-11 rounded-2xl border-black/8 bg-white px-5 text-slate-700 hover:bg-slate-50 hover:text-slate-900 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-100 dark:hover:bg-white/[0.08] dark:hover:text-white"
                             onClick={clearFilters}
                         >
                             Reset filters
@@ -940,7 +940,7 @@ export default function InvoiceApprovalsPage() {
                 ) : (
                     <div className="overflow-auto">
                         <Table className={cn('min-w-[1120px]', queueTab === 'blocked' && 'min-w-[1240px]')}>
-                            <TableHeader className="sticky top-0 z-10 border-b border-white/10 bg-[linear-gradient(180deg,rgba(11,25,42,0.98),rgba(10,20,35,0.92))] backdrop-blur-xl">
+                            <TableHeader className="sticky top-0 z-10 border-b border-black/8 bg-white/95 backdrop-blur-xl dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(11,25,42,0.98),rgba(10,20,35,0.92))]">
                                 <TableRow className="border-white/0 hover:bg-transparent">
                                     <TableHead className="w-[170px] pl-6 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Job ID</TableHead>
                                     <TableHead className="w-[190px] text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Location</TableHead>
@@ -961,14 +961,14 @@ export default function InvoiceApprovalsPage() {
                                     <TableRow
                                         key={inv.job_id}
                                         className={cn(
-                                            'group cursor-pointer border-b border-white/6 transition-colors hover:bg-white/[0.045]',
-                                            index % 2 === 1 && 'bg-white/[0.015]',
+                                            'group cursor-pointer border-b border-black/6 transition-colors hover:bg-slate-50 dark:border-white/6 dark:hover:bg-white/[0.045]',
+                                            index % 2 === 1 && 'bg-slate-50/70 dark:bg-white/[0.015]',
                                         )}
                                         onClick={() => void handleOpenDrawer(inv)}
                                     >
                                         <TableCell className="pl-6 py-4">
                                             <div className="space-y-1.5">
-                                                <div className="text-base font-semibold tracking-[-0.03em] text-white transition-colors group-hover:text-cyan-100" style={displayFontStyle}>
+                                                <div className="text-base font-semibold tracking-[-0.03em] text-slate-900 transition-colors group-hover:text-slate-700 dark:text-white dark:group-hover:text-cyan-100" style={displayFontStyle}>
                                                     {inv.job_code}
                                                 </div>
                                                 <div className="text-xs text-slate-500">{inv.job_id}</div>
@@ -976,32 +976,32 @@ export default function InvoiceApprovalsPage() {
                                         </TableCell>
                                         <TableCell className="py-4">
                                             <div className="space-y-1">
-                                                <OverflowText text={queueTab === 'approval' ? getApprovalLocationLabel(inv as PendingInvoice) : getBlockedLocationLabel(inv as BlockedInvoice)} className="max-w-[14rem] text-sm font-medium text-slate-100" />
+                                                <OverflowText text={queueTab === 'approval' ? getApprovalLocationLabel(inv as PendingInvoice) : getBlockedLocationLabel(inv as BlockedInvoice)} className="max-w-[14rem] text-sm font-medium text-slate-800 dark:text-slate-100" />
                                                 <div className="text-xs text-slate-500">{inv.dealership_name}</div>
                                             </div>
                                         </TableCell>
                                         <TableCell className="py-4">
-                                            <div className="inline-flex items-center gap-3 rounded-2xl border border-emerald-300/18 bg-emerald-300/[0.08] px-3 py-2">
-                                                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-300/20 text-[10px] font-semibold uppercase tracking-[0.12em] text-emerald-100">
+                                            <div className="inline-flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-3 py-2 dark:border-emerald-300/18 dark:bg-emerald-300/[0.08]">
+                                                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100 text-[10px] font-semibold uppercase tracking-[0.12em] text-emerald-700 dark:bg-emerald-300/20 dark:text-emerald-100">
                                                     {inv.technician_name?.substring(0, 2) || 'NA'}
                                                 </div>
                                                 <div>
-                                                    <div className="text-sm font-medium text-emerald-50">{inv.technician_name || 'Unassigned'}</div>
-                                                    <div className="text-[11px] text-emerald-200/70">Submitting technician</div>
+                                                    <div className="text-sm font-medium text-emerald-700 dark:text-emerald-50">{inv.technician_name || 'Unassigned'}</div>
+                                                    <div className="text-[11px] text-emerald-600/80 dark:text-emerald-200/70">Submitting technician</div>
                                                 </div>
                                             </div>
                                         </TableCell>
                                         <TableCell className="py-4">
-                                            <OverflowText text={inv.service_summary} className="max-w-[240px] text-sm text-slate-300" />
+                                            <OverflowText text={inv.service_summary} className="max-w-[240px] text-sm text-slate-600 dark:text-slate-300" />
                                         </TableCell>
                                         <TableCell className="py-4 text-right">
-                                            <div className="text-lg font-semibold tracking-[-0.04em] text-amber-100" style={displayFontStyle}>
+                                            <div className="text-lg font-semibold tracking-[-0.04em] text-amber-700 dark:text-amber-100" style={displayFontStyle}>
                                                 ${queueTab === 'approval' ? toNumber((inv as PendingInvoice).estimated_total).toFixed(2) : '0.00'}
                                             </div>
                                         </TableCell>
                                         <TableCell className="py-4">
                                             <div className="space-y-1">
-                                                <div className="text-sm font-medium text-slate-100">
+                                                <div className="text-sm font-medium text-slate-700 dark:text-slate-100">
                                                     {inv.completed_at ? new Date(inv.completed_at).toLocaleDateString() : '-'}
                                                 </div>
                                                 <div className="text-[11px] text-slate-500">
@@ -1010,8 +1010,8 @@ export default function InvoiceApprovalsPage() {
                                             </div>
                                         </TableCell>
                                         <TableCell className="py-4">
-                                            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-2 text-xs font-medium text-slate-300">
-                                                <Clock3 className="h-3.5 w-3.5 text-cyan-200" />
+                                            <div className="inline-flex items-center gap-2 rounded-full border border-black/8 bg-slate-50 px-3 py-2 text-xs font-medium text-slate-600 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300">
+                                                <Clock3 className="h-3.5 w-3.5 text-slate-600 dark:text-cyan-200" />
                                                 {formatQueueDuration(inv.completed_at)}
                                             </div>
                                         </TableCell>
@@ -1019,7 +1019,7 @@ export default function InvoiceApprovalsPage() {
                                             <TableCell className="py-4">
                                                 <div className="flex flex-wrap gap-2">
                                                     {(inv as BlockedInvoice).blocking_reasons.map((reason) => (
-                                                        <Badge key={`${inv.job_id}-${reason}`} variant="outline" className="rounded-full border-red-300/20 bg-red-300/10 text-red-100">
+                                                        <Badge key={`${inv.job_id}-${reason}`} variant="outline" className="rounded-full border-red-200 bg-red-50 text-red-700 dark:border-red-300/20 dark:bg-red-300/10 dark:text-red-100">
                                                             {reason}
                                                         </Badge>
                                                     ))}
@@ -1033,7 +1033,7 @@ export default function InvoiceApprovalsPage() {
                                             <Button
                                                 variant="ghost"
                                                 size="sm"
-                                                className="h-10 w-10 rounded-2xl border border-white/10 bg-white/[0.03] p-0 text-slate-300 hover:bg-white/[0.08] hover:text-white"
+                                                className="h-10 w-10 rounded-2xl border border-black/8 bg-white p-0 text-slate-500 hover:bg-slate-50 hover:text-slate-900 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-300 dark:hover:bg-white/[0.08] dark:hover:text-white"
                                             >
                                                 <ChevronRight className="h-4 w-4" />
                                             </Button>

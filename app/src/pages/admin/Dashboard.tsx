@@ -120,63 +120,63 @@ function titleCaseStatus(status: string): string {
 
 function metricCardClasses(tone: DashboardCardTone): string {
   return cn(
-    'group relative overflow-hidden rounded-[24px] border px-5 py-5 text-left transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_24px_60px_rgba(0,0,0,0.28)]',
-    tone === 'green' && 'border-emerald-400/20 bg-[linear-gradient(180deg,rgba(8,34,30,0.96),rgba(7,24,25,0.96))] hover:border-emerald-300/35',
-    tone === 'orange' && 'border-amber-400/20 bg-[linear-gradient(180deg,rgba(36,24,14,0.96),rgba(24,18,14,0.96))] hover:border-amber-300/35',
-    tone === 'red' && 'border-rose-400/20 bg-[linear-gradient(180deg,rgba(42,16,25,0.96),rgba(28,15,23,0.96))] hover:border-rose-300/35',
-    tone === 'blue' && 'border-cyan-400/20 bg-[linear-gradient(180deg,rgba(9,29,48,0.96),rgba(8,20,38,0.96))] hover:border-cyan-300/35',
+    'group relative overflow-hidden rounded-[24px] border px-5 py-5 text-left transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_24px_60px_rgba(15,23,42,0.08)] dark:hover:shadow-[0_24px_60px_rgba(0,0,0,0.28)]',
+    tone === 'green' && 'border-emerald-200 bg-[linear-gradient(180deg,#ffffff,#f7fcfa)] hover:border-emerald-300 dark:border-emerald-400/20 dark:bg-[linear-gradient(180deg,rgba(8,34,30,0.96),rgba(7,24,25,0.96))] dark:hover:border-emerald-300/35',
+    tone === 'orange' && 'border-amber-200 bg-[linear-gradient(180deg,#ffffff,#fdf9f4)] hover:border-amber-300 dark:border-amber-400/20 dark:bg-[linear-gradient(180deg,rgba(36,24,14,0.96),rgba(24,18,14,0.96))] dark:hover:border-amber-300/35',
+    tone === 'red' && 'border-rose-200 bg-[linear-gradient(180deg,#ffffff,#fdf7f8)] hover:border-rose-300 dark:border-rose-400/20 dark:bg-[linear-gradient(180deg,rgba(42,16,25,0.96),rgba(28,15,23,0.96))] dark:hover:border-rose-300/35',
+    tone === 'blue' && 'border-slate-200 bg-[linear-gradient(180deg,#ffffff,#f8fafc)] hover:border-slate-300 dark:border-cyan-400/20 dark:bg-[linear-gradient(180deg,rgba(9,29,48,0.96),rgba(8,20,38,0.96))] dark:hover:border-cyan-300/35',
   );
 }
 
 function metricTopLineClasses(tone: DashboardCardTone): string {
-  if (tone === 'green') return 'via-emerald-300/80';
-  if (tone === 'orange') return 'via-amber-300/80';
-  if (tone === 'red') return 'via-rose-300/80';
-  return 'via-cyan-300/80';
+  if (tone === 'green') return 'via-emerald-400/55 dark:via-emerald-300/80';
+  if (tone === 'orange') return 'via-amber-400/55 dark:via-amber-300/80';
+  if (tone === 'red') return 'via-rose-400/55 dark:via-rose-300/80';
+  return 'via-slate-900/35 dark:via-cyan-300/80';
 }
 
 function metricIconClasses(tone: DashboardCardTone): string {
-  if (tone === 'green') return 'border border-emerald-300/20 bg-emerald-300/12 text-emerald-100';
-  if (tone === 'orange') return 'border border-amber-300/20 bg-amber-300/12 text-amber-100';
-  if (tone === 'red') return 'border border-rose-300/20 bg-rose-300/12 text-rose-100';
-  return 'border border-cyan-300/20 bg-cyan-300/12 text-cyan-100';
+  if (tone === 'green') return 'border border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-300/20 dark:bg-emerald-300/12 dark:text-emerald-100';
+  if (tone === 'orange') return 'border border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-300/20 dark:bg-amber-300/12 dark:text-amber-100';
+  if (tone === 'red') return 'border border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-300/20 dark:bg-rose-300/12 dark:text-rose-100';
+  return 'border border-slate-200 bg-slate-100 text-slate-700 dark:border-cyan-300/20 dark:bg-cyan-300/12 dark:text-cyan-100';
 }
 
 function metricValueClasses(tone: DashboardCardTone): string {
-  if (tone === 'green') return 'text-emerald-50';
-  if (tone === 'orange') return 'text-amber-50';
-  if (tone === 'red') return 'text-rose-50';
-  return 'text-white';
+  if (tone === 'green') return 'text-emerald-950 dark:text-emerald-50';
+  if (tone === 'orange') return 'text-amber-950 dark:text-amber-50';
+  if (tone === 'red') return 'text-rose-950 dark:text-rose-50';
+  return 'text-slate-900 dark:text-white';
 }
 
 function metricQueueClasses(tone: DashboardCardTone): string {
-  if (tone === 'green') return 'text-emerald-200/80';
-  if (tone === 'orange') return 'text-amber-200/80';
-  if (tone === 'red') return 'text-rose-200/80';
-  return 'text-cyan-200/80';
+  if (tone === 'green') return 'text-emerald-700 dark:text-emerald-200/80';
+  if (tone === 'orange') return 'text-amber-700 dark:text-amber-200/80';
+  if (tone === 'red') return 'text-rose-700 dark:text-rose-200/80';
+  return 'text-slate-600 dark:text-cyan-200/80';
 }
 
 function alertPanelClasses(tone: DashboardAlert['tone']): string {
   return cn(
-    'rounded-[22px] border px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]',
-    tone === 'critical' && 'border-rose-400/20 bg-rose-400/10',
-    tone === 'warning' && 'border-amber-400/20 bg-amber-400/10',
-    tone === 'info' && 'border-emerald-400/20 bg-emerald-400/10',
+    'rounded-[22px] border px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]',
+    tone === 'critical' && 'border-rose-200 bg-rose-50/80 dark:border-rose-400/20 dark:bg-rose-400/10',
+    tone === 'warning' && 'border-amber-200 bg-amber-50/80 dark:border-amber-400/20 dark:bg-amber-400/10',
+    tone === 'info' && 'border-emerald-200 bg-emerald-50/80 dark:border-emerald-400/20 dark:bg-emerald-400/10',
   );
 }
 
 function alertIconClasses(tone: DashboardAlert['tone']): string {
-  if (tone === 'critical') return 'text-rose-200';
-  if (tone === 'warning') return 'text-amber-200';
-  return 'text-emerald-200';
+  if (tone === 'critical') return 'text-rose-600 dark:text-rose-200';
+  if (tone === 'warning') return 'text-amber-600 dark:text-amber-200';
+  return 'text-emerald-600 dark:text-emerald-200';
 }
 
 function activityBadgeClasses(tone: ActivityRow['tone']): string {
   return cn(
     'border text-[11px] font-semibold uppercase tracking-[0.18em]',
-    tone === 'success' && 'border-emerald-300/20 bg-emerald-300/10 text-emerald-100',
-    tone === 'warning' && 'border-amber-300/20 bg-amber-300/10 text-amber-100',
-    tone === 'info' && 'border-cyan-300/20 bg-cyan-300/10 text-cyan-100',
+    tone === 'success' && 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-300/20 dark:bg-emerald-300/10 dark:text-emerald-100',
+    tone === 'warning' && 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-300/20 dark:bg-amber-300/10 dark:text-amber-100',
+    tone === 'info' && 'border-slate-200 bg-slate-50 text-slate-700 dark:border-cyan-300/20 dark:bg-cyan-300/10 dark:text-cyan-100',
   );
 }
 
@@ -471,20 +471,20 @@ export default function Dashboard() {
 
   return (
     <div className="relative w-full pb-10" style={bodyFontStyle}>
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-[420px] rounded-[34px] bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.12),rgba(34,211,238,0)_34%),radial-gradient(circle_at_top_right,rgba(52,211,153,0.1),rgba(52,211,153,0)_28%)]" />
-      <div className="pointer-events-none absolute left-10 top-10 h-48 w-48 rounded-full bg-cyan-400/8 blur-3xl" />
-      <div className="pointer-events-none absolute right-10 top-20 h-56 w-56 rounded-full bg-emerald-400/8 blur-3xl" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-[420px] rounded-[34px] bg-[radial-gradient(circle_at_top_left,rgba(15,23,42,0.05),rgba(15,23,42,0)_34%),radial-gradient(circle_at_top_right,rgba(15,23,42,0.03),rgba(15,23,42,0)_28%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.12),rgba(34,211,238,0)_34%),radial-gradient(circle_at_top_right,rgba(52,211,153,0.1),rgba(52,211,153,0)_28%)]" />
+      <div className="pointer-events-none absolute left-10 top-10 h-48 w-48 rounded-full bg-slate-900/5 blur-3xl dark:bg-cyan-400/8" />
+      <div className="pointer-events-none absolute right-10 top-20 h-56 w-56 rounded-full bg-slate-900/4 blur-3xl dark:bg-emerald-400/8" />
 
       <div className="relative space-y-6">
-        <section className="relative overflow-hidden rounded-[32px] border border-white/10 bg-[linear-gradient(135deg,rgba(7,25,42,0.98),rgba(6,18,32,0.98))] shadow-[0_34px_120px_rgba(0,0,0,0.34)]">
-          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] bg-[size:120px_120px] opacity-20" />
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-200/70 to-transparent" />
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(47,142,146,0.14),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(245,158,11,0.12),transparent_26%)]" />
+        <section className="relative overflow-hidden rounded-[32px] border border-black/8 bg-[linear-gradient(135deg,#ffffff,#fbfbfb)] shadow-[0_34px_120px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-[linear-gradient(135deg,rgba(7,25,42,0.98),rgba(6,18,32,0.98))] dark:shadow-[0_34px_120px_rgba(0,0,0,0.34)]">
+          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(15,23,42,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(15,23,42,0.03)_1px,transparent_1px)] bg-[size:120px_120px] opacity-20 dark:bg-[linear-gradient(rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)]" />
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-slate-900/20 to-transparent dark:via-cyan-200/70" />
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(15,23,42,0.04),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(15,23,42,0.03),transparent_26%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(47,142,146,0.14),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(245,158,11,0.12),transparent_26%)]" />
 
           <div className="relative grid gap-6 p-6 xl:grid-cols-[1.2fr_0.85fr] xl:p-8">
             <div>
               <div
-                className="inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-100"
+                className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-slate-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-700 dark:border-cyan-300/20 dark:bg-cyan-300/10 dark:text-cyan-100"
                 style={displayFontStyle}
               >
                 <Sparkles className="h-3.5 w-3.5" />
@@ -492,16 +492,16 @@ export default function Dashboard() {
               </div>
 
               <h1
-                className="mt-5 text-[clamp(2.1rem,4vw,4.2rem)] font-semibold leading-[0.92] tracking-[-0.07em] text-white"
+                className="mt-5 text-[clamp(2.1rem,4vw,4.2rem)] font-semibold leading-[0.92] tracking-[-0.07em] text-slate-900 dark:text-white"
                 style={displayFontStyle}
               >
                 Dispatch
-                <span className="block bg-gradient-to-r from-white via-cyan-100 to-emerald-100 bg-clip-text text-transparent">
+                <span className="block bg-gradient-to-r from-slate-900 via-slate-700 to-slate-500 bg-clip-text text-transparent dark:from-white dark:via-cyan-100 dark:to-emerald-100">
                   command dashboard
                 </span>
               </h1>
 
-              <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-300 sm:text-[15px]">
+              <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-600 dark:text-slate-300 sm:text-[15px]">
                 Live operational metrics from the Neon-backed admin APIs, styled like a real control room instead of a generic table wall.
               </p>
 
@@ -509,20 +509,20 @@ export default function Dashboard() {
                 {leadMetrics.map((metric) => (
                   <div
                     key={metric.id}
-                    className="rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-sm text-slate-200 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
+                    className="rounded-full border border-black/8 bg-white px-4 py-2 text-sm text-slate-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-200 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
                   >
-                    <span className="text-slate-400">{metric.label}</span>
-                    <span className="ml-2 font-semibold text-white">{metric.value}</span>
+                    <span className="text-slate-500 dark:text-slate-400">{metric.label}</span>
+                    <span className="ml-2 font-semibold text-slate-900 dark:text-white">{metric.value}</span>
                   </div>
                 ))}
               </div>
 
               <div className="mt-6 flex flex-wrap items-center gap-3">
-                <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-sm text-slate-300">
-                  <Clock3 className="h-4 w-4 text-cyan-200" />
+                <div className="inline-flex items-center gap-2 rounded-full border border-black/8 bg-white px-4 py-2 text-sm text-slate-600 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300">
+                  <Clock3 className="h-4 w-4 text-slate-700 dark:text-cyan-200" />
                   Last sync {lastUpdated ? lastUpdated.toLocaleTimeString() : '--'}
                 </div>
-                <div className="inline-flex items-center gap-2 rounded-full border border-emerald-300/20 bg-emerald-300/10 px-4 py-2 text-sm text-emerald-100">
+                <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm text-emerald-700 dark:border-emerald-300/20 dark:bg-emerald-300/10 dark:text-emerald-100">
                   <Activity className="h-4 w-4" />
                   Live backend session
                 </div>
@@ -533,22 +533,22 @@ export default function Dashboard() {
               {overviewTiles.map((tile) => (
                 <div
                   key={tile.id}
-                  className="relative overflow-hidden rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,rgba(10,31,48,0.94),rgba(8,23,37,0.94))] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
+                  className="relative overflow-hidden rounded-[24px] border border-black/8 bg-[linear-gradient(180deg,#ffffff,#fafafa)] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.92)] dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(10,31,48,0.94),rgba(8,23,37,0.94))] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
+                      <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500 dark:text-slate-400">
                         {tile.label}
                       </p>
-                      <div className="mt-3 text-[2.15rem] font-semibold leading-none tracking-[-0.06em] text-white" style={displayFontStyle}>
+                      <div className="mt-3 text-[2.15rem] font-semibold leading-none tracking-[-0.06em] text-slate-900 dark:text-white" style={displayFontStyle}>
                         {tile.value}
                       </div>
                     </div>
-                    <div className="rounded-2xl border border-cyan-300/15 bg-cyan-300/10 p-2.5 text-cyan-100">
+                    <div className="rounded-2xl border border-black/8 bg-slate-100 p-2.5 text-slate-700 dark:border-cyan-300/15 dark:bg-cyan-300/10 dark:text-cyan-100">
                       <tile.icon className="h-4 w-4" />
                     </div>
                   </div>
-                  <p className="mt-4 text-sm leading-6 text-slate-400">{tile.description}</p>
+                  <p className="mt-4 text-sm leading-6 text-slate-500 dark:text-slate-400">{tile.description}</p>
                 </div>
               ))}
             </div>
@@ -582,17 +582,17 @@ export default function Dashboard() {
         <section>
           <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h2 className="text-xl font-semibold tracking-tight text-white" style={displayFontStyle}>
+              <h2 className="text-xl font-semibold tracking-tight text-slate-900 dark:text-white" style={displayFontStyle}>
                 Live queue
               </h2>
-              <p className="text-sm text-slate-400">
+              <p className="text-sm text-slate-500 dark:text-slate-400">
                 Fast entry points into the operational states that matter most right now.
               </p>
             </div>
             <Button
               variant="outline"
               size="sm"
-              className="h-10 gap-2 rounded-full border-white/10 bg-white/[0.03] px-4 text-slate-200 hover:bg-white/[0.08] hover:text-white"
+              className="h-10 gap-2 rounded-full border-black/8 bg-white px-4 text-slate-700 hover:bg-slate-50 hover:text-slate-900 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-200 dark:hover:bg-white/[0.08] dark:hover:text-white"
               onClick={() => void loadDashboard({ background: true })}
               title="Refresh dashboard"
               disabled={refreshing}
@@ -640,21 +640,21 @@ export default function Dashboard() {
         </section>
 
         <div className="grid grid-cols-1 2xl:grid-cols-[1.6fr_1fr] gap-6">
-          <section className="relative overflow-hidden rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(8,23,38,0.98),rgba(7,18,31,0.98))] shadow-[0_28px_90px_rgba(0,0,0,0.3)]">
-            <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-200/60 to-transparent" />
+          <section className="relative overflow-hidden rounded-[28px] border border-black/8 bg-[linear-gradient(180deg,#ffffff,#fafafa)] shadow-[0_28px_90px_rgba(15,23,42,0.06)] dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,23,38,0.98),rgba(7,18,31,0.98))] dark:shadow-[0_28px_90px_rgba(0,0,0,0.3)]">
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-slate-900/20 to-transparent dark:via-cyan-200/60" />
             <div className="flex items-center justify-between px-6 pb-4 pt-6">
               <div>
-                <h2 className="text-xl font-semibold text-white" style={displayFontStyle}>
+                <h2 className="text-xl font-semibold text-slate-900 dark:text-white" style={displayFontStyle}>
                   Recent activity
                 </h2>
-                <p className="text-sm text-slate-400">
+                <p className="text-sm text-slate-500 dark:text-slate-400">
                   Latest job movement coming in from the backend session.
                 </p>
               </div>
               <Button
                 variant="ghost"
                 size="sm"
-                className="gap-2 rounded-full text-cyan-200 hover:bg-white/[0.05] hover:text-white"
+                className="gap-2 rounded-full text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:text-cyan-200 dark:hover:bg-white/[0.05] dark:hover:text-white"
                 onClick={() => navigate('/admin/jobs')}
               >
                 View jobs
@@ -669,21 +669,21 @@ export default function Dashboard() {
                     {snapshot.activity.map((event) => (
                       <div
                         key={event.id}
-                        className="rounded-[22px] border border-white/10 bg-white/[0.03] px-5 py-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"
+                        className="rounded-[22px] border border-black/8 bg-white px-5 py-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.92)] dark:border-white/10 dark:bg-white/[0.03] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"
                       >
                         <div className="flex items-start gap-4">
                           <div className={cn('mt-1 h-2.5 w-2.5 rounded-full', activityDotClasses(event.tone))} />
                           <div className="min-w-0 flex-1">
                             <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                               <div className="min-w-0">
-                                <p className="truncate text-sm font-semibold text-white">{event.title}</p>
-                                <p className="mt-2 text-sm leading-6 text-slate-400">{event.description}</p>
+                                <p className="truncate text-sm font-semibold text-slate-900 dark:text-white">{event.title}</p>
+                                <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">{event.description}</p>
                               </div>
                               <Badge variant="outline" className={activityBadgeClasses(event.tone)}>
                                 {event.badge}
                               </Badge>
                             </div>
-                            <div className="mt-4 text-xs font-medium uppercase tracking-[0.22em] text-slate-500">
+                            <div className="mt-4 text-xs font-medium uppercase tracking-[0.22em] text-slate-400 dark:text-slate-500">
                               {event.timestamp}
                             </div>
                           </div>
@@ -692,7 +692,7 @@ export default function Dashboard() {
                     ))}
                   </div>
                 ) : (
-                  <div className="rounded-[22px] border border-white/10 bg-white/[0.03] px-5 py-6 text-sm text-slate-400">
+                  <div className="rounded-[22px] border border-black/8 bg-white px-5 py-6 text-sm text-slate-500 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-400">
                     No recent activity found.
                   </div>
                 )}
@@ -701,13 +701,13 @@ export default function Dashboard() {
           </section>
 
           <div className="space-y-6">
-            <section className="relative overflow-hidden rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(8,23,38,0.98),rgba(7,18,31,0.98))] p-6 shadow-[0_28px_90px_rgba(0,0,0,0.3)]">
-              <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-200/60 to-transparent" />
+            <section className="relative overflow-hidden rounded-[28px] border border-black/8 bg-[linear-gradient(180deg,#ffffff,#fafafa)] p-6 shadow-[0_28px_90px_rgba(15,23,42,0.06)] dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,23,38,0.98),rgba(7,18,31,0.98))] dark:shadow-[0_28px_90px_rgba(0,0,0,0.3)]">
+              <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-slate-900/20 to-transparent dark:via-cyan-200/60" />
               <div>
-                <h2 className="text-xl font-semibold text-white" style={displayFontStyle}>
+                <h2 className="text-xl font-semibold text-slate-900 dark:text-white" style={displayFontStyle}>
                   Quick actions
                 </h2>
-                <p className="text-sm text-slate-400">
+                <p className="text-sm text-slate-500 dark:text-slate-400">
                   Jump directly into the operational screens you use the most.
                 </p>
               </div>
@@ -718,30 +718,30 @@ export default function Dashboard() {
                     key={action.id}
                     type="button"
                     onClick={action.onClick}
-                    className="group flex w-full items-start gap-4 rounded-[22px] border border-white/10 bg-white/[0.03] px-4 py-4 text-left transition-all duration-200 hover:border-cyan-300/25 hover:bg-white/[0.06]"
+                    className="group flex w-full items-start gap-4 rounded-[22px] border border-black/8 bg-white px-4 py-4 text-left transition-all duration-200 hover:border-black/12 hover:bg-slate-50 dark:border-white/10 dark:bg-white/[0.03] dark:hover:border-cyan-300/25 dark:hover:bg-white/[0.06]"
                   >
-                    <div className="rounded-2xl border border-cyan-300/15 bg-cyan-300/10 p-2.5 text-cyan-100">
+                    <div className="rounded-2xl border border-black/8 bg-slate-100 p-2.5 text-slate-700 dark:border-cyan-300/15 dark:bg-cyan-300/10 dark:text-cyan-100">
                       <action.icon className="h-4 w-4" />
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center justify-between gap-3">
-                        <p className="text-sm font-semibold text-white">{action.label}</p>
-                        <ArrowRight className="h-4 w-4 text-white/45 transition-transform duration-200 group-hover:translate-x-1 group-hover:text-white" />
+                        <p className="text-sm font-semibold text-slate-900 dark:text-white">{action.label}</p>
+                        <ArrowRight className="h-4 w-4 text-slate-400 transition-transform duration-200 group-hover:translate-x-1 group-hover:text-slate-900 dark:text-white/45 dark:group-hover:text-white" />
                       </div>
-                      <p className="mt-2 text-sm leading-6 text-slate-400">{action.description}</p>
+                      <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">{action.description}</p>
                     </div>
                   </button>
                 ))}
               </div>
             </section>
 
-            <section className="relative overflow-hidden rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(8,23,38,0.98),rgba(7,18,31,0.98))] p-6 shadow-[0_28px_90px_rgba(0,0,0,0.3)]">
-              <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-200/60 to-transparent" />
+            <section className="relative overflow-hidden rounded-[28px] border border-black/8 bg-[linear-gradient(180deg,#ffffff,#fafafa)] p-6 shadow-[0_28px_90px_rgba(15,23,42,0.06)] dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,23,38,0.98),rgba(7,18,31,0.98))] dark:shadow-[0_28px_90px_rgba(0,0,0,0.3)]">
+              <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-slate-900/20 to-transparent dark:via-cyan-200/60" />
               <div>
-                <h2 className="text-xl font-semibold text-white" style={displayFontStyle}>
+                <h2 className="text-xl font-semibold text-slate-900 dark:text-white" style={displayFontStyle}>
                   Technician status board
                 </h2>
-                <p className="text-sm text-slate-400">
+                <p className="text-sm text-slate-500 dark:text-slate-400">
                   Current field status for every technician on the roster.
                 </p>
               </div>
@@ -764,11 +764,11 @@ export default function Dashboard() {
                         : 'bg-slate-700 text-slate-300';
 
                   return (
-                    <div key={tech.id} className="rounded-[22px] border border-white/10 bg-white/[0.03] p-4">
+                    <div key={tech.id} className="rounded-[22px] border border-black/8 bg-white p-4 dark:border-white/10 dark:bg-white/[0.03]">
                       <div className="flex items-center justify-between gap-4">
                         <div>
-                          <p className="text-sm font-semibold text-white">{tech.name}</p>
-                          <p className="mt-1 text-xs uppercase tracking-[0.2em] text-slate-500">{tech.email}</p>
+                          <p className="text-sm font-semibold text-slate-900 dark:text-white">{tech.name}</p>
+                          <p className="mt-1 text-xs uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">{tech.email}</p>
                         </div>
                         <span className={cn('rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em]', statusClasses)}>
                           {statusLabel}
@@ -779,7 +779,7 @@ export default function Dashboard() {
                 })}
               </div>
 
-              <div className="mt-4 flex items-center justify-between rounded-[22px] border border-white/10 bg-white/[0.03] px-4 py-4 text-sm text-slate-400">
+              <div className="mt-4 flex items-center justify-between rounded-[22px] border border-black/8 bg-white px-4 py-4 text-sm text-slate-500 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-400">
                 <span>{snapshot?.technicians.length ?? 0} technicians total</span>
                 <Button variant="ghost" size="sm" onClick={() => navigate('/admin/technicians')}>
                   View all technicians
@@ -787,20 +787,20 @@ export default function Dashboard() {
               </div>
             </section>
 
-            <section className="relative overflow-hidden rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(8,23,38,0.98),rgba(7,18,31,0.98))] p-6 shadow-[0_28px_90px_rgba(0,0,0,0.3)]">
-              <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-200/60 to-transparent" />
+            <section className="relative overflow-hidden rounded-[28px] border border-black/8 bg-[linear-gradient(180deg,#ffffff,#fafafa)] p-6 shadow-[0_28px_90px_rgba(15,23,42,0.06)] dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,23,38,0.98),rgba(7,18,31,0.98))] dark:shadow-[0_28px_90px_rgba(0,0,0,0.3)]">
+              <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-slate-900/20 to-transparent dark:via-emerald-200/60" />
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
+                  <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500 dark:text-slate-400">
                     Sync status
                   </p>
-                  <p className="mt-2 text-sm text-slate-300">
+                  <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
                     Dashboard is reading from the active admin backend session.
                   </p>
                 </div>
                 <Badge
                   variant="outline"
-                  className="border-emerald-300/20 bg-emerald-300/10 text-emerald-100"
+                  className="border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-300/20 dark:bg-emerald-300/10 dark:text-emerald-100"
                 >
                   Backend live
                 </Badge>
