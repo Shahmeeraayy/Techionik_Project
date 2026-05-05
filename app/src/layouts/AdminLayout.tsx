@@ -41,7 +41,7 @@ const navItems = [
   { path: '/admin/approvals', label: 'Invoice Approvals', icon: FileCheck },
   { path: '/admin/invoices', label: 'Invoice History', icon: ScrollText },
   { path: '/admin/technicians', label: 'Technicians', icon: Users },
-  { path: '/admin/accounts', label: 'Tech Accounts', icon: UserCog },
+  { path: '/admin/accounts', label: 'Technician Accounts', icon: UserCog },
   { path: '/admin/locations', label: 'Locations', icon: Building2 },
   { path: '/admin/services', label: 'Services', icon: Wrench },
   { path: '/admin/reports', label: 'Reports', icon: BarChart3 },

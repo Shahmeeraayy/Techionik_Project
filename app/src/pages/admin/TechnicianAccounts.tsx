@@ -495,111 +495,6 @@ export default function TechnicianAccountsPage() {
 
       <Card className={sectionCardClass}>
         <div className={sectionHeaderClass}>
-          <h2 className="text-base font-semibold text-white flex items-center gap-2">
-            <KeyRound className="w-4 h-4 text-rose-300" />
-            Password Reset Requests
-            <Badge variant="secondary" className="border border-rose-300/20 bg-rose-300/10 text-rose-100">
-              {filteredPendingPasswordResetRequests.length}
-            </Badge>
-          </h2>
-          <p className="text-sm text-slate-300 mt-1">
-            Technicians who clicked forgot password appear here until an admin handles their access request.
-          </p>
-        </div>
-        <div className="overflow-hidden rounded-[20px] border border-white/8 bg-black/10">
-        <div className="flex items-start justify-between gap-3 border-b border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0))] px-6 py-5">
-          <div className="space-y-2">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Reset Queue</div>
-            <div className="text-sm text-slate-200">Admin-managed password reset requests waiting for action.</div>
-          </div>
-          <Badge variant="outline" className="rounded-full border-white/10 bg-white/[0.04] px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-slate-300">
-            {filteredPendingPasswordResetRequests.length} visible
-          </Badge>
-        </div>
-        <Table>
-          <TableHeader className="sticky top-0 z-10 border-b border-white/10 bg-[linear-gradient(180deg,rgba(11,25,42,0.98),rgba(10,20,35,0.92))] backdrop-blur-xl">
-            <TableRow className="border-white/0 hover:bg-transparent">
-              <TableHead className="pl-6 w-[220px] text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Technician</TableHead>
-              <TableHead className="w-[260px] text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Contact</TableHead>
-              <TableHead className="w-[220px] text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Requested At</TableHead>
-              <TableHead className="text-right pr-6 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredPendingPasswordResetRequests.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={4} className="h-28 text-center text-sm text-slate-400">
-                  {hasSearchQuery ? 'No password reset requests match your search.' : 'No pending password reset requests.'}
-                </TableCell>
-              </TableRow>
-            ) : (
-              filteredPendingPasswordResetRequests.map((request) => (
-                <TableRow key={request.id} className="border-white/6 hover:bg-white/[0.045]">
-                  <TableCell className="pl-6">
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-full bg-rose-300/12 text-rose-100 flex items-center justify-center">
-                        <KeyRound className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <p className="font-semibold text-white">{request.technicianName ?? 'Technician'}</p>
-                        <p className="text-xs text-slate-500 font-mono">{request.id}</p>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="space-y-1">
-                      <div className="text-sm text-slate-200 flex items-center gap-2">
-                        <Mail className="w-3.5 h-3.5 text-slate-500" />
-                        <span>{request.technicianEmail}</span>
-                      </div>
-                      <div className="text-sm text-slate-400 flex items-center gap-2">
-                        <Phone className="w-3.5 h-3.5 text-slate-500" />
-                        <span>{request.technicianPhone ? formatPhoneForDisplay(request.technicianPhone) : 'Not set'}</span>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="text-sm text-slate-300 flex items-center gap-2">
-                      <Calendar className="w-3.5 h-3.5 text-slate-500" />
-                      <span>{formatDateTime(request.requestedAt)}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="pr-6">
-                    <div className="flex items-center justify-end gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleSendResetLink({
-                          email: request.technicianEmail,
-                          name: request.technicianName ?? 'Technician',
-                        })}
-                        disabled={isRefreshing}
-                        className="border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
-                      >
-                        <Send className="w-4 h-4 mr-1" />
-                        Send Reset Link
-                      </Button>
-                      <Button
-                        size="sm"
-                        className="bg-rose-600 hover:bg-rose-700"
-                        onClick={() => handleResolvePasswordResetRequest(request)}
-                        disabled={isRefreshing}
-                      >
-                        <CheckCircle2 className="w-4 h-4 mr-1" />
-                        Mark Handled
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-        </div>
-      </Card>
-
-      <Card className={sectionCardClass}>
-        <div className={sectionHeaderClass}>
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <h2 className="flex items-center gap-2 text-base font-semibold text-white">
@@ -634,6 +529,101 @@ export default function TechnicianAccountsPage() {
           </div>
         </div>
         <div className="overflow-hidden rounded-[20px] border border-white/8 bg-black/10">
+          <div className="border-b border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.025),rgba(255,255,255,0))] px-6 py-5">
+            <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-sm font-semibold text-white">
+                  <KeyRound className="h-4 w-4 text-rose-300" />
+                  Password Reset Requests
+                  <Badge variant="secondary" className="border border-rose-300/20 bg-rose-300/10 text-rose-100">
+                    {filteredPendingPasswordResetRequests.length}
+                  </Badge>
+                </div>
+                <p className="text-sm text-slate-300">
+                  Technician-initiated password reset requests appear here for admin follow-up and reset-link delivery.
+                </p>
+              </div>
+              <Badge variant="outline" className="w-fit rounded-full border-white/10 bg-white/[0.04] px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-slate-300">
+                {filteredPendingPasswordResetRequests.length} reset pending
+              </Badge>
+            </div>
+            <div className="mt-4 overflow-hidden rounded-2xl border border-white/8 bg-black/10">
+              <Table>
+                <TableHeader className="border-b border-white/10 bg-[linear-gradient(180deg,rgba(11,25,42,0.98),rgba(10,20,35,0.92))] backdrop-blur-xl">
+                  <TableRow className="border-white/0 hover:bg-transparent">
+                    <TableHead className="pl-6 w-[220px] text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Technician</TableHead>
+                    <TableHead className="w-[260px] text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Contact</TableHead>
+                    <TableHead className="w-[220px] text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Requested At</TableHead>
+                    <TableHead className="text-right pr-6 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredPendingPasswordResetRequests.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={4} className="h-24 text-center text-sm text-slate-400">
+                        {hasSearchQuery ? 'No password reset requests match your search.' : 'No pending password reset requests.'}
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    filteredPendingPasswordResetRequests.map((request) => (
+                      <TableRow key={request.id} className="border-white/6 hover:bg-white/[0.045]">
+                        <TableCell className="pl-6">
+                          <div>
+                            <p className="font-semibold text-white">{request.technicianName ?? 'Technician'}</p>
+                            <p className="text-xs text-slate-500 font-mono">{request.id}</p>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="space-y-1">
+                            <div className="text-sm text-slate-200 flex items-center gap-2">
+                              <Mail className="w-3.5 h-3.5 text-slate-500" />
+                              <span>{request.technicianEmail}</span>
+                            </div>
+                            <div className="text-sm text-slate-400 flex items-center gap-2">
+                              <Phone className="w-3.5 h-3.5 text-slate-500" />
+                              <span>{request.technicianPhone ? formatPhoneForDisplay(request.technicianPhone) : 'Not set'}</span>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="text-sm text-slate-300 flex items-center gap-2">
+                            <Calendar className="w-3.5 h-3.5 text-slate-500" />
+                            <span>{formatDateTime(request.requestedAt)}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="pr-6">
+                          <div className="flex items-center justify-end gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleSendResetLink({
+                                email: request.technicianEmail,
+                                name: request.technicianName ?? 'Technician',
+                              })}
+                              disabled={isRefreshing}
+                              className="border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
+                            >
+                              <Send className="w-4 h-4 mr-1" />
+                              Send Reset Link
+                            </Button>
+                            <Button
+                              size="sm"
+                              className="bg-rose-600 hover:bg-rose-700"
+                              onClick={() => handleResolvePasswordResetRequest(request)}
+                              disabled={isRefreshing}
+                            >
+                              <CheckCircle2 className="w-4 h-4 mr-1" />
+                              Mark Handled
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
           <div className="flex items-start justify-between gap-3 border-b border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0))] px-6 py-5">
             <div className="space-y-2">
               <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">
