@@ -14,13 +14,13 @@
     --card-foreground: 220 25% 9%;
     --popover: 0 0% 100%;
     --popover-foreground: 220 25% 9%;
-    --primary: 181 52% 38%;
+    --primary: 222 100% 65%;
     --primary-foreground: 0 0% 100%;
     --secondary: 220 13% 95%;
     --secondary-foreground: 220 25% 9%;
     --muted: 220 13% 95%;
     --muted-foreground: 220 9% 46%;
-    --accent: 181 52% 38%;
+    --accent: 222 100% 65%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
@@ -30,23 +30,23 @@
     --success-foreground: 0 0% 100%;
     --border: 220 13% 91%;
     --input: 220 13% 91%;
-    --ring: 181 52% 38%;
+    --ring: 222 100% 65%;
     --radius: 0.625rem;
     
     /* Sidebar */
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 220 25% 9%;
-    --sidebar-primary: 181 52% 38%;
+    --sidebar-primary: 222 100% 65%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 220 13% 95%;
     --sidebar-accent-foreground: 220 25% 9%;
     --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 181 52% 38%;
+    --sidebar-ring: 222 100% 65%;
     
     /* Custom Colors */
-    --teal: #2F8E92;
-    --teal-light: #E6F4F4;
-    --teal-dark: #236B6E;
+    --teal: #4F7CFF;
+    --teal-light: #EAF0FF;
+    --teal-dark: #315BDA;
     --gray-50: #F6F7F9;
     --gray-100: #EEF1F5;
     --gray-200: #E5E7EB;
@@ -60,36 +60,36 @@
   }
  
   .dark {
-    --background: 224 64% 6%;
-    --background-secondary: 223 39% 11%;
-    --foreground: 214 34% 94%;
-    --card: 223 38% 13%;
-    --card-foreground: 213 31% 91%;
-    --popover: 223 38% 13%;
+    --background: 220 43% 5%;
+    --background-secondary: 220 33% 9%;
+    --foreground: 216 38% 95%;
+    --card: 220 31% 11%;
+    --card-foreground: 216 32% 92%;
+    --popover: 220 31% 11%;
     --popover-foreground: 215 20.2% 65.1%;
-    --primary: 180 62% 46%;
-    --primary-foreground: 222 47.4% 11.2%;
-    --secondary: 221 30% 18%;
+    --primary: 222 100% 65%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 221 28% 16%;
     --secondary-foreground: 210 40% 98%;
-    --muted: 220 29% 17%;
-    --muted-foreground: 215 24% 72%;
-    --accent: 180 62% 46%;
+    --muted: 220 25% 15%;
+    --muted-foreground: 216 26% 74%;
+    --accent: 222 100% 65%;
     --accent-foreground: 210 40% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
-    --border: 220 25% 21%;
-    --input: 220 25% 21%;
-    --ring: 180 62% 46%;
+    --border: 220 24% 18%;
+    --input: 220 24% 18%;
+    --ring: 222 100% 65%;
 
     /* Sidebar Dark */
-    --sidebar-background: 224 64% 6%;
-    --sidebar-foreground: 213 31% 91%;
-    --sidebar-primary: 180 62% 46%;
+    --sidebar-background: 220 43% 5%;
+    --sidebar-foreground: 216 32% 92%;
+    --sidebar-primary: 222 100% 65%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 29% 17%;
+    --sidebar-accent: 220 24% 15%;
     --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 220 25% 21%;
-    --sidebar-ring: 180 62% 46%;
+    --sidebar-border: 220 24% 18%;
+    --sidebar-ring: 222 100% 65%;
   }
 }
 
@@ -106,8 +106,8 @@
     @apply bg-background text-foreground antialiased;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
     background-image:
-      radial-gradient(circle at top left, rgba(99, 102, 241, 0.08), transparent 24%),
-      radial-gradient(circle at top right, rgba(45, 212, 191, 0.08), transparent 22%),
+      radial-gradient(circle at top left, rgba(79, 124, 255, 0.12), transparent 24%),
+      radial-gradient(circle at top right, rgba(79, 124, 255, 0.06), transparent 22%),
       linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0));
   }
   
@@ -192,7 +192,7 @@
   
   /* Button Styles */
   .btn-primary {
-    @apply bg-[linear-gradient(135deg,#2F8E92,#41c7cf)] text-white rounded-2xl px-4 py-2.5 font-medium 
+    @apply bg-[linear-gradient(135deg,#4f7cff,#7aa2ff)] text-white rounded-2xl px-4 py-2.5 font-medium 
            transition-all duration-200 hover:-translate-y-0.5
            active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed;
   }
@@ -204,16 +204,16 @@
   }
   
   .btn-outline {
-    @apply bg-transparent text-[#2F8E92] border border-[#2F8E92]/45 rounded-2xl px-4 py-2.5 font-medium
-           transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#E6F4F4]
-           active:bg-[#d0ebeb] disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply bg-transparent text-[#4f7cff] border border-[#4f7cff]/45 rounded-2xl px-4 py-2.5 font-medium
+           transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#EAF0FF]
+           active:bg-[#dbe5ff] disabled:opacity-50 disabled:cursor-not-allowed;
   }
   
   /* Form Input Styles */
   .input-field {
     @apply w-full px-4 py-3 bg-white/90 border border-white/60 rounded-2xl text-gray-900 backdrop-blur-sm
-           placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2F8E92]/20 
-           focus:border-[#2F8E92] transition-all duration-200;
+           placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#4f7cff]/20 
+           focus:border-[#4f7cff] transition-all duration-200;
   }
   
   /* Table Styles */
@@ -235,7 +235,7 @@
   }
   
   .timeline-dot {
-    @apply absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-white border-2 border-[#2F8E92];
+    @apply absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-white border-2 border-[#4f7cff];
   }
   
   /* Animation Classes */
@@ -348,7 +348,7 @@
   
   /* Focus Ring */
   .focus-ring {
-    @apply focus:outline-none focus:ring-2 focus:ring-[#2F8E92]/20 focus:border-[#2F8E92];
+    @apply focus:outline-none focus:ring-2 focus:ring-[#4f7cff]/20 focus:border-[#4f7cff];
   }
 }
 
@@ -359,14 +359,14 @@
 
   .dark .admin-shell {
     background:
-      radial-gradient(960px 520px at 18% -120px, rgba(99, 102, 241, 0.18), rgba(6, 11, 25, 0) 54%),
-      radial-gradient(860px 460px at 88% -80px, rgba(45, 212, 191, 0.15), rgba(6, 11, 25, 0) 46%),
-      linear-gradient(180deg, #050b18 0%, #030712 100%);
+      radial-gradient(960px 520px at 18% -120px, rgba(79, 124, 255, 0.24), rgba(8, 12, 20, 0) 54%),
+      radial-gradient(860px 460px at 88% -80px, rgba(79, 124, 255, 0.12), rgba(8, 12, 20, 0) 46%),
+      linear-gradient(180deg, #080c14 0%, #060912 100%);
   }
 
   .dark .admin-shell .admin-sidebar {
     background:
-      linear-gradient(180deg, rgba(10, 18, 34, 0.98) 0%, rgba(5, 11, 22, 0.98) 100%);
+      linear-gradient(180deg, rgba(10, 16, 28, 0.98) 0%, rgba(8, 12, 20, 0.98) 100%);
     border-color: rgba(148, 163, 184, 0.12);
     box-shadow:
       inset -1px 0 0 rgba(148, 163, 184, 0.08),
@@ -374,7 +374,7 @@
   }
 
   .dark .admin-shell .admin-topbar {
-    background: rgba(8, 15, 30, 0.78);
+    background: rgba(8, 12, 20, 0.82);
     border-color: rgba(148, 163, 184, 0.1);
     box-shadow: 0 12px 36px rgba(2, 6, 23, 0.32);
     backdrop-filter: blur(18px);
@@ -382,13 +382,13 @@
 
   .dark .admin-shell .admin-content {
     background:
-      linear-gradient(180deg, rgba(12, 18, 37, 0.18) 0%, rgba(6, 11, 24, 0) 30%);
+      linear-gradient(180deg, rgba(17, 26, 45, 0.22) 0%, rgba(8, 12, 20, 0) 30%);
   }
 
   .dark .admin-shell .admin-page-frame {
     border: 1px solid rgba(148, 163, 184, 0.1);
     background:
-      linear-gradient(180deg, rgba(10, 18, 34, 0.7), rgba(6, 12, 24, 0.58));
+      linear-gradient(180deg, rgba(13, 20, 34, 0.76), rgba(8, 12, 20, 0.62));
     box-shadow:
       0 30px 90px rgba(2, 6, 23, 0.28),
       inset 0 1px 0 rgba(255,255,255,0.04);
@@ -397,7 +397,7 @@
 
   .dark .admin-shell [data-slot="card"] {
     background:
-      linear-gradient(180deg, rgba(13, 24, 44, 0.9), rgba(9, 18, 33, 0.9));
+      linear-gradient(180deg, rgba(14, 24, 42, 0.92), rgba(9, 15, 28, 0.92));
     border-color: rgba(148, 163, 184, 0.1);
     box-shadow:
       0 18px 54px rgba(2, 6, 23, 0.24),
@@ -420,7 +420,7 @@
 
   /* Normalize hardcoded light surfaces inside admin pages */
   .dark .admin-shell .bg-white {
-    background-color: rgba(12, 22, 44, 0.9) !important;
+    background-color: rgba(14, 24, 42, 0.92) !important;
   }
 
   .dark .admin-shell .bg-gray-50,
@@ -432,7 +432,7 @@
   .dark .admin-shell .bg-gray-100\/80,
   .dark .admin-shell .bg-\[\#f6fbfb\],
   .dark .admin-shell .bg-\[\#E6F4F4\] {
-    background-color: rgba(18, 30, 57, 0.78) !important;
+    background-color: rgba(18, 28, 49, 0.82) !important;
   }
 
   .dark .admin-shell .bg-amber-50,
@@ -479,11 +479,11 @@
   .dark .admin-shell .hover\:bg-gray-50\/50:hover,
   .dark .admin-shell .hover\:bg-gray-100:hover,
   .dark .admin-shell .hover\:bg-white:hover {
-    background-color: rgba(28, 43, 76, 0.82) !important;
+    background-color: rgba(28, 42, 73, 0.86) !important;
   }
 
   .dark .admin-shell .focus\:bg-white:focus {
-    background-color: rgba(18, 31, 58, 0.95) !important;
+    background-color: rgba(18, 28, 49, 0.95) !important;
   }
 }
 

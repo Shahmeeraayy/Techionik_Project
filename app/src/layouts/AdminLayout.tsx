@@ -85,7 +85,7 @@ function Sidebar({
       >
         {/* Logo */}
         <div className="flex items-center gap-3 px-6 py-6 border-b border-border flex-shrink-0">
-          <div className="w-10 h-10 rounded-2xl bg-[linear-gradient(135deg,#2F8E92,#63d7db)] flex items-center justify-center shadow-[0_18px_40px_rgba(47,142,146,0.24)]">
+          <div className="w-10 h-10 rounded-2xl bg-[linear-gradient(135deg,#4f7cff,#79a1ff)] flex items-center justify-center shadow-[0_18px_40px_rgba(79,124,255,0.28)]">
             <Shield className="w-5 h-5 text-primary-foreground" />
           </div>
           <div>
@@ -108,21 +108,21 @@ function Sidebar({
                 className={cn(
                   'flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-medium transition-all duration-200 w-full text-left group',
                   isActive
-                    ? 'bg-muted text-primary shadow-sm dark:bg-[linear-gradient(135deg,rgba(18,43,60,0.92),rgba(15,31,53,0.92))] dark:text-cyan-200 dark:shadow-[0_18px_34px_rgba(6,11,24,0.24),inset_0_0_0_1px_rgba(99,219,228,0.18)]'
+                    ? 'bg-muted text-primary shadow-sm dark:bg-[linear-gradient(135deg,rgba(18,32,58,0.92),rgba(12,23,44,0.92))] dark:text-blue-100 dark:shadow-[0_18px_34px_rgba(6,11,24,0.24),inset_0_0_0_1px_rgba(79,124,255,0.24)]'
                     : 'text-muted-foreground hover:bg-muted hover:text-foreground dark:text-slate-400 dark:hover:bg-white/[0.05] dark:hover:text-slate-100'
                 )}
               >
                 <div className={cn(
                   'flex h-9 w-9 items-center justify-center rounded-xl border transition-all duration-200',
                   isActive
-                    ? 'border-cyan-300/20 bg-cyan-300/10 text-cyan-200'
+                    ? 'border-blue-300/20 bg-blue-400/10 text-blue-100'
                     : 'border-white/6 bg-white/[0.03] text-slate-500 group-hover:border-white/10 group-hover:bg-white/[0.06] group-hover:text-slate-200',
                 )}>
                   <Icon className="w-4.5 h-4.5" />
                 </div>
                 <span className="flex-1">{item.label}</span>
                 {item.path === '/admin/chat' && unreadChatCount > 0 ? (
-                  <span className="rounded-full bg-cyan-100 px-2 py-0.5 text-xs font-semibold text-cyan-700 shadow-[0_10px_20px_rgba(34,211,238,0.18)]">
+                  <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-700 shadow-[0_10px_20px_rgba(79,124,255,0.22)]">
                     {unreadChatCount}
                   </span>
                 ) : null}

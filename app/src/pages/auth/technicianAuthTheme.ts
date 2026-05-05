@@ -2,7 +2,7 @@ import type { CSSProperties } from 'react';
 
 export const technicianPageBackgroundStyle: CSSProperties = {
   backgroundImage:
-    'radial-gradient(circle at 16% 18%, rgba(99, 102, 241, 0.16), transparent 22%), radial-gradient(circle at 82% 14%, rgba(45, 212, 191, 0.14), transparent 24%), radial-gradient(circle at 70% 78%, rgba(168, 85, 247, 0.08), transparent 26%), linear-gradient(145deg, #04101d 0%, #0a1d34 48%, #0a1f26 100%)',
+    'radial-gradient(circle at 16% 18%, rgba(79, 124, 255, 0.22), transparent 22%), radial-gradient(circle at 82% 14%, rgba(79, 124, 255, 0.14), transparent 24%), radial-gradient(circle at 70% 78%, rgba(121, 161, 255, 0.12), transparent 26%), linear-gradient(145deg, #080c14 0%, #0d1422 48%, #111b2f 100%)',
 };
 
 export const technicianGridOverlayStyle: CSSProperties = {
@@ -14,7 +14,7 @@ export const technicianGridOverlayStyle: CSSProperties = {
 
 export const technicianOrbitalGlowStyle: CSSProperties = {
   background:
-    'radial-gradient(circle at 50% 0%, rgba(99,102,241,0.24), rgba(99,102,241,0) 52%), radial-gradient(circle at 78% 18%, rgba(45,212,191,0.18), rgba(45,212,191,0) 38%)',
+    'radial-gradient(circle at 50% 0%, rgba(79,124,255,0.3), rgba(79,124,255,0) 52%), radial-gradient(circle at 78% 18%, rgba(121,161,255,0.18), rgba(121,161,255,0) 38%)',
 };
 
 export const technicianDisplayFontStyle: CSSProperties = {
