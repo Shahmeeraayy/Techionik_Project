@@ -640,6 +640,24 @@ export async function fetchAdminTechnicians(token: string): Promise<BackendTechn
   });
 }
 
+export async function createAdminTechnician(
+  token: string,
+  payload: {
+    name: string;
+    email: string;
+    phone?: string;
+    password?: string;
+    status?: 'active' | 'deactivated';
+    manual_availability?: boolean;
+  },
+): Promise<BackendTechnicianProfile> {
+  return requestJson<BackendTechnicianProfile>('/admin/technicians', {
+    method: 'POST',
+    token,
+    body: payload,
+  });
+}
+
 export async function fetchAdminTechnicianJobsFeed(
   token: string,
   technicianId: string,

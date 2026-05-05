@@ -79,6 +79,7 @@ import { useAuth, type TechnicianAccountSummary } from '@/contexts/AuthContext';
 import {
     assignAdminTechnicianSkill,
     assignAdminTechnicianZone,
+    createAdminTechnician,
     createAdminTechnicianSkillCatalogEntry,
     createAdminTechnicianTimeOff,
     createAdminTechnicianZoneCatalogEntry,
@@ -418,7 +419,7 @@ export default function TechniciansPage() {
     const [exportModalOpen, setExportModalOpen] = useState(false);
 
     // Form States (for creating new tech or time off)
-    const [newTechForm, setNewTechForm] = useState({ name: '', code: '', phone: '', zones: '', skills: '' });
+    const [newTechForm, setNewTechForm] = useState({ name: '', email: '', code: '', phone: '', zones: '', skills: '' });
     const [editTechForm, setEditTechForm] = useState({ name: '', code: '', phone: '', zones: '', skills: '' });
     const [timeOffForm, setTimeOffForm] = useState({ start: '', end: '', reason: '' });
     const [newZoneInput, setNewZoneInput] = useState('');
@@ -952,19 +953,29 @@ export default function TechniciansPage() {
         setTimeOffForm({ start: '', end: '', reason: '' });
     };
 
-    const handleAddTech = () => {
+    const handleAddTech = async () => {
         const name = newTechForm.name.trim();
+        const email = newTechForm.email.trim().toLowerCase();
         const code = newTechForm.code.trim();
         const phone = toUsPhoneFormat(newTechForm.phone);
         const zones = newTechForm.zones.split(',').map(s => s.trim()).filter(Boolean);
         const skills = newTechForm.skills.split(',').map(s => s.trim()).filter(Boolean);
+        const adminToken = getStoredAdminToken();
 
-        if (!name || !code || !phone) {
-            alert("Name, tech code, and phone are required.");
+        if (!name || !email || !code || !phone) {
+            alert("Name, email, tech code, and phone are required.");
+            return;
+        }
+        if (!email.includes('@')) {
+            alert('Please enter a valid email address.');
             return;
         }
         if (phone !== newTechForm.phone.trim()) {
             alert(`Phone must be in this format: ${phoneExampleFormat}.`);
+            return;
+        }
+        if (techs.some(t => t.email.toLowerCase() === email)) {
+            alert("Email already exists.");
             return;
         }
         if (techs.some(t => t.tech_code.toLowerCase() === code.toLowerCase())) {
@@ -976,11 +987,85 @@ export default function TechniciansPage() {
             return;
         }
 
+        if (hasBackendAdminToken && adminToken) {
+            const createdProfile = await createAdminTechnician(adminToken, {
+                name,
+                email,
+                phone,
+                manual_availability: true,
+                status: 'active',
+            });
+
+            const createdTechnician = mergeProfileIntoTechnician(
+                {
+                    id: createdProfile.id,
+                    name,
+                    full_name: name,
+                    tech_code: code,
+                    email,
+                    phone,
+                    status: 'active',
+                    manual_availability: true,
+                    effective_availability: true,
+                    on_leave_now: false,
+                    zones: [],
+                    zone_records: [],
+                    skills: [],
+                    skill_records: [],
+                    working_hours: getRealSchedule(),
+                    time_off: [],
+                    current_jobs_count: 0,
+                    current_assignments: [],
+                    allowed_actions: [...DEFAULT_ACCOUNT_ACTIONS],
+                },
+                createdProfile,
+                [],
+            );
+
+            const ensureZoneRecord = async (zoneName: string) => {
+                let zoneRecord = zoneCatalog.find((entry) => entry.name.trim().toLowerCase() === zoneName.toLowerCase());
+                if (!zoneRecord) {
+                    zoneRecord = await createAdminTechnicianZoneCatalogEntry(adminToken, zoneName);
+                    setZoneCatalog((prev) => [...prev, zoneRecord as BackendTechnicianCatalogEntry]);
+                }
+                await assignAdminTechnicianZone(adminToken, createdProfile.id, zoneRecord.id);
+                return zoneRecord;
+            };
+
+            const ensureSkillRecord = async (skillName: string) => {
+                let skillRecord = skillCatalog.find((entry) => entry.name.trim().toLowerCase() === skillName.toLowerCase());
+                if (!skillRecord) {
+                    skillRecord = await createAdminTechnicianSkillCatalogEntry(adminToken, skillName);
+                    setSkillCatalog((prev) => [...prev, skillRecord as BackendTechnicianCatalogEntry]);
+                }
+                await assignAdminTechnicianSkill(adminToken, createdProfile.id, skillRecord.id);
+                return skillRecord;
+            };
+
+            const createdZones = await Promise.all(zones.map(ensureZoneRecord));
+            const createdSkills = await Promise.all(skills.map(ensureSkillRecord));
+
+            const hydratedTechnician: Technician = {
+                ...createdTechnician,
+                tech_code: code,
+                zones: createdZones.map((entry) => entry.name),
+                zone_records: createdZones.map((entry) => ({ id: entry.id, name: entry.name })),
+                skills: createdSkills.map((entry) => entry.name),
+                skill_records: createdSkills.map((entry) => ({ id: entry.id, name: entry.name })),
+            };
+
+            setTechs(prev => [...prev, hydratedTechnician]);
+            setAddTechModalOpen(false);
+            setNewTechForm({ name: '', email: '', code: '', phone: '', zones: '', skills: '' });
+            setTimeout(() => void handleOpenProfile(hydratedTechnician), 300);
+            return;
+        }
+
         const newTech: Technician = {
             id: `t-${Date.now()}`,
             name,
             tech_code: code,
-            email: `${code.toLowerCase()}@pending.local`,
+            email,
             phone,
             status: 'active',
             manual_availability: true,
@@ -1014,7 +1099,7 @@ export default function TechniciansPage() {
             }
         );
         setAddTechModalOpen(false);
-        setNewTechForm({ name: '', code: '', phone: '', zones: '', skills: '' });
+        setNewTechForm({ name: '', email: '', code: '', phone: '', zones: '', skills: '' });
 
         // Open drawer for the new tech
         setTimeout(() => handleOpenProfile(newTech), 300);
@@ -1230,18 +1315,24 @@ export default function TechniciansPage() {
                                         <Input className="border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500" placeholder="e.g. John Doe" value={newTechForm.name} onChange={e => setNewTechForm({ ...newTechForm, name: e.target.value })} />
                                     </div>
                                     <div className="space-y-2">
+                                        <Label className="text-slate-200">Email</Label>
+                                        <Input className="border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500" placeholder="e.g. john@example.com" value={newTechForm.email} onChange={e => setNewTechForm({ ...newTechForm, email: e.target.value })} />
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
                                         <Label className="text-slate-200">Tech Code</Label>
                                         <Input className="border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500" placeholder="e.g. TECH-999" value={newTechForm.code} onChange={e => setNewTechForm({ ...newTechForm, code: e.target.value })} />
                                     </div>
-                                </div>
-                                <div className="space-y-2">
-                                    <Label className="text-slate-200">Phone</Label>
-                                    <Input
-                                        className="border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500"
-                                        placeholder={phoneExampleFormat}
-                                        value={newTechForm.phone}
-                                        onChange={e => setNewTechForm({ ...newTechForm, phone: formatUsPhoneInput(e.target.value) })}
-                                    />
+                                    <div className="space-y-2">
+                                        <Label className="text-slate-200">Phone</Label>
+                                        <Input
+                                            className="border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500"
+                                            placeholder={phoneExampleFormat}
+                                            value={newTechForm.phone}
+                                            onChange={e => setNewTechForm({ ...newTechForm, phone: formatUsPhoneInput(e.target.value) })}
+                                        />
+                                    </div>
                                 </div>
                                 <div className="space-y-2">
                                     <Label className="text-slate-200">Default Zones (comma separated)</Label>
