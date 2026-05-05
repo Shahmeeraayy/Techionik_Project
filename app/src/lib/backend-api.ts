@@ -99,6 +99,13 @@ export type BackendTechnicianProfile = {
     created_at: string;
     cancelled_at?: string | null;
   }>;
+  zones: Array<{ id: string; name: string }>;
+  skills: Array<{ id: string; name: string }>;
+};
+
+export type BackendTechnicianCatalogEntry = {
+  id: string;
+  name: string;
 };
 
 export type BackendEmailChangeRequest = {
@@ -638,6 +645,152 @@ export async function fetchAdminTechnicianJobsFeed(
   technicianId: string,
 ): Promise<BackendTechnicianJobFeed> {
   return requestJson<BackendTechnicianJobFeed>(`/admin/technicians/${technicianId}/jobs-feed`, {
+    token,
+  });
+}
+
+export async function fetchAdminTechnicianProfile(
+  token: string,
+  technicianId: string,
+): Promise<BackendTechnicianProfile> {
+  return requestJson<BackendTechnicianProfile>(`/admin/technicians/${technicianId}`, {
+    token,
+  });
+}
+
+export async function fetchAdminTechnicianZoneCatalog(
+  token: string,
+): Promise<BackendTechnicianCatalogEntry[]> {
+  return requestJson<BackendTechnicianCatalogEntry[]>('/admin/technicians/zones/catalog', {
+    token,
+  });
+}
+
+export async function createAdminTechnicianZoneCatalogEntry(
+  token: string,
+  name: string,
+): Promise<BackendTechnicianCatalogEntry> {
+  return requestJson<BackendTechnicianCatalogEntry>('/admin/technicians/zones/catalog', {
+    method: 'POST',
+    token,
+    body: { name },
+  });
+}
+
+export async function fetchAdminTechnicianSkillCatalog(
+  token: string,
+): Promise<BackendTechnicianCatalogEntry[]> {
+  return requestJson<BackendTechnicianCatalogEntry[]>('/admin/technicians/skills/catalog', {
+    token,
+  });
+}
+
+export async function createAdminTechnicianSkillCatalogEntry(
+  token: string,
+  name: string,
+): Promise<BackendTechnicianCatalogEntry> {
+  return requestJson<BackendTechnicianCatalogEntry>('/admin/technicians/skills/catalog', {
+    method: 'POST',
+    token,
+    body: { name },
+  });
+}
+
+export async function assignAdminTechnicianZone(
+  token: string,
+  technicianId: string,
+  zoneId: string,
+): Promise<{ status: string }> {
+  return requestJson<{ status: string }>(`/admin/technicians/${technicianId}/zones`, {
+    method: 'POST',
+    token,
+    body: { zone_id: zoneId },
+  });
+}
+
+export async function removeAdminTechnicianZone(
+  token: string,
+  technicianId: string,
+  zoneId: string,
+): Promise<{ status: string }> {
+  return requestJson<{ status: string }>(`/admin/technicians/${technicianId}/zones/${zoneId}`, {
+    method: 'DELETE',
+    token,
+  });
+}
+
+export async function assignAdminTechnicianSkill(
+  token: string,
+  technicianId: string,
+  skillId: string,
+): Promise<{ status: string }> {
+  return requestJson<{ status: string }>(`/admin/technicians/${technicianId}/skills`, {
+    method: 'POST',
+    token,
+    body: { skill_id: skillId },
+  });
+}
+
+export async function removeAdminTechnicianSkill(
+  token: string,
+  technicianId: string,
+  skillId: string,
+): Promise<{ status: string }> {
+  return requestJson<{ status: string }>(`/admin/technicians/${technicianId}/skills/${skillId}`, {
+    method: 'DELETE',
+    token,
+  });
+}
+
+export async function updateAdminTechnicianWeeklySchedule(
+  token: string,
+  technicianId: string,
+  payload: Array<{
+    day_of_week: number;
+    is_enabled: boolean;
+    start_time: string;
+    end_time: string;
+  }>,
+): Promise<BackendTechnicianProfile['weekly_schedule']> {
+  return requestJson<BackendTechnicianProfile['weekly_schedule']>(`/admin/technicians/${technicianId}/weekly-schedule`, {
+    method: 'PUT',
+    token,
+    body: payload,
+  });
+}
+
+export async function fetchAdminTechnicianTimeOff(
+  token: string,
+  technicianId: string,
+): Promise<BackendOutOfOfficeRange[]> {
+  return requestJson<BackendOutOfOfficeRange[]>(`/admin/technicians/${technicianId}/time-off`, {
+    token,
+  });
+}
+
+export async function createAdminTechnicianTimeOff(
+  token: string,
+  technicianId: string,
+  payload: {
+    start_date: string;
+    end_date: string;
+    reason: string;
+  },
+): Promise<BackendOutOfOfficeRange> {
+  return requestJson<BackendOutOfOfficeRange>(`/admin/technicians/${technicianId}/time-off`, {
+    method: 'POST',
+    token,
+    body: payload,
+  });
+}
+
+export async function deleteAdminTechnicianTimeOff(
+  token: string,
+  technicianId: string,
+  timeOffId: string,
+): Promise<{ status: string }> {
+  return requestJson<{ status: string }>(`/admin/technicians/${technicianId}/time-off/${timeOffId}`, {
+    method: 'DELETE',
     token,
   });
 }

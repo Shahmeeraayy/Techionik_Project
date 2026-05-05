@@ -11,8 +11,17 @@ import {
     Briefcase,
     X,
     User,
-    FileDown
+    FileDown,
+    Mail,
+    ArrowUpRight,
+    Route,
+    Tag,
+    UserCog,
+    Loader2,
+    Phone,
+    Activity,
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { exportArrayData, selectColumnsForExport, type ExportFormat } from '@/lib/export';
 import { Button } from '@/components/ui/button';
@@ -68,9 +77,26 @@ import {
 } from '@/lib/phone';
 import { useAuth, type TechnicianAccountSummary } from '@/contexts/AuthContext';
 import {
+    assignAdminTechnicianSkill,
+    assignAdminTechnicianZone,
+    createAdminTechnicianSkillCatalogEntry,
+    createAdminTechnicianTimeOff,
+    createAdminTechnicianZoneCatalogEntry,
+    deleteAdminTechnicianTimeOff,
+    fetchAdminTechnicianJobsFeed,
+    fetchAdminTechnicianProfile,
+    fetchAdminTechnicianSkillCatalog,
+    fetchAdminTechnicianTimeOff,
+    fetchAdminTechnicianZoneCatalog,
     fetchAdminTechnicians,
     getStoredAdminToken,
+    removeAdminTechnicianSkill,
+    removeAdminTechnicianZone,
+    updateAdminTechnicianWeeklySchedule,
+    type BackendTechnicianCatalogEntry,
+    type BackendTechnicianJobFeedItem,
     type BackendTechnicianListItem,
+    type BackendTechnicianProfile,
 } from '@/lib/backend-api';
 
 // --- Types ---
@@ -94,19 +120,27 @@ interface Technician {
     name: string;
     full_name?: string;
     tech_code: string; // Unique
+    email: string;
     phone: string;
     profile_picture_url?: string;
-    status: 'active' | 'inactive';
+    status: 'active' | 'deactivated';
+    manual_availability: boolean;
+    effective_availability: boolean;
+    on_leave_now: boolean;
     has_pending_email_change_request?: boolean;
     pending_email_change_requested_email?: string;
     zones: string[];
+    zone_records: Array<{ id: string; name: string }>;
     skills: string[];
+    skill_records: Array<{ id: string; name: string }>;
     working_hours: WorkingHours[];
     time_off: TimeOff[];
     current_jobs_count: number;
-    current_assignments: { job_code: string; status: string; scheduled_at?: string }[];
+    current_assignments: { id: string; job_code: string; status: string; scheduled_at?: string; dealership_name?: string; vehicle_summary?: string }[];
     allowed_actions: string[];
 }
+
+type OperationalStatus = 'available' | 'in_progress' | 'offline' | 'out_of_office';
 
 interface PersistedAuditEvent {
     id: string;
@@ -141,6 +175,7 @@ const appendAuditLog = (
 const REAL_HOURS_MON_THU = { start: '08:00', end: '17:00', is_closed: false };
 const REAL_HOURS_FRI = { start: '08:00', end: '15:00', is_closed: false };
 const REAL_HOURS_WEEKEND = { start: '00:00', end: '00:00', is_closed: true };
+const WEEKDAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const;
 
 const getRealSchedule = () => [
     { day: 'Mon', ...REAL_HOURS_MON_THU },
@@ -165,6 +200,58 @@ const formatDateForUi = (value: string): string => {
 };
 
 const cloneTech = (tech: Technician): Technician => JSON.parse(JSON.stringify(tech)) as Technician;
+
+const formatTimeValue = (value?: string | null) => (value ? value.slice(0, 5) : '08:00');
+
+const mapWeeklySchedule = (profile?: BackendTechnicianProfile | null): WorkingHours[] => {
+    if (!profile?.weekly_schedule?.length) {
+        return getRealSchedule();
+    }
+
+    return WEEKDAY_LABELS.slice(1)
+        .concat(WEEKDAY_LABELS[0])
+        .map((day, orderIndex) => {
+            const dayOfWeek = (orderIndex + 1) % 7;
+            const slot = profile.weekly_schedule.find((entry) => entry.day_of_week === dayOfWeek);
+            return {
+                day,
+                start: formatTimeValue(slot?.start_time),
+                end: formatTimeValue(slot?.end_time || slot?.start_time),
+                is_closed: slot ? !slot.is_enabled : true,
+            };
+        });
+};
+
+const mapTimeOffEntries = (profile?: BackendTechnicianProfile | null): TimeOff[] => (
+    profile?.upcoming_time_off?.map((entry) => ({
+        id: entry.id,
+        start: entry.start_date,
+        end: entry.end_date,
+        reason: entry.reason,
+    })) ?? []
+);
+
+const getOperationalStatus = (tech: Pick<Technician, 'status' | 'manual_availability' | 'effective_availability' | 'on_leave_now' | 'current_jobs_count'>): OperationalStatus => {
+    if (tech.on_leave_now) return 'out_of_office';
+    if (tech.current_jobs_count > 0) return 'in_progress';
+    if (tech.status !== 'active' || !tech.manual_availability || !tech.effective_availability) return 'offline';
+    return 'available';
+};
+
+const getOperationalStatusLabel = (status: OperationalStatus) => {
+    switch (status) {
+        case 'available':
+            return 'Available';
+        case 'in_progress':
+            return 'In Progress';
+        case 'offline':
+            return 'Offline';
+        case 'out_of_office':
+            return 'Out of Office';
+        default:
+            return status;
+    }
+};
 
 const makeAccountTechCode = (accountId: string, usedCodes: Set<string>) => {
     const compact = accountId.replace(/[^a-z0-9]/gi, '').toUpperCase();
@@ -209,10 +296,16 @@ const mergeTechniciansWithAccounts = (
             id: account.id,
             name: account.name,
             tech_code: techCode,
+            email: account.email,
             phone: formatPhoneForDisplay(account.phone ?? existing?.phone ?? ''),
-            status: account.isActive ? 'active' : 'inactive',
+            status: account.isActive ? 'active' : 'deactivated',
+            manual_availability: existing?.manual_availability ?? account.isActive,
+            effective_availability: existing?.effective_availability ?? account.isActive,
+            on_leave_now: existing?.on_leave_now ?? false,
             zones: existing?.zones?.length ? existing.zones : [...DEFAULT_ACCOUNT_ZONES],
+            zone_records: existing?.zone_records ?? [],
             skills: existing?.skills?.length ? existing.skills : [...DEFAULT_ACCOUNT_SKILLS],
+            skill_records: existing?.skill_records ?? [],
             working_hours: existing?.working_hours?.length ? existing.working_hours : getRealSchedule(),
             time_off: existing?.time_off ?? [],
             current_jobs_count: existing?.current_jobs_count ?? 0,
@@ -232,13 +325,19 @@ const mapBackendTechnician = (item: BackendTechnicianListItem, index: number): T
         name: item.full_name || item.name,
         full_name: item.full_name || item.name,
         tech_code: `T-${String(index + 1).padStart(2, '0')}`,
+        email: item.email,
         phone: formatPhoneForDisplay(item.phone ?? ''),
         profile_picture_url: item.profile_picture_url ?? undefined,
-        status: item.status === 'active' ? 'active' : 'inactive',
+        status: item.status === 'active' ? 'active' : 'deactivated',
+        manual_availability: item.manual_availability,
+        effective_availability: item.effective_availability,
+        on_leave_now: item.on_leave_now,
         has_pending_email_change_request: item.has_pending_email_change_request ?? false,
         pending_email_change_requested_email: item.pending_email_change_requested_email ?? undefined,
         zones: item.zones.map((zone) => zone.name),
+        zone_records: item.zones.map((zone) => ({ id: zone.id, name: zone.name })),
         skills: item.skills.map((skill) => skill.name),
+        skill_records: item.skills.map((skill) => ({ id: skill.id, name: skill.name })),
         working_hours: getRealSchedule(),
         time_off: [],
         current_jobs_count: item.current_jobs_count,
@@ -249,9 +348,16 @@ const mapBackendTechnician = (item: BackendTechnicianListItem, index: number): T
 
 // --- Components ---
 
-function StatusBadge({ status }: { status: 'active' | 'inactive' }) {
-    if (status === 'active') return <Badge className="border border-cyan-300/20 bg-cyan-300/12 text-cyan-100 hover:bg-cyan-300/12 shadow-none">Active</Badge>;
-    return <Badge variant="outline" className="border-white/10 bg-white/[0.03] text-slate-400">Inactive</Badge>;
+function StatusBadge({ status }: { status: OperationalStatus }) {
+    const label = getOperationalStatusLabel(status);
+    const className = {
+        available: 'border-emerald-300/20 bg-emerald-300/12 text-emerald-100',
+        in_progress: 'border-amber-300/20 bg-amber-300/12 text-amber-100',
+        offline: 'border-white/10 bg-white/[0.03] text-slate-300',
+        out_of_office: 'border-violet-300/20 bg-violet-300/12 text-violet-100',
+    }[status];
+
+    return <Badge className={cn('shadow-none hover:bg-inherit', className)}>{label}</Badge>;
 }
 
 function ProfileStat({
@@ -275,25 +381,31 @@ function ProfileStat({
 }
 
 const TECHNICIAN_EXPORT_COLUMNS = [
-    'TechCode',
     'Name',
+    'Email',
     'Phone',
-    'Status',
-    'ActiveJobs',
     'Zones',
     'Skills',
+    'CurrentStatus',
+    'ActiveJobs',
+    'CurrentJob',
     'WorkingHours',
 ];
 
 export default function TechniciansPage() {
+    const navigate = useNavigate();
     const { technicianAccounts, hasBackendAdminToken } = useAuth();
     const [techs, setTechs] = useState<Technician[]>([]);
     const [loading, setLoading] = useState(true);
+    const [detailLoading, setDetailLoading] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [filterStatus, setFilterStatus] = useState<string>('all');
     const [filterZone, setFilterZone] = useState<string>('all');
     const [filterSkill, setFilterSkill] = useState<string>('all');
     const [isBackendSynced, setIsBackendSynced] = useState(false);
+    const [zoneCatalog, setZoneCatalog] = useState<BackendTechnicianCatalogEntry[]>([]);
+    const [skillCatalog, setSkillCatalog] = useState<BackendTechnicianCatalogEntry[]>([]);
+    const [techJobFeed, setTechJobFeed] = useState<BackendTechnicianJobFeedItem[]>([]);
 
     // Drawers & Modals
     const [selectedTech, setSelectedTech] = useState<Technician | null>(null);
@@ -319,9 +431,15 @@ export default function TechniciansPage() {
 
         if (hasBackendAdminToken && adminToken) {
             try {
-                const backendItems = await fetchAdminTechnicians(adminToken);
+                const [backendItems, zones, skills] = await Promise.all([
+                    fetchAdminTechnicians(adminToken),
+                    fetchAdminTechnicianZoneCatalog(adminToken).catch(() => []),
+                    fetchAdminTechnicianSkillCatalog(adminToken).catch(() => []),
+                ]);
                 const mapped = backendItems.map(mapBackendTechnician);
                 setTechs(mapped);
+                setZoneCatalog(zones);
+                setSkillCatalog(skills);
                 setIsBackendSynced(true);
                 setLoading(false);
                 return;
@@ -332,6 +450,8 @@ export default function TechniciansPage() {
 
         const merged = mergeTechniciansWithAccounts([], technicianAccounts);
         setTechs(merged);
+        setZoneCatalog([]);
+        setSkillCatalog([]);
         setIsBackendSynced(false);
         setLoading(false);
     }, [hasBackendAdminToken, technicianAccounts]);
@@ -392,10 +512,12 @@ export default function TechniciansPage() {
         const queryPhoneToken = getPhoneSearchToken(searchQuery);
         const matchesSearch =
             tech.name.toLowerCase().includes(query) ||
+            tech.email.toLowerCase().includes(query) ||
             tech.tech_code.toLowerCase().includes(query) ||
+            tech.zones.some((zone) => zone.toLowerCase().includes(query)) ||
             tech.phone.includes(searchQuery) ||
             (queryPhoneToken.length > 0 && getPhoneSearchToken(tech.phone).includes(queryPhoneToken));
-        const matchesStatus = filterStatus === 'all' || tech.status === filterStatus;
+        const matchesStatus = filterStatus === 'all' || getOperationalStatus(tech) === filterStatus;
         const matchesZone =
             filterZone === 'all' ||
             tech.zones.some((zone) => zone.trim().toLowerCase() === filterZone.toLowerCase());
@@ -405,10 +527,11 @@ export default function TechniciansPage() {
         return matchesSearch && matchesStatus && matchesZone && matchesSkill;
     });
     const totalTechCount = techs.length;
-    const activeTechCount = techs.filter((tech) => tech.status === 'active').length;
-    const inactiveTechCount = totalTechCount - activeTechCount;
+    const availableTechCount = techs.filter((tech) => getOperationalStatus(tech) === 'available').length;
+    const offlineTechCount = techs.filter((tech) => getOperationalStatus(tech) === 'offline').length;
+    const outOfOfficeCount = techs.filter((tech) => getOperationalStatus(tech) === 'out_of_office').length;
     const assignedJobsCount = techs.reduce((sum, tech) => sum + tech.current_jobs_count, 0);
-    const busyTechniciansCount = techs.filter((tech) => tech.current_jobs_count > 0).length;
+    const busyTechniciansCount = techs.filter((tech) => getOperationalStatus(tech) === 'in_progress').length;
     const hasActiveFilters =
         searchQuery.trim().length > 0
         || filterStatus !== 'all'
@@ -456,14 +579,96 @@ export default function TechniciansPage() {
         setTechDraft((prev) => (prev ? updater(prev) : prev));
     };
 
-    const handleOpenProfile = (tech: Technician) => {
+    const mergeProfileIntoTechnician = (tech: Technician, profile: BackendTechnicianProfile, jobsFeed?: BackendTechnicianJobFeedItem[]): Technician => ({
+        ...tech,
+        name: profile.full_name || profile.name,
+        full_name: profile.full_name || profile.name,
+        email: profile.email,
+        phone: formatPhoneForDisplay(profile.phone ?? tech.phone ?? ''),
+        profile_picture_url: profile.profile_picture_url ?? tech.profile_picture_url,
+        status: profile.status,
+        manual_availability: profile.manual_availability,
+        effective_availability: profile.effective_availability,
+        on_leave_now: profile.on_leave_now,
+        has_pending_email_change_request: profile.has_pending_email_change_request ?? tech.has_pending_email_change_request,
+        pending_email_change_requested_email: profile.pending_email_change_requested_email ?? tech.pending_email_change_requested_email,
+        zones: profile.zones.map((zone) => zone.name),
+        zone_records: profile.zones.map((zone) => ({ id: zone.id, name: zone.name })),
+        skills: profile.skills.map((skill) => skill.name),
+        skill_records: profile.skills.map((skill) => ({ id: skill.id, name: skill.name })),
+        working_hours: mapWeeklySchedule(profile),
+        time_off: mapTimeOffEntries(profile),
+        current_jobs_count: jobsFeed ? jobsFeed.length : tech.current_jobs_count,
+        current_assignments: jobsFeed
+            ? jobsFeed.map((job) => ({
+                id: job.id,
+                job_code: job.job_code,
+                status: job.status,
+                scheduled_at: job.requested_service_date ?? undefined,
+                dealership_name: job.dealership_name ?? undefined,
+                vehicle_summary: job.vehicle_summary ?? undefined,
+            }))
+            : tech.current_assignments,
+    });
+
+    const handleOpenProfile = async (tech: Technician) => {
         const snapshot = cloneTech(tech);
         setSelectedTech(snapshot);
         setTechDraft(cloneTech(snapshot));
+        setTechJobFeed(snapshot.current_assignments.map((job) => ({
+            id: job.id,
+            job_code: job.job_code,
+            status: job.status,
+            dealership_name: job.dealership_name ?? null,
+            service_name: null,
+            service_names: [],
+            service_entries: [],
+            vehicle_summary: job.vehicle_summary ?? null,
+            zone_name: null,
+            requested_service_date: job.scheduled_at ?? null,
+            requested_service_time: null,
+            created_at: job.scheduled_at ?? '',
+            updated_at: job.scheduled_at ?? '',
+        })));
         setNewZoneInput('');
         setNewSkillInput('');
         setTimeOffForm({ start: '', end: '', reason: '' });
         setDrawerOpen(true);
+
+        const adminToken = getStoredAdminToken();
+        if (!hasBackendAdminToken || !adminToken) {
+            return;
+        }
+
+        try {
+            setDetailLoading(true);
+            const [profile, jobsFeed, timeOff] = await Promise.all([
+                fetchAdminTechnicianProfile(adminToken, tech.id),
+                fetchAdminTechnicianJobsFeed(adminToken, tech.id),
+                fetchAdminTechnicianTimeOff(adminToken, tech.id).catch(() => []),
+            ]);
+            const merged = mergeProfileIntoTechnician(tech, {
+                ...profile,
+                upcoming_time_off: profile.upcoming_time_off?.length
+                    ? profile.upcoming_time_off
+                    : timeOff.map((entry) => ({
+                        id: entry.id,
+                        technician_id: tech.id,
+                        entry_type: 'OUT_OF_OFFICE',
+                        start_date: entry.start_date,
+                        end_date: entry.end_date,
+                        reason: entry.reason,
+                        created_at: entry.created_at,
+                        cancelled_at: null,
+                    })),
+            }, jobsFeed.my_jobs);
+            setSelectedTech(cloneTech(merged));
+            setTechDraft(cloneTech(merged));
+            setTechJobFeed(jobsFeed.my_jobs);
+            setTechs((prev) => prev.map((item) => (item.id === merged.id ? merged : item)));
+        } finally {
+            setDetailLoading(false);
+        }
     };
 
     const handleCancelDrawerChanges = () => {
@@ -475,7 +680,7 @@ export default function TechniciansPage() {
         setTimeOffModalOpen(false);
     };
 
-    const handleSaveDrawerChanges = () => {
+    const handleSaveDrawerChanges = async () => {
         if (!selectedTech || !techDraft || !hasDrawerChanges) return;
 
         const beforeSnapshot = {
@@ -491,7 +696,55 @@ export default function TechniciansPage() {
             time_off: techDraft.time_off,
         };
 
+        const adminToken = getStoredAdminToken();
         const saved = cloneTech(techDraft);
+
+        if (hasBackendAdminToken && adminToken) {
+            const nextZones = techDraft.zone_records;
+            const previousZoneIds = new Set(selectedTech.zone_records.map((entry) => entry.id));
+            const nextZoneIds = new Set(nextZones.map((entry) => entry.id));
+            const zonesToAdd = nextZones.filter((entry) => !previousZoneIds.has(entry.id));
+            const zonesToRemove = selectedTech.zone_records.filter((entry) => !nextZoneIds.has(entry.id));
+
+            const nextSkills = techDraft.skill_records;
+            const previousSkillIds = new Set(selectedTech.skill_records.map((entry) => entry.id));
+            const nextSkillIds = new Set(nextSkills.map((entry) => entry.id));
+            const skillsToAdd = nextSkills.filter((entry) => !previousSkillIds.has(entry.id));
+            const skillsToRemove = selectedTech.skill_records.filter((entry) => !nextSkillIds.has(entry.id));
+
+            await Promise.all([
+                ...zonesToAdd.map((entry) => assignAdminTechnicianZone(adminToken, selectedTech.id, entry.id)),
+                ...zonesToRemove.map((entry) => removeAdminTechnicianZone(adminToken, selectedTech.id, entry.id)),
+                ...skillsToAdd.map((entry) => assignAdminTechnicianSkill(adminToken, selectedTech.id, entry.id)),
+                ...skillsToRemove.map((entry) => removeAdminTechnicianSkill(adminToken, selectedTech.id, entry.id)),
+            ]);
+
+            await updateAdminTechnicianWeeklySchedule(
+                adminToken,
+                selectedTech.id,
+                techDraft.working_hours.map((entry, index) => ({
+                    day_of_week: (index + 1) % 7,
+                    is_enabled: !entry.is_closed,
+                    start_time: entry.start,
+                    end_time: entry.end,
+                })),
+            );
+
+            const previousTimeOffIds = new Set(selectedTech.time_off.map((entry) => entry.id));
+            const nextTimeOffIds = new Set(techDraft.time_off.map((entry) => entry.id));
+            const createdTimeOff = techDraft.time_off.filter((entry) => !previousTimeOffIds.has(entry.id));
+            const deletedTimeOff = selectedTech.time_off.filter((entry) => !nextTimeOffIds.has(entry.id));
+
+            await Promise.all([
+                ...createdTimeOff.map((entry) => createAdminTechnicianTimeOff(adminToken, selectedTech.id, {
+                    start_date: entry.start,
+                    end_date: entry.end,
+                    reason: entry.reason,
+                })),
+                ...deletedTimeOff.map((entry) => deleteAdminTechnicianTimeOff(adminToken, selectedTech.id, entry.id)),
+            ]);
+        }
+
         setTechs(prev => {
             const next = prev.map(t => t.id === saved.id ? saved : t);
             persistTechniciansToStorage(next);
@@ -528,7 +781,7 @@ export default function TechniciansPage() {
         }
     };
 
-    const handleAddZone = () => {
+    const handleAddZone = async () => {
         if (!techDraft) return;
         const zone = newZoneInput.trim();
         if (!zone) return;
@@ -538,7 +791,18 @@ export default function TechniciansPage() {
             return;
         }
 
-        updateDraft((draft) => ({ ...draft, zones: [...draft.zones, zone] }));
+        const adminToken = getStoredAdminToken();
+        let zoneRecord = zoneCatalog.find((entry) => entry.name.trim().toLowerCase() === zone.toLowerCase());
+        if (!zoneRecord && hasBackendAdminToken && adminToken) {
+            zoneRecord = await createAdminTechnicianZoneCatalogEntry(adminToken, zone);
+            setZoneCatalog((prev) => [...prev, zoneRecord as BackendTechnicianCatalogEntry]);
+        }
+
+        updateDraft((draft) => ({
+            ...draft,
+            zones: [...draft.zones, zone],
+            zone_records: zoneRecord ? [...draft.zone_records, zoneRecord] : draft.zone_records,
+        }));
         setNewZoneInput('');
     };
 
@@ -552,10 +816,11 @@ export default function TechniciansPage() {
         updateDraft((draft) => ({
             ...draft,
             zones: draft.zones.filter(z => z !== zone),
+            zone_records: draft.zone_records.filter((entry) => entry.name !== zone),
         }));
     };
 
-    const handleAddSkill = () => {
+    const handleAddSkill = async () => {
         if (!techDraft) return;
         const skill = newSkillInput.trim();
         if (!skill) return;
@@ -565,7 +830,18 @@ export default function TechniciansPage() {
             return;
         }
 
-        updateDraft((draft) => ({ ...draft, skills: [...draft.skills, skill] }));
+        const adminToken = getStoredAdminToken();
+        let skillRecord = skillCatalog.find((entry) => entry.name.trim().toLowerCase() === skill.toLowerCase());
+        if (!skillRecord && hasBackendAdminToken && adminToken) {
+            skillRecord = await createAdminTechnicianSkillCatalogEntry(adminToken, skill);
+            setSkillCatalog((prev) => [...prev, skillRecord as BackendTechnicianCatalogEntry]);
+        }
+
+        updateDraft((draft) => ({
+            ...draft,
+            skills: [...draft.skills, skill],
+            skill_records: skillRecord ? [...draft.skill_records, skillRecord] : draft.skill_records,
+        }));
         setNewSkillInput('');
     };
 
@@ -579,6 +855,7 @@ export default function TechniciansPage() {
         updateDraft((draft) => ({
             ...draft,
             skills: draft.skills.filter(s => s !== skill),
+            skill_records: draft.skill_records.filter((entry) => entry.name !== skill),
         }));
     };
 
@@ -662,10 +939,14 @@ export default function TechniciansPage() {
             end,
             reason
         };
+        const now = new Date();
+        const isCurrentWindow = startBoundary <= now && endBoundary >= now;
 
         updateDraft((draft) => ({
             ...draft,
             time_off: [...draft.time_off, newTimeOff],
+            on_leave_now: isCurrentWindow ? true : draft.on_leave_now,
+            effective_availability: isCurrentWindow ? false : draft.effective_availability,
         }));
         setTimeOffModalOpen(false);
         setTimeOffForm({ start: '', end: '', reason: '' });
@@ -699,10 +980,16 @@ export default function TechniciansPage() {
             id: `t-${Date.now()}`,
             name,
             tech_code: code,
+            email: `${code.toLowerCase()}@pending.local`,
             phone,
             status: 'active',
+            manual_availability: true,
+            effective_availability: true,
+            on_leave_now: false,
             zones,
+            zone_records: zones.map((name) => ({ id: name, name })),
             skills,
+            skill_records: skills.map((name) => ({ id: name, name })),
             working_hours: getRealSchedule(),
             time_off: [],
             current_jobs_count: 0,
@@ -781,7 +1068,9 @@ export default function TechniciansPage() {
             tech_code: code,
             phone,
             zones,
-            skills
+            zone_records: zones.map((name) => selectedTech.zone_records.find((entry) => entry.name === name) ?? { id: name, name }),
+            skills,
+            skill_records: skills.map((name) => selectedTech.skill_records.find((entry) => entry.name === name) ?? { id: name, name }),
         };
 
         setTechs(prev => {
@@ -839,7 +1128,7 @@ export default function TechniciansPage() {
 
     const confirmDeactivate = () => {
         if (!selectedTech) return;
-        const updated = { ...selectedTech, status: 'inactive' as const };
+        const updated = { ...selectedTech, status: 'deactivated' as const };
         setTechs(prev => {
             const next = prev.map(t => t.id === updated.id ? updated : t);
             persistTechniciansToStorage(next);
@@ -857,13 +1146,14 @@ export default function TechniciansPage() {
     };
 
     const getTechnicianExportRows = () => techs.map(t => ({
-            TechCode: t.tech_code,
             Name: t.name,
+            Email: t.email,
             Phone: t.phone,
-            Status: t.status,
-            ActiveJobs: t.current_jobs_count,
             Zones: t.zones.join('; '),
             Skills: t.skills.join('; '),
+            CurrentStatus: getOperationalStatusLabel(getOperationalStatus(t)),
+            ActiveJobs: t.current_jobs_count,
+            CurrentJob: t.current_assignments[0]?.job_code ?? '',
             WorkingHours: JSON.stringify(t.working_hours) // Simplify for CSV
         }));
 
@@ -982,23 +1272,23 @@ export default function TechniciansPage() {
                 </Card>
                 <Card className="overflow-hidden rounded-[24px] border border-emerald-400/15 bg-[linear-gradient(180deg,rgba(10,37,45,0.96),rgba(7,25,31,0.96))] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
                     <div className="p-5">
-                        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Active</p>
-                        <p className="mt-3 text-[2.15rem] font-semibold leading-none tracking-[-0.06em] text-white">{activeTechCount}</p>
-                        <p className="mt-2 text-sm text-slate-300">Ready for dispatch</p>
+                        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Available</p>
+                        <p className="mt-3 text-[2.15rem] font-semibold leading-none tracking-[-0.06em] text-white">{availableTechCount}</p>
+                        <p className="mt-2 text-sm text-slate-300">Ready for dispatch right now</p>
                     </div>
                 </Card>
                 <Card className="overflow-hidden rounded-[24px] border border-violet-400/15 bg-[linear-gradient(180deg,rgba(30,23,49,0.96),rgba(18,16,33,0.96))] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
                     <div className="p-5">
-                        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Inactive</p>
-                        <p className="mt-3 text-[2.15rem] font-semibold leading-none tracking-[-0.06em] text-white">{inactiveTechCount}</p>
-                        <p className="mt-2 text-sm text-slate-300">Profiles temporarily unavailable</p>
+                        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Out of Office</p>
+                        <p className="mt-3 text-[2.15rem] font-semibold leading-none tracking-[-0.06em] text-white">{outOfOfficeCount}</p>
+                        <p className="mt-2 text-sm text-slate-300">Temporarily removed from dispatch</p>
                     </div>
                 </Card>
                 <Card className="overflow-hidden rounded-[24px] border border-amber-400/15 bg-[linear-gradient(180deg,rgba(41,28,15,0.94),rgba(27,18,10,0.96))] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
                     <div className="p-5">
-                        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Assigned Jobs</p>
-                        <p className="mt-3 text-[2.15rem] font-semibold leading-none tracking-[-0.06em] text-white">{assignedJobsCount}</p>
-                        <p className="mt-2 text-sm text-slate-300">{busyTechniciansCount} technicians currently assigned</p>
+                        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">In Progress / Offline</p>
+                        <p className="mt-3 text-[2.15rem] font-semibold leading-none tracking-[-0.06em] text-white">{busyTechniciansCount} / {offlineTechCount}</p>
+                        <p className="mt-2 text-sm text-slate-300">{assignedJobsCount} active jobs across the roster</p>
                     </div>
                 </Card>
             </div>
@@ -1010,7 +1300,7 @@ export default function TechniciansPage() {
                         <div className="flex flex-col gap-2 lg:flex-row lg:items-end lg:justify-between">
                             <div>
                                 <h2 className="text-base font-semibold text-white">Technician Filters</h2>
-                                <p className="mt-1 text-sm text-slate-300">Search by technician identity, routing zone, or skill coverage.</p>
+                                <p className="mt-1 text-sm text-slate-300">Search by name, email, or zone and narrow by readiness, coverage, and skill fit.</p>
                             </div>
                             <Badge variant="outline" className="w-fit border-white/10 bg-white/[0.03] text-slate-300">
                                 Showing {filteredTechs.length} of {totalTechCount}
@@ -1020,7 +1310,7 @@ export default function TechniciansPage() {
                             <div className="relative flex-1 w-full lg:w-auto min-w-0 lg:min-w-[300px]">
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                                 <Input
-                                    placeholder="Search technician, code, phone, zone, or skill..."
+                                    placeholder="Search by name, email, phone, or zone..."
                                     className="h-11 rounded-full border-white/10 bg-white/[0.04] pl-9 text-slate-100 placeholder:text-slate-500 focus:bg-white/[0.06] transition-all"
                                     value={searchQuery}
                                     onChange={e => setSearchQuery(e.target.value)}
@@ -1032,9 +1322,11 @@ export default function TechniciansPage() {
                                         <SelectValue placeholder="Status" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="all">All Status</SelectItem>
-                                        <SelectItem value="active">Active</SelectItem>
-                                        <SelectItem value="inactive">Inactive</SelectItem>
+                                        <SelectItem value="all">All Statuses</SelectItem>
+                                        <SelectItem value="available">Available</SelectItem>
+                                        <SelectItem value="in_progress">In Progress</SelectItem>
+                                        <SelectItem value="offline">Offline</SelectItem>
+                                        <SelectItem value="out_of_office">Out of Office</SelectItem>
                                     </SelectContent>
                                 </Select>
 
@@ -1112,14 +1404,16 @@ export default function TechniciansPage() {
                             </Badge>
                         </div>
                         <div className="overflow-auto">
-                            <Table className="min-w-[1080px]">
+                            <Table className="min-w-[1320px]">
                                 <TableHeader className="sticky top-0 z-10 border-b border-white/10 bg-[linear-gradient(180deg,rgba(11,25,42,0.98),rgba(10,20,35,0.92))] backdrop-blur-xl">
                                     <TableRow className="border-white/0 hover:bg-transparent">
-                                        <TableHead className="pl-6 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Technician</TableHead>
-                                        <TableHead className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Status</TableHead>
-                                        <TableHead className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Active Jobs</TableHead>
-                                        <TableHead className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Zones</TableHead>
-                                        <TableHead className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Skills</TableHead>
+                                        <TableHead className="pl-6 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Technician Name</TableHead>
+                                        <TableHead className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Email</TableHead>
+                                        <TableHead className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Phone</TableHead>
+                                        <TableHead className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Assigned Zones</TableHead>
+                                        <TableHead className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Skill Tags</TableHead>
+                                        <TableHead className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Current Status</TableHead>
+                                        <TableHead className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Active Job Count</TableHead>
                                         <TableHead className="w-[64px] pr-6 text-right text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Open</TableHead>
                                     </TableRow>
                                 </TableHeader>
@@ -1145,7 +1439,7 @@ export default function TechniciansPage() {
                                                         <div className="flex items-center gap-2 text-xs text-slate-500">
                                                             <span className="font-mono">{tech.tech_code}</span>
                                                             <span>&bull;</span>
-                                                            <span>{formatPhoneForDisplay(tech.phone)}</span>
+                                                            <span>{tech.current_assignments[0]?.job_code ?? 'No active assignment'}</span>
                                                         </div>
                                                         {tech.has_pending_email_change_request ? (
                                                             <Badge
@@ -1159,7 +1453,33 @@ export default function TechniciansPage() {
                                                 </div>
                                             </TableCell>
                                             <TableCell className="py-4">
-                                                <StatusBadge status={tech.status} />
+                                                <div className="text-sm text-slate-200">{tech.email}</div>
+                                            </TableCell>
+                                            <TableCell className="py-4">
+                                                <div className="text-sm text-slate-300">{formatPhoneForDisplay(tech.phone) || 'Not set'}</div>
+                                            </TableCell>
+                                            <TableCell className="py-4">
+                                                <div className="flex flex-wrap items-center gap-1.5">
+                                                    {tech.zones.slice(0, 2).map((zone) => (
+                                                        <Badge key={zone} variant="secondary" className="h-5 border border-white/10 bg-white/[0.04] px-2 py-0 text-[10px] text-slate-300">
+                                                            {zone}
+                                                        </Badge>
+                                                    ))}
+                                                    {tech.zones.length > 2 ? <span className="text-[10px] text-slate-500">+{tech.zones.length - 2}</span> : null}
+                                                </div>
+                                            </TableCell>
+                                            <TableCell className="py-4">
+                                                <div className="flex flex-wrap items-center gap-1.5">
+                                                    {tech.skills.slice(0, 2).map((skill) => (
+                                                        <Badge key={skill} variant="secondary" className="h-5 border border-cyan-300/20 bg-cyan-300/10 px-2 py-0 text-[10px] text-cyan-100">
+                                                            {skill}
+                                                        </Badge>
+                                                    ))}
+                                                    {tech.skills.length > 2 ? <span className="text-[10px] text-slate-500">+{tech.skills.length - 2}</span> : null}
+                                                </div>
+                                            </TableCell>
+                                            <TableCell className="py-4">
+                                                <StatusBadge status={getOperationalStatus(tech)} />
                                             </TableCell>
                                             <TableCell className="py-4">
                                                 <Badge
@@ -1174,26 +1494,6 @@ export default function TechniciansPage() {
                                                     {tech.current_jobs_count}
                                                 </Badge>
                                             </TableCell>
-                                            <TableCell className="py-4">
-                                                <div className="flex flex-wrap items-center gap-1.5">
-                                                    {tech.zones.slice(0, 1).map((zone) => (
-                                                        <Badge key={zone} variant="secondary" className="h-5 border border-white/10 bg-white/[0.04] px-2 py-0 text-[10px] text-slate-300">
-                                                            {zone}
-                                                        </Badge>
-                                                    ))}
-                                                    {tech.zones.length > 1 ? <span className="text-[10px] text-slate-500">+{tech.zones.length - 1}</span> : null}
-                                                </div>
-                                            </TableCell>
-                                            <TableCell className="py-4">
-                                                <div className="flex flex-wrap items-center gap-1.5">
-                                                    {tech.skills.slice(0, 1).map((skill) => (
-                                                        <Badge key={skill} variant="secondary" className="h-5 border border-cyan-300/20 bg-cyan-300/10 px-2 py-0 text-[10px] text-cyan-100">
-                                                            {skill}
-                                                        </Badge>
-                                                    ))}
-                                                    {tech.skills.length > 1 ? <span className="text-[10px] text-slate-500">+{tech.skills.length - 1}</span> : null}
-                                                </div>
-                                            </TableCell>
                                             <TableCell className="pr-6 text-right">
                                                 <div onClick={(e) => e.stopPropagation()}>
                                                     <DropdownMenu>
@@ -1204,40 +1504,14 @@ export default function TechniciansPage() {
                                                         </DropdownMenuTrigger>
                                                         <DropdownMenuContent align="end" className="border-white/10 bg-[#091827] text-slate-100">
                                                             <DropdownMenuItem onClick={() => handleOpenProfile(tech)}>View Profile</DropdownMenuItem>
-                                                            <DropdownMenuItem onClick={() => openEditTechModal(tech)}>Edit Technician</DropdownMenuItem>
+                                                            {tech.current_assignments[0] ? (
+                                                                <DropdownMenuItem onClick={() => navigate(`/admin/jobs/${tech.current_assignments[0].id}`)}>
+                                                                    View Current Job
+                                                                </DropdownMenuItem>
+                                                            ) : null}
                                                             <DropdownMenuSeparator />
-                                                            <DropdownMenuItem
-                                                                className={tech.status === 'active' ? 'text-rose-200' : 'text-cyan-100'}
-                                                                onClick={() => {
-                                                                    if (tech.status === 'active') {
-                                                                        if (tech.current_jobs_count > 0) {
-                                                                            alert('Cannot deactivate technician with active assigned jobs.');
-                                                                            return;
-                                                                        }
-                                                                        setSelectedTech(tech);
-                                                                        setTechDraft(cloneTech(tech));
-                                                                        setConfirmDeactivateOpen(true);
-                                                                        return;
-                                                                    }
-
-                                                                    const updated = { ...tech, status: 'active' as const };
-                                                                    setTechs((prev) => {
-                                                                        const next = prev.map((t) => (t.id === updated.id ? updated : t));
-                                                                        persistTechniciansToStorage(next);
-                                                                        return next;
-                                                                    });
-                                                                    if (selectedTech?.id === updated.id) {
-                                                                        setSelectedTech(updated);
-                                                                        setTechDraft(cloneTech(updated));
-                                                                    }
-                                                                    appendAuditLog(
-                                                                        'technician.status_changed',
-                                                                        `Technician ${updated.name} activated`,
-                                                                        { tech_id: updated.id, tech_code: updated.tech_code, new_status: 'active' }
-                                                                    );
-                                                                }}
-                                                            >
-                                                                {tech.status === 'active' ? 'Deactivate' : 'Activate'}
+                                                            <DropdownMenuItem onClick={() => navigate('/admin/technician-accounts')}>
+                                                                Open Technician Accounts
                                                             </DropdownMenuItem>
                                                         </DropdownMenuContent>
                                                     </DropdownMenu>
@@ -1263,12 +1537,14 @@ export default function TechniciansPage() {
                                         <div className="flex flex-col gap-1.5">
                                             <div className="flex items-center gap-2">
                                                 <h2 className="text-xl font-bold text-white">{selectedTech.name}</h2>
-                                                <StatusBadge status={selectedTech.status} />
+                                                <StatusBadge status={getOperationalStatus(selectedTech)} />
                                             </div>
                                             <div className="flex items-center gap-2 text-sm text-slate-400">
                                                 <span className="font-mono">{selectedTech.tech_code}</span>
                                                 <span>|</span>
-                                                <span>{formatPhoneForDisplay(selectedTech.phone)}</span>
+                                                <span>{selectedTech.email}</span>
+                                                <span>|</span>
+                                                <span>{formatPhoneForDisplay(selectedTech.phone) || 'No phone on file'}</span>
                                             </div>
                                             {selectedTech.has_pending_email_change_request ? (
                                                 <div className="pt-0.5">
@@ -1286,11 +1562,28 @@ export default function TechniciansPage() {
                                             <Button
                                                 variant="outline"
                                                 size="sm"
-                                                onClick={() => openEditTechModal(selectedTech)}
-                                                disabled={hasDrawerChanges}
+                                                onClick={() => setTimeOffModalOpen(true)}
                                                 className="border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
                                             >
-                                                Edit
+                                                Mark Out of Office
+                                            </Button>
+                                            {selectedTech.current_assignments[0] ? (
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => navigate(`/admin/jobs/${selectedTech.current_assignments[0].id}`)}
+                                                    className="border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
+                                                >
+                                                    View Current Job
+                                                </Button>
+                                            ) : null}
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => navigate('/admin/technician-accounts')}
+                                                className="border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
+                                            >
+                                                Technician Accounts
                                             </Button>
                                             <Button
                                                 variant="outline"
@@ -1308,18 +1601,6 @@ export default function TechniciansPage() {
                                                 onClick={handleSaveDrawerChanges}
                                             >
                                                 Save Changes
-                                            </Button>
-                                            <Button
-                                                variant={selectedTech.status === 'active' ? 'outline' : 'default'}
-                                                size="sm"
-                                                className={cn(
-                                                    selectedTech.status === 'active'
-                                                        ? 'border-red-200 text-red-700 hover:bg-red-50 hover:text-red-700'
-                                                        : 'bg-[#2F8E92] hover:bg-[#267276]'
-                                                )}
-                                                onClick={handleToggleStatus}
-                                            >
-                                                {selectedTech.status === 'active' ? 'Deactivate' : 'Activate'}
                                             </Button>
                                         </div>
 
@@ -1342,6 +1623,60 @@ export default function TechniciansPage() {
 
                             <div className="flex-1 min-h-0 overflow-y-auto">
                                 <div className="p-6 space-y-6">
+
+                                    <Card className="p-4 border-white/10 bg-white/[0.03] shadow-none">
+                                        <h3 className="mb-4 flex items-center gap-2 text-sm font-bold text-white">
+                                            <Activity className="h-4 w-4" /> Technician Profile
+                                        </h3>
+                                        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                                            <ProfileStat label="Email" value={selectedTech.email} valueClassName="text-sm text-white" />
+                                            <ProfileStat label="Phone" value={formatPhoneForDisplay(selectedTech.phone) || 'Not set'} valueClassName="text-sm text-white" />
+                                            <ProfileStat label="Availability" value={selectedTech.effective_availability ? 'Dispatch Ready' : 'Unavailable'} valueClassName={selectedTech.effective_availability ? 'text-emerald-100' : 'text-slate-300'} />
+                                            <ProfileStat label="Account Control" value="Tech Accounts" hint="Activate, deactivate, approve, and reset there" valueClassName="text-sm text-white" />
+                                        </div>
+                                    </Card>
+
+                                    <Card className="p-4 border-white/10 bg-white/[0.03] shadow-none">
+                                        <div className="mb-4 flex items-center justify-between gap-3">
+                                            <h3 className="flex items-center gap-2 text-sm font-bold text-white">
+                                                <Route className="h-4 w-4" /> Active Jobs & History Summary
+                                            </h3>
+                                            <Badge variant="outline" className="border-white/10 bg-white/[0.03] text-slate-300">
+                                                {techJobFeed.length} active
+                                            </Badge>
+                                        </div>
+                                        {detailLoading ? (
+                                            <div className="flex items-center gap-2 text-sm text-slate-400">
+                                                <Loader2 className="h-4 w-4 animate-spin" /> Loading live technician workload...
+                                            </div>
+                                        ) : techJobFeed.length === 0 ? (
+                                            <div className="rounded-xl border border-dashed border-white/10 bg-white/[0.02] px-4 py-5 text-sm text-slate-400">
+                                                No active jobs are currently assigned. This technician will appear in the dispatch queue based on zone, skill, and availability rules.
+                                            </div>
+                                        ) : (
+                                            <div className="space-y-3">
+                                                {techJobFeed.map((job) => (
+                                                    <button
+                                                        key={job.id}
+                                                        type="button"
+                                                        onClick={() => navigate(`/admin/jobs/${job.id}`)}
+                                                        className="flex w-full items-center justify-between rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-left transition hover:bg-white/[0.06]"
+                                                    >
+                                                        <div className="space-y-1">
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="text-sm font-semibold text-white">{job.job_code}</span>
+                                                                <Badge variant="outline" className="border-white/10 bg-white/[0.02] text-slate-300">{job.status}</Badge>
+                                                            </div>
+                                                            <div className="text-xs text-slate-400">
+                                                                {(job.dealership_name || 'Unknown location')} · {(job.vehicle_summary || 'Vehicle not specified')}
+                                                            </div>
+                                                        </div>
+                                                        <ArrowUpRight className="h-4 w-4 text-slate-400" />
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </Card>
 
                                     {/* B) Skills & Zones */}
                                     <Card className="p-4 border-white/10 bg-white/[0.03] shadow-none">
@@ -1469,9 +1804,9 @@ export default function TechniciansPage() {
                                     <Card className="p-4 border-white/10 bg-white/[0.03] shadow-none">
                                         <div className="flex items-center justify-between mb-4">
                                             <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                                                <Calendar className="w-4 h-4" /> Time Off
+                                                <Calendar className="w-4 h-4" /> Out of Office
                                             </h3>
-                                            <Button variant="outline" size="sm" className="h-7 border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]" onClick={() => setTimeOffModalOpen(true)}>+ Add Time Off</Button>
+                                            <Button variant="outline" size="sm" className="h-7 border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]" onClick={() => setTimeOffModalOpen(true)}>+ Mark Out of Office</Button>
                                         </div>
                                         {techDraft.time_off.length === 0 ? (
                                             <div className="text-center py-6 text-slate-500 text-sm italic bg-white/[0.02] rounded-lg border border-dashed border-white/10">
@@ -1555,9 +1890,9 @@ export default function TechniciansPage() {
             <Dialog open={timeOffModalOpen} onOpenChange={setTimeOffModalOpen}>
                 <DialogContent className="border-white/10 bg-[linear-gradient(180deg,rgba(9,24,39,0.98),rgba(6,17,29,0.98))] text-slate-100">
                     <DialogHeader>
-                        <DialogTitle className="text-white">Schedule Time Off</DialogTitle>
+                        <DialogTitle className="text-white">Mark Technician Out of Office</DialogTitle>
                         <DialogDescription className="text-slate-300">
-                            Add a time off entry for {selectedTech?.name} so dispatch planning stays accurate.
+                            Set the out-of-office window for {selectedTech?.name}. A return date is required before they leave the dispatch queue.
                         </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-2">
@@ -1567,7 +1902,7 @@ export default function TechniciansPage() {
                                 <Input className="border-white/10 bg-white/[0.04] text-white" type="date" value={timeOffForm.start} onChange={e => setTimeOffForm({ ...timeOffForm, start: e.target.value })} />
                             </div>
                             <div className="space-y-2">
-                                <Label className="text-slate-200">End Date</Label>
+                                <Label className="text-slate-200">Return Date</Label>
                                 <Input className="border-white/10 bg-white/[0.04] text-white" type="date" value={timeOffForm.end} onChange={e => setTimeOffForm({ ...timeOffForm, end: e.target.value })} />
                             </div>
                         </div>
@@ -1578,7 +1913,7 @@ export default function TechniciansPage() {
                     </div>
                     <DialogFooter>
                         <Button variant="outline" className="border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]" onClick={() => setTimeOffModalOpen(false)}>Cancel</Button>
-                        <Button onClick={handleSaveTimeOff} className="bg-[#2F8E92] hover:bg-[#267276]">Save Time Off</Button>
+                        <Button onClick={handleSaveTimeOff} className="bg-[#2F8E92] hover:bg-[#267276]">Save Out of Office</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
@@ -1615,6 +1950,3 @@ export default function TechniciansPage() {
         </div>
     );
 }
-
-
-
