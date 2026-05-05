@@ -145,7 +145,9 @@ function App() {
                     <Route path="invoice-approvals" element={<InvoiceApprovalsPage />} />
                     <Route path="approvals" element={<InvoiceApprovalsPage />} />
                     <Route path="intake" element={<IntakeQueuePage />} />
+                    <Route path="invoices" element={<InvoiceHistoryPage />} />
                     <Route path="invoice-history" element={<InvoiceHistoryPage />} />
+                    <Route path="locations" element={<DealershipsPage />} />
                     <Route path="technicians" element={<TechniciansPage />} />
                     <Route path="technician-accounts" element={<TechnicianAccountsPage />} />
                     <Route path="dealerships" element={<DealershipsPage />} />

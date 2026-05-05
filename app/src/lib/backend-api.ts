@@ -1063,6 +1063,51 @@ export async function createInvoice(
   });
 }
 
+export async function updateInvoice(
+  token: string,
+  invoiceId: string,
+  payload: {
+    invoice_number?: string;
+    terms?: 'NET_15' | 'NET_30' | 'CUSTOM';
+    custom_term_days?: number;
+    shipping?: string | number;
+    customer_message?: string;
+    approval_note?: string;
+    status?: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
+    payment_recorded_at?: string;
+    line_items?: BackendInvoiceLineItemPayload[];
+    replace_dispatch_line_items?: boolean;
+  },
+): Promise<BackendInvoice> {
+  return requestJson<BackendInvoice>(`/invoices/${invoiceId}`, {
+    method: 'PUT',
+    token,
+    body: payload,
+  });
+}
+
+export async function markInvoicePaid(
+  token: string,
+  invoiceId: string,
+  payment_recorded_at?: string,
+): Promise<BackendInvoice> {
+  return requestJson<BackendInvoice>(`/invoices/${invoiceId}/mark-paid`, {
+    method: 'POST',
+    token,
+    body: { payment_recorded_at },
+  });
+}
+
+export async function voidInvoice(
+  token: string,
+  invoiceId: string,
+): Promise<BackendInvoice> {
+  return requestJson<BackendInvoice>(`/invoices/${invoiceId}`, {
+    method: 'DELETE',
+    token,
+  });
+}
+
 export async function fetchPendingInvoiceApprovals(token: string): Promise<BackendPendingInvoiceApproval[]> {
   return requestJson<BackendPendingInvoiceApproval[]>('/invoices/pending-approvals', { token });
 }

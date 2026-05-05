@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef, type CSSProperties } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
     Activity,
     Search,
@@ -858,6 +858,7 @@ function SearchableSelect({
 }
 
 export default function JobsPage() {
+    const location = useLocation();
     const navigate = useNavigate();
     const { technicianAccounts } = useAuth();
     const [backendTechnicianRows, setBackendTechnicianRows] = useState<BackendTechnicianListItem[]>([]);
@@ -947,6 +948,14 @@ export default function JobsPage() {
     const [urgencyFilter, setUrgencyFilter] = useState<string>('all');
     const [statusFilter, setStatusFilter] = useState<StatusFilterKey>('all');
     const [dateFilter, setDateFilter] = useState('');
+
+    useEffect(() => {
+        const params = new URLSearchParams(location.search);
+        const locationQuery = params.get('location');
+        if (locationQuery) {
+            setSearchQuery(locationQuery);
+        }
+    }, [location.search]);
 
     const assignJobZone = useMemo(() => {
         if (!jobToAssign) return '';
@@ -3075,6 +3084,3 @@ function Building2Icon(props: any) {
         </svg>
     )
 }
-
-
-

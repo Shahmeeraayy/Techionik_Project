@@ -87,6 +87,9 @@ interface ServiceItem {
     allowed_actions: string[];
 }
 
+type ServiceStatusFilter = 'all' | 'active' | 'archived';
+type IndustryPresetKey = 'automotive' | 'hvac';
+
 const toNumber = (value: string | number): number => {
     if (typeof value === 'number') return value;
     const parsed = Number(value);
@@ -191,6 +194,28 @@ function metricIconClass(tone: 'cyan' | 'emerald' | 'amber' | 'violet'): string 
         tone === 'violet' && 'border-violet-300/20 bg-violet-300/10 text-violet-100',
     );
 }
+
+const INDUSTRY_PRESETS: Record<IndustryPresetKey, Array<{
+    code: string;
+    name: string;
+    category: string;
+    default_price: number;
+    approval_required?: boolean;
+    notes?: string;
+}>> = {
+    automotive: [
+        { code: 'AUTO-DIAG', name: 'Vehicle Diagnostics', category: 'Diagnostics', default_price: 95, notes: 'Preset automotive diagnostics service.' },
+        { code: 'AUTO-TINT-FRONT', name: 'Front Window Tint', category: 'Window Tint', default_price: 120 },
+        { code: 'AUTO-REMOTE', name: 'Remote Starter Install', category: 'Remote Starter', default_price: 349, approval_required: true },
+        { code: 'AUTO-TRACK', name: 'Vehicle Tracking Install', category: 'Tracking', default_price: 279, approval_required: true },
+    ],
+    hvac: [
+        { code: 'HVAC-TUNEUP', name: 'Seasonal Tune-Up', category: 'Maintenance', default_price: 149 },
+        { code: 'HVAC-DIAG', name: 'System Diagnostic Visit', category: 'Diagnostics', default_price: 119, approval_required: true },
+        { code: 'HVAC-THERMO', name: 'Thermostat Installation', category: 'Installation', default_price: 199 },
+        { code: 'HVAC-FILTER', name: 'Filter Replacement', category: 'Maintenance', default_price: 65 },
+    ],
+};
 
 // --- Mock Data ---
 
@@ -297,8 +322,11 @@ export default function ServicesPage() {
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [filterCategory, setFilterCategory] = useState<BusinessCategoryFilter>('all');
+    const [filterStatus, setFilterStatus] = useState<ServiceStatusFilter>('all');
     const [minPrice, setMinPrice] = useState<string>('');
     const [maxPrice, setMaxPrice] = useState<string>('');
+    const [presetIndustry, setPresetIndustry] = useState<IndustryPresetKey>('automotive');
+    const [presetLoading, setPresetLoading] = useState(false);
 
     // Drawers & Modals
     const [selectedService, setSelectedService] = useState<ServiceItem | null>(null);
@@ -381,6 +409,7 @@ export default function ServicesPage() {
         const matchesSearch =
             s.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
             s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            s.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
             (s.sku || '').toLowerCase().includes(searchQuery.toLowerCase());
         const normalizedCategory = s.category.trim().toLowerCase();
         const normalizedName = s.name.trim().toLowerCase();
@@ -433,8 +462,9 @@ export default function ServicesPage() {
         const max = maxPrice.trim() === '' ? null : Number(maxPrice);
         const matchesMin = min === null || (!Number.isNaN(min) && s.default_price >= min);
         const matchesMax = max === null || (!Number.isNaN(max) && s.default_price <= max);
+        const matchesStatus = filterStatus === 'all' || s.status === filterStatus;
 
-        return matchesSearch && matchesCategory && matchesMin && matchesMax;
+        return matchesSearch && matchesCategory && matchesStatus && matchesMin && matchesMax;
     });
 
     const activeServicesCount = services.filter((service) => service.status === 'active').length;
@@ -559,6 +589,45 @@ export default function ServicesPage() {
         }
     };
 
+    const handleLoadIndustryPreset = async () => {
+        const token = getStoredAdminToken();
+        if (!token) {
+            alert('Admin session is required to load service presets.');
+            return;
+        }
+        const presetRows = INDUSTRY_PRESETS[presetIndustry];
+        const existingCodes = new Set(services.map((service) => service.code.trim().toLowerCase()));
+        const rowsToCreate = presetRows.filter((row) => !existingCodes.has(row.code.trim().toLowerCase()));
+
+        if (rowsToCreate.length === 0) {
+            alert('All preset services are already in the catalog.');
+            return;
+        }
+
+        setPresetLoading(true);
+        try {
+            const createdRows: ServiceItem[] = [];
+            for (const row of rowsToCreate) {
+                const created = await createAdminService(token, {
+                    code: row.code,
+                    name: row.name,
+                    category: row.category,
+                    default_price: row.default_price,
+                    approval_required: row.approval_required ?? false,
+                    notes: row.notes ?? null,
+                });
+                createdRows.push(mapBackendServiceToUi(created));
+            }
+            setServices((current) => [...createdRows, ...current]);
+            alert(`Loaded ${createdRows.length} ${presetIndustry} preset service${createdRows.length === 1 ? '' : 's'}.`);
+        } catch (error) {
+            const detail = error instanceof Error ? error.message : 'Unable to load industry preset';
+            alert(detail);
+        } finally {
+            setPresetLoading(false);
+        }
+    };
+
     return (
         <div className="relative w-full pb-10">
             <div className="pointer-events-none absolute inset-x-0 top-0 h-[380px] rounded-[34px] bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.12),rgba(34,211,238,0)_34%),radial-gradient(circle_at_top_right,rgba(52,211,153,0.08),rgba(52,211,153,0)_30%)]" />
@@ -574,16 +643,16 @@ export default function ServicesPage() {
                         <div className="max-w-3xl">
                             <div className="inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-100">
                                 <FileText className="h-3.5 w-3.5" />
-                                Catalog Controls
+                                Services Catalogue
                             </div>
                             <h1 className="mt-5 text-[2.35rem] font-semibold leading-none tracking-[-0.06em] text-white md:text-[2.8rem]">
                                 Services
                                 <span className="block bg-gradient-to-r from-white via-cyan-100 to-emerald-100 bg-clip-text text-transparent">
-                                    pricing console
+                                    pricing source of truth
                                 </span>
                             </h1>
                             <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-300 sm:text-[15px]">
-                                Manage your service catalog, default pricing, and approval controls from one operational workspace.
+                                Manage billable services, unit pricing, archive state, and industry presets from one operational workspace.
                             </p>
                         </div>
                         <div className="flex flex-wrap items-center justify-end gap-3">
@@ -591,8 +660,22 @@ export default function ServicesPage() {
                                 <RefreshCw className={cn('w-4 h-4 text-cyan-200', loading && 'animate-spin')} /> Refresh
                             </Button>
                             <Button variant="outline" size="sm" onClick={() => setExportModalOpen(true)} className="h-10 gap-2 rounded-full border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]">
-                                <FileDown className="w-4 h-4" /> Export
+                                <FileDown className="w-4 h-4" /> Export CSV / Excel
                             </Button>
+                            <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-2 py-1">
+                                <Select value={presetIndustry} onValueChange={(value) => setPresetIndustry(value as IndustryPresetKey)}>
+                                    <SelectTrigger className="h-8 w-[148px] border-0 bg-transparent text-slate-100 shadow-none">
+                                        <SelectValue placeholder="Preset" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="automotive">Automotive</SelectItem>
+                                        <SelectItem value="hvac">HVAC</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <Button variant="ghost" size="sm" onClick={() => void handleLoadIndustryPreset()} disabled={presetLoading} className="h-8 rounded-full px-3 text-slate-100 hover:bg-white/[0.08]">
+                                    {presetLoading ? 'Loading...' : 'Load Preset'}
+                                </Button>
+                            </div>
                             <Button size="sm" onClick={handleOpenAddModal} className="h-10 gap-2 rounded-full bg-[#2F8E92] px-5 text-white shadow-[0_12px_30px_rgba(47,142,146,0.28)] hover:bg-[#267276]">
                                 <Plus className="w-4 h-4" /> Add Service
                             </Button>
@@ -670,9 +753,9 @@ export default function ServicesPage() {
                     <div className={sectionHeaderClass}>
                         <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
                             <div>
-                                <h2 className="text-base font-semibold text-white">Catalog Filters</h2>
+                                <h2 className="text-base font-semibold text-white">Catalogue Filters</h2>
                                 <p className="mt-1 text-sm text-slate-300">
-                                    Narrow the service catalog by business category or default pricing range.
+                                    Narrow the service catalogue by category, status, or unit price range.
                                 </p>
                             </div>
                             <div className="flex flex-wrap items-center gap-2">
@@ -686,7 +769,7 @@ export default function ServicesPage() {
                             <div className="relative flex-1 min-w-[300px]">
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                                 <Input
-                                    placeholder="Search by service code or name..."
+                                    placeholder="Search by service name, category, code, or SKU..."
                                     className="h-11 rounded-full border-white/10 bg-white/[0.04] pl-9 text-slate-100 placeholder:text-slate-500 transition-all focus:bg-white/[0.06]"
                                     value={searchQuery}
                                     onChange={e => setSearchQuery(e.target.value)}
@@ -706,6 +789,17 @@ export default function ServicesPage() {
                                         <SelectItem value="vehicle_tracking_systems">Vehicle tracking systems</SelectItem>
                                         <SelectItem value="windshield_repair">Windshield repair</SelectItem>
                                         <SelectItem value="windshield_replacement">Windshield replacement</SelectItem>
+                                    </SelectContent>
+                                </Select>
+
+                                <Select value={filterStatus} onValueChange={(value) => setFilterStatus(value as ServiceStatusFilter)}>
+                                    <SelectTrigger className="h-11 w-[150px] border-white/10 bg-white/[0.04] text-slate-100">
+                                        <SelectValue placeholder="Status" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">All Status</SelectItem>
+                                        <SelectItem value="active">Active</SelectItem>
+                                        <SelectItem value="archived">Archived</SelectItem>
                                     </SelectContent>
                                 </Select>
 
@@ -748,7 +842,7 @@ export default function ServicesPage() {
                 <Card className={cn(sectionCardClass, 'flex-1 flex flex-col')}>
                 <div className={cn(sectionHeaderClass, 'flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between')}>
                     <div>
-                        <h2 className="text-base font-semibold text-white">Service Catalog</h2>
+                        <h2 className="text-base font-semibold text-white">Service Catalogue</h2>
                         <p className="mt-1 text-sm text-slate-300">
                             Browse active and archived services and open item detail for maintenance actions.
                         </p>
@@ -775,14 +869,14 @@ export default function ServicesPage() {
                         </div>
                         <h3 className="text-lg font-semibold text-white">No services found</h3>
                         <p className="text-sm mt-1">Try adjusting your filters or search query.</p>
-                        <Button variant="outline" className="mt-4 border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]" onClick={() => { setSearchQuery(''); setFilterCategory('all'); setMinPrice(''); setMaxPrice(''); }}>Clear Filters</Button>
+                        <Button variant="outline" className="mt-4 border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]" onClick={() => { setSearchQuery(''); setFilterCategory('all'); setFilterStatus('all'); setMinPrice(''); setMaxPrice(''); }}>Clear Filters</Button>
                     </div>
                 ) : (
                     <div className="overflow-hidden">
                         <div className="flex items-start justify-between gap-3 border-b border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0))] px-6 py-5">
                             <div className="space-y-2">
-                                <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Catalog Board</div>
-                                <div className="text-sm text-slate-200">Service records with pricing and archive status.</div>
+                                <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Catalogue Board</div>
+                                <div className="text-sm text-slate-200">Service records with category, unit pricing, and archive status.</div>
                             </div>
                             <Badge variant="outline" className="rounded-full border-white/10 bg-white/[0.04] px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-slate-300">
                                 {filteredServices.length} visible
@@ -796,7 +890,7 @@ export default function ServicesPage() {
                                         <TableHead className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Service Name</TableHead>
                                         <TableHead className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">SKU</TableHead>
                                         <TableHead className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Category</TableHead>
-                                        <TableHead className="pr-6 text-right text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Default Price</TableHead>
+                                        <TableHead className="pr-6 text-right text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Unit Price</TableHead>
                                         <TableHead className="text-center text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Status</TableHead>
                                         <TableHead className="text-right text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Last Updated</TableHead>
                                         <TableHead className="w-[64px] pr-6 text-right text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Open</TableHead>
@@ -862,7 +956,7 @@ export default function ServicesPage() {
                     <DialogHeader>
                         <DialogTitle className="text-white">{modalMode === 'add' ? 'Add New Service' : 'Edit Service'}</DialogTitle>
                         <DialogDescription className="text-slate-300">
-                            Configure service details and default pricing. <br />
+                            Configure service details, category, and unit pricing. <br />
                             <span className="text-xs font-medium text-amber-200">Changes affect future jobs only.</span>
                         </DialogDescription>
                     </DialogHeader>
@@ -879,7 +973,7 @@ export default function ServicesPage() {
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label className="text-slate-200">Default Price ($) <span className="text-rose-300">*</span></Label>
+                                <Label className="text-slate-200">Unit Price ($) <span className="text-rose-300">*</span></Label>
                                 <div className="relative">
                                     <DollarSign className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                                     <Input
@@ -920,10 +1014,10 @@ export default function ServicesPage() {
                         </div>
 
                         <div className="space-y-2">
-                            <Label className="text-slate-200">Notes (Optional)</Label>
+                            <Label className="text-slate-200">Description / Notes</Label>
                             <Textarea
                                 className="border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500"
-                                placeholder="Internal notes about pricing logic or restrictions..."
+                                placeholder="Add service description, pricing context, or restrictions..."
                                 value={formData.notes}
                                 onChange={e => setFormData({ ...formData, notes: e.target.value })}
                             />
@@ -940,7 +1034,7 @@ export default function ServicesPage() {
                 open={exportModalOpen}
                 onOpenChange={setExportModalOpen}
                 title="Export Services"
-                description="Select the service columns you want in your CSV."
+                description="Select the service catalogue columns you want in your CSV."
                 availableColumns={SERVICE_EXPORT_COLUMNS}
                 onConfirm={handleExport}
             />

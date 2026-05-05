@@ -38,18 +38,36 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
 import ColumnExportDialog from '@/components/modals/ColumnExportDialog';
 import OverflowText from '@/components/common/overflow-text';
-import { fetchInvoices, getStoredAdminToken, type BackendInvoice } from '@/lib/backend-api';
+import {
+    fetchAdminDealerships,
+    fetchInvoices,
+    getStoredAdminToken,
+    markInvoicePaid,
+    updateInvoice,
+    voidInvoice,
+    type BackendDealership,
+    type BackendInvoice,
+} from '@/lib/backend-api';
 
 const INVOICE_HISTORY_EXPORT_COLUMNS = [
     'InvoiceID',
-    'JobCode',
-    'Dealership',
+    'JobID',
+    'Location',
     'Technician',
-    'Amount',
-    'ApprovedAt',
-    'ApprovedBy',
+    'TotalValue',
+    'GeneratedDate',
+    'SentDate',
     'Status',
 ];
 
@@ -101,8 +119,8 @@ const formatDateSafe = (value?: string | null, pattern = 'MMM dd, yyyy') => {
     return format(date, pattern);
 };
 
-type InvoiceStatusFilter = 'all' | 'draft' | 'sent' | 'sync_failed' | 'paid' | 'overdue' | 'cancelled';
-type InvoicePeriodFilter = 'all' | 'today' | '7d' | '30d' | '90d' | 'year';
+type InvoiceStatusFilter = 'all' | 'draft' | 'approved' | 'sent' | 'paid' | 'void';
+type InvoiceQuickRange = 'none' | 'today' | 'week' | 'month' | 'year';
 type InvoiceDisplayStatus = Exclude<InvoiceStatusFilter, 'all'>;
 
 const toNumber = (value: string | number | null | undefined): number => {
@@ -137,6 +155,26 @@ const extractJobCodeFromInvoice = (invoice: BackendInvoice): string => {
 
 const resolveTechnician = (invoice: BackendInvoice): string => invoice.technician_name?.trim() || '-';
 
+const resolveInvoiceLocation = (invoice: BackendInvoice, dealerships: BackendDealership[] = []): string => {
+    const fromInvoice =
+        invoice.bill_to?.city?.trim() ||
+        invoice.ship_to?.city?.trim();
+    if (fromInvoice) return fromInvoice;
+    const matchedDealership = dealerships.find((dealer) => {
+        const names = [dealer.name, dealer.code].filter(Boolean).map((value) => value!.trim().toLowerCase());
+        const invoiceName = (invoice.dealership_name || invoice.bill_to?.name || '').trim().toLowerCase();
+        return invoiceName.length > 0 && names.includes(invoiceName);
+    });
+    return matchedDealership?.city?.trim() || invoice.dealership_name?.trim() || invoice.bill_to?.name?.trim() || '-';
+};
+
+const resolveInvoiceSentDate = (invoice: BackendInvoice): string | null => {
+    if (invoice.status === 'sent' || invoice.status === 'paid' || invoice.status === 'overdue') {
+        return invoice.updated_at;
+    }
+    return invoice.voided_at || null;
+};
+
 const resolveInvoiceDisplayStatus = (
     invoice: BackendInvoice,
 ): {
@@ -160,22 +198,22 @@ const resolveInvoiceDisplayStatus = (
     }
     if (invoice.status === 'overdue') {
         return {
-            value: 'overdue',
-            label: 'Overdue',
+            value: 'sent',
+            label: 'Sent',
             badgeClassName: 'border-orange-300/20 bg-orange-300/12 text-orange-100',
         };
     }
     if (invoice.status === 'cancelled') {
         return {
-            value: 'cancelled',
-            label: 'Cancelled',
+            value: 'void',
+            label: 'Void',
             badgeClassName: 'border-red-300/20 bg-red-300/12 text-red-100',
         };
     }
     return {
-        value: 'draft',
-        label: 'Draft',
-        badgeClassName: 'border-slate-300/20 bg-slate-300/10 text-slate-300',
+        value: 'approved',
+        label: 'Approved',
+        badgeClassName: 'border-slate-300/20 bg-slate-300/10 text-slate-200',
     };
 };
 
@@ -197,13 +235,19 @@ const toAddressLines = (party?: {
 
 export default function InvoiceHistoryPage() {
     const [history, setHistory] = useState<BackendInvoice[]>([]);
+    const [dealerships, setDealerships] = useState<BackendDealership[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [filterStatus, setFilterStatus] = useState<InvoiceStatusFilter>('all');
-    const [filterPeriod, setFilterPeriod] = useState<InvoicePeriodFilter>('all');
+    const [quickRange, setQuickRange] = useState<InvoiceQuickRange>('none');
+    const [fromDate, setFromDate] = useState('');
+    const [toDate, setToDate] = useState('');
     const [selectedInvoice, setSelectedInvoice] = useState<BackendInvoice | null>(null);
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [exportModalOpen, setExportModalOpen] = useState(false);
+    const [voidDialogOpen, setVoidDialogOpen] = useState(false);
+    const [voidReason, setVoidReason] = useState('');
+    const [actionLoading, setActionLoading] = useState<'paid' | 'void' | 'send' | null>(null);
 
     const fetchHistory = async () => {
         setLoading(true);
@@ -211,13 +255,19 @@ export default function InvoiceHistoryPage() {
             const adminToken = getStoredAdminToken();
             if (!adminToken) {
                 setHistory([]);
+                setDealerships([]);
                 return;
             }
-            const rows = await fetchInvoices(adminToken);
+            const [rows, dealershipRows] = await Promise.all([
+                fetchInvoices(adminToken),
+                fetchAdminDealerships(adminToken).catch(() => [] as BackendDealership[]),
+            ]);
             setHistory(rows);
+            setDealerships(dealershipRows);
         } catch (error) {
             console.error(error);
             setHistory([]);
+            setDealerships([]);
         } finally {
             setLoading(false);
         }
@@ -227,67 +277,54 @@ export default function InvoiceHistoryPage() {
         void fetchHistory();
     }, []);
 
+    const resolvedRange = useMemo(() => {
+        if (quickRange === 'none') {
+            return { from: fromDate, to: toDate };
+        }
+        const now = new Date();
+        const end = format(now, 'yyyy-MM-dd');
+        if (quickRange === 'today') {
+            return { from: end, to: end };
+        }
+        if (quickRange === 'week') {
+            const start = new Date(now);
+            start.setDate(now.getDate() - 6);
+            return { from: format(start, 'yyyy-MM-dd'), to: end };
+        }
+        if (quickRange === 'month') {
+            const start = new Date(now.getFullYear(), now.getMonth(), 1);
+            return { from: format(start, 'yyyy-MM-dd'), to: end };
+        }
+        return { from: `${now.getFullYear()}-01-01`, to: end };
+    }, [fromDate, quickRange, toDate]);
+
     const filteredHistory = useMemo(() => history.filter((inv) => {
         const query = searchQuery.toLowerCase().trim();
-        const approvedDate = new Date(inv.created_at);
-        const todayStart = new Date();
-        todayStart.setHours(0, 0, 0, 0);
+        const generatedDate = new Date(inv.created_at);
 
         const jobCode = extractJobCodeFromInvoice(inv).toLowerCase();
-        const dealership = (inv.dealership_name || inv.bill_to?.name || '').toLowerCase();
+        const location = resolveInvoiceLocation(inv, dealerships).toLowerCase();
         const technician = resolveTechnician(inv).toLowerCase();
 
         const matchesSearch =
             query.length === 0 ||
             jobCode.includes(query) ||
-            dealership.includes(query) ||
+            location.includes(query) ||
             technician.includes(query) ||
             inv.invoice_number.toLowerCase().includes(query);
 
         const displayStatus = resolveInvoiceDisplayStatus(inv);
-        const matchesStatus = filterStatus === 'all' || displayStatus.value === filterStatus;
+        const matchesStatus =
+            filterStatus === 'all' ||
+            displayStatus.value === filterStatus ||
+            (filterStatus === 'draft' && inv.status === 'draft');
 
-        let matchesPeriod = true;
-        if (filterPeriod !== 'all') {
-            if (Number.isNaN(approvedDate.getTime())) {
-                matchesPeriod = false;
-            } else {
-                const now = new Date();
-                switch (filterPeriod) {
-                    case 'today':
-                        matchesPeriod = approvedDate >= todayStart;
-                        break;
-                    case '7d': {
-                        const start = new Date(now);
-                        start.setDate(now.getDate() - 7);
-                        matchesPeriod = approvedDate >= start;
-                        break;
-                    }
-                    case '30d': {
-                        const start = new Date(now);
-                        start.setDate(now.getDate() - 30);
-                        matchesPeriod = approvedDate >= start;
-                        break;
-                    }
-                    case '90d': {
-                        const start = new Date(now);
-                        start.setDate(now.getDate() - 90);
-                        matchesPeriod = approvedDate >= start;
-                        break;
-                    }
-                    case 'year': {
-                        const start = new Date(now.getFullYear(), 0, 1);
-                        matchesPeriod = approvedDate >= start;
-                        break;
-                    }
-                    default:
-                        matchesPeriod = true;
-                }
-            }
-        }
+        const generatedKey = Number.isNaN(generatedDate.getTime()) ? '' : format(generatedDate, 'yyyy-MM-dd');
+        const matchesFrom = !resolvedRange.from || (generatedKey !== '' && generatedKey >= resolvedRange.from);
+        const matchesTo = !resolvedRange.to || (generatedKey !== '' && generatedKey <= resolvedRange.to);
 
-        return matchesSearch && matchesStatus && matchesPeriod;
-    }), [filterPeriod, filterStatus, history, searchQuery]);
+        return matchesSearch && matchesStatus && matchesFrom && matchesTo;
+    }), [dealerships, filterStatus, history, resolvedRange.from, resolvedRange.to, searchQuery]);
 
     const archiveValue = useMemo(
         () => filteredHistory.reduce((sum, inv) => sum + toNumber(inv.total), 0),
@@ -299,20 +336,22 @@ export default function InvoiceHistoryPage() {
         [filteredHistory],
     );
 
-    const syncFailedCount = useMemo(
-        () => filteredHistory.filter((inv) => resolveInvoiceDisplayStatus(inv).value === 'sync_failed').length,
+    const paidCount = useMemo(
+        () => filteredHistory.filter((inv) => resolveInvoiceDisplayStatus(inv).value === 'paid').length,
         [filteredHistory],
     );
 
-    const paidCount = useMemo(
-        () => filteredHistory.filter((inv) => resolveInvoiceDisplayStatus(inv).value === 'paid').length,
+    const voidCount = useMemo(
+        () => filteredHistory.filter((inv) => resolveInvoiceDisplayStatus(inv).value === 'void').length,
         [filteredHistory],
     );
 
     const clearFilters = () => {
         setSearchQuery('');
         setFilterStatus('all');
-        setFilterPeriod('all');
+        setQuickRange('none');
+        setFromDate('');
+        setToDate('');
     };
 
     const handleViewInvoice = (invoice: BackendInvoice) => {
@@ -322,18 +361,85 @@ export default function InvoiceHistoryPage() {
 
     const getInvoiceHistoryExportRows = () => filteredHistory.map((invoice) => ({
         InvoiceID: invoice.invoice_number,
-        JobCode: extractJobCodeFromInvoice(invoice),
-        Dealership: invoice.dealership_name || invoice.bill_to?.name || '-',
+        JobID: extractJobCodeFromInvoice(invoice),
+        Location: resolveInvoiceLocation(invoice, dealerships),
         Technician: resolveTechnician(invoice),
-        Amount: toNumber(invoice.total),
-        ApprovedAt: invoice.created_at,
-        ApprovedBy: 'System',
+        TotalValue: toNumber(invoice.total),
+        GeneratedDate: formatDateTimeSafe(invoice.created_at),
+        SentDate: formatDateTimeSafe(resolveInvoiceSentDate(invoice)),
         Status: resolveInvoiceDisplayStatus(invoice).label,
     }));
 
     const handleExport = (selectedColumns: string[], format: ExportFormat = 'csv') => {
         const exportData = selectColumnsForExport(getInvoiceHistoryExportRows(), selectedColumns);
         exportArrayData(exportData, 'invoice_history_export', format);
+    };
+
+    const refreshSelectedInvoice = (updatedInvoice: BackendInvoice) => {
+        setHistory((current) => current.map((invoice) => (invoice.id === updatedInvoice.id ? updatedInvoice : invoice)));
+        setSelectedInvoice(updatedInvoice);
+    };
+
+    const handleSendInvoiceEmail = async (invoice: BackendInvoice) => {
+        const matchedDealership = dealerships.find((dealer) => {
+            const invoiceName = (invoice.dealership_name || invoice.bill_to?.name || '').trim().toLowerCase();
+            return invoiceName.length > 0 && dealer.name.trim().toLowerCase() === invoiceName;
+        });
+        const recipient = matchedDealership?.email?.split(',')[0]?.trim();
+        if (!recipient) {
+            alert('No client contact email is available for this location yet.');
+            return;
+        }
+        setActionLoading('send');
+        const subject = encodeURIComponent(`Invoice ${invoice.invoice_number}`);
+        const body = encodeURIComponent(`Hello,\n\nPlease find invoice ${invoice.invoice_number} for job ${extractJobCodeFromInvoice(invoice)}.\n\nLocation: ${resolveInvoiceLocation(invoice, dealerships)}\nTotal: $${toNumber(invoice.total).toFixed(2)}\n\nThank you.`);
+        window.location.href = `mailto:${recipient}?subject=${subject}&body=${body}`;
+        setActionLoading(null);
+    };
+
+    const handleMarkAsPaid = async (invoice: BackendInvoice) => {
+        const adminToken = getStoredAdminToken();
+        if (!adminToken) {
+            alert('Admin session is required to update invoice status.');
+            return;
+        }
+        setActionLoading('paid');
+        try {
+            const updatedInvoice = await markInvoicePaid(adminToken, invoice.id, new Date().toISOString());
+            refreshSelectedInvoice(updatedInvoice);
+        } catch (error) {
+            alert(error instanceof Error ? error.message : 'Unable to mark invoice as paid.');
+        } finally {
+            setActionLoading(null);
+        }
+    };
+
+    const handleVoidInvoice = async () => {
+        if (!selectedInvoice) return;
+        const reason = voidReason.trim();
+        if (!reason) {
+            alert('A void reason is required.');
+            return;
+        }
+        const adminToken = getStoredAdminToken();
+        if (!adminToken) {
+            alert('Admin session is required to void invoices.');
+            return;
+        }
+        setActionLoading('void');
+        try {
+            await updateInvoice(adminToken, selectedInvoice.id, {
+                approval_note: reason,
+            });
+            const updatedInvoice = await voidInvoice(adminToken, selectedInvoice.id);
+            refreshSelectedInvoice(updatedInvoice);
+            setVoidReason('');
+            setVoidDialogOpen(false);
+        } catch (error) {
+            alert(error instanceof Error ? error.message : 'Unable to void invoice.');
+        } finally {
+            setActionLoading(null);
+        }
     };
 
     const handleDownloadPdf = (invoice: BackendInvoice) => {
@@ -509,16 +615,16 @@ export default function InvoiceHistoryPage() {
 
     const summaryCards = [
         {
-            key: 'archive',
-            label: 'Archive records',
+            key: 'history',
+            label: 'Invoice records',
             value: filteredHistory.length.toString(),
-            description: 'Invoices visible in the current archive view.',
+            description: 'Invoices visible in the current history view.',
             icon: FileText,
             tone: 'cyan' as const,
         },
         {
             key: 'value',
-            label: 'Archive value',
+            label: 'Total value',
             value: `$${archiveValue.toFixed(2)}`,
             description: 'Total invoice amount across the current filtered history.',
             icon: Download,
@@ -533,12 +639,10 @@ export default function InvoiceHistoryPage() {
             tone: 'emerald' as const,
         },
         {
-            key: 'sync',
-            label: 'Sync issues',
-            value: syncFailedCount.toString(),
-            description: paidCount > 0
-                ? `${paidCount} invoice${paidCount === 1 ? '' : 's'} already marked paid in this view.`
-                : 'Sync issue candidates surfaced for follow-up.',
+            key: 'void',
+            label: 'Paid / void',
+            value: `${paidCount} / ${voidCount}`,
+            description: `${paidCount} paid and ${voidCount} void invoice${voidCount === 1 ? '' : 's'} in the filtered result set.`,
             icon: AlertTriangle,
             tone: 'violet' as const,
         },
@@ -553,22 +657,22 @@ export default function InvoiceHistoryPage() {
                     <div className="max-w-3xl space-y-4">
                         <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-300">
                             <Sparkles className="h-3.5 w-3.5 text-cyan-200" />
-                            Archive Surface
+                            Billing archive
                         </div>
                         <div className="space-y-3">
                             <h1 className="text-[2.35rem] font-semibold leading-none tracking-[-0.06em] text-white md:text-[2.8rem]" style={displayFontStyle}>
                                 Invoice history
                                 <br />
-                                with audit depth.
+                                with lifecycle control.
                             </h1>
                             <p className="max-w-2xl text-sm leading-7 text-slate-300 md:text-[15px]" style={bodyFontStyle}>
-                                Audit processed invoices and reopen archived records from one premium command surface instead of a plain archive table.
+                                Search every generated invoice, review metadata, download branded PDFs, and handle resend, paid, or void actions from one admin surface.
                             </p>
                         </div>
                         <div className="flex flex-wrap items-center gap-2">
                             <Badge variant="outline" className="h-9 rounded-full border-cyan-300/20 bg-cyan-300/10 px-3 text-cyan-100">
                                 <Activity className="mr-1.5 h-3.5 w-3.5" />
-                                {filteredHistory.length} archive records
+                                {filteredHistory.length} records
                             </Badge>
                             <Badge variant="outline" className="h-9 rounded-full border-white/10 bg-white/[0.04] px-3 text-slate-300">
                                 <Send className="mr-1.5 h-3.5 w-3.5 text-emerald-200" />
@@ -593,7 +697,7 @@ export default function InvoiceHistoryPage() {
                             onClick={() => setExportModalOpen(true)}
                         >
                             <Download className="h-4 w-4 text-slate-300" />
-                            Export Archive
+                            Export CSV / Excel
                         </Button>
                     </div>
                 </div>
@@ -641,7 +745,7 @@ export default function InvoiceHistoryPage() {
                         <div className="relative min-w-0 flex-1">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
                             <Input
-                                placeholder="Search by invoice, job code, dealership, or technician..."
+                                placeholder="Search by invoice ID, job ID, location, or technician..."
                                 className="h-11 rounded-2xl border-white/10 bg-white/[0.04] pl-9 text-white placeholder:text-slate-500 shadow-none focus-visible:border-cyan-300/35 focus-visible:ring-cyan-300/15"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -655,30 +759,60 @@ export default function InvoiceHistoryPage() {
                                 <SelectContent>
                                     <SelectItem value="all">All Statuses</SelectItem>
                                     <SelectItem value="draft">Draft</SelectItem>
+                                    <SelectItem value="approved">Approved</SelectItem>
                                     <SelectItem value="sent">Sent</SelectItem>
-                                    <SelectItem value="sync_failed">Sync Failed</SelectItem>
                                     <SelectItem value="paid">Paid</SelectItem>
-                                    <SelectItem value="overdue">Overdue</SelectItem>
-                                    <SelectItem value="cancelled">Cancelled</SelectItem>
+                                    <SelectItem value="void">Void</SelectItem>
                                 </SelectContent>
                             </Select>
-                            <Select value={filterPeriod} onValueChange={(value) => setFilterPeriod(value as InvoicePeriodFilter)}>
-                                <SelectTrigger className="h-11 w-full rounded-2xl border-white/10 bg-white/[0.04] text-white shadow-none sm:w-[170px]">
-                                    <div className="flex items-center gap-2">
-                                        <Calendar className="h-4 w-4 text-slate-400" />
-                                        <SelectValue placeholder="Period" />
-                                    </div>
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="all">All Periods</SelectItem>
-                                    <SelectItem value="today">Today</SelectItem>
-                                    <SelectItem value="7d">Last 7 days</SelectItem>
-                                    <SelectItem value="30d">Last 30 days</SelectItem>
-                                    <SelectItem value="90d">Last 90 days</SelectItem>
-                                    <SelectItem value="year">This year</SelectItem>
-                                </SelectContent>
-                            </Select>
-                            {(searchQuery || filterStatus !== 'all' || filterPeriod !== 'all') ? (
+                            <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.03] p-1">
+                                {([
+                                    ['today', 'Today'],
+                                    ['week', 'This week'],
+                                    ['month', 'This month'],
+                                    ['year', 'This year'],
+                                ] as const).map(([value, label]) => (
+                                    <Button
+                                        key={value}
+                                        type="button"
+                                        variant="ghost"
+                                        className={cn(
+                                            'h-9 rounded-xl px-3 text-xs text-slate-300 hover:bg-white/[0.06] hover:text-white',
+                                            quickRange === value && 'bg-cyan-300/12 text-cyan-100',
+                                        )}
+                                        onClick={() => setQuickRange(quickRange === value ? 'none' : value)}
+                                    >
+                                        {label}
+                                    </Button>
+                                ))}
+                            </div>
+                            <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.03] px-3 py-2">
+                                <Calendar className="h-4 w-4 text-slate-400" />
+                                <span className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">From</span>
+                                <Input
+                                    type="date"
+                                    value={fromDate}
+                                    onChange={(e) => {
+                                        setQuickRange('none');
+                                        setFromDate(e.target.value);
+                                    }}
+                                    className="h-8 w-[138px] border-0 bg-transparent px-0 text-white shadow-none focus-visible:ring-0"
+                                />
+                            </div>
+                            <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.03] px-3 py-2">
+                                <Calendar className="h-4 w-4 text-slate-400" />
+                                <span className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">To</span>
+                                <Input
+                                    type="date"
+                                    value={toDate}
+                                    onChange={(e) => {
+                                        setQuickRange('none');
+                                        setToDate(e.target.value);
+                                    }}
+                                    className="h-8 w-[138px] border-0 bg-transparent px-0 text-white shadow-none focus-visible:ring-0"
+                                />
+                            </div>
+                            {(searchQuery || filterStatus !== 'all' || quickRange !== 'none' || fromDate || toDate) ? (
                                 <Button
                                     variant="ghost"
                                     size="sm"
@@ -699,8 +833,8 @@ export default function InvoiceHistoryPage() {
                 <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(47,142,146,0.12),transparent_28%),radial-gradient(circle_at_bottom_left,rgba(96,165,250,0.08),transparent_26%)]" />
                 <div className="relative flex items-center justify-between border-b border-white/10 px-5 py-4">
                     <div>
-                        <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Archive board</div>
-                        <div className="mt-1 text-sm text-slate-300">Processed invoices with status, sync health, and downloadable detail.</div>
+                        <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Invoice ledger</div>
+                        <div className="mt-1 text-sm text-slate-300">Searchable invoice records with lifecycle status, dates, and downloadable detail.</div>
                     </div>
                     <Badge variant="outline" className="h-9 rounded-full border-white/10 bg-white/[0.04] px-3 text-slate-300">
                         {filteredHistory.length} visible
@@ -716,10 +850,10 @@ export default function InvoiceHistoryPage() {
                             <FileText className="h-8 w-8 text-cyan-200/80" />
                         </div>
                         <h3 className="text-2xl font-semibold tracking-[-0.03em] text-white" style={displayFontStyle}>
-                            No archive records in this view
+                            No invoices in this view
                         </h3>
                         <p className="mt-3 max-w-md text-sm leading-6 text-slate-400" style={bodyFontStyle}>
-                            Adjust the archive filters or refresh the dataset to widen the visible invoice history.
+                            Adjust the history filters or refresh the dataset to widen the visible invoice ledger.
                         </p>
                         <Button
                             variant="outline"
@@ -734,12 +868,14 @@ export default function InvoiceHistoryPage() {
                         <Table className="min-w-[1120px]">
                             <TableHeader className="sticky top-0 z-10 border-b border-white/10 bg-[linear-gradient(180deg,rgba(11,25,42,0.98),rgba(10,20,35,0.92))] backdrop-blur-xl">
                                 <TableRow className="border-white/0 hover:bg-transparent">
-                                    <TableHead className="pl-6 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Invoice / Job</TableHead>
-                                    <TableHead className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Dealership</TableHead>
+                                    <TableHead className="pl-6 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Invoice ID</TableHead>
+                                    <TableHead className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Job ID</TableHead>
+                                    <TableHead className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Location</TableHead>
                                     <TableHead className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Technician</TableHead>
-                                    <TableHead className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Created Date</TableHead>
-                                    <TableHead className="text-right text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Amount</TableHead>
+                                    <TableHead className="text-right text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Total Value</TableHead>
                                     <TableHead className="text-center text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Status</TableHead>
+                                    <TableHead className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Generated Date</TableHead>
+                                    <TableHead className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Sent Date</TableHead>
                                     <TableHead className="w-[90px] pr-6 text-right text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Open</TableHead>
                                 </TableRow>
                             </TableHeader>
@@ -756,12 +892,12 @@ export default function InvoiceHistoryPage() {
                                             onClick={() => handleViewInvoice(inv)}
                                         >
                                             <TableCell className="pl-6 py-4">
-                                                <div className="space-y-1.5">
-                                                    <div className="text-base font-semibold tracking-[-0.03em] text-white transition-colors group-hover:text-cyan-100" style={displayFontStyle}>
-                                                        {inv.invoice_number}
-                                                    </div>
-                                                    <div className="text-xs font-mono text-slate-500">{extractJobCodeFromInvoice(inv)}</div>
+                                                <div className="text-base font-semibold tracking-[-0.03em] text-white transition-colors group-hover:text-cyan-100" style={displayFontStyle}>
+                                                    {inv.invoice_number}
                                                 </div>
+                                            </TableCell>
+                                            <TableCell className="py-4">
+                                                <div className="text-xs font-mono text-slate-300">{extractJobCodeFromInvoice(inv)}</div>
                                             </TableCell>
                                             <TableCell className="py-4">
                                                 <div className="flex items-center gap-3">
@@ -769,7 +905,7 @@ export default function InvoiceHistoryPage() {
                                                         <Building2 className="h-4 w-4" />
                                                     </div>
                                                     <OverflowText
-                                                        text={inv.dealership_name || inv.bill_to?.name || '-'}
+                                                        text={resolveInvoiceLocation(inv, dealerships)}
                                                         className="max-w-[14rem] text-sm font-medium text-slate-100"
                                                     />
                                                 </div>
@@ -780,11 +916,6 @@ export default function InvoiceHistoryPage() {
                                                         {resolveTechnician(inv).substring(0, 2)}
                                                     </div>
                                                     <span className="text-sm text-emerald-50">{resolveTechnician(inv)}</span>
-                                                </div>
-                                            </TableCell>
-                                            <TableCell className="py-4">
-                                                <div className="text-sm text-slate-300">
-                                                    {format(new Date(inv.created_at), 'MMM dd, yyyy - HH:mm')}
                                                 </div>
                                             </TableCell>
                                             <TableCell className="py-4 text-right">
@@ -799,6 +930,12 @@ export default function InvoiceHistoryPage() {
                                                 >
                                                     {displayStatus.label}
                                                 </Badge>
+                                            </TableCell>
+                                            <TableCell className="py-4 text-sm text-slate-300">
+                                                {formatDateTimeSafe(inv.created_at)}
+                                            </TableCell>
+                                            <TableCell className="py-4 text-sm text-slate-300">
+                                                {formatDateTimeSafe(resolveInvoiceSentDate(inv))}
                                             </TableCell>
                                             <TableCell className="pr-6 text-right">
                                                 <Button
@@ -824,9 +961,10 @@ export default function InvoiceHistoryPage() {
                         (() => {
                             const displayStatus = resolveInvoiceDisplayStatus(selectedInvoice);
                             const summaryTiles = [
-                                { label: 'Dealership', value: selectedInvoice.dealership_name || selectedInvoice.bill_to?.name || '-' },
+                                { label: 'Job ID', value: extractJobCodeFromInvoice(selectedInvoice) },
+                                { label: 'Location', value: resolveInvoiceLocation(selectedInvoice, dealerships) },
                                 { label: 'Technician', value: resolveTechnician(selectedInvoice) },
-                                { label: 'Created', value: formatDateTimeSafe(selectedInvoice.created_at) },
+                                { label: 'Generated', value: formatDateTimeSafe(selectedInvoice.created_at) },
                                 { label: 'Invoice total', value: `$${toNumber(selectedInvoice.total).toFixed(2)}` },
                             ];
                             return (
@@ -839,7 +977,7 @@ export default function InvoiceHistoryPage() {
                                         <div className="space-y-3">
                                             <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-300">
                                                 <Sparkles className="h-3.5 w-3.5 text-cyan-200" />
-                                                Archive Detail
+                                                Invoice detail
                                             </div>
                                             <SheetHeader className="space-y-2 text-left">
                                                 <div className="flex flex-wrap items-center gap-2">
@@ -850,7 +988,7 @@ export default function InvoiceHistoryPage() {
                                                             displayStatus.badgeClassName,
                                                         )}
                                                     >
-                                                        {displayStatus.value === 'sync_failed' ? (
+                                                        {displayStatus.value === 'void' ? (
                                                             <AlertTriangle className="mr-1.5 h-3 w-3" />
                                                         ) : (
                                                             <CheckCircle2 className="mr-1.5 h-3 w-3" />
@@ -865,7 +1003,7 @@ export default function InvoiceHistoryPage() {
                                                     {selectedInvoice.invoice_number}
                                                 </SheetTitle>
                                                 <SheetDescription className="max-w-xl text-sm leading-6 text-slate-300" style={bodyFontStyle}>
-                                                    Archived invoice for job {extractJobCodeFromInvoice(selectedInvoice)} with sync state, bill-to detail, and downloadable records.
+                                                    Full invoice record with line items, lifecycle timestamps, and admin actions for payment, resend, and void handling.
                                                 </SheetDescription>
                                             </SheetHeader>
                                         </div>
@@ -886,17 +1024,22 @@ export default function InvoiceHistoryPage() {
                                 <div className="space-y-6 p-6">
                                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                         <div className="rounded-[24px] border border-white/10 bg-white/[0.03] p-4">
-                                            <div className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-400">Created At</div>
+                                            <div className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-400">Generated Date</div>
                                             <div className="mt-2 text-sm text-white">{formatDateTimeSafe(selectedInvoice.created_at, 'PPPP - HH:mm')}</div>
                                         </div>
                                         <div className="rounded-[24px] border border-white/10 bg-white/[0.03] p-4">
-                                            <div className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-400">Invoice Date</div>
-                                            <div className="mt-2 text-sm text-white">{formatDateSafe(selectedInvoice.invoice_date)}</div>
+                                            <div className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-400">Sent Date</div>
+                                            <div className="mt-2 text-sm text-white">{formatDateTimeSafe(resolveInvoiceSentDate(selectedInvoice))}</div>
                                         </div>
                                         <div className="rounded-[24px] border border-white/10 bg-white/[0.03] p-4">
                                             <div className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-400">Due Date / Terms</div>
                                             <div className="mt-2 text-sm text-white">{formatDateSafe(selectedInvoice.due_date)}</div>
                                             <div className="mt-1 text-xs text-slate-400">{formatTermsLabel(selectedInvoice.terms, selectedInvoice.custom_term_days)}</div>
+                                        </div>
+                                        <div className="rounded-[24px] border border-white/10 bg-white/[0.03] p-4">
+                                            <div className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-400">Payment / Void</div>
+                                            <div className="mt-2 text-sm text-white">{formatDateTimeSafe(selectedInvoice.payment_recorded_at) || '-'}</div>
+                                            <div className="mt-1 text-xs text-slate-400">Void: {formatDateTimeSafe(selectedInvoice.voided_at)}</div>
                                         </div>
                                     </div>
 
@@ -914,8 +1057,9 @@ export default function InvoiceHistoryPage() {
                                             <Table>
                                                 <TableHeader className="bg-white/[0.04]">
                                                     <TableRow className="border-white/10 hover:bg-transparent">
-                                                        <TableHead className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-400">Description</TableHead>
+                                                        <TableHead className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-400">Service</TableHead>
                                                         <TableHead className="w-[84px] text-center text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-400">Qty</TableHead>
+                                                        <TableHead className="w-[108px] text-right text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-400">Unit Price</TableHead>
                                                         <TableHead className="w-[108px] text-right text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-400">Total</TableHead>
                                                     </TableRow>
                                                 </TableHeader>
@@ -937,6 +1081,7 @@ export default function InvoiceHistoryPage() {
                                                                 </div>
                                                             </TableCell>
                                                             <TableCell className="py-4 text-center text-sm text-slate-300">{toNumber(item.qty ?? item.quantity).toFixed(2)}</TableCell>
+                                                            <TableCell className="py-4 text-right text-sm text-slate-200">${toNumber(item.rate).toFixed(2)}</TableCell>
                                                             <TableCell className="py-4 text-right text-sm font-semibold text-amber-100">${toNumber(item.amount).toFixed(2)}</TableCell>
                                                         </TableRow>
                                                     ))}
@@ -983,12 +1128,18 @@ export default function InvoiceHistoryPage() {
                                         </div>
 
                                         <div className="rounded-[26px] border border-white/10 bg-white/[0.03] p-5 shadow-[0_18px_50px_rgba(0,0,0,0.18)]">
-                                            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Archive notes</div>
+                                            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Metadata & notes</div>
                                             <div className="mt-4 space-y-4">
                                                 <div className="rounded-[20px] border border-cyan-300/16 bg-cyan-300/[0.06] p-4">
                                                     <div className="text-[10px] font-semibold uppercase tracking-[0.22em] text-cyan-100/75">Customer Message</div>
                                                     <p className="mt-2 text-sm leading-6 text-cyan-50/90">
-                                                        {selectedInvoice.customer_message?.trim() || 'No customer message was attached to this archived invoice.'}
+                                                        {selectedInvoice.customer_message?.trim() || 'No customer message was attached to this invoice.'}
+                                                    </p>
+                                                </div>
+                                                <div className="rounded-[20px] border border-white/10 bg-black/10 p-4">
+                                                    <div className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-400">Approval / Void Note</div>
+                                                    <p className="mt-2 text-sm leading-6 text-slate-200">
+                                                        {selectedInvoice.approval_note?.trim() || 'No approval or void note has been recorded.'}
                                                     </p>
                                                 </div>
                                             </div>
@@ -1004,6 +1155,33 @@ export default function InvoiceHistoryPage() {
                                             <Download className="h-4 w-4" />
                                             Download PDF
                                         </Button>
+                                        <Button
+                                            className="h-12 flex-1 gap-2 rounded-2xl border-white/10 bg-white/[0.04] text-slate-100 hover:bg-white/[0.08] hover:text-white"
+                                            variant="outline"
+                                            onClick={() => void handleSendInvoiceEmail(selectedInvoice)}
+                                            disabled={actionLoading === 'send'}
+                                        >
+                                            <Send className="h-4 w-4" />
+                                            Send Invoice Email
+                                        </Button>
+                                        <Button
+                                            className="h-12 flex-1 gap-2 rounded-2xl border-emerald-300/20 bg-emerald-300/10 text-emerald-50 hover:bg-emerald-300/15"
+                                            variant="outline"
+                                            onClick={() => void handleMarkAsPaid(selectedInvoice)}
+                                            disabled={actionLoading === 'paid' || displayStatus.value === 'paid' || displayStatus.value === 'void'}
+                                        >
+                                            <CheckCircle2 className="h-4 w-4" />
+                                            Mark as Paid
+                                        </Button>
+                                        <Button
+                                            className="h-12 flex-1 gap-2 rounded-2xl border-rose-300/20 bg-rose-300/10 text-rose-50 hover:bg-rose-300/15"
+                                            variant="outline"
+                                            onClick={() => setVoidDialogOpen(true)}
+                                            disabled={actionLoading === 'void' || displayStatus.value === 'void'}
+                                        >
+                                            <AlertTriangle className="h-4 w-4" />
+                                            Void Invoice
+                                        </Button>
                                     </div>
                                 </div>
                             </ScrollArea>
@@ -1013,6 +1191,31 @@ export default function InvoiceHistoryPage() {
                     )}
                 </SheetContent>
             </Sheet>
+
+            <Dialog open={voidDialogOpen} onOpenChange={setVoidDialogOpen}>
+                <DialogContent className="border-white/10 bg-[linear-gradient(180deg,rgba(9,24,39,0.98),rgba(6,17,29,0.98))] text-slate-100">
+                    <DialogHeader>
+                        <DialogTitle>Void invoice</DialogTitle>
+                        <DialogDescription className="text-slate-300">
+                            Enter the required reason for voiding this invoice. The note will be saved before the invoice is marked void.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <Textarea
+                        value={voidReason}
+                        onChange={(e) => setVoidReason(e.target.value)}
+                        placeholder="Reason for voiding this invoice..."
+                        className="min-h-[120px] border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500"
+                    />
+                    <DialogFooter>
+                        <Button variant="outline" className="border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]" onClick={() => setVoidDialogOpen(false)}>
+                            Cancel
+                        </Button>
+                        <Button className="bg-rose-500 hover:bg-rose-600" onClick={() => void handleVoidInvoice()} disabled={actionLoading === 'void'}>
+                            Confirm Void
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

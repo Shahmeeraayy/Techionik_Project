@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
     Search,
     RefreshCw,
@@ -649,18 +650,20 @@ function metricIconClass(tone: 'cyan' | 'emerald' | 'amber' | 'violet'): string 
 
 const DEALERSHIP_EXPORT_COLUMNS = [
     'ID',
-    'Name',
+    'LocationName',
+    'ContactName',
+    'City',
     'Phone',
     'Email',
     'Address',
-    'City/Ville',
-    'Postal Code',
+    'ActiveJobCount',
     'Status',
     'Notes',
 ];
 
 export default function DealershipsPage() {
     const { hasBackendAdminToken } = useAuth();
+    const navigate = useNavigate();
     const [dealerships, setDealerships] = useState<Dealership[]>([]);
     const [loading, setLoading] = useState(true);
     const [lastSuccessfulFetchAt, setLastSuccessfulFetchAt] = useState<Date | null>(null);
@@ -724,6 +727,7 @@ export default function DealershipsPage() {
         const matchesSearch =
             d.name.toLowerCase().includes(query) ||
             d.phone.includes(searchQuery) ||
+            d.email.toLowerCase().includes(query) ||
             d.city.toLowerCase().includes(query) ||
             (queryPhoneToken.length > 0 && getPhoneSearchToken(d.phone).includes(queryPhoneToken));
         const matchesStatus = filterStatus === 'all' || d.status === filterStatus;
@@ -877,12 +881,13 @@ export default function DealershipsPage() {
 
     const getDealershipExportRows = () => dealerships.map(d => ({
             ID: d.id,
-            Name: d.name,
+            LocationName: d.name,
+            ContactName: '',
+            City: d.city,
             Phone: formatPhoneForDisplay(d.phone),
             Email: d.email,
             Address: d.address,
-            'City/Ville': d.city,
-            'Postal Code': d.postal_code,
+            ActiveJobCount: getActiveJobCount(d),
             Status: d.status,
             Notes: d.notes || ''
         }));
@@ -895,6 +900,13 @@ export default function DealershipsPage() {
     const activeCount = dealerships.filter(d => d.status === 'active').length;
     const inactiveCount = dealerships.filter(d => d.status === 'inactive').length;
     const withNotesCount = dealerships.filter(d => Boolean(d.notes?.trim())).length;
+    const getActiveJobCount = (dealership: Dealership) =>
+        dealership.recent_jobs.filter((job) => !['completed', 'cancelled', 'refused'].includes(job.status.toLowerCase())).length;
+
+    const handleViewLocationJobs = (dealership: Dealership) => {
+        const query = encodeURIComponent(dealership.city || dealership.name);
+        navigate(`/admin/jobs?location=${query}`);
+    };
 
     return (
         <div className="relative w-full pb-10">
@@ -911,16 +923,16 @@ export default function DealershipsPage() {
                         <div className="max-w-3xl">
                             <div className="inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-100">
                                 <Building2 className="h-3.5 w-3.5" />
-                                Partner Directory
+                                Location directory
                             </div>
                             <h1 className="mt-5 text-[2.35rem] font-semibold leading-none tracking-[-0.06em] text-white md:text-[2.8rem]">
-                                Dealerships
+                                Locations
                                 <span className="block bg-gradient-to-r from-white via-cyan-100 to-emerald-100 bg-clip-text text-transparent">
-                                    network console
+                                    operations console
                                 </span>
                             </h1>
                             <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-300 sm:text-[15px]">
-                                Maintain partner profiles, billing contacts, and operational notes from one centralized control surface.
+                                Maintain service locations, contacts, city routing, and operational notes from one centralized control surface.
                             </p>
                         </div>
                         <div className="flex flex-wrap items-center justify-end gap-3">
@@ -937,17 +949,17 @@ export default function DealershipsPage() {
                             <Dialog open={addModalOpen} onOpenChange={setAddModalOpen}>
                                 <DialogTrigger asChild>
                                     <Button size="sm" className="h-10 gap-2 rounded-full bg-[#2F8E92] px-5 text-white shadow-[0_12px_30px_rgba(47,142,146,0.28)] hover:bg-[#267276]">
-                                        <Plus className="w-4 h-4" /> Add Dealership
+                                        <Plus className="w-4 h-4" /> Add Location
                                     </Button>
                                 </DialogTrigger>
                         <DialogContent className="sm:max-w-xl border-white/10 bg-[linear-gradient(180deg,rgba(9,24,39,0.98),rgba(6,17,29,0.98))] text-slate-100">
                             <DialogHeader>
-                                <DialogTitle className="text-white">Add New Dealership</DialogTitle>
-                                <DialogDescription className="text-slate-300">Create a new dealership profile for dispatch and billing workflows.</DialogDescription>
+                                <DialogTitle className="text-white">Add New Location</DialogTitle>
+                                <DialogDescription className="text-slate-300">Create a new location profile for dispatch and billing workflows.</DialogDescription>
                             </DialogHeader>
                             <div className="space-y-4 py-2">
                                 <div className="space-y-2">
-                                    <Label className="text-slate-200">Dealership Name <span className="text-rose-300">*</span></Label>
+                                    <Label className="text-slate-200">Location Name <span className="text-rose-300">*</span></Label>
                                     <Input className="border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500" placeholder="e.g. Metro Ford" value={addForm.name} onChange={e => setAddForm({ ...addForm, name: e.target.value })} />
                                 </div>
                                 <div className="space-y-2">
@@ -960,16 +972,16 @@ export default function DealershipsPage() {
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label className="text-slate-200">Domain Email <span className="text-rose-300">*</span></Label>
-                                    <Input className="border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500" placeholder="e.g. info@dealership.com" value={addForm.email} onChange={e => setAddForm({ ...addForm, email: e.target.value })} />
+                                    <Label className="text-slate-200">Email <span className="text-rose-300">*</span></Label>
+                                    <Input className="border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500" placeholder="e.g. info@location.com" value={addForm.email} onChange={e => setAddForm({ ...addForm, email: e.target.value })} />
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-2">
-                                        <Label className="text-slate-200">City/Ville</Label>
+                                        <Label className="text-slate-200">City</Label>
                                         <Input className="border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500" placeholder="e.g. Quebec" value={addForm.city} onChange={e => setAddForm({ ...addForm, city: e.target.value })} />
                                     </div>
                                     <div className="space-y-2">
-                                        <Label className="text-slate-200">Postal Code (Code)</Label>
+                                        <Label className="text-slate-200">Postal Code</Label>
                                         <Input className="border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500" placeholder="e.g. G1X 3X4" value={addForm.postal_code} onChange={e => setAddForm({ ...addForm, postal_code: e.target.value })} />
                                     </div>
                                 </div>
@@ -984,7 +996,7 @@ export default function DealershipsPage() {
                             </div>
                             <DialogFooter>
                                 <Button variant="outline" className="border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]" onClick={() => setAddModalOpen(false)}>Cancel</Button>
-                                <Button onClick={handleAddDealership} className="bg-[#2F8E92] hover:bg-[#267276]">Add Dealership</Button>
+                                <Button onClick={handleAddDealership} className="bg-[#2F8E92] hover:bg-[#267276]">Add Location</Button>
                             </DialogFooter>
                         </DialogContent>
                     </Dialog>
@@ -997,9 +1009,9 @@ export default function DealershipsPage() {
                         <div className="p-5">
                             <div className="flex items-start justify-between gap-3">
                                 <div className="space-y-2">
-                                    <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Partner Accounts</p>
+                                    <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Locations</p>
                                     <p className="mt-3 text-[2.15rem] font-semibold leading-none tracking-[-0.06em] text-white">{dealerships.length}</p>
-                                    <p className="text-sm text-slate-300">Total dealership profiles tracked</p>
+                                    <p className="text-sm text-slate-300">Total location profiles tracked</p>
                                 </div>
                                 <div className={metricIconClass('cyan')}>
                                     <Building2 className="w-5 h-5" />
@@ -1011,7 +1023,7 @@ export default function DealershipsPage() {
                         <div className="p-5">
                             <div className="flex items-start justify-between gap-3">
                                 <div className="space-y-2">
-                                    <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Active Partners</p>
+                                    <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Active Locations</p>
                                     <p className="mt-3 text-[2.15rem] font-semibold leading-none tracking-[-0.06em] text-white">{activeCount}</p>
                                     <p className="text-sm text-slate-300">Currently available for dispatch intake</p>
                                 </div>
@@ -1042,8 +1054,8 @@ export default function DealershipsPage() {
                 <div className={sectionHeaderClass}>
                 <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
                     <div>
-                        <h2 className="text-base font-semibold text-white">Partner Filters</h2>
-                        <p className="mt-1 text-sm text-slate-300">Search partner accounts by name, city, phone, and current operational status.</p>
+                        <h2 className="text-base font-semibold text-white">Location Filters</h2>
+                        <p className="mt-1 text-sm text-slate-300">Search locations by name, city, phone, email, and current operational status.</p>
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
                         <Badge variant="outline" className="border-emerald-300/20 bg-emerald-300/10 px-3 py-1 text-emerald-100">
@@ -1058,7 +1070,7 @@ export default function DealershipsPage() {
                     <div className="relative flex-1 w-full lg:w-auto min-w-0 lg:min-w-[300px]">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                         <Input
-                            placeholder="Search by dealership name, phone, or city/ville..."
+                            placeholder="Search by location name, contact name, phone, email, or city..."
                             className="h-11 rounded-full border-white/10 bg-white/[0.04] pl-9 text-slate-100 placeholder:text-slate-500 transition-all focus:bg-white/[0.06]"
                             value={searchQuery}
                             onChange={e => setSearchQuery(e.target.value)}
@@ -1080,11 +1092,11 @@ export default function DealershipsPage() {
                             <SelectTrigger className="h-11 w-full sm:w-[180px] border-white/10 bg-white/[0.04] text-slate-100">
                                 <div className="flex items-center gap-2">
                                     <Building2 className="w-4 h-4" />
-                                    <SelectValue placeholder="City/Ville" />
+                                    <SelectValue placeholder="City" />
                                 </div>
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="all">City/Ville</SelectItem>
+                                <SelectItem value="all">All Cities</SelectItem>
                                 {cityFilterOptions.map((city) => (
                                     <SelectItem key={city} value={city}>
                                         {city}
@@ -1101,8 +1113,8 @@ export default function DealershipsPage() {
             <Card className={cn(sectionCardClass, 'flex-1 flex flex-col')}>
                 <div className={cn(sectionHeaderClass, 'flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between')}>
                     <div>
-                        <h2 className="text-base font-semibold text-white">Dealership Directory</h2>
-                        <p className="mt-1 text-sm text-slate-300">Review contact data, billing identifiers, and partner availability from the live directory.</p>
+                        <h2 className="text-base font-semibold text-white">Location Directory</h2>
+                        <p className="mt-1 text-sm text-slate-300">Review contact data, routing, job counts, and availability from the live location directory.</p>
                     </div>
                     <Badge variant="outline" className="border-cyan-300/20 bg-cyan-300/10 px-3 py-1 text-cyan-100">
                         {filteredDealerships.length} visible
@@ -1119,7 +1131,7 @@ export default function DealershipsPage() {
                         <div className="w-16 h-16 bg-white/[0.05] rounded-full flex items-center justify-center mb-4">
                             <Building2 className="w-8 h-8 text-slate-400" />
                         </div>
-                        <h3 className="text-lg font-semibold text-white">No dealerships found</h3>
+                        <h3 className="text-lg font-semibold text-white">No locations found</h3>
                         <p className="text-sm mt-1">Try adjusting your filters or search query.</p>
                         <Button variant="outline" className="mt-4 border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]" onClick={() => { setSearchQuery(''); setFilterStatus('all'); setFilterCity('all'); }}>Clear Filters</Button>
                     </div>
@@ -1127,8 +1139,8 @@ export default function DealershipsPage() {
                     <div className="overflow-hidden">
                         <div className="flex items-start justify-between gap-3 border-b border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0))] px-6 py-5">
                             <div className="space-y-2">
-                                <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Partner Board</div>
-                                <div className="text-sm text-slate-200">Dealership records with contact routing and availability status.</div>
+                                <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Location Board</div>
+                                <div className="text-sm text-slate-200">Location records with contact routing, active job counts, and availability status.</div>
                             </div>
                             <Badge variant="outline" className="rounded-full border-white/10 bg-white/[0.04] px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-slate-300">
                                 {filteredDealerships.length} visible
@@ -1138,11 +1150,13 @@ export default function DealershipsPage() {
                             <Table className="min-w-[1180px]">
                                 <TableHeader className="sticky top-0 z-10 border-b border-white/10 bg-[linear-gradient(180deg,rgba(11,25,42,0.98),rgba(10,20,35,0.92))] backdrop-blur-xl">
                                     <TableRow className="border-white/0 hover:bg-transparent">
-                                        <TableHead className="pl-6 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Dealership Name</TableHead>
-                                        <TableHead className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Contact Info</TableHead>
-                                        <TableHead className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Location</TableHead>
+                                        <TableHead className="pl-6 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Location Name</TableHead>
+                                        <TableHead className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Contact Name</TableHead>
+                                        <TableHead className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">City</TableHead>
+                                        <TableHead className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Phone</TableHead>
+                                        <TableHead className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Email</TableHead>
+                                        <TableHead className="text-center text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Active Jobs</TableHead>
                                         <TableHead className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Status</TableHead>
-                                        <TableHead className="text-center text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Notes</TableHead>
                                         <TableHead className="w-[64px] pr-6 text-right text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Open</TableHead>
                                     </TableRow>
                                 </TableHeader>
@@ -1163,31 +1177,31 @@ export default function DealershipsPage() {
                                                 </div>
                                             </TableCell>
                                             <TableCell className="py-4">
-                                                <div className="space-y-1.5">
-                                                    <div className="flex items-center gap-2 text-sm text-slate-200">
-                                                        <Phone className="h-3.5 w-3.5 text-slate-500" />
-                                                        <span>{formatPhoneForDisplay(dealer.phone) || '-'}</span>
-                                                    </div>
-                                                    <div className="flex items-center gap-2 text-xs text-slate-400">
-                                                        <Mail className="h-3.5 w-3.5 text-slate-500" />
-                                                        <OverflowText text={dealer.email || '-'} className="max-w-[12rem]" />
-                                                    </div>
+                                                <div className="text-sm text-slate-400">Not set</div>
+                                            </TableCell>
+                                            <TableCell className="py-4">
+                                                <div className="flex items-center gap-2 text-sm text-slate-200 capitalize">
+                                                    <MapPin className="h-3.5 w-3.5 text-slate-500" />
+                                                    <span>{dealer.city || '-'}</span>
                                                 </div>
                                             </TableCell>
                                             <TableCell className="py-4">
-                                                <div className="space-y-1.5">
-                                                    <div className="flex items-center gap-2 text-sm text-slate-200 capitalize">
-                                                        <MapPin className="h-3.5 w-3.5 text-slate-500" />
-                                                        <span>{dealer.city || '-'}</span>
-                                                    </div>
-                                                    <OverflowText text={`${dealer.address || ''} ${dealer.postal_code || ''}`.trim() || '-'} className="max-w-[16rem] text-xs text-slate-500" />
+                                                <div className="flex items-center gap-2 text-sm text-slate-200">
+                                                    <Phone className="h-3.5 w-3.5 text-slate-500" />
+                                                    <span>{formatPhoneForDisplay(dealer.phone) || '-'}</span>
                                                 </div>
+                                            </TableCell>
+                                            <TableCell className="py-4">
+                                                <div className="flex items-center gap-2 text-xs text-slate-400">
+                                                    <Mail className="h-3.5 w-3.5 text-slate-500" />
+                                                    <OverflowText text={dealer.email || '-'} className="max-w-[12rem]" />
+                                                </div>
+                                            </TableCell>
+                                            <TableCell className="py-4 text-center text-sm text-slate-200">
+                                                {getActiveJobCount(dealer)}
                                             </TableCell>
                                             <TableCell className="py-4">
                                                 <StatusBadge status={dealer.status} />
-                                            </TableCell>
-                                            <TableCell className="py-4 text-center">
-                                                {dealer.notes ? <AlertCircle className="mx-auto h-4 w-4 text-amber-300" /> : null}
                                             </TableCell>
                                             <TableCell className="pr-6 text-right">
                                                 <div onClick={(e) => e.stopPropagation()}>
@@ -1200,6 +1214,7 @@ export default function DealershipsPage() {
                                                         <DropdownMenuContent align="end" className="border-white/10 bg-[#091827] text-slate-100">
                                                             <DropdownMenuItem onClick={() => handleOpenDrawer(dealer)}>View Details</DropdownMenuItem>
                                                             <DropdownMenuItem onClick={() => handleOpenDrawer(dealer)}>Edit</DropdownMenuItem>
+                                                            <DropdownMenuItem onClick={() => handleViewLocationJobs(dealer)}>View Location Jobs</DropdownMenuItem>
                                                             <DropdownMenuSeparator />
                                                             <DropdownMenuItem
                                                                 className={dealer.status === 'active' ? 'text-rose-200' : ''}
@@ -1236,7 +1251,7 @@ export default function DealershipsPage() {
                                         <StatusBadge status={selectedDealership.status} />
                                     </div>
                                     <div className="text-sm text-slate-400">
-                                        {selectedDealership.city || 'No city/ville provided'}
+                                        {selectedDealership.city || 'No city provided'}
                                     </div>
                                     </div>
                                     <div className="flex items-center justify-start sm:justify-end">
@@ -1272,7 +1287,7 @@ export default function DealershipsPage() {
                                         </div>
                                         <div className="grid grid-cols-1 gap-4 px-5 py-5 md:grid-cols-2">
                                             <div className="space-y-2">
-                                                <Label className="text-xs text-slate-400">Dealership Name</Label>
+                                                <Label className="text-xs text-slate-400">Location Name</Label>
                                                 <Input value={editForm.name} onChange={e => setEditForm({ ...editForm, name: e.target.value })} className="h-9 border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500" />
                                             </div>
                                             <div className="space-y-2">
@@ -1285,15 +1300,15 @@ export default function DealershipsPage() {
                                                 />
                                             </div>
                                             <div className="space-y-2 md:col-span-2">
-                                                <Label className="text-xs text-slate-400">Domain Email</Label>
+                                                <Label className="text-xs text-slate-400">Email</Label>
                                                 <Input value={editForm.email} onChange={e => setEditForm({ ...editForm, email: e.target.value })} className="h-9 border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500" />
                                             </div>
                                             <div className="space-y-2">
-                                                <Label className="text-xs text-slate-400">City/Ville</Label>
+                                                <Label className="text-xs text-slate-400">City</Label>
                                                 <Input value={editForm.city} onChange={e => setEditForm({ ...editForm, city: e.target.value })} className="h-9 border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500" />
                                             </div>
                                             <div className="space-y-2">
-                                                <Label className="text-xs text-slate-400">Postal Code (Code)</Label>
+                                                <Label className="text-xs text-slate-400">Postal Code</Label>
                                                 <Input value={editForm.postal_code} onChange={e => setEditForm({ ...editForm, postal_code: e.target.value })} className="h-9 border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500" />
                                             </div>
                                             <div className="space-y-2 md:col-span-2">
@@ -1329,8 +1344,8 @@ export default function DealershipsPage() {
             <ColumnExportDialog
                 open={exportModalOpen}
                 onOpenChange={setExportModalOpen}
-                title="Export Dealerships"
-                description="Select the dealership columns you want in your CSV."
+                title="Export Locations"
+                description="Select the location columns you want in your CSV."
                 availableColumns={DEALERSHIP_EXPORT_COLUMNS}
                 onConfirm={handleExport}
             />
@@ -1345,7 +1360,7 @@ export default function DealershipsPage() {
                         <DialogDescription className="text-slate-300">
                             Are you sure you want to change the status of <strong>{selectedDealership?.name}</strong> to <strong>{selectedDealership?.status === 'active' ? 'Inactive' : 'Active'}</strong>?
                             <br /><br />
-                            {selectedDealership?.status === 'active' ? 'Inactive dealerships cannot submit new service requests.' : 'Active dealerships will be able to submit requests immediately.'}
+                            {selectedDealership?.status === 'active' ? 'Inactive locations cannot receive new jobs.' : 'Active locations will be available for new jobs immediately.'}
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
