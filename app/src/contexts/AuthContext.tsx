@@ -17,6 +17,7 @@ import {
   fetchAdminToken,
   fetchAdminTechnicianPasswordResetRequests,
   fetchDevTechnicianToken,
+  fetchTechnicianToken,
   fetchTechnicianMeProfile,
   fetchAdminTechnicianSignupRequests,
   fetchAdminTechnicians,
@@ -613,10 +614,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     try {
-      const tokenResponse = await fetchDevTechnicianToken({
-        email: normalizedEmail,
-        password: normalizedPassword,
-      });
+      let tokenResponse;
+      try {
+        tokenResponse = await fetchTechnicianToken({
+          email: normalizedEmail,
+          password: normalizedPassword,
+        });
+      } catch {
+        tokenResponse = await fetchDevTechnicianToken({
+          email: normalizedEmail,
+          password: normalizedPassword,
+        });
+      }
       setStoredTechnicianToken(tokenResponse.access_token, persistSession);
       setHasBackendTechnicianToken(true);
 

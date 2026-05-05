@@ -672,6 +672,16 @@ export async function fetchDevTechnicianToken(payload: {
   });
 }
 
+export async function fetchTechnicianToken(payload: {
+  email: string;
+  password: string;
+}): Promise<DevTechnicianTokenResponse> {
+  return requestJson<DevTechnicianTokenResponse>('/auth/technician-token', {
+    method: 'POST',
+    body: payload,
+  });
+}
+
 export async function fetchAdminTechnicians(token: string): Promise<BackendTechnicianListItem[]> {
   return requestJson<BackendTechnicianListItem[]>('/admin/technicians', {
     token,

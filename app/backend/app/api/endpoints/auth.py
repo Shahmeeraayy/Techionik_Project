@@ -117,3 +117,40 @@ def create_dev_technician_token(
         expires_at=expires_at,
         role=UserRole.TECHNICIAN,
     )
+
+
+@router.post("/technician-token", response_model=DevTokenResponse)
+def create_technician_token(
+    payload: DevTechnicianTokenRequest,
+    db: Session = Depends(deps.get_db),
+):
+    normalized_email = payload.email.strip().lower()
+    normalized_password = payload.password.strip()
+    repo = TechnicianRepository(db)
+    technician = repo.get_technician_by_email(normalized_email)
+    if technician is None:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid technician credentials")
+    if technician.status != "active":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Technician account is deactivated")
+
+    stored_password = (technician.password or "").strip()
+    if stored_password:
+        if normalized_password != stored_password:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid technician credentials")
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Technician password is not configured. Contact admin.",
+        )
+
+    expires_at = datetime.now(timezone.utc) + timedelta(hours=8)
+    token = create_access_token(
+        user_id=technician.id,
+        role=UserRole.TECHNICIAN,
+        expires_at=expires_at,
+    )
+    return DevTokenResponse(
+        access_token=token,
+        expires_at=expires_at,
+        role=UserRole.TECHNICIAN,
+    )
