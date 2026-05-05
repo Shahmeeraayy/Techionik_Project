@@ -85,7 +85,7 @@ function Sidebar({
       >
         {/* Logo */}
         <div className="flex items-center gap-3 px-6 py-6 border-b border-border flex-shrink-0">
-          <div className="w-10 h-10 rounded-2xl bg-[linear-gradient(135deg,#4f7cff,#79a1ff)] flex items-center justify-center shadow-[0_18px_40px_rgba(79,124,255,0.28)]">
+          <div className="w-10 h-10 rounded-2xl bg-[linear-gradient(135deg,#111827,#0f172a)] dark:bg-[linear-gradient(135deg,#4f7cff,#79a1ff)] flex items-center justify-center shadow-[0_18px_40px_rgba(15,23,42,0.18)] dark:shadow-[0_18px_40px_rgba(79,124,255,0.28)]">
             <Shield className="w-5 h-5 text-primary-foreground" />
           </div>
           <div>
@@ -108,21 +108,21 @@ function Sidebar({
                 className={cn(
                   'flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-medium transition-all duration-200 w-full text-left group',
                   isActive
-                    ? 'bg-muted text-primary shadow-sm dark:bg-[linear-gradient(135deg,rgba(18,32,58,0.92),rgba(12,23,44,0.92))] dark:text-blue-100 dark:shadow-[0_18px_34px_rgba(6,11,24,0.24),inset_0_0_0_1px_rgba(79,124,255,0.24)]'
-                    : 'text-muted-foreground hover:bg-muted hover:text-foreground dark:text-slate-400 dark:hover:bg-white/[0.05] dark:hover:text-slate-100'
+                    ? 'bg-[#111827] text-white shadow-[0_18px_34px_rgba(15,23,42,0.12)] dark:bg-[linear-gradient(135deg,rgba(18,32,58,0.92),rgba(12,23,44,0.92))] dark:text-blue-100 dark:shadow-[0_18px_34px_rgba(6,11,24,0.24),inset_0_0_0_1px_rgba(79,124,255,0.24)]'
+                    : 'text-muted-foreground hover:bg-[#f3f4f6] hover:text-foreground dark:text-slate-400 dark:hover:bg-white/[0.05] dark:hover:text-slate-100'
                 )}
               >
                 <div className={cn(
                   'flex h-9 w-9 items-center justify-center rounded-xl border transition-all duration-200',
                   isActive
-                    ? 'border-blue-300/20 bg-blue-400/10 text-blue-100'
-                    : 'border-white/6 bg-white/[0.03] text-slate-500 group-hover:border-white/10 group-hover:bg-white/[0.06] group-hover:text-slate-200',
+                    ? 'border-black/10 bg-white text-[#111827] dark:border-blue-300/20 dark:bg-blue-400/10 dark:text-blue-100'
+                    : 'border-slate-200 bg-white text-slate-500 group-hover:border-slate-300 group-hover:bg-slate-50 group-hover:text-slate-900 dark:border-white/6 dark:bg-white/[0.03] dark:text-slate-500 dark:group-hover:border-white/10 dark:group-hover:bg-white/[0.06] dark:group-hover:text-slate-200',
                 )}>
                   <Icon className="w-4.5 h-4.5" />
                 </div>
                 <span className="flex-1">{item.label}</span>
                 {item.path === '/admin/chat' && unreadChatCount > 0 ? (
-                  <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-700 shadow-[0_10px_20px_rgba(79,124,255,0.22)]">
+                  <span className="rounded-full bg-[#111827] px-2 py-0.5 text-xs font-semibold text-white shadow-[0_10px_20px_rgba(15,23,42,0.16)] dark:bg-blue-100 dark:text-blue-700 dark:shadow-[0_10px_20px_rgba(79,124,255,0.22)]">
                     {unreadChatCount}
                   </span>
                 ) : null}
@@ -149,7 +149,7 @@ function UserMenu() {
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className="flex items-center gap-3 p-1.5 pl-3 pr-2 rounded-full border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] transition-all shadow-[0_14px_34px_rgba(2,6,23,0.18)] backdrop-blur-sm">
+          <button className="flex items-center gap-3 p-1.5 pl-3 pr-2 rounded-full border border-black/10 bg-white hover:bg-[#f9fafb] transition-all shadow-[0_14px_34px_rgba(15,23,42,0.08)] backdrop-blur-sm dark:border-white/10 dark:bg-white/[0.04] dark:hover:bg-white/[0.08] dark:shadow-[0_14px_34px_rgba(2,6,23,0.18)]">
             <Avatar className="w-8 h-8 border border-white/10">
               <AvatarImage src={user?.avatar} alt={user?.name} />
               <AvatarFallback className="bg-muted text-primary text-xs font-bold">
@@ -295,7 +295,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
             <div className="flex items-center gap-3 sm:gap-6">
               {!hideHeaderRefreshControls && (
                 <>
-                  <span className="hidden sm:block text-xs font-medium text-muted-foreground bg-white/[0.04] px-3 py-1.5 rounded-full border border-white/8">
+                  <span className="hidden sm:block text-xs font-medium text-muted-foreground bg-white px-3 py-1.5 rounded-full border border-black/10 dark:bg-white/[0.04] dark:border-white/8">
                     {lastUpdated}
                   </span>
 
