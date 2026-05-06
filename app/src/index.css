@@ -358,6 +358,58 @@
   }
 
   .admin-shell {
+    --admin-ink: #111827;
+    --admin-ink-soft: #334155;
+    --admin-muted: #64748b;
+    --admin-panel: rgba(255, 255, 255, 0.96);
+    --admin-panel-subtle: rgba(248, 250, 252, 0.92);
+    --admin-line: rgba(15, 23, 42, 0.1);
+    color: var(--admin-ink);
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  .admin-shell h1,
+  .admin-shell h2,
+  .admin-shell h3 {
+    letter-spacing: -0.015em;
+  }
+
+  .admin-shell p,
+  .admin-shell span,
+  .admin-shell button,
+  .admin-shell input,
+  .admin-shell textarea,
+  .admin-shell select {
+    letter-spacing: 0;
+  }
+
+  .admin-shell .admin-sidebar nav {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(100, 116, 139, 0.34) transparent;
+  }
+
+  .admin-shell .admin-sidebar nav::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .admin-shell .admin-sidebar nav::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .admin-shell .admin-sidebar nav::-webkit-scrollbar-thumb {
+    background: rgba(100, 116, 139, 0.34);
+    border: 2px solid transparent;
+    border-radius: 999px;
+    background-clip: padding-box;
+  }
+
+  .admin-shell .admin-sidebar nav::-webkit-scrollbar-thumb:hover {
+    background: rgba(100, 116, 139, 0.5);
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+
+  .admin-shell {
     background:
       radial-gradient(960px 520px at 18% -120px, rgba(17, 24, 39, 0.035), rgba(255, 255, 255, 0) 54%),
       radial-gradient(860px 460px at 88% -80px, rgba(17, 24, 39, 0.02), rgba(255, 255, 255, 0) 46%),
@@ -419,6 +471,11 @@
     background: linear-gradient(135deg, #111827, #0f172a);
     color: #fff;
     box-shadow: 0 18px 40px rgba(15, 23, 42, 0.14);
+  }
+
+  .admin-shell [data-slot="button"][data-variant="default"] *,
+  .admin-shell [data-slot="button"][data-variant="default"] svg {
+    color: inherit;
   }
 
   .admin-shell .admin-content > * {
@@ -484,6 +541,12 @@
     color: #111827 !important;
   }
 
+  .admin-shell .admin-sidebar a[class~="text-white"],
+  .admin-shell [data-slot="button"][class~="text-white"],
+  .admin-shell .btn-primary[class~="text-white"] {
+    color: #ffffff !important;
+  }
+
   .admin-shell [class*="bg-[linear-gradient(135deg,rgba(7,25,42"],
   .admin-shell [class*="bg-[linear-gradient(135deg,rgba(8,24,39"],
   .admin-shell [class*="bg-[linear-gradient(180deg,rgba(9,24,39"],
@@ -507,19 +570,42 @@
   }
 
   .dark .admin-shell {
+    --admin-ink: #eaf1ff;
+    --admin-ink-soft: #c7d2e6;
+    --admin-muted: #8ea3c5;
+    --admin-panel: rgba(14, 24, 42, 0.94);
+    --admin-panel-subtle: rgba(18, 28, 49, 0.82);
+    --admin-line: rgba(148, 163, 184, 0.16);
+    color: var(--admin-ink);
     background:
-      radial-gradient(960px 520px at 18% -120px, rgba(79, 124, 255, 0.24), rgba(8, 12, 20, 0) 54%),
-      radial-gradient(860px 460px at 88% -80px, rgba(79, 124, 255, 0.12), rgba(8, 12, 20, 0) 46%),
+      radial-gradient(960px 520px at 18% -120px, rgba(79, 124, 255, 0.18), rgba(8, 12, 20, 0) 54%),
+      radial-gradient(860px 460px at 88% -80px, rgba(45, 212, 191, 0.08), rgba(8, 12, 20, 0) 46%),
       linear-gradient(180deg, #080c14 0%, #060912 100%);
   }
 
   .dark .admin-shell .admin-sidebar {
     background:
-      linear-gradient(180deg, rgba(10, 16, 28, 0.98) 0%, rgba(8, 12, 20, 0.98) 100%);
+      linear-gradient(180deg, rgba(13, 20, 34, 0.98) 0%, rgba(8, 12, 20, 0.98) 100%);
     border-color: rgba(148, 163, 184, 0.12);
     box-shadow:
       inset -1px 0 0 rgba(148, 163, 184, 0.08),
       24px 0 60px rgba(2, 6, 23, 0.24);
+  }
+
+  .dark .admin-shell .admin-sidebar nav {
+    scrollbar-color: rgba(148, 163, 184, 0.28) transparent;
+  }
+
+  .dark .admin-shell .admin-sidebar nav::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.28);
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+
+  .dark .admin-shell .admin-sidebar nav::-webkit-scrollbar-thumb:hover {
+    background: rgba(148, 163, 184, 0.42);
+    border: 2px solid transparent;
+    background-clip: padding-box;
   }
 
   .dark .admin-shell .admin-topbar {
@@ -561,6 +647,13 @@
   .dark .admin-shell [data-slot="input"] {
     background: rgba(255,255,255,0.04);
     border-color: rgba(148, 163, 184, 0.14);
+  }
+
+  .dark .admin-shell [data-slot="button"][data-variant="default"],
+  .dark .admin-shell .btn-primary {
+    background: linear-gradient(135deg, #4f7cff, #7aa2ff);
+    color: #ffffff !important;
+    box-shadow: 0 18px 40px rgba(79, 124, 255, 0.22);
   }
 
   .dark .admin-shell .admin-content > * {
@@ -618,6 +711,98 @@
 
   .dark .admin-shell .text-gray-300 {
     color: #8da4c7 !important;
+  }
+
+  .dark .admin-shell .text-slate-950,
+  .dark .admin-shell .text-slate-900,
+  .dark .admin-shell .text-slate-800,
+  .dark .admin-shell .text-black,
+  .dark .admin-shell .text-\[\#111827\] {
+    color: #eaf1ff !important;
+  }
+
+  .dark .admin-shell .text-slate-700,
+  .dark .admin-shell .text-slate-600 {
+    color: #c7d2e6 !important;
+  }
+
+  .dark .admin-shell .text-slate-500,
+  .dark .admin-shell .text-slate-400 {
+    color: #8ea3c5 !important;
+  }
+
+  .dark .admin-shell .text-slate-300,
+  .dark .admin-shell .text-slate-200,
+  .dark .admin-shell .text-slate-100,
+  .dark .admin-shell .text-white {
+    color: #f4f8ff !important;
+  }
+
+  .dark .admin-shell .text-cyan-50,
+  .dark .admin-shell .text-cyan-100,
+  .dark .admin-shell .text-cyan-200 {
+    color: #c8f8ff !important;
+  }
+
+  .dark .admin-shell .text-emerald-50,
+  .dark .admin-shell .text-emerald-100,
+  .dark .admin-shell .text-emerald-200 {
+    color: #c8f7df !important;
+  }
+
+  .dark .admin-shell .text-amber-50,
+  .dark .admin-shell .text-amber-100,
+  .dark .admin-shell .text-amber-200 {
+    color: #fdecc8 !important;
+  }
+
+  .dark .admin-shell .text-rose-50,
+  .dark .admin-shell .text-rose-100,
+  .dark .admin-shell .text-rose-200 {
+    color: #ffd7df !important;
+  }
+
+  .dark .admin-shell .bg-clip-text.text-transparent {
+    color: transparent !important;
+  }
+
+  .dark .admin-shell .border-slate-200,
+  .dark .admin-shell .border-slate-300,
+  .dark .admin-shell .border-black\/8,
+  .dark .admin-shell .border-black\/10,
+  .dark .admin-shell .border-black\/12 {
+    border-color: rgba(148, 163, 184, 0.16) !important;
+  }
+
+  .dark .admin-shell .bg-slate-50,
+  .dark .admin-shell .bg-slate-100,
+  .dark .admin-shell .bg-slate-200 {
+    background-color: rgba(24, 36, 60, 0.9) !important;
+  }
+
+  .dark .admin-shell .bg-emerald-50 {
+    background-color: rgba(16, 185, 129, 0.12) !important;
+  }
+
+  .dark .admin-shell .bg-amber-50 {
+    background-color: rgba(245, 158, 11, 0.14) !important;
+  }
+
+  .dark .admin-shell .bg-rose-50 {
+    background-color: rgba(244, 63, 94, 0.12) !important;
+  }
+
+  .dark .admin-shell .bg-blue-50 {
+    background-color: rgba(79, 124, 255, 0.13) !important;
+  }
+
+  .dark .admin-shell table,
+  .dark .admin-shell thead,
+  .dark .admin-shell tbody,
+  .dark .admin-shell tr,
+  .dark .admin-shell td,
+  .dark .admin-shell th {
+    border-color: rgba(148, 163, 184, 0.16) !important;
   }
 
   .dark .admin-shell .placeholder\:text-gray-400::placeholder {
