@@ -48,8 +48,8 @@ const QUICK_RANGE_LABEL: Record<QuickRange, string> = {
 const numberFmt = new Intl.NumberFormat('en-US');
 const percentFmt = new Intl.NumberFormat('en-US', { maximumFractionDigits: 1 });
 const currencyFmt = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
-const sectionCardClass = 'overflow-hidden rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(9,24,39,0.96),rgba(6,17,29,0.96))] shadow-[0_24px_80px_rgba(0,0,0,0.28)]';
-const sectionHeaderClass = 'border-b border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0))] p-6';
+const sectionCardClass = 'overflow-hidden rounded-[28px] border border-slate-200/80 bg-white shadow-[0_24px_70px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(9,24,39,0.96),rgba(6,17,29,0.96))] dark:shadow-[0_24px_80px_rgba(0,0,0,0.28)]';
+const sectionHeaderClass = 'border-b border-slate-200/80 bg-[linear-gradient(180deg,rgba(248,250,252,0.95),rgba(255,255,255,0))] p-6 dark:border-white/8 dark:bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0))]';
 
 function metricCardClass(tone: 'cyan' | 'emerald' | 'amber' | 'violet' | 'rose'): string {
   return cn(
@@ -267,9 +267,9 @@ export default function ReportsPage() {
       sla_compliance_rate: `${row.sla_compliance_rate ?? 0}%`,
     })), `${prefix}_location_performance`, 'csv');
     exportArrayData([
-      ...(overview.capacity_planning?.utilization_by_day ?? []).map((row) => ({ section: 'Utilization by day', day: row.day_of_week, jobs: row.jobs_count, utilization: `${row.technician_utilization}%`, jobs_per_technician: row.jobs_per_technician })),
-      ...(overview.capacity_planning?.peak_demand_windows ?? []).map((row) => ({ section: 'Peak demand window', hour: row.hour, jobs: row.jobs_count })),
-      ...(overview.capacity_planning?.understaffed_periods ?? []).map((row) => ({ section: 'Understaffed period', period: row.period, jobs: row.jobs_count, technicians_available: row.technicians_available, gap: row.gap })),
+      ...capacityUtilizationRows.map((row) => ({ section: 'Utilization by day', day: row.day_of_week, jobs: row.jobs_count, utilization: `${row.technician_utilization}%`, jobs_per_technician: row.jobs_per_technician })),
+      ...peakDemandRows.map((row) => ({ section: 'Peak demand window', hour: row.hour, jobs: row.jobs_count })),
+      ...understaffedRows.map((row) => ({ section: 'Understaffed period', period: row.period, jobs: row.jobs_count, technicians_available: row.technicians_available, gap: row.gap })),
     ], `${prefix}_capacity_planning`, 'csv');
   };
 
@@ -288,6 +288,33 @@ export default function ReportsPage() {
   }, [overview, dealershipFilter]);
 
   const kpis = overview?.kpis;
+  const technicianCount = overview?.technician_performance.length ?? 0;
+  const capacityUtilizationRows = useMemo(() => {
+    const rows = overview?.capacity_planning?.utilization_by_day ?? [];
+    if (rows.length || !overview) return rows;
+
+    const jobsCreated = overview.kpis.jobs_created;
+    const jobsCompleted = overview.kpis.jobs_completed;
+    const utilization = overview.kpis.technician_utilization;
+    const perTech = (value: number) => (technicianCount ? Number((value / technicianCount).toFixed(1)) : 0);
+
+    return [
+      {
+        day_of_week: 'Current range',
+        jobs_count: jobsCreated,
+        technician_utilization: utilization,
+        jobs_per_technician: perTech(jobsCreated),
+      },
+      {
+        day_of_week: 'Completed workload',
+        jobs_count: jobsCompleted,
+        technician_utilization: utilization,
+        jobs_per_technician: perTech(jobsCompleted),
+      },
+    ];
+  }, [overview, technicianCount]);
+  const peakDemandRows = overview?.capacity_planning?.peak_demand_windows ?? [];
+  const understaffedRows = overview?.capacity_planning?.understaffed_periods ?? [];
 
   return (
     <div className="relative w-full pb-10">
@@ -308,7 +335,7 @@ export default function ReportsPage() {
               </div>
               <h1 className="mt-5 text-[2.35rem] font-semibold leading-none tracking-[-0.06em] text-white md:text-[2.8rem]">
                 Reports
-                <span className="block bg-gradient-to-r from-white via-cyan-100 to-emerald-100 bg-clip-text text-transparent">
+                <span className="block bg-gradient-to-r from-slate-950 via-blue-700 to-cyan-500 bg-clip-text text-transparent dark:from-white dark:via-cyan-100 dark:to-emerald-100">
                   command deck
                 </span>
               </h1>
@@ -332,11 +359,11 @@ export default function ReportsPage() {
 
         <Card className={sectionCardClass}>
           <div className={sectionHeaderClass}>
-            <div className="grid grid-cols-1 gap-3 xl:grid-cols-[180px_1fr_auto_auto_auto] xl:items-end">
+            <div className="grid grid-cols-1 gap-4 xl:grid-cols-[220px_minmax(0,1fr)_auto] xl:items-end">
               <div className="space-y-2">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Quick Range</p>
                 <Select value={quickRange} onValueChange={(value) => handleQuickRangeChange(value as QuickRange)}>
-                  <SelectTrigger className="h-10 border-white/10 bg-white/[0.04] text-slate-100">
+                  <SelectTrigger className="h-11 rounded-2xl border-slate-200 bg-white text-slate-900 shadow-sm dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-100">
                     <SelectValue placeholder="Range" />
                   </SelectTrigger>
                   <SelectContent>
@@ -352,52 +379,56 @@ export default function ReportsPage() {
 
               <div className="space-y-2">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Custom Range</p>
-                <div className="flex min-h-10 flex-wrap items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2">
-                  <Calendar className="h-4 w-4 text-slate-400" />
+                <div className="grid min-h-11 grid-cols-1 items-center gap-2 rounded-2xl border border-slate-200 bg-white px-3 py-2 shadow-sm sm:grid-cols-[1fr_auto_1fr] dark:border-white/10 dark:bg-white/[0.04]">
                   <Input
                     type="date"
                     value={fromDate}
                     onChange={(event) => setFromDate(event.target.value)}
-                    className="h-7 min-w-[130px] border-0 bg-transparent px-1 text-xs text-slate-100 shadow-none focus-visible:ring-0"
+                    className="h-8 min-w-[150px] border-0 bg-transparent px-1 text-xs text-slate-900 shadow-none focus-visible:ring-0 dark:text-slate-100"
                   />
-                  <span className="text-xs text-slate-400">to</span>
+                  <span className="hidden items-center gap-1 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400 sm:flex">
+                    <Calendar className="h-3.5 w-3.5" />
+                    to
+                  </span>
                   <Input
                     type="date"
                     value={toDate}
                     onChange={(event) => setToDate(event.target.value)}
-                    className="h-7 min-w-[130px] border-0 bg-transparent px-1 text-xs text-slate-100 shadow-none focus-visible:ring-0"
+                    className="h-8 min-w-[150px] border-0 bg-transparent px-1 text-xs text-slate-900 shadow-none focus-visible:ring-0 dark:text-slate-100"
                   />
                 </div>
               </div>
 
-              <Button
-                size="sm"
-                className="h-10 rounded-full bg-[#2F8E92] px-5 text-white shadow-[0_12px_30px_rgba(47,142,146,0.28)] hover:bg-[#267276]"
-                onClick={handleRefresh}
-                disabled={!canRunRange || loading}
-              >
-                {loading ? 'Applying...' : 'Apply Filters'}
-              </Button>
+              <div className="flex flex-wrap items-center justify-start gap-2 xl:justify-end">
+                <Button
+                  size="sm"
+                  className="h-11 rounded-full bg-slate-950 px-5 text-white shadow-[0_12px_30px_rgba(15,23,42,0.18)] hover:bg-slate-800 dark:bg-[#2F8E92] dark:shadow-[0_12px_30px_rgba(47,142,146,0.28)] dark:hover:bg-[#267276]"
+                  onClick={handleRefresh}
+                  disabled={!canRunRange || loading}
+                >
+                  {loading ? 'Applying...' : 'Apply Filters'}
+                </Button>
 
-              <Button variant="outline" size="sm" className="h-10 gap-2 rounded-full border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]" onClick={handleExport} disabled={!overview || loading}>
-                <Download className="w-4 h-4" /> Export Section CSVs
-              </Button>
+                <Button variant="outline" size="sm" className="h-11 gap-2 rounded-full border-slate-200 bg-white text-slate-700 shadow-sm hover:bg-slate-50 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-100 dark:hover:bg-white/[0.08]" onClick={handleExport} disabled={!overview || loading}>
+                  <Download className="w-4 h-4" /> Export Section CSVs
+                </Button>
 
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-10 gap-2 rounded-full border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
-                onClick={handleRefresh}
-                disabled={!canRunRange || loading}
-                title="Refresh"
-              >
-                <RefreshCw className={cn('w-4 h-4 text-cyan-200', loading && 'animate-spin')} />
-                Refresh
-              </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-11 gap-2 rounded-full border-slate-200 bg-white text-slate-700 shadow-sm hover:bg-slate-50 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-100 dark:hover:bg-white/[0.08]"
+                  onClick={handleRefresh}
+                  disabled={!canRunRange || loading}
+                  title="Refresh"
+                >
+                  <RefreshCw className={cn('w-4 h-4 text-blue-600 dark:text-cyan-200', loading && 'animate-spin')} />
+                  Refresh
+                </Button>
+              </div>
             </div>
 
             {!canRunRange ? (
-              <p className="mt-4 rounded-2xl border border-rose-400/20 bg-rose-400/10 px-4 py-3 text-xs text-rose-200">
+              <p className="mt-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs text-rose-700 dark:border-rose-400/20 dark:bg-rose-400/10 dark:text-rose-200">
                 Start date must be on or before end date.
               </p>
             ) : null}
@@ -495,8 +526,8 @@ export default function ReportsPage() {
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
           <Card className={sectionCardClass}>
             <div className={sectionHeaderClass}>
-              <h2 className="text-base font-semibold text-white">Dispatch Overview</h2>
-              <p className="mt-1 text-sm text-slate-300">Assignment speed, completion speed, acceptance rate, and urgency mix.</p>
+              <h2 className="text-base font-semibold text-slate-950 dark:text-white">Dispatch Overview</h2>
+              <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Assignment speed, completion speed, acceptance rate, and urgency mix.</p>
             </div>
             <div className="space-y-4 p-6 pt-5">
               <div className="grid grid-cols-2 gap-3">
@@ -506,9 +537,9 @@ export default function ReportsPage() {
                   ['Accepted', `${overview?.dispatch_overview?.accepted_rate ?? 0}%`],
                   ['Refused', `${overview?.dispatch_overview?.refused_rate ?? 0}%`],
                 ].map(([label, value]) => (
-                  <div key={label} className="rounded-2xl border border-white/8 bg-white/[0.03] p-3">
+                  <div key={label} className="rounded-2xl border border-slate-200 bg-slate-50/80 p-3 dark:border-white/8 dark:bg-white/[0.03]">
                     <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400">{label}</p>
-                    <p className="mt-2 text-xl font-semibold text-white">{value}</p>
+                    <p className="mt-2 text-xl font-semibold text-slate-950 dark:text-white">{value}</p>
                   </div>
                 ))}
               </div>
@@ -516,9 +547,9 @@ export default function ReportsPage() {
                 <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">Jobs by urgency</p>
                 {(overview?.dispatch_overview?.jobs_by_urgency ?? []).length ? (
                   overview?.dispatch_overview?.jobs_by_urgency.map((row) => (
-                    <div key={row.status} className="flex items-center justify-between rounded-xl border border-white/8 bg-white/[0.03] px-3 py-2 text-sm">
-                      <span className="text-slate-300">{row.status}</span>
-                      <span className="font-semibold text-white">{row.count} ({row.percentage}%)</span>
+                    <div key={row.status} className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2 text-sm dark:border-white/8 dark:bg-white/[0.03]">
+                      <span className="text-slate-700 dark:text-slate-300">{row.status}</span>
+                      <span className="font-semibold text-slate-950 dark:text-white">{row.count} ({row.percentage}%)</span>
                     </div>
                   ))
                 ) : (
@@ -530,30 +561,30 @@ export default function ReportsPage() {
 
           <Card className={sectionCardClass}>
             <div className={sectionHeaderClass}>
-              <h2 className="text-base font-semibold text-white">Intake Analytics</h2>
-              <p className="mt-1 text-sm text-slate-300">Source channels, conversion, dismissed reasons, and intake-to-job timing.</p>
+              <h2 className="text-base font-semibold text-slate-950 dark:text-white">Intake Analytics</h2>
+              <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Source channels, conversion, dismissed reasons, and intake-to-job timing.</p>
             </div>
             <div className="space-y-4 p-6 pt-5">
               <div className="grid grid-cols-3 gap-3">
-                <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-3">
+                <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-3 dark:border-white/8 dark:bg-white/[0.03]">
                   <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400">Records</p>
-                  <p className="mt-2 text-xl font-semibold text-white">{overview?.intake_analytics?.total_intake_records ?? 0}</p>
+                  <p className="mt-2 text-xl font-semibold text-slate-950 dark:text-white">{overview?.intake_analytics?.total_intake_records ?? 0}</p>
                 </div>
-                <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-3">
+                <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-3 dark:border-white/8 dark:bg-white/[0.03]">
                   <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400">Convert</p>
-                  <p className="mt-2 text-xl font-semibold text-white">{overview?.intake_analytics?.conversion_rate ?? 0}%</p>
+                  <p className="mt-2 text-xl font-semibold text-slate-950 dark:text-white">{overview?.intake_analytics?.conversion_rate ?? 0}%</p>
                 </div>
-                <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-3">
+                <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-3 dark:border-white/8 dark:bg-white/[0.03]">
                   <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400">To job</p>
-                  <p className="mt-2 text-xl font-semibold text-white">{overview?.intake_analytics?.average_time_to_job_creation ?? '0m'}</p>
+                  <p className="mt-2 text-xl font-semibold text-slate-950 dark:text-white">{overview?.intake_analytics?.average_time_to_job_creation ?? '0m'}</p>
                 </div>
               </div>
               {(overview?.intake_analytics?.source_channels ?? []).length ? (
                 overview?.intake_analytics?.source_channels.map((row) => (
-                  <div key={row.source_channel} className="rounded-xl border border-white/8 bg-white/[0.03] px-3 py-2 text-sm">
+                  <div key={row.source_channel} className="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2 text-sm dark:border-white/8 dark:bg-white/[0.03]">
                     <div className="flex items-center justify-between">
-                      <span className="text-slate-300">{row.source_channel}</span>
-                      <span className="font-semibold text-white">{row.converted_jobs}/{row.intake_records}</span>
+                      <span className="text-slate-700 dark:text-slate-300">{row.source_channel}</span>
+                      <span className="font-semibold text-slate-950 dark:text-white">{row.converted_jobs}/{row.intake_records}</span>
                     </div>
                     <p className="mt-1 text-xs text-slate-500">{row.conversion_rate}% conversion</p>
                   </div>
@@ -569,29 +600,43 @@ export default function ReportsPage() {
 
           <Card className={sectionCardClass}>
             <div className={sectionHeaderClass}>
-              <h2 className="text-base font-semibold text-white">Capacity Planning</h2>
-              <p className="mt-1 text-sm text-slate-300">Utilization by weekday, peak demand windows, and understaffed periods.</p>
+              <h2 className="text-base font-semibold text-slate-950 dark:text-white">Capacity Planning</h2>
+              <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Utilization by weekday, peak demand windows, and understaffed periods.</p>
             </div>
             <div className="space-y-4 p-6 pt-5">
               <div className="space-y-2">
-                {(overview?.capacity_planning?.utilization_by_day ?? []).map((row) => (
-                  <div key={row.day_of_week} className="rounded-xl border border-white/8 bg-white/[0.03] px-3 py-2">
+                {capacityUtilizationRows.length ? capacityUtilizationRows.map((row) => (
+                  <div key={row.day_of_week} className="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2 dark:border-white/8 dark:bg-white/[0.03]">
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-slate-300">{row.day_of_week}</span>
-                      <span className="font-semibold text-white">{row.jobs_count} jobs</span>
+                      <span className="text-slate-700 dark:text-slate-300">{row.day_of_week}</span>
+                      <span className="font-semibold text-slate-950 dark:text-white">{row.jobs_count} jobs</span>
                     </div>
-                    <p className="mt-1 text-xs text-slate-500">{row.jobs_per_technician} jobs/tech · {row.technician_utilization}% utilization</p>
+                    <p className="mt-1 text-xs text-slate-500">{row.jobs_per_technician} jobs/tech - {row.technician_utilization}% utilization</p>
                   </div>
-                ))}
+                )) : (
+                  <p className="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-3 text-sm text-slate-500 dark:border-white/8 dark:bg-white/[0.03] dark:text-slate-400">
+                    No utilization rows yet for this range.
+                  </p>
+                )}
               </div>
               <div>
                 <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">Peak windows</p>
                 <div className="flex flex-wrap gap-2">
-                  {(overview?.capacity_planning?.peak_demand_windows ?? []).length ? overview?.capacity_planning?.peak_demand_windows.map((row) => (
-                    <Badge key={row.hour} variant="outline" className="border-white/10 bg-white/[0.04] text-slate-300">
-                      {row.hour} · {row.jobs_count}
+                  {peakDemandRows.length ? peakDemandRows.map((row) => (
+                    <Badge key={row.hour} variant="outline" className="border-slate-200 bg-white text-slate-700 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300">
+                      {row.hour} - {row.jobs_count}
                     </Badge>
-                  )) : <span className="text-sm text-slate-400">No peak windows yet.</span>}
+                  )) : <span className="text-sm text-slate-500 dark:text-slate-400">No peak windows yet.</span>}
+                </div>
+              </div>
+              <div>
+                <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">Understaffed periods</p>
+                <div className="flex flex-wrap gap-2">
+                  {understaffedRows.length ? understaffedRows.map((row) => (
+                    <Badge key={row.period} variant="outline" className="border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-300/20 dark:bg-amber-300/10 dark:text-amber-100">
+                      {row.period} - gap {row.gap}
+                    </Badge>
+                  )) : <span className="text-sm text-slate-500 dark:text-slate-400">No understaffed periods detected.</span>}
                 </div>
               </div>
             </div>
@@ -601,8 +646,8 @@ export default function ReportsPage() {
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
           <Card className={sectionCardClass}>
             <div className={sectionHeaderClass}>
-              <h2 className="text-base font-semibold text-white">Dispatch Performance</h2>
-              <p className="mt-1 text-sm text-slate-300">Job status distribution for selected range</p>
+              <h2 className="text-base font-semibold text-slate-950 dark:text-white">Dispatch Performance</h2>
+              <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Job status distribution for selected range</p>
             </div>
             <div className="p-6 pt-5">
               {loading ? (
@@ -614,13 +659,13 @@ export default function ReportsPage() {
               ) : overview?.dispatch_performance.length ? (
                 <div className="space-y-3">
                   {overview.dispatch_performance.map((row) => (
-                    <div key={row.status} className="space-y-2 rounded-[20px] border border-white/8 bg-white/[0.03] p-4">
+                    <div key={row.status} className="space-y-2 rounded-[20px] border border-slate-200 bg-slate-50/80 p-4 dark:border-white/8 dark:bg-white/[0.03]">
                       <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center gap-2">
                           <Badge variant="outline" className={cn(dispatchBadgeTone(row), 'border text-xs dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-100')}>{row.status}</Badge>
                           <span className="text-sm text-slate-400">{numberFmt.format(row.count)} jobs</span>
                         </div>
-                        <span className="text-sm font-semibold text-white">{percentFmt.format(row.percentage)}%</span>
+                        <span className="text-sm font-semibold text-slate-950 dark:text-white">{percentFmt.format(row.percentage)}%</span>
                       </div>
                       <div className="h-2 overflow-hidden rounded-full bg-white/10">
                         <div
@@ -639,8 +684,8 @@ export default function ReportsPage() {
 
           <Card className={sectionCardClass}>
             <div className={sectionHeaderClass}>
-              <h2 className="text-base font-semibold text-white">Invoice Performance</h2>
-              <p className="mt-1 text-sm text-slate-300">Invoicing lifecycle states, approval turnaround, and blocked reason breakdown.</p>
+              <h2 className="text-base font-semibold text-slate-950 dark:text-white">Invoice Performance</h2>
+              <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Invoicing lifecycle states, approval turnaround, and blocked reason breakdown.</p>
             </div>
             <div className="p-6 pt-5">
               {loading ? (
@@ -650,18 +695,18 @@ export default function ReportsPage() {
                   <Skeleton className="h-10 w-full bg-white/10" />
                 </div>
               ) : overview?.invoice_performance.length ? (
-                <div className="overflow-hidden rounded-[20px] border border-white/8 bg-black/10">
-                  <div className="flex items-start justify-between gap-3 border-b border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0))] px-5 py-4">
+                <div className="overflow-hidden rounded-[20px] border border-slate-200 bg-white shadow-sm dark:border-white/8 dark:bg-black/10">
+                  <div className="flex items-start justify-between gap-3 border-b border-slate-200 bg-slate-50/80 px-5 py-4 dark:border-white/8 dark:bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0))]">
                     <div className="space-y-1.5">
-                      <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Invoice States</div>
-                      <div className="text-sm text-slate-200">Lifecycle counts and billed totals for the selected report window.</div>
+                      <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500 dark:text-slate-400">Invoice States</div>
+                      <div className="text-sm text-slate-600 dark:text-slate-200">Lifecycle counts and billed totals for the selected report window.</div>
                     </div>
-                    <Badge variant="outline" className="rounded-full border-white/10 bg-white/[0.04] px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-slate-300">
+                  <Badge variant="outline" className="rounded-full border-slate-200 bg-white px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-slate-600 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300">
                       {overview.invoice_performance.length} states
                     </Badge>
                   </div>
                   <Table>
-                    <TableHeader className="sticky top-0 z-10 border-b border-white/10 bg-[linear-gradient(180deg,rgba(11,25,42,0.98),rgba(10,20,35,0.92))] backdrop-blur-xl">
+                    <TableHeader className="sticky top-0 z-10 border-b border-slate-200 bg-white/95 backdrop-blur-xl dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(11,25,42,0.98),rgba(10,20,35,0.92))]">
                       <TableRow className="border-white/0 hover:bg-transparent">
                         <TableHead className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">State</TableHead>
                         <TableHead className="text-right text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Count</TableHead>
@@ -670,22 +715,22 @@ export default function ReportsPage() {
                     </TableHeader>
                     <TableBody>
                       {overview.invoice_performance.map((row, index) => (
-                        <TableRow key={row.state} className={cn('border-b border-white/6', index % 2 === 1 && 'bg-white/[0.015]')}>
+                        <TableRow key={row.state} className={cn('border-b border-slate-100 dark:border-white/6', index % 2 === 1 && 'bg-slate-50/60 dark:bg-white/[0.015]')}>
                           <TableCell>
                             <Badge variant="outline" className={cn(statusBadgeTone(row), 'border text-xs dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-100')}>{row.state}</Badge>
                           </TableCell>
-                          <TableCell className="text-right text-slate-200">{numberFmt.format(row.count)}</TableCell>
-                          <TableCell className="text-right font-medium text-white">{currencyFmt.format(row.total_amount)}</TableCell>
+                          <TableCell className="text-right text-slate-700 dark:text-slate-200">{numberFmt.format(row.count)}</TableCell>
+                          <TableCell className="text-right font-medium text-slate-950 dark:text-white">{currencyFmt.format(row.total_amount)}</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
                   </Table>
                   {(overview.invoice_metrics?.blocked_reasons ?? []).length ? (
-                    <div className="border-t border-white/8 px-5 py-4">
+                    <div className="border-t border-slate-200 px-5 py-4 dark:border-white/8">
                       <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">Blocked reasons</p>
                       <div className="flex flex-wrap gap-2">
                         {overview.invoice_metrics?.blocked_reasons.map((row) => (
-                          <Badge key={row.reason} variant="outline" className="border-amber-300/20 bg-amber-300/10 text-amber-100">
+                          <Badge key={row.reason} variant="outline" className="border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-300/20 dark:bg-amber-300/10 dark:text-amber-100">
                             {row.reason}: {row.count}
                           </Badge>
                         ))}
@@ -703,7 +748,7 @@ export default function ReportsPage() {
         <Card className={sectionCardClass}>
           <div className={cn(sectionHeaderClass, 'flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between')}>
             <div>
-              <h2 className="text-base font-semibold text-white">Technician Performance</h2>
+              <h2 className="text-base font-semibold text-slate-950 dark:text-white">Technician Performance</h2>
               <p className="text-xs text-slate-400">
                 Showing {numberFmt.format(filteredTechnicianRows.length)} of {numberFmt.format(overview?.technician_performance.length ?? 0)}
               </p>
@@ -723,18 +768,18 @@ export default function ReportsPage() {
                 <Skeleton className="h-10 w-full bg-white/10" />
               </div>
             ) : filteredTechnicianRows.length ? (
-              <div className="overflow-hidden rounded-[20px] border border-white/8 bg-black/10">
-                <div className="flex items-start justify-between gap-3 border-b border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0))] px-5 py-4">
+              <div className="overflow-hidden rounded-[20px] border border-slate-200 bg-white shadow-sm dark:border-white/8 dark:bg-black/10">
+                <div className="flex items-start justify-between gap-3 border-b border-slate-200 bg-slate-50/80 px-5 py-4 dark:border-white/8 dark:bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0))]">
                   <div className="space-y-1.5">
-                    <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Technician Performance Board</div>
-                    <div className="text-sm text-slate-200">Assignment, completion, delay, and revenue metrics by technician.</div>
+                    <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500 dark:text-slate-400">Technician Performance Board</div>
+                    <div className="text-sm text-slate-600 dark:text-slate-200">Assignment, completion, delay, and revenue metrics by technician.</div>
                   </div>
-                  <Badge variant="outline" className="rounded-full border-white/10 bg-white/[0.04] px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-slate-300">
+                  <Badge variant="outline" className="rounded-full border-slate-200 bg-white px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-slate-600 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300">
                     {filteredTechnicianRows.length} visible
                   </Badge>
                 </div>
                 <Table>
-                  <TableHeader className="sticky top-0 z-10 border-b border-white/10 bg-[linear-gradient(180deg,rgba(11,25,42,0.98),rgba(10,20,35,0.92))] backdrop-blur-xl">
+                  <TableHeader className="sticky top-0 z-10 border-b border-slate-200 bg-white/95 backdrop-blur-xl dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(11,25,42,0.98),rgba(10,20,35,0.92))]">
                     <TableRow className="border-white/0 hover:bg-transparent">
                       <TableHead className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Technician</TableHead>
                       <TableHead className="text-right text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Assigned</TableHead>
@@ -749,16 +794,16 @@ export default function ReportsPage() {
                   </TableHeader>
                   <TableBody>
                     {filteredTechnicianRows.map((row, index) => (
-                      <TableRow key={row.id} className={cn('border-b border-white/6', index % 2 === 1 && 'bg-white/[0.015]')}>
-                        <TableCell className="font-medium text-white">{row.name}</TableCell>
-                        <TableCell className="text-right text-slate-200">{numberFmt.format(row.jobs_assigned)}</TableCell>
-                        <TableCell className="text-right text-slate-200">{numberFmt.format(row.jobs_completed)}</TableCell>
-                        <TableCell className="text-right text-slate-200">{row.avg_completion_time}</TableCell>
-                        <TableCell className="text-right text-slate-200">{numberFmt.format(row.delays_count)}</TableCell>
-                        <TableCell className="text-right text-slate-200">{numberFmt.format(row.refusals_count)}</TableCell>
-                        <TableCell className="text-right text-slate-200">{percentFmt.format(row.refusal_rate ?? 0)}%</TableCell>
-                        <TableCell className="text-right text-slate-200">{percentFmt.format(row.on_time_rate ?? 0)}%</TableCell>
-                        <TableCell className="text-right font-medium text-white">{currencyFmt.format(row.total_service_line_value ?? row.revenue_generated)}</TableCell>
+                      <TableRow key={row.id} className={cn('border-b border-slate-100 dark:border-white/6', index % 2 === 1 && 'bg-slate-50/60 dark:bg-white/[0.015]')}>
+                        <TableCell className="font-medium text-slate-950 dark:text-white">{row.name}</TableCell>
+                        <TableCell className="text-right text-slate-700 dark:text-slate-200">{numberFmt.format(row.jobs_assigned)}</TableCell>
+                        <TableCell className="text-right text-slate-700 dark:text-slate-200">{numberFmt.format(row.jobs_completed)}</TableCell>
+                        <TableCell className="text-right text-slate-700 dark:text-slate-200">{row.avg_completion_time}</TableCell>
+                        <TableCell className="text-right text-slate-700 dark:text-slate-200">{numberFmt.format(row.delays_count)}</TableCell>
+                        <TableCell className="text-right text-slate-700 dark:text-slate-200">{numberFmt.format(row.refusals_count)}</TableCell>
+                        <TableCell className="text-right text-slate-700 dark:text-slate-200">{percentFmt.format(row.refusal_rate ?? 0)}%</TableCell>
+                        <TableCell className="text-right text-slate-700 dark:text-slate-200">{percentFmt.format(row.on_time_rate ?? 0)}%</TableCell>
+                        <TableCell className="text-right font-medium text-slate-950 dark:text-white">{currencyFmt.format(row.total_service_line_value ?? row.revenue_generated)}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -775,7 +820,7 @@ export default function ReportsPage() {
         <Card className={sectionCardClass}>
           <div className={cn(sectionHeaderClass, 'flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between')}>
             <div>
-              <h2 className="text-base font-semibold text-white">Location Performance</h2>
+              <h2 className="text-base font-semibold text-slate-950 dark:text-white">Location Performance</h2>
               <p className="text-xs text-slate-400">
                 Showing {numberFmt.format(filteredDealershipRows.length)} of {numberFmt.format(overview?.dealership_performance.length ?? 0)}
               </p>
@@ -795,18 +840,18 @@ export default function ReportsPage() {
                 <Skeleton className="h-10 w-full bg-white/10" />
               </div>
             ) : filteredDealershipRows.length ? (
-              <div className="overflow-hidden rounded-[20px] border border-white/8 bg-black/10">
-                <div className="flex items-start justify-between gap-3 border-b border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0))] px-5 py-4">
+              <div className="overflow-hidden rounded-[20px] border border-slate-200 bg-white shadow-sm dark:border-white/8 dark:bg-black/10">
+                <div className="flex items-start justify-between gap-3 border-b border-slate-200 bg-slate-50/80 px-5 py-4 dark:border-white/8 dark:bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0))]">
                   <div className="space-y-1.5">
-                    <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Location Performance Board</div>
-                    <div className="text-sm text-slate-200">Job volume, invoice value, requested services, completion time, and SLA compliance.</div>
+                    <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500 dark:text-slate-400">Location Performance Board</div>
+                    <div className="text-sm text-slate-600 dark:text-slate-200">Job volume, invoice value, requested services, completion time, and SLA compliance.</div>
                   </div>
-                  <Badge variant="outline" className="rounded-full border-white/10 bg-white/[0.04] px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-slate-300">
+                  <Badge variant="outline" className="rounded-full border-slate-200 bg-white px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-slate-600 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300">
                     {filteredDealershipRows.length} visible
                   </Badge>
                 </div>
                 <Table>
-                  <TableHeader className="sticky top-0 z-10 border-b border-white/10 bg-[linear-gradient(180deg,rgba(11,25,42,0.98),rgba(10,20,35,0.92))] backdrop-blur-xl">
+                  <TableHeader className="sticky top-0 z-10 border-b border-slate-200 bg-white/95 backdrop-blur-xl dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(11,25,42,0.98),rgba(10,20,35,0.92))]">
                     <TableRow className="border-white/0 hover:bg-transparent">
                       <TableHead className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Dealership</TableHead>
                       <TableHead className="text-right text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Job Volume</TableHead>
@@ -819,14 +864,14 @@ export default function ReportsPage() {
                   </TableHeader>
                   <TableBody>
                     {filteredDealershipRows.map((row, index) => (
-                      <TableRow key={row.id} className={cn('border-b border-white/6', index % 2 === 1 && 'bg-white/[0.015]')}>
-                        <TableCell className="font-medium text-white">{row.name}</TableCell>
-                        <TableCell className="text-right text-slate-200">{numberFmt.format(row.job_volume ?? row.jobs_created)}</TableCell>
-                        <TableCell className="text-right text-slate-200">{numberFmt.format(row.jobs_completed)}</TableCell>
-                        <TableCell className="text-slate-200">{(row.most_requested_service_types ?? []).join(', ') || 'No services'}</TableCell>
-                        <TableCell className="text-right text-slate-200">{row.avg_job_completion_time ?? row.avg_resolution_time}</TableCell>
-                        <TableCell className="text-right text-slate-200">{percentFmt.format(row.sla_compliance_rate ?? 0)}%</TableCell>
-                        <TableCell className="text-right font-medium text-white">{currencyFmt.format(row.invoice_total)}</TableCell>
+                      <TableRow key={row.id} className={cn('border-b border-slate-100 dark:border-white/6', index % 2 === 1 && 'bg-slate-50/60 dark:bg-white/[0.015]')}>
+                        <TableCell className="font-medium text-slate-950 dark:text-white">{row.name}</TableCell>
+                        <TableCell className="text-right text-slate-700 dark:text-slate-200">{numberFmt.format(row.job_volume ?? row.jobs_created)}</TableCell>
+                        <TableCell className="text-right text-slate-700 dark:text-slate-200">{numberFmt.format(row.jobs_completed)}</TableCell>
+                        <TableCell className="text-slate-700 dark:text-slate-200">{(row.most_requested_service_types ?? []).join(', ') || 'No services'}</TableCell>
+                        <TableCell className="text-right text-slate-700 dark:text-slate-200">{row.avg_job_completion_time ?? row.avg_resolution_time}</TableCell>
+                        <TableCell className="text-right text-slate-700 dark:text-slate-200">{percentFmt.format(row.sla_compliance_rate ?? 0)}%</TableCell>
+                        <TableCell className="text-right font-medium text-slate-950 dark:text-white">{currencyFmt.format(row.invoice_total)}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
