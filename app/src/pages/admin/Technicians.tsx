@@ -352,10 +352,10 @@ const mapBackendTechnician = (item: BackendTechnicianListItem, index: number): T
 function StatusBadge({ status }: { status: OperationalStatus }) {
     const label = getOperationalStatusLabel(status);
     const className = {
-        available: 'border-emerald-300/20 bg-emerald-300/12 text-emerald-100',
-        in_progress: 'border-amber-300/20 bg-amber-300/12 text-amber-100',
-        offline: 'border-white/10 bg-white/[0.03] text-slate-300',
-        out_of_office: 'border-violet-300/20 bg-violet-300/12 text-violet-100',
+        available: 'border-emerald-300/45 bg-emerald-50 text-emerald-700 dark:border-emerald-300/20 dark:bg-emerald-300/12 dark:text-emerald-100',
+        in_progress: 'border-amber-300/55 bg-amber-50 text-amber-700 dark:border-amber-300/20 dark:bg-amber-300/12 dark:text-amber-100',
+        offline: 'border-slate-200 bg-slate-50 text-slate-600 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-300',
+        out_of_office: 'border-violet-300/45 bg-violet-50 text-violet-700 dark:border-violet-300/20 dark:bg-violet-300/12 dark:text-violet-100',
     }[status];
 
     return <Badge className={cn('shadow-none hover:bg-inherit', className)}>{label}</Badge>;
@@ -365,7 +365,7 @@ function ProfileStat({
     label,
     value,
     hint,
-    valueClassName = 'text-white',
+    valueClassName = 'text-slate-900 dark:text-white',
 }: {
     label: string;
     value: string;
@@ -373,10 +373,10 @@ function ProfileStat({
     valueClassName?: string;
 }) {
     return (
-        <div className="rounded-[18px] border border-white/10 bg-white/[0.03] p-3">
-            <p className="text-[11px] uppercase tracking-wider text-slate-400">{label}</p>
+        <div className="rounded-[18px] border border-slate-200 bg-white p-3 shadow-sm dark:border-white/10 dark:bg-white/[0.03] dark:shadow-none">
+            <p className="text-[11px] uppercase tracking-wider text-slate-500 dark:text-slate-400">{label}</p>
             <p className={cn('mt-1 text-lg font-semibold leading-none', valueClassName)}>{value}</p>
-            {hint ? <p className="mt-1 text-[11px] text-slate-500">{hint}</p> : null}
+            {hint ? <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-500">{hint}</p> : null}
         </div>
     );
 }
@@ -1247,8 +1247,8 @@ export default function TechniciansPage() {
         exportArrayData(exportData, 'technicians_export', format);
     };
 
-    const sectionCardClass = 'overflow-hidden rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(9,24,39,0.96),rgba(6,17,29,0.96))] shadow-[0_24px_80px_rgba(0,0,0,0.28)]';
-    const sectionHeaderClass = 'border-b border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0))] p-6';
+    const sectionCardClass = 'overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_22px_70px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(9,24,39,0.96),rgba(6,17,29,0.96))] dark:shadow-[0_24px_80px_rgba(0,0,0,0.28)]';
+    const sectionHeaderClass = 'border-b border-slate-200 bg-[linear-gradient(180deg,rgba(248,250,252,0.88),rgba(255,255,255,0))] p-6 dark:border-white/8 dark:bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0))]';
 
     return (
         <div className="relative w-full pb-10">
@@ -1259,23 +1259,23 @@ export default function TechniciansPage() {
             <div className="relative space-y-6">
 
             {/* 1. Header */}
-            <section className="relative overflow-hidden rounded-[32px] border border-white/10 bg-[linear-gradient(135deg,rgba(7,25,42,0.98),rgba(6,18,32,0.98))] shadow-[0_34px_120px_rgba(0,0,0,0.34)]">
-                <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] bg-[size:120px_120px] opacity-20" />
-                <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-200/70 to-transparent" />
-                <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(47,142,146,0.14),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(245,158,11,0.12),transparent_26%)]" />
+            <section className="relative overflow-hidden rounded-[32px] border border-slate-200 bg-[linear-gradient(135deg,#ffffff,#f7fbff)] shadow-[0_28px_90px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-[linear-gradient(135deg,rgba(7,25,42,0.98),rgba(6,18,32,0.98))] dark:shadow-[0_34px_120px_rgba(0,0,0,0.34)]">
+                <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(15,23,42,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(15,23,42,0.035)_1px,transparent_1px)] bg-[size:120px_120px] opacity-40 dark:bg-[linear-gradient(rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] dark:opacity-20" />
+                <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent dark:via-cyan-200/70" />
+                <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(79,124,255,0.10),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(34,211,238,0.10),transparent_26%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(47,142,146,0.14),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(245,158,11,0.12),transparent_26%)]" />
                 <div className="relative flex flex-col gap-5 p-6 xl:flex-row xl:items-end xl:justify-between xl:p-8">
                     <div className="max-w-3xl">
-                        <div className="inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-100">
+                        <div className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-blue-700 dark:border-cyan-300/20 dark:bg-cyan-300/10 dark:text-cyan-100">
                             <User className="h-3.5 w-3.5" />
                             Field Workforce
                         </div>
-                        <h1 className="mt-5 text-[2.35rem] font-semibold leading-none tracking-[-0.06em] text-white md:text-[2.8rem]">
+                        <h1 className="mt-5 text-[2.35rem] font-semibold leading-none tracking-[-0.06em] text-slate-950 dark:text-white md:text-[2.8rem]">
                             Technicians
-                            <span className="block bg-gradient-to-r from-white via-cyan-100 to-emerald-100 bg-clip-text text-transparent">
+                            <span className="block bg-gradient-to-r from-slate-950 via-blue-700 to-cyan-500 bg-clip-text text-transparent dark:from-white dark:via-cyan-100 dark:to-emerald-100">
                                 workforce board
                             </span>
                         </h1>
-                        <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-300 sm:text-[15px]">
+                        <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-600 dark:text-slate-300 sm:text-[15px]">
                             Manage technician profiles, schedules, zones, skills, and availability across the active dispatch network.
                         </p>
                         <div className="mt-5 flex flex-wrap items-center gap-2">
@@ -1285,16 +1285,16 @@ export default function TechniciansPage() {
                             <Badge variant="outline" className="border-amber-300/20 bg-amber-300/10 px-3 py-1 text-amber-100">
                                 {busyTechniciansCount} busy now
                             </Badge>
-                            <Badge variant="outline" className="border-white/10 bg-white/[0.04] px-3 py-1 text-slate-300">
+                            <Badge variant="outline" className="border-slate-200 bg-white px-3 py-1 text-slate-600 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300">
                                 {zoneFilterOptions.length} zones
                             </Badge>
                         </div>
                     </div>
                     <div className="flex flex-wrap items-center justify-end gap-3">
-                    <Button variant="outline" size="sm" onClick={() => void fetchTechs()} className="h-10 gap-2 rounded-full border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]" disabled={loading}>
+                    <Button variant="outline" size="sm" onClick={() => void fetchTechs()} className="h-10 gap-2 rounded-full border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-100 dark:hover:bg-white/[0.08]" disabled={loading}>
                         <RefreshCw className={cn('w-4 h-4 text-cyan-200', loading && 'animate-spin')} /> Refresh
                     </Button>
-                    <Button variant="outline" size="sm" onClick={() => setExportModalOpen(true)} className="h-10 gap-2 rounded-full border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]">
+                    <Button variant="outline" size="sm" onClick={() => setExportModalOpen(true)} className="h-10 gap-2 rounded-full border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-100 dark:hover:bg-white/[0.08]">
                         <FileDown className="w-4 h-4" /> Export
                     </Button>
                     <Dialog open={addTechModalOpen} onOpenChange={setAddTechModalOpen}>
@@ -1354,32 +1354,32 @@ export default function TechniciansPage() {
             </section>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                <Card className="overflow-hidden rounded-[24px] border border-cyan-400/15 bg-[linear-gradient(180deg,rgba(12,36,55,0.96),rgba(8,24,39,0.96))] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                <Card className="overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-[0_18px_54px_rgba(15,23,42,0.07)] dark:border-cyan-400/15 dark:bg-[linear-gradient(180deg,rgba(12,36,55,0.96),rgba(8,24,39,0.96))] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
                     <div className="p-5">
-                        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Total Technicians</p>
-                        <p className="mt-3 text-[2.15rem] font-semibold leading-none tracking-[-0.06em] text-white">{totalTechCount}</p>
-                        <p className="mt-2 text-sm text-slate-300">Visible workforce profiles</p>
+                        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500 dark:text-slate-400">Total Technicians</p>
+                        <p className="mt-3 text-[2.15rem] font-semibold leading-none tracking-[-0.06em] text-slate-950 dark:text-white">{totalTechCount}</p>
+                        <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">Visible workforce profiles</p>
                     </div>
                 </Card>
-                <Card className="overflow-hidden rounded-[24px] border border-emerald-400/15 bg-[linear-gradient(180deg,rgba(10,37,45,0.96),rgba(7,25,31,0.96))] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                <Card className="overflow-hidden rounded-[24px] border border-emerald-200 bg-emerald-50/70 shadow-[0_18px_54px_rgba(15,23,42,0.06)] dark:border-emerald-400/15 dark:bg-[linear-gradient(180deg,rgba(10,37,45,0.96),rgba(7,25,31,0.96))] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
                     <div className="p-5">
-                        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Available</p>
-                        <p className="mt-3 text-[2.15rem] font-semibold leading-none tracking-[-0.06em] text-white">{availableTechCount}</p>
-                        <p className="mt-2 text-sm text-slate-300">Ready for dispatch right now</p>
+                        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700/70 dark:text-slate-400">Available</p>
+                        <p className="mt-3 text-[2.15rem] font-semibold leading-none tracking-[-0.06em] text-emerald-950 dark:text-white">{availableTechCount}</p>
+                        <p className="mt-2 text-sm text-emerald-800/75 dark:text-slate-300">Ready for dispatch right now</p>
                     </div>
                 </Card>
-                <Card className="overflow-hidden rounded-[24px] border border-violet-400/15 bg-[linear-gradient(180deg,rgba(30,23,49,0.96),rgba(18,16,33,0.96))] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                <Card className="overflow-hidden rounded-[24px] border border-violet-200 bg-violet-50/60 shadow-[0_18px_54px_rgba(15,23,42,0.06)] dark:border-violet-400/15 dark:bg-[linear-gradient(180deg,rgba(30,23,49,0.96),rgba(18,16,33,0.96))] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
                     <div className="p-5">
-                        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Out of Office</p>
-                        <p className="mt-3 text-[2.15rem] font-semibold leading-none tracking-[-0.06em] text-white">{outOfOfficeCount}</p>
-                        <p className="mt-2 text-sm text-slate-300">Temporarily removed from dispatch</p>
+                        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-violet-700/70 dark:text-slate-400">Out of Office</p>
+                        <p className="mt-3 text-[2.15rem] font-semibold leading-none tracking-[-0.06em] text-violet-950 dark:text-white">{outOfOfficeCount}</p>
+                        <p className="mt-2 text-sm text-violet-800/75 dark:text-slate-300">Temporarily removed from dispatch</p>
                     </div>
                 </Card>
-                <Card className="overflow-hidden rounded-[24px] border border-amber-400/15 bg-[linear-gradient(180deg,rgba(41,28,15,0.94),rgba(27,18,10,0.96))] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                <Card className="overflow-hidden rounded-[24px] border border-amber-200 bg-amber-50/70 shadow-[0_18px_54px_rgba(15,23,42,0.06)] dark:border-amber-400/15 dark:bg-[linear-gradient(180deg,rgba(41,28,15,0.94),rgba(27,18,10,0.96))] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
                     <div className="p-5">
-                        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">In Progress / Offline</p>
-                        <p className="mt-3 text-[2.15rem] font-semibold leading-none tracking-[-0.06em] text-white">{busyTechniciansCount} / {offlineTechCount}</p>
-                        <p className="mt-2 text-sm text-slate-300">{assignedJobsCount} active jobs across the roster</p>
+                        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-amber-700/70 dark:text-slate-400">In Progress / Offline</p>
+                        <p className="mt-3 text-[2.15rem] font-semibold leading-none tracking-[-0.06em] text-amber-950 dark:text-white">{busyTechniciansCount} / {offlineTechCount}</p>
+                        <p className="mt-2 text-sm text-amber-800/75 dark:text-slate-300">{assignedJobsCount} active jobs across the roster</p>
                     </div>
                 </Card>
             </div>
@@ -1390,10 +1390,10 @@ export default function TechniciansPage() {
                     <div className="flex flex-col gap-4">
                         <div className="flex flex-col gap-2 lg:flex-row lg:items-end lg:justify-between">
                             <div>
-                                <h2 className="text-base font-semibold text-white">Technician Filters</h2>
-                                <p className="mt-1 text-sm text-slate-300">Search by name, email, or zone and narrow by readiness, coverage, and skill fit.</p>
+                                <h2 className="text-base font-semibold text-slate-950 dark:text-white">Technician Filters</h2>
+                                <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Search by name, email, or zone and narrow by readiness, coverage, and skill fit.</p>
                             </div>
-                            <Badge variant="outline" className="w-fit border-white/10 bg-white/[0.03] text-slate-300">
+                            <Badge variant="outline" className="w-fit border-slate-200 bg-slate-50 text-slate-600 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-300">
                                 Showing {filteredTechs.length} of {totalTechCount}
                             </Badge>
                         </div>
@@ -1402,14 +1402,14 @@ export default function TechniciansPage() {
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                                 <Input
                                     placeholder="Search by name, email, phone, or zone..."
-                                    className="h-11 rounded-full border-white/10 bg-white/[0.04] pl-9 text-slate-100 placeholder:text-slate-500 focus:bg-white/[0.06] transition-all"
+                                    className="h-11 rounded-full border-slate-200 bg-white pl-9 text-slate-900 placeholder:text-slate-400 transition-all focus:bg-white dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:bg-white/[0.06]"
                                     value={searchQuery}
                                     onChange={e => setSearchQuery(e.target.value)}
                                 />
                             </div>
                             <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
                                 <Select value={filterStatus} onValueChange={setFilterStatus}>
-                                    <SelectTrigger className="h-11 w-full sm:w-[140px] border-white/10 bg-white/[0.04] text-slate-100">
+                                    <SelectTrigger className="h-11 w-full border-slate-200 bg-white text-slate-800 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-100 sm:w-[140px]">
                                         <SelectValue placeholder="Status" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -1422,7 +1422,7 @@ export default function TechniciansPage() {
                                 </Select>
 
                                 <Select value={filterZone} onValueChange={setFilterZone}>
-                                    <SelectTrigger className="h-11 w-full sm:w-[160px] border-white/10 bg-white/[0.04] text-slate-100">
+                                    <SelectTrigger className="h-11 w-full border-slate-200 bg-white text-slate-800 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-100 sm:w-[160px]">
                                         <div className="flex items-center gap-2">
                                             <MapPin className="w-4 h-4" />
                                             <SelectValue placeholder="Zone" />
@@ -1439,7 +1439,7 @@ export default function TechniciansPage() {
                                 </Select>
 
                                 <Select value={filterSkill} onValueChange={setFilterSkill}>
-                                    <SelectTrigger className="h-11 w-full sm:w-[170px] border-white/10 bg-white/[0.04] text-slate-100">
+                                    <SelectTrigger className="h-11 w-full border-slate-200 bg-white text-slate-800 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-100 sm:w-[170px]">
                                         <div className="flex items-center gap-2">
                                             <Briefcase className="w-4 h-4" />
                                             <SelectValue placeholder="Skills" />
@@ -1475,28 +1475,28 @@ export default function TechniciansPage() {
                         ))}
                     </div>
                 ) : filteredTechs.length === 0 ? (
-                    <div className="flex-1 flex flex-col items-center justify-center py-20 text-slate-400">
-                        <div className="w-16 h-16 bg-white/[0.05] rounded-full flex items-center justify-center mb-4">
-                            <User className="w-8 h-8 text-slate-400" />
+                    <div className="flex-1 flex flex-col items-center justify-center py-20 text-slate-500 dark:text-slate-400">
+                        <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mb-4 dark:bg-white/[0.05]">
+                            <User className="w-8 h-8 text-slate-500 dark:text-slate-400" />
                         </div>
-                        <h3 className="text-lg font-semibold text-white">No technicians found</h3>
+                        <h3 className="text-lg font-semibold text-slate-950 dark:text-white">No technicians found</h3>
                         <p className="text-sm mt-1">Try adjusting your filters or search query.</p>
                         <Button variant="outline" className="mt-4 border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]" onClick={clearFilters}>Clear Filters</Button>
                     </div>
                 ) : (
                     <div className="overflow-hidden">
-                        <div className="flex items-start justify-between gap-3 border-b border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0))] px-6 py-5">
+                        <div className="flex items-start justify-between gap-3 border-b border-slate-200 bg-[linear-gradient(180deg,rgba(248,250,252,0.88),rgba(255,255,255,0))] px-6 py-5 dark:border-white/8 dark:bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0))]">
                             <div className="space-y-2">
-                                <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Technician Board</div>
-                                <div className="text-sm text-slate-200">Active workforce records with status, routing zones, and current dispatch readiness.</div>
+                                <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500 dark:text-slate-400">Technician Board</div>
+                                <div className="text-sm text-slate-600 dark:text-slate-200">Active workforce records with status, routing zones, and current dispatch readiness.</div>
                             </div>
-                            <Badge variant="outline" className="rounded-full border-white/10 bg-white/[0.04] px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-slate-300">
+                            <Badge variant="outline" className="rounded-full border-slate-200 bg-slate-50 px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-slate-600 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300">
                                 {filteredTechs.length} visible
                             </Badge>
                         </div>
                         <div className="overflow-auto">
                             <Table className="min-w-[1320px]">
-                                <TableHeader className="sticky top-0 z-10 border-b border-white/10 bg-[linear-gradient(180deg,rgba(11,25,42,0.98),rgba(10,20,35,0.92))] backdrop-blur-xl">
+                                <TableHeader className="sticky top-0 z-10 border-b border-slate-200 bg-slate-50/95 backdrop-blur-xl dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(11,25,42,0.98),rgba(10,20,35,0.92))]">
                                     <TableRow className="border-white/0 hover:bg-transparent">
                                         <TableHead className="pl-6 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Technician Name</TableHead>
                                         <TableHead className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Email</TableHead>
@@ -1513,8 +1513,8 @@ export default function TechniciansPage() {
                                         <TableRow
                                             key={tech.id}
                                             className={cn(
-                                                'group cursor-pointer border-b border-white/6 transition-colors hover:bg-white/[0.045]',
-                                                index % 2 === 1 && 'bg-white/[0.015]',
+                                                'group cursor-pointer border-b border-slate-100 transition-colors hover:bg-slate-50 dark:border-white/6 dark:hover:bg-white/[0.045]',
+                                                index % 2 === 1 && 'bg-slate-50/40 dark:bg-white/[0.015]',
                                             )}
                                             onClick={() => handleOpenProfile(tech)}
                                         >
@@ -1524,7 +1524,7 @@ export default function TechniciansPage() {
                                                         {tech.name.substring(0, 2)}
                                                     </div>
                                                     <div className="space-y-1.5">
-                                                        <div className="text-sm font-semibold tracking-[-0.03em] text-white transition-colors group-hover:text-cyan-100">
+                                                        <div className="text-sm font-semibold tracking-[-0.03em] text-slate-950 transition-colors group-hover:text-blue-700 dark:text-white dark:group-hover:text-cyan-100">
                                                             {tech.name}
                                                         </div>
                                                         <div className="flex items-center gap-2 text-xs text-slate-500">
@@ -1544,15 +1544,15 @@ export default function TechniciansPage() {
                                                 </div>
                                             </TableCell>
                                             <TableCell className="py-4">
-                                                <div className="text-sm text-slate-200">{tech.email}</div>
+                                                <div className="text-sm text-slate-700 dark:text-slate-200">{tech.email}</div>
                                             </TableCell>
                                             <TableCell className="py-4">
-                                                <div className="text-sm text-slate-300">{formatPhoneForDisplay(tech.phone) || 'Not set'}</div>
+                                                <div className="text-sm text-slate-600 dark:text-slate-300">{formatPhoneForDisplay(tech.phone) || 'Not set'}</div>
                                             </TableCell>
                                             <TableCell className="py-4">
                                                 <div className="flex flex-wrap items-center gap-1.5">
                                                     {tech.zones.slice(0, 2).map((zone) => (
-                                                        <Badge key={zone} variant="secondary" className="h-5 border border-white/10 bg-white/[0.04] px-2 py-0 text-[10px] text-slate-300">
+                                                        <Badge key={zone} variant="secondary" className="h-5 border border-slate-200 bg-slate-50 px-2 py-0 text-[10px] text-slate-600 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300">
                                                             {zone}
                                                         </Badge>
                                                     ))}

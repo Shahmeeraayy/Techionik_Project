@@ -110,6 +110,13 @@
       radial-gradient(circle at top right, rgba(17, 24, 39, 0.025), transparent 22%),
       linear-gradient(180deg, rgba(255,255,255,1), rgba(250,250,250,1));
   }
+
+  .dark body {
+    background-image:
+      radial-gradient(circle at top left, rgba(79, 124, 255, 0.10), transparent 26%),
+      radial-gradient(circle at top right, rgba(34, 211, 238, 0.055), transparent 24%),
+      linear-gradient(180deg, #080c14, #080c14);
+  }
   
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Sora', system-ui, -apple-system, sans-serif;

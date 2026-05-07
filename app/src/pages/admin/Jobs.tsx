@@ -2609,7 +2609,7 @@ export default function JobsPage() {
                             </div>
                             <div className="flex flex-wrap items-center gap-2 text-xs">
                                 <Select value={jobSortMode} onValueChange={(value) => handleSortModeChange(value as JobSortMode)}>
-                                    <SelectTrigger className="h-9 w-[180px] rounded-2xl border-white/8 bg-white/[0.035] text-white shadow-none">
+                                    <SelectTrigger className="h-9 w-[180px] rounded-2xl border-black/8 bg-white text-slate-800 shadow-none dark:border-white/8 dark:bg-white/[0.035] dark:text-white">
                                         <div className="flex items-center gap-2 text-sm">
                                             <TrendingUp className="w-3.5 h-3.5 text-slate-400" />
                                             <SelectValue placeholder="Sort by" />

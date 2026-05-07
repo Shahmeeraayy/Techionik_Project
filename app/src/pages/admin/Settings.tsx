@@ -133,9 +133,9 @@ const getDefaultAdminCredentialValues = () => ({
     adminEmail: DEFAULT_ADMIN_EMAIL,
 });
 
-const sectionCardClass = 'overflow-hidden rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(9,24,39,0.96),rgba(6,17,29,0.96))] shadow-[0_24px_80px_rgba(0,0,0,0.28)]';
-const sectionHeaderClass = 'border-b border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0))] pb-5';
-const sectionFooterClass = 'border-t border-white/8 bg-white/[0.03] py-4';
+const sectionCardClass = 'overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_22px_70px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(9,24,39,0.96),rgba(6,17,29,0.96))] dark:shadow-[0_24px_80px_rgba(0,0,0,0.28)]';
+const sectionHeaderClass = 'border-b border-slate-200 bg-[linear-gradient(180deg,rgba(248,250,252,0.88),rgba(255,255,255,0))] pb-5 dark:border-white/8 dark:bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0))]';
+const sectionFooterClass = 'border-t border-slate-200 bg-slate-50/80 py-4 dark:border-white/8 dark:bg-white/[0.03]';
 
 
 
@@ -513,23 +513,23 @@ export default function SettingsPage() {
             <div className="pointer-events-none absolute right-10 top-20 h-48 w-48 rounded-full bg-emerald-400/8 blur-3xl" />
 
             <div className="relative space-y-6">
-                <section className="relative overflow-hidden rounded-[32px] border border-white/10 bg-[linear-gradient(135deg,rgba(7,25,42,0.98),rgba(6,18,32,0.98))] shadow-[0_34px_120px_rgba(0,0,0,0.34)]">
-                    <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] bg-[size:120px_120px] opacity-20" />
-                    <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-200/70 to-transparent" />
-                    <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(47,142,146,0.14),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(245,158,11,0.12),transparent_26%)]" />
+                <section className="relative overflow-hidden rounded-[32px] border border-slate-200 bg-[linear-gradient(135deg,#ffffff,#f7fbff)] shadow-[0_28px_90px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-[linear-gradient(135deg,rgba(7,25,42,0.98),rgba(6,18,32,0.98))] dark:shadow-[0_34px_120px_rgba(0,0,0,0.34)]">
+                    <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(15,23,42,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(15,23,42,0.035)_1px,transparent_1px)] bg-[size:120px_120px] opacity-40 dark:bg-[linear-gradient(rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] dark:opacity-20" />
+                    <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent dark:via-cyan-200/70" />
+                    <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(79,124,255,0.10),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(34,211,238,0.10),transparent_26%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(47,142,146,0.14),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(245,158,11,0.12),transparent_26%)]" />
                     <div className="relative flex flex-col gap-5 p-6 xl:flex-row xl:items-end xl:justify-between xl:p-8">
                         <div className="max-w-3xl">
-                            <div className="inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-100">
+                            <div className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-blue-700 dark:border-cyan-300/20 dark:bg-cyan-300/10 dark:text-cyan-100">
                                 <Monitor className="h-3.5 w-3.5" />
                                 Admin Controls
                             </div>
-                            <h1 className="mt-5 text-[2.35rem] font-semibold leading-none tracking-[-0.06em] text-white md:text-[2.8rem]">
+                            <h1 className="mt-5 text-[2.35rem] font-semibold leading-none tracking-[-0.06em] text-slate-950 dark:text-white md:text-[2.8rem]">
                                 Settings
-                                <span className="block bg-gradient-to-r from-white via-cyan-100 to-emerald-100 bg-clip-text text-transparent">
+                                <span className="block bg-gradient-to-r from-slate-950 via-blue-700 to-cyan-500 bg-clip-text text-transparent dark:from-white dark:via-cyan-100 dark:to-emerald-100">
                                     command center
                                 </span>
                             </h1>
-                            <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-300 sm:text-[15px]">
+                            <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-600 dark:text-slate-300 sm:text-[15px]">
                                 Configure dispatch ranking, invoice branding, admin access, and interface preferences from one operational control surface.
                             </p>
                         </div>
@@ -537,7 +537,7 @@ export default function SettingsPage() {
                             <Button
                                 variant="outline"
                                 size="sm"
-                                className="h-10 gap-2 rounded-full border-white/12 bg-white/[0.04] px-4 text-slate-100 shadow-none hover:bg-white/[0.08] hover:text-white"
+                                className="h-10 gap-2 rounded-full border-slate-200 bg-white px-4 text-slate-700 shadow-none hover:bg-slate-50 dark:border-white/12 dark:bg-white/[0.04] dark:text-slate-100 dark:hover:bg-white/[0.08] dark:hover:text-white"
                                 onClick={() => void refreshSettingsData()}
                                 disabled={refreshing}
                             >
@@ -549,13 +549,13 @@ export default function SettingsPage() {
                 </section>
 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                    <Card className="overflow-hidden rounded-[24px] border border-cyan-400/15 bg-[linear-gradient(180deg,rgba(12,36,55,0.96),rgba(8,24,39,0.96))] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                    <Card className="overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-[0_18px_54px_rgba(15,23,42,0.07)] dark:border-cyan-400/15 dark:bg-[linear-gradient(180deg,rgba(12,36,55,0.96),rgba(8,24,39,0.96))] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
                         <CardContent className="p-5">
                             <div className="flex items-start justify-between gap-3">
                                 <div className="space-y-2">
-                                    <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Dispatch Rules</p>
-                                    <p className="mt-3 text-[2.15rem] font-semibold leading-none tracking-[-0.06em] text-white">{priorityRules.length}</p>
-                                    <p className="text-sm text-slate-300">Ranking rules configured</p>
+                                    <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500 dark:text-slate-400">Dispatch Rules</p>
+                                    <p className="mt-3 text-[2.15rem] font-semibold leading-none tracking-[-0.06em] text-slate-950 dark:text-white">{priorityRules.length}</p>
+                                    <p className="text-sm text-slate-600 dark:text-slate-300">Ranking rules configured</p>
                                 </div>
                                 <div className="rounded-2xl border border-cyan-300/20 bg-cyan-300/10 p-3 text-cyan-100">
                                     <ListFilter className="w-5 h-5" />
@@ -563,13 +563,13 @@ export default function SettingsPage() {
                             </div>
                         </CardContent>
                     </Card>
-                    <Card className="overflow-hidden rounded-[24px] border border-emerald-400/15 bg-[linear-gradient(180deg,rgba(10,37,45,0.96),rgba(7,25,31,0.96))] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                    <Card className="overflow-hidden rounded-[24px] border border-emerald-200 bg-emerald-50/70 shadow-[0_18px_54px_rgba(15,23,42,0.06)] dark:border-emerald-400/15 dark:bg-[linear-gradient(180deg,rgba(10,37,45,0.96),rgba(7,25,31,0.96))] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
                         <CardContent className="p-5">
                             <div className="flex items-start justify-between gap-3">
                                 <div className="space-y-2">
-                                    <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Active Rules</p>
-                                    <p className="mt-3 text-[2.15rem] font-semibold leading-none tracking-[-0.06em] text-white">{priorityRules.filter((rule) => rule.isActive).length}</p>
-                                    <p className="text-sm text-slate-300">Rules affecting queue ranking</p>
+                                    <p className="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700/70 dark:text-slate-400">Active Rules</p>
+                                    <p className="mt-3 text-[2.15rem] font-semibold leading-none tracking-[-0.06em] text-emerald-950 dark:text-white">{priorityRules.filter((rule) => rule.isActive).length}</p>
+                                    <p className="text-sm text-emerald-800/75 dark:text-slate-300">Rules affecting queue ranking</p>
                                 </div>
                                 <div className="rounded-2xl border border-emerald-300/20 bg-emerald-300/10 p-3 text-emerald-100">
                                     <ShieldCheck className="w-5 h-5" />
@@ -577,13 +577,13 @@ export default function SettingsPage() {
                             </div>
                         </CardContent>
                     </Card>
-                    <Card className="overflow-hidden rounded-[24px] border border-amber-400/15 bg-[linear-gradient(180deg,rgba(41,28,15,0.94),rgba(27,18,10,0.96))] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                    <Card className="overflow-hidden rounded-[24px] border border-amber-200 bg-amber-50/70 shadow-[0_18px_54px_rgba(15,23,42,0.06)] dark:border-amber-400/15 dark:bg-[linear-gradient(180deg,rgba(41,28,15,0.94),rgba(27,18,10,0.96))] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
                         <CardContent className="p-5">
                             <div className="flex items-start justify-between gap-3">
                                 <div className="space-y-2">
-                                    <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Dealership Coverage</p>
-                                    <p className="mt-3 text-[2.15rem] font-semibold leading-none tracking-[-0.06em] text-white">{dealershipOptions.length}</p>
-                                    <p className="text-sm text-slate-300">Partners available for rule targeting</p>
+                                    <p className="text-xs font-semibold uppercase tracking-[0.24em] text-amber-700/70 dark:text-slate-400">Dealership Coverage</p>
+                                    <p className="mt-3 text-[2.15rem] font-semibold leading-none tracking-[-0.06em] text-amber-950 dark:text-white">{dealershipOptions.length}</p>
+                                    <p className="text-sm text-amber-800/75 dark:text-slate-300">Partners available for rule targeting</p>
                                 </div>
                                 <div className="rounded-2xl border border-amber-300/20 bg-amber-300/10 p-3 text-amber-100">
                                     <Building2 className="w-5 h-5" />
@@ -591,15 +591,15 @@ export default function SettingsPage() {
                             </div>
                         </CardContent>
                     </Card>
-                    <Card className="overflow-hidden rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,rgba(13,24,38,0.96),rgba(8,17,29,0.96))] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                    <Card className="overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-[0_18px_54px_rgba(15,23,42,0.07)] dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(13,24,38,0.96),rgba(8,17,29,0.96))] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
                         <CardContent className="p-5">
                             <div className="flex items-start justify-between gap-3">
                                 <div className="space-y-2">
-                                    <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">CRM Theme</p>
-                                    <p className="mt-3 text-[2.15rem] font-semibold leading-none tracking-[-0.06em] text-white">
+                                    <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500 dark:text-slate-400">CRM Theme</p>
+                                    <p className="mt-3 text-[2.15rem] font-semibold leading-none tracking-[-0.06em] text-slate-950 dark:text-white">
                                         {theme === 'dark' ? 'Dark' : theme === 'light' ? 'Light' : 'System'}
                                     </p>
-                                    <p className="text-sm text-slate-300">Current interface appearance</p>
+                                    <p className="text-sm text-slate-600 dark:text-slate-300">Current interface appearance</p>
                                 </div>
                                 <div className="rounded-2xl border border-white/10 bg-white/[0.05] p-3 text-slate-200">
                                     <Monitor className="w-5 h-5" />
@@ -614,7 +614,7 @@ export default function SettingsPage() {
                 <Card className={cn(sectionCardClass, 'xl:row-span-2')}>
                     <CardHeader className={sectionHeaderClass}>
                         <div className="flex items-center justify-between">
-                            <CardTitle className="text-base font-semibold flex items-center gap-2 text-white">
+                            <CardTitle className="text-base font-semibold flex items-center gap-2 text-slate-950 dark:text-white">
                                 <span className="rounded-xl border border-cyan-300/20 bg-cyan-300/10 p-2 text-cyan-100">
                                     <ListFilter className="w-4 h-4" />
                                 </span>
@@ -821,7 +821,7 @@ export default function SettingsPage() {
                                             <TableRow key={rule.id} className="border-white/6">
                                                 <TableCell className="py-3">
                                                     <div className="flex flex-col">
-                                                        <span className="font-semibold text-sm text-white">{rule.description}</span>
+                                                        <span className="font-semibold text-sm text-slate-950 dark:text-white">{rule.description}</span>
                                                         <span className="text-[10px] uppercase text-slate-400">{dealer?.name || 'Global'}</span>
                                                     </div>
                                                 </TableCell>
@@ -874,7 +874,7 @@ export default function SettingsPage() {
                 <div className="space-y-6">
                 <Card className={sectionCardClass}>
                     <CardHeader className={sectionHeaderClass}>
-                        <CardTitle className="text-base font-semibold flex items-center gap-2 text-white">
+                        <CardTitle className="text-base font-semibold flex items-center gap-2 text-slate-950 dark:text-white">
                             <span className="rounded-xl border border-cyan-300/20 bg-cyan-300/10 p-2 text-cyan-100">
                                 <FileText className="w-4 h-4" />
                             </span>
@@ -890,7 +890,7 @@ export default function SettingsPage() {
                                 <Label htmlFor="invoice_company_name" className="text-slate-200">Company Name</Label>
                                 <Input
                                     id="invoice_company_name"
-                                    className="border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500"
+                                    className="border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-slate-500"
                                     value={invoiceCompany.name}
                                     onChange={(e) => setInvoiceCompany({ ...invoiceCompany, name: e.target.value })}
                                     placeholder="SM2 electronics"
@@ -901,7 +901,7 @@ export default function SettingsPage() {
                                 <Input
                                     id="invoice_company_email"
                                     type="email"
-                                    className="border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500"
+                                    className="border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-slate-500"
                                     value={invoiceCompany.email}
                                     onChange={(e) => setInvoiceCompany({ ...invoiceCompany, email: e.target.value })}
                                     placeholder="billing@sm2dispatch.com"
@@ -911,7 +911,7 @@ export default function SettingsPage() {
                                 <Label htmlFor="invoice_company_street" className="text-slate-200">Street Address</Label>
                                 <Input
                                     id="invoice_company_street"
-                                    className="border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500"
+                                    className="border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-slate-500"
                                     value={invoiceCompany.street_address}
                                     onChange={(e) => setInvoiceCompany({ ...invoiceCompany, street_address: e.target.value })}
                                     placeholder="123 Dispatch Ave"
@@ -921,7 +921,7 @@ export default function SettingsPage() {
                                 <Label htmlFor="invoice_company_city" className="text-slate-200">City</Label>
                                 <Input
                                     id="invoice_company_city"
-                                    className="border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500"
+                                    className="border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-slate-500"
                                     value={invoiceCompany.city}
                                     onChange={(e) => setInvoiceCompany({ ...invoiceCompany, city: e.target.value })}
                                     placeholder="Quebec"
@@ -931,7 +931,7 @@ export default function SettingsPage() {
                                 <Label htmlFor="invoice_company_state" className="text-slate-200">State / Province</Label>
                                 <Input
                                     id="invoice_company_state"
-                                    className="border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500"
+                                    className="border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-slate-500"
                                     value={invoiceCompany.state}
                                     onChange={(e) => setInvoiceCompany({ ...invoiceCompany, state: e.target.value })}
                                     placeholder="QC"
@@ -941,7 +941,7 @@ export default function SettingsPage() {
                                 <Label htmlFor="invoice_company_zip" className="text-slate-200">ZIP / Postal Code</Label>
                                 <Input
                                     id="invoice_company_zip"
-                                    className="border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500"
+                                    className="border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-slate-500"
                                     value={invoiceCompany.zip_code}
                                     onChange={(e) => setInvoiceCompany({ ...invoiceCompany, zip_code: e.target.value })}
                                     placeholder="G1A 1A1"
@@ -951,7 +951,7 @@ export default function SettingsPage() {
                                 <Label htmlFor="invoice_company_phone" className="text-slate-200">Phone</Label>
                                 <Input
                                     id="invoice_company_phone"
-                                    className="border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500"
+                                    className="border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-slate-500"
                                     value={invoiceCompany.phone}
                                     onChange={(e) => setInvoiceCompany({ ...invoiceCompany, phone: e.target.value })}
                                     placeholder="+1-418-555-0100"
@@ -961,7 +961,7 @@ export default function SettingsPage() {
                                 <Label htmlFor="invoice_company_website" className="text-slate-200">Website</Label>
                                 <Input
                                     id="invoice_company_website"
-                                    className="border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500"
+                                    className="border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-slate-500"
                                     value={invoiceCompany.website}
                                     onChange={(e) => setInvoiceCompany({ ...invoiceCompany, website: e.target.value })}
                                     placeholder="https://www.sm2dispatch.com"
@@ -984,7 +984,7 @@ export default function SettingsPage() {
 
                 <Card className={sectionCardClass}>
                     <CardHeader className={sectionHeaderClass}>
-                        <CardTitle className="text-base font-semibold flex items-center gap-2 text-white">
+                        <CardTitle className="text-base font-semibold flex items-center gap-2 text-slate-950 dark:text-white">
                             <span className="rounded-xl border border-cyan-300/20 bg-cyan-300/10 p-2 text-cyan-100">
                                 <KeyRound className="w-4 h-4" />
                             </span>
@@ -1001,7 +1001,7 @@ export default function SettingsPage() {
                                 <Input
                                     id="admin_account_email"
                                     type="email"
-                                    className="border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500"
+                                    className="border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-slate-500"
                                     value={adminCredentialForm.adminEmail}
                                     onChange={(e) => setAdminCredentialForm((prev) => ({ ...prev, adminEmail: e.target.value }))}
                                     autoComplete="email"
@@ -1012,7 +1012,7 @@ export default function SettingsPage() {
                                 <Input
                                     id="admin_current_password"
                                     type="password"
-                                    className="border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500"
+                                    className="border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-slate-500"
                                     value={adminCredentialForm.currentPassword}
                                     onChange={(e) => setAdminCredentialForm((prev) => ({ ...prev, currentPassword: e.target.value }))}
                                     autoComplete="current-password"
@@ -1023,7 +1023,7 @@ export default function SettingsPage() {
                                 <Input
                                     id="admin_new_password"
                                     type="password"
-                                    className="border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500"
+                                    className="border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-slate-500"
                                     value={adminCredentialForm.newPassword}
                                     onChange={(e) => setAdminCredentialForm((prev) => ({ ...prev, newPassword: e.target.value }))}
                                     autoComplete="new-password"
@@ -1034,7 +1034,7 @@ export default function SettingsPage() {
                                 <Input
                                     id="admin_confirm_password"
                                     type="password"
-                                    className="border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500"
+                                    className="border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-slate-500"
                                     value={adminCredentialForm.confirmPassword}
                                     onChange={(e) => setAdminCredentialForm((prev) => ({ ...prev, confirmPassword: e.target.value }))}
                                     autoComplete="new-password"
@@ -1074,13 +1074,13 @@ export default function SettingsPage() {
 
                 <Card className={sectionCardClass}>
                     <CardHeader className={sectionHeaderClass}>
-                        <CardTitle className="text-base font-semibold flex items-center gap-2 text-white">
+                        <CardTitle className="text-base font-semibold flex items-center gap-2 text-slate-950 dark:text-white">
                             <span className="rounded-xl border border-cyan-300/20 bg-cyan-300/10 p-2 text-cyan-100">
                                 <Monitor className="w-4 h-4" />
                             </span>
                             Appearance
                         </CardTitle>
-                        <CardDescription className="text-slate-300">Customize your interface theme.</CardDescription>
+                        <CardDescription className="text-slate-600 dark:text-slate-300">Customize your interface theme.</CardDescription>
                     </CardHeader>
                     <CardContent className="pt-0">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -1090,15 +1090,15 @@ export default function SettingsPage() {
                                 className={cn(
                                     "flex flex-col items-start rounded-[22px] border p-4 text-left transition-all",
                                     theme === 'light'
-                                        ? "border-cyan-300/40 bg-cyan-300/10 ring-1 ring-cyan-300/40"
-                                        : "border-white/10 bg-white/[0.03] hover:bg-white/[0.06]"
+                                        ? "border-blue-300 bg-blue-50 ring-1 ring-blue-200 dark:border-cyan-300/40 dark:bg-cyan-300/10 dark:ring-cyan-300/40"
+                                        : "border-slate-200 bg-white hover:bg-slate-50 dark:border-white/10 dark:bg-white/[0.03] dark:hover:bg-white/[0.06]"
                                 )}
                             >
-                                <div className="mb-3 rounded-xl border border-white/10 bg-white/[0.05] p-2 text-slate-300">
+                                <div className="mb-3 rounded-xl border border-slate-200 bg-slate-50 p-2 text-slate-700 dark:border-white/10 dark:bg-white/[0.05] dark:text-slate-300">
                                     <Sun className="w-5 h-5" />
                                 </div>
-                                <span className="font-semibold text-sm text-white">Light Mode</span>
-                                <span className="mt-1 text-xs text-slate-400">Standard professional light theme</span>
+                                <span className="font-semibold text-sm text-slate-950 dark:text-white">Light Mode</span>
+                                <span className="mt-1 text-xs text-slate-500 dark:text-slate-400">Standard professional light theme</span>
                             </button>
 
                             {/* Dark Mode */}
@@ -1107,15 +1107,15 @@ export default function SettingsPage() {
                                 className={cn(
                                     "flex flex-col items-start rounded-[22px] border p-4 text-left transition-all",
                                     theme === 'dark'
-                                        ? "border-cyan-300/40 bg-cyan-300/10 ring-1 ring-cyan-300/40"
-                                        : "border-white/10 bg-white/[0.03] hover:bg-white/[0.06]"
+                                        ? "border-blue-300 bg-blue-50 ring-1 ring-blue-200 dark:border-cyan-300/40 dark:bg-cyan-300/10 dark:ring-cyan-300/40"
+                                        : "border-slate-200 bg-white hover:bg-slate-50 dark:border-white/10 dark:bg-white/[0.03] dark:hover:bg-white/[0.06]"
                                 )}
                             >
-                                <div className="mb-3 rounded-xl border border-white/10 bg-white/[0.05] p-2 text-slate-300">
+                                <div className="mb-3 rounded-xl border border-slate-200 bg-slate-50 p-2 text-slate-700 dark:border-white/10 dark:bg-white/[0.05] dark:text-slate-300">
                                     <Moon className="w-5 h-5" />
                                 </div>
-                                <span className="font-semibold text-sm text-white">Dark Mode</span>
-                                <span className="mt-1 text-xs text-slate-400">Reduced eye strain for low-light</span>
+                                <span className="font-semibold text-sm text-slate-950 dark:text-white">Dark Mode</span>
+                                <span className="mt-1 text-xs text-slate-500 dark:text-slate-400">Reduced eye strain for low-light</span>
                             </button>
 
                             {/* System Mode */}
@@ -1124,15 +1124,15 @@ export default function SettingsPage() {
                                 className={cn(
                                     "flex flex-col items-start rounded-[22px] border p-4 text-left transition-all",
                                     theme === 'system'
-                                        ? "border-cyan-300/40 bg-cyan-300/10 ring-1 ring-cyan-300/40"
-                                        : "border-white/10 bg-white/[0.03] hover:bg-white/[0.06]"
+                                        ? "border-blue-300 bg-blue-50 ring-1 ring-blue-200 dark:border-cyan-300/40 dark:bg-cyan-300/10 dark:ring-cyan-300/40"
+                                        : "border-slate-200 bg-white hover:bg-slate-50 dark:border-white/10 dark:bg-white/[0.03] dark:hover:bg-white/[0.06]"
                                 )}
                             >
-                                <div className="mb-3 rounded-xl border border-white/10 bg-white/[0.05] p-2 text-slate-300">
+                                <div className="mb-3 rounded-xl border border-slate-200 bg-slate-50 p-2 text-slate-700 dark:border-white/10 dark:bg-white/[0.05] dark:text-slate-300">
                                     <Monitor className="w-5 h-5" />
                                 </div>
-                                <span className="font-semibold text-sm text-white">System Default</span>
-                                <span className="mt-1 text-xs text-slate-400">Sync with device preference</span>
+                                <span className="font-semibold text-sm text-slate-950 dark:text-white">System Default</span>
+                                <span className="mt-1 text-xs text-slate-500 dark:text-slate-400">Sync with device preference</span>
                             </button>
                         </div>
                     </CardContent>
