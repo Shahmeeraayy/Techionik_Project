@@ -469,11 +469,52 @@ export type BackendDispatchStatusRow = {
   percentage: number;
 };
 
+export type BackendDispatchOverviewMetrics = {
+  average_time_to_assignment: string;
+  average_time_to_completion: string;
+  accepted_rate: number;
+  refused_rate: number;
+  jobs_by_urgency: BackendDispatchStatusRow[];
+};
+
+export type BackendIntakeChannelRow = {
+  source_channel: string;
+  intake_records: number;
+  converted_jobs: number;
+  conversion_rate: number;
+};
+
+export type BackendIntakeDismissedReasonRow = {
+  reason: string;
+  count: number;
+  percentage: number;
+};
+
+export type BackendIntakeAnalyticsMetrics = {
+  total_intake_records: number;
+  conversion_rate: number;
+  average_time_to_job_creation: string;
+  source_channels: BackendIntakeChannelRow[];
+  dismissed_reasons: BackendIntakeDismissedReasonRow[];
+};
+
 export type BackendInvoiceStatusRow = {
   state: string;
   count: number;
   total_amount: number;
   is_critical: boolean;
+};
+
+export type BackendInvoiceBlockedReasonRow = {
+  reason: string;
+  count: number;
+  percentage: number;
+};
+
+export type BackendInvoicePerformanceMetrics = {
+  total_invoice_value: number;
+  average_approval_turnaround_time: string;
+  blocked_reasons: BackendInvoiceBlockedReasonRow[];
 };
 
 export type BackendTechnicianPerformanceRow = {
@@ -485,6 +526,9 @@ export type BackendTechnicianPerformanceRow = {
   delays_count: number;
   refusals_count: number;
   revenue_generated: number;
+  refusal_rate?: number;
+  on_time_rate?: number;
+  total_service_line_value?: number;
 };
 
 export type BackendDealershipPerformanceRow = {
@@ -495,6 +539,36 @@ export type BackendDealershipPerformanceRow = {
   avg_resolution_time: string;
   invoice_total: number;
   attention_flags: number;
+  job_volume?: number;
+  most_requested_service_types?: string[];
+  avg_job_completion_time?: string;
+  sla_compliance_rate?: number;
+};
+
+export type BackendCapacityUtilizationRow = {
+  day_of_week: string;
+  jobs_count: number;
+  technician_utilization: number;
+  jobs_per_technician: number;
+};
+
+export type BackendPeakDemandWindowRow = {
+  hour: string;
+  jobs_count: number;
+};
+
+export type BackendUnderstaffedPeriodRow = {
+  period: string;
+  jobs_count: number;
+  technicians_available: number;
+  gap: number;
+};
+
+export type BackendCapacityPlanningMetrics = {
+  utilization_by_day: BackendCapacityUtilizationRow[];
+  peak_demand_windows: BackendPeakDemandWindowRow[];
+  jobs_per_technician_trend: BackendCapacityUtilizationRow[];
+  understaffed_periods: BackendUnderstaffedPeriodRow[];
 };
 
 export type BackendInvoicingDetailRow = {
@@ -511,10 +585,14 @@ export type BackendReportsOverview = {
   current_period_invoice_count: number;
   revenue_delta: number;
   kpis: BackendReportsKpis;
+  dispatch_overview?: BackendDispatchOverviewMetrics;
+  intake_analytics?: BackendIntakeAnalyticsMetrics;
+  invoice_metrics?: BackendInvoicePerformanceMetrics;
   dispatch_performance: BackendDispatchStatusRow[];
   invoice_performance: BackendInvoiceStatusRow[];
   technician_performance: BackendTechnicianPerformanceRow[];
   dealership_performance: BackendDealershipPerformanceRow[];
+  capacity_planning?: BackendCapacityPlanningMetrics;
   invoicing_detail_rows: BackendInvoicingDetailRow[];
 };
 

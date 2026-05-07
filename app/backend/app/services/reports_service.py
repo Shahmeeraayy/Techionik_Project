@@ -13,13 +13,23 @@ from ..models.job import Job
 from ..models.job_rejection import JobRejection
 from ..models.technician import Technician
 from ..schemas.reporting import (
+    CapacityPlanningMetrics,
+    CapacityUtilizationRow,
     DealershipPerformanceRow,
+    DispatchOverviewMetrics,
     DispatchStatusRow,
+    IntakeAnalyticsMetrics,
+    IntakeChannelRow,
+    IntakeDismissedReasonRow,
+    InvoiceBlockedReasonRow,
+    InvoicePerformanceMetrics,
     InvoiceStatusRow,
     InvoicingDetailRow,
+    PeakDemandWindowRow,
     ReportKpis,
     ReportsOverviewResponse,
     TechnicianPerformanceRow,
+    UnderstaffedPeriodRow,
 )
 
 
@@ -97,6 +107,37 @@ def _normalize_invoice_state(value: Optional[str]) -> str:
         "cancelled": "Cancelled",
     }
     return mapping.get(status, "Draft")
+
+
+def _metadata_text(row: Job, *keys: str, default: str = "") -> str:
+    metadata = row.source_metadata if isinstance(row.source_metadata, dict) else {}
+    for key in keys:
+        value = metadata.get(key)
+        if value is not None and str(value).strip():
+            return str(value).strip()
+    return default
+
+
+def _job_urgency(row: Job) -> str:
+    value = _metadata_text(row, "urgency", "urgency_level", "priority", default="Medium")
+    normalized = value.strip().lower().replace("_", " ")
+    mapping = {
+        "low": "Low",
+        "normal": "Medium",
+        "medium": "Medium",
+        "high": "High",
+        "critical": "Critical",
+    }
+    return mapping.get(normalized, value.title() if value else "Medium")
+
+
+def _job_source_channel(row: Job) -> str:
+    source = (row.source_system or _metadata_text(row, "source", "source_channel", default="Admin UI")).strip()
+    if not source:
+        return "Admin UI"
+    if source.lower() in {"admin_ui", "admin"}:
+        return "Admin UI"
+    return source
 
 
 def _primary_job_by_invoice_id(db: Session, invoice_ids: Iterable) -> dict:
@@ -215,6 +256,16 @@ class ReportsService:
                 completion_minutes.append((completed_at - created_at).total_seconds() / 60)
         avg_completion_minutes = float(sum(completion_minutes) / len(completion_minutes)) if completion_minutes else 0.0
 
+        assignment_minutes = []
+        for row in jobs_in_range:
+            if row.assigned_tech_id is None:
+                continue
+            created_at = _ensure_utc(row.created_at)
+            assigned_at = _ensure_utc(row.updated_at)
+            if created_at and assigned_at and assigned_at >= created_at:
+                assignment_minutes.append((assigned_at - created_at).total_seconds() / 60)
+        avg_assignment_minutes = float(sum(assignment_minutes) / len(assignment_minutes)) if assignment_minutes else 0.0
+
         invoices_in_range = (
             self.db.query(Invoice)
             .filter(Invoice.created_at >= start_dt, Invoice.created_at <= end_dt)
@@ -252,6 +303,21 @@ class ReportsService:
             for key, value in sorted(status_counts.items(), key=lambda item: item[1], reverse=True)
         ]
 
+        urgency_counts: dict[str, int] = defaultdict(int)
+        source_counts: dict[str, int] = defaultdict(int)
+        for row in jobs_in_range:
+            urgency_counts[_job_urgency(row)] += 1
+            source_counts[_job_source_channel(row)] += 1
+
+        jobs_by_urgency = [
+            DispatchStatusRow(
+                status=key,
+                count=value,
+                percentage=int(round((value / dispatch_total) * 100)) if dispatch_total else 0,
+            )
+            for key, value in sorted(urgency_counts.items(), key=lambda item: item[1], reverse=True)
+        ]
+
         invoice_state_totals: dict[str, dict[str, float]] = defaultdict(lambda: {"count": 0, "amount": 0.0})
         for row in invoices_in_range:
             state = _normalize_invoice_state(row.status)
@@ -269,6 +335,21 @@ class ReportsService:
             for key, value in sorted(invoice_state_totals.items(), key=lambda item: item[1]["count"], reverse=True)
         ]
 
+        blocked_reasons = []
+        if pending_approval_jobs > 0:
+            blocked_reasons.append(
+                InvoiceBlockedReasonRow(
+                    reason="Pending admin approval or validation",
+                    count=pending_approval_jobs,
+                    percentage=100.0,
+                )
+            )
+        invoice_metrics = InvoicePerformanceMetrics(
+            total_invoice_value=round(invoice_total, 2),
+            average_approval_turnaround_time="0m",
+            blocked_reasons=blocked_reasons,
+        )
+
         rejections_in_range = (
             self.db.query(JobRejection)
             .filter(JobRejection.rejected_at >= start_dt, JobRejection.rejected_at <= end_dt)
@@ -279,6 +360,41 @@ class ReportsService:
             tech_id = getattr(row, "tech_id", None)
             if tech_id is not None:
                 rejection_count_by_tech[tech_id] += 1
+
+        refused_total = len(rejections_in_range)
+        accepted_total = len(
+            [
+                row
+                for row in jobs_in_range
+                if row.assigned_tech_id is not None
+                or _normalize_job_status(row.status) in {"In Progress", "Completed", "Delayed"}
+            ]
+        )
+        acceptance_denominator = accepted_total + refused_total
+        dispatch_overview = DispatchOverviewMetrics(
+            average_time_to_assignment=_duration_label(avg_assignment_minutes),
+            average_time_to_completion=_duration_label(avg_completion_minutes),
+            accepted_rate=round((accepted_total / acceptance_denominator) * 100, 1) if acceptance_denominator else 0.0,
+            refused_rate=round((refused_total / acceptance_denominator) * 100, 1) if acceptance_denominator else 0.0,
+            jobs_by_urgency=jobs_by_urgency,
+        )
+
+        total_intake_records = len(jobs_in_range)
+        intake_analytics = IntakeAnalyticsMetrics(
+            total_intake_records=total_intake_records,
+            conversion_rate=100.0 if total_intake_records else 0.0,
+            average_time_to_job_creation="0m",
+            source_channels=[
+                IntakeChannelRow(
+                    source_channel=key,
+                    intake_records=value,
+                    converted_jobs=value,
+                    conversion_rate=100.0 if value else 0.0,
+                )
+                for key, value in sorted(source_counts.items(), key=lambda item: item[1], reverse=True)
+            ],
+            dismissed_reasons=[],
+        )
 
         primary_jobs_by_invoice = _primary_job_by_invoice_id(self.db, [row.id for row in invoices_in_range])
         revenue_by_tech: dict = defaultdict(float)
@@ -316,6 +432,12 @@ class ReportsService:
                 if created_at and completed_at and completed_at >= created_at:
                     durations.append((completed_at - created_at).total_seconds() / 60)
             avg_minutes = float(sum(durations) / len(durations)) if durations else 0.0
+            delays = len([item for item in tech_jobs if (item.status or "").strip().lower() == "delayed"])
+            refusals = rejection_count_by_tech.get(row.id, 0)
+            total_actions = len(tech_jobs) + refusals
+            refusal_rate = round((refusals / total_actions) * 100, 1) if total_actions else 0.0
+            on_time_rate = round(((len(completed) - delays) / len(completed)) * 100, 1) if completed else 0.0
+            tech_revenue = round(float(revenue_by_tech.get(row.id, 0.0)), 2)
 
             tech_rows.append(
                 TechnicianPerformanceRow(
@@ -324,9 +446,12 @@ class ReportsService:
                     jobs_assigned=len(tech_jobs),
                     jobs_completed=len(completed),
                     avg_completion_time=_duration_label(avg_minutes),
-                    delays_count=len([item for item in tech_jobs if (item.status or "").strip().lower() == "delayed"]),
-                    refusals_count=rejection_count_by_tech.get(row.id, 0),
-                    revenue_generated=round(float(revenue_by_tech.get(row.id, 0.0)), 2),
+                    delays_count=delays,
+                    refusals_count=refusals,
+                    revenue_generated=tech_revenue,
+                    refusal_rate=refusal_rate,
+                    on_time_rate=on_time_rate,
+                    total_service_line_value=tech_revenue,
                 )
             )
         tech_rows.sort(key=lambda item: item.name.lower())
@@ -352,6 +477,12 @@ class ReportsService:
                 if created_at and completed_at and completed_at >= created_at:
                     durations.append((completed_at - created_at).total_seconds() / 60)
             avg_minutes = float(sum(durations) / len(durations)) if durations else 0.0
+            service_counts: dict[str, int] = defaultdict(int)
+            for item in dealership_jobs:
+                service_counts[(item.service_type or "Unspecified").strip() or "Unspecified"] += 1
+            top_services = [name for name, _ in sorted(service_counts.items(), key=lambda item: item[1], reverse=True)[:3]]
+            delayed_count = len([item for item in dealership_jobs if (item.status or "").strip().lower() == "delayed"])
+            sla_compliance = round(((len(completed) - delayed_count) / len(completed)) * 100, 1) if completed else 0.0
 
             dealership_rows.append(
                 DealershipPerformanceRow(
@@ -362,9 +493,51 @@ class ReportsService:
                     avg_resolution_time=_duration_label(avg_minutes),
                     invoice_total=round(float(revenue_by_dealership.get(row.id, 0.0)), 2),
                     attention_flags=0,
+                    job_volume=len(dealership_jobs),
+                    most_requested_service_types=top_services,
+                    avg_job_completion_time=_duration_label(avg_minutes),
+                    sla_compliance_rate=sla_compliance,
                 )
             )
         dealership_rows.sort(key=lambda item: item.invoice_total, reverse=True)
+
+        active_tech_count = len(active_techs)
+        jobs_by_weekday: dict[int, int] = defaultdict(int)
+        jobs_by_hour: dict[int, int] = defaultdict(int)
+        for row in jobs_in_range:
+            created_at = _ensure_utc(row.created_at)
+            if created_at is None:
+                continue
+            jobs_by_weekday[created_at.weekday()] += 1
+            jobs_by_hour[created_at.hour] += 1
+        weekday_names = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+        utilization_by_day = [
+            CapacityUtilizationRow(
+                day_of_week=weekday_names[index],
+                jobs_count=jobs_by_weekday.get(index, 0),
+                technician_utilization=round((jobs_by_weekday.get(index, 0) / active_tech_count) * 100, 1) if active_tech_count else 0.0,
+                jobs_per_technician=round(jobs_by_weekday.get(index, 0) / active_tech_count, 2) if active_tech_count else 0.0,
+            )
+            for index in range(7)
+        ]
+        capacity_planning = CapacityPlanningMetrics(
+            utilization_by_day=utilization_by_day,
+            peak_demand_windows=[
+                PeakDemandWindowRow(hour=f"{hour:02d}:00", jobs_count=count)
+                for hour, count in sorted(jobs_by_hour.items(), key=lambda item: item[1], reverse=True)[:6]
+            ],
+            jobs_per_technician_trend=utilization_by_day,
+            understaffed_periods=[
+                UnderstaffedPeriodRow(
+                    period=row.day_of_week,
+                    jobs_count=row.jobs_count,
+                    technicians_available=active_tech_count,
+                    gap=max(0, row.jobs_count - active_tech_count),
+                )
+                for row in utilization_by_day
+                if active_tech_count and row.jobs_count > active_tech_count
+            ],
+        )
 
         previous_primary_jobs = _primary_job_by_invoice_id(self.db, [row.id for row in invoices_previous_period])
         previous_revenue_by_tech: dict = defaultdict(float)
@@ -403,9 +576,13 @@ class ReportsService:
             current_period_invoice_count=len(invoices_in_range),
             revenue_delta=round(revenue_delta, 2),
             kpis=kpis,
+            dispatch_overview=dispatch_overview,
+            intake_analytics=intake_analytics,
+            invoice_metrics=invoice_metrics,
             dispatch_performance=dispatch_performance,
             invoice_performance=invoice_performance,
             technician_performance=tech_rows,
             dealership_performance=dealership_rows,
+            capacity_planning=capacity_planning,
             invoicing_detail_rows=invoicing_detail_rows,
         )
