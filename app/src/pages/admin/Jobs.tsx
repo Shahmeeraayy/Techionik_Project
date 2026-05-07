@@ -2709,17 +2709,17 @@ export default function JobsPage() {
                         </Button>
                     </div>
                 ) : (
-                    <div className="relative flex-1 overflow-auto">
-                        <Table className="min-w-[1320px]">
+                    <div className="admin-jobs-table relative flex-1 overflow-hidden">
+                        <Table className="w-full table-fixed">
                             <TableHeader className="sticky top-0 z-10 border-b border-black/8 bg-white/95 backdrop-blur-xl dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(9,24,40,0.98),rgba(8,19,33,0.94))]">
                                 <TableRow className="border-white/0 hover:bg-transparent">
-                                    <TableHead className="w-[48px] pl-5">
+                                    <TableHead className="w-[38px] pl-4">
                                         <Checkbox
                                             checked={headerCheckboxState}
                                             onCheckedChange={handleSelectAll}
                                         />
                                     </TableHead>
-                                    <TableHead className="w-[170px] text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">
+                                    <TableHead className="w-[8%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
                                         <Button
                                             variant="ghost"
                                             size="sm"
@@ -2731,16 +2731,16 @@ export default function JobsPage() {
                                             <ArrowUpDown className="ml-2 h-3.5 w-3.5" />
                                         </Button>
                                     </TableHead>
-                                    <TableHead className="w-[220px] text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Service Type</TableHead>
-                                    <TableHead className="w-[220px] text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Dealership / Location</TableHead>
-                                    <TableHead className="w-[190px] text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Vehicle</TableHead>
-                                    <TableHead className="w-[200px] text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Assigned Technician</TableHead>
-                                    <TableHead className="w-[100px] text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Urgency</TableHead>
-                                    <TableHead className="w-[130px] text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Ranking Score</TableHead>
-                                    <TableHead className="w-[130px] text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Status</TableHead>
-                                    <TableHead className="w-[145px] text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Created Date / Time</TableHead>
-                                    <TableHead className="w-[145px] text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Last Updated</TableHead>
-                                    <TableHead className="w-[170px] pr-5 text-right text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Actions</TableHead>
+                                    <TableHead className="w-[11%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Service Type</TableHead>
+                                    <TableHead className="w-[12%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Dealership / Location</TableHead>
+                                    <TableHead className="w-[10%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Vehicle</TableHead>
+                                    <TableHead className="w-[11%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Assigned Tech</TableHead>
+                                    <TableHead className="w-[6%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Urgency</TableHead>
+                                    <TableHead className="w-[7%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Rank</TableHead>
+                                    <TableHead className="w-[7%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Status</TableHead>
+                                    <TableHead className="w-[8%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Created</TableHead>
+                                    <TableHead className="w-[8%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Updated</TableHead>
+                                    <TableHead className="w-[10%] pr-4 text-right text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -2764,7 +2764,7 @@ export default function JobsPage() {
                                                 job.attention_flag && 'bg-red-400/[0.035] hover:bg-red-400/[0.07]',
                                             )}
                                         >
-                                            <TableCell className="relative pl-5">
+                                            <TableCell className="relative pl-4">
                                                 {job.attention_flag ? (
                                                     <div className="absolute left-0 top-3 bottom-3 w-[3px] rounded-full bg-gradient-to-b from-red-300 via-orange-300 to-red-500" />
                                                 ) : null}
@@ -2786,20 +2786,20 @@ export default function JobsPage() {
                                                 </button>
                                             </TableCell>
                                             <TableCell className="py-4">
-                                                <div className="rounded-[20px] border border-white/6 bg-white/[0.025] px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
-                                                    <OverflowText text={job.service_name} className="max-w-[12rem] text-base font-semibold text-white" />
+                                                <div className="rounded-[16px] border border-white/6 bg-white/[0.025] px-3 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+                                                    <OverflowText text={job.service_name} className="max-w-full text-sm font-semibold text-white" />
                                                     <div className="mt-1 text-xs text-slate-500">
                                                         {job.service_names.length > 1 ? `${job.service_names.length} catalog services linked` : 'Primary dispatch service'}
                                                     </div>
                                                 </div>
                                             </TableCell>
                                             <TableCell className="py-4">
-                                                <div className="flex items-start gap-3 rounded-[20px] border border-white/6 bg-white/[0.025] px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
-                                                    <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-cyan-300/12 bg-cyan-300/[0.08] text-cyan-100 shadow-[0_14px_24px_rgba(8,145,178,0.12)]">
+                                                <div className="flex items-start gap-2 rounded-[16px] border border-white/6 bg-white/[0.025] px-3 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+                                                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-cyan-300/12 bg-cyan-300/[0.08] text-cyan-100 shadow-[0_14px_24px_rgba(8,145,178,0.12)]">
                                                         <Building2Icon className="h-4 w-4" />
                                                     </div>
                                                     <div className="min-w-0">
-                                                        <OverflowText text={job.dealership_name} className="max-w-[10rem] text-sm font-semibold text-white" />
+                                                        <OverflowText text={job.dealership_name} className="max-w-full text-sm font-semibold text-white" />
                                                         <div className="mt-1 inline-flex items-center gap-1 text-xs text-slate-500">
                                                             <MapPin className="h-3 w-3" />
                                                             {locationLabel}
@@ -2808,29 +2808,29 @@ export default function JobsPage() {
                                                 </div>
                                             </TableCell>
                                             <TableCell className="py-4">
-                                                <div className="rounded-[20px] border border-white/6 bg-white/[0.025] px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
-                                                    <OverflowText text={job.vehicle_summary} className="max-w-[11rem] text-sm font-medium text-slate-700 dark:text-slate-100" />
+                                                <div className="rounded-[16px] border border-white/6 bg-white/[0.025] px-3 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+                                                    <OverflowText text={job.vehicle_summary} className="max-w-full text-sm font-medium text-slate-700 dark:text-slate-100" />
                                                     <div className="mt-1 text-xs text-slate-500">Dispatch-ready vehicle profile</div>
                                                 </div>
                                             </TableCell>
                                             <TableCell className="py-4">
                                                 {primaryTechnicianName ? (
-                                                    <div className="inline-flex max-w-[11rem] items-center gap-3 rounded-2xl border border-emerald-300/18 bg-emerald-300/[0.08] px-3 py-2">
+                                                    <div className="inline-flex max-w-full items-center gap-2 rounded-2xl border border-emerald-300/18 bg-emerald-300/[0.08] px-2.5 py-2">
                                                         <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-300/20 text-[10px] font-semibold uppercase tracking-[0.12em] text-emerald-100">
                                                             {primaryTechnicianName.substring(0, 2)}
                                                         </div>
                                                         <div className="min-w-0">
-                                                            <OverflowText text={primaryTechnicianName} className="max-w-[7rem] text-sm font-medium text-emerald-50" />
+                                                            <OverflowText text={primaryTechnicianName} className="max-w-full text-sm font-medium text-emerald-50" />
                                                             <div className="text-[11px] text-emerald-200/70">Assigned technician</div>
                                                         </div>
                                                     </div>
                                                 ) : pendingTechnicianName ? (
-                                                    <div className="inline-flex max-w-[11rem] items-center gap-3 rounded-2xl border border-violet-300/18 bg-violet-300/[0.09] px-3 py-2">
+                                                    <div className="inline-flex max-w-full items-center gap-2 rounded-2xl border border-violet-300/18 bg-violet-300/[0.09] px-2.5 py-2">
                                                         <div className="flex h-8 w-8 items-center justify-center rounded-full bg-violet-300/20 text-[10px] font-semibold uppercase tracking-[0.12em] text-violet-100">
                                                             {pendingTechnicianName.substring(0, 2)}
                                                         </div>
                                                         <div className="min-w-0">
-                                                            <OverflowText text={pendingTechnicianName} className="max-w-[7rem] text-sm font-medium text-violet-50" />
+                                                            <OverflowText text={pendingTechnicianName} className="max-w-full text-sm font-medium text-violet-50" />
                                                             <div className="text-[11px] text-violet-200/70">Pending admin confirmation</div>
                                                         </div>
                                                     </div>
@@ -2887,14 +2887,14 @@ export default function JobsPage() {
                                                     <div className="text-[11px] text-slate-500">{formatJobTime(job.updated_at)}</div>
                                                 </div>
                                             </TableCell>
-                                            <TableCell className="py-4 pr-5 text-right align-top">
-                                                <div className="inline-flex flex-col items-end gap-2 rounded-[22px] border border-white/6 bg-white/[0.025] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+                                            <TableCell className="py-4 pr-4 text-right align-top">
+                                                <div className="inline-flex max-w-full flex-col items-end gap-2 rounded-[18px] border border-white/6 bg-white/[0.025] p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
                                                     {(job.job_status === 'admin_preview' || job.job_status === 'pending_admin_confirmation') && Boolean(
                                                         (job.pending_assigned_technician_name ?? job.assigned_technician_name)?.trim()
                                                     ) ? (
                                                         <Button
                                                             size="sm"
-                                                            className="h-8 w-[148px] rounded-2xl bg-[linear-gradient(135deg,#36d6dd,#2d9fe5)] px-3 text-xs text-white shadow-[0_16px_28px_rgba(36,196,203,0.28)] hover:brightness-105"
+                                                            className="h-8 w-full rounded-2xl bg-[linear-gradient(135deg,#36d6dd,#2d9fe5)] px-2 text-[11px] text-white shadow-[0_16px_28px_rgba(36,196,203,0.28)] hover:brightness-105"
                                                             onClick={() => void handleConfirmJob(job)}
                                                         >
                                                             <Check className="mr-2 h-3.5 w-3.5" />
@@ -2905,7 +2905,7 @@ export default function JobsPage() {
                                                         <Button
                                                             size="sm"
                                                             variant="outline"
-                                                            className="h-8 w-[148px] rounded-2xl border-cyan-300/20 bg-[linear-gradient(135deg,rgba(34,211,238,0.16),rgba(8,145,178,0.10))] px-3 text-xs text-cyan-50 hover:bg-cyan-300/15 hover:text-white"
+                                                            className="h-8 w-full rounded-2xl border-cyan-300/20 bg-[linear-gradient(135deg,rgba(34,211,238,0.16),rgba(8,145,178,0.10))] px-2 text-[11px] text-cyan-50 hover:bg-cyan-300/15 hover:text-white"
                                                             onClick={() => handlePushToQueue(job)}
                                                         >
                                                             <ArrowRight className="mr-2 h-3.5 w-3.5" />
@@ -2916,7 +2916,7 @@ export default function JobsPage() {
                                                         <Button
                                                             size="sm"
                                                             variant="outline"
-                                                            className="h-8 w-[148px] rounded-2xl border-white/10 bg-[linear-gradient(135deg,rgba(148,163,184,0.10),rgba(30,41,59,0.16))] px-3 text-xs text-slate-100 hover:bg-white/[0.08] hover:text-white"
+                                                            className="h-8 w-full rounded-2xl border-white/10 bg-[linear-gradient(135deg,rgba(148,163,184,0.10),rgba(30,41,59,0.16))] px-2 text-[11px] text-slate-100 hover:bg-white/[0.08] hover:text-white"
                                                             onClick={() => handleAssignTechnician(job)}
                                                         >
                                                             <User className="mr-2 h-3.5 w-3.5" />
