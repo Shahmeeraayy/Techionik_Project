@@ -1171,6 +1171,47 @@
   color: var(--admin-dark-muted) !important;
 }
 
+/* Repair gradient headings after dark surface normalization.
+   The class strings contain tokens like dark:from-white, so broad white-surface
+   selectors can accidentally paint the whole text span as a rectangle. */
+.dark .admin-shell [class*="bg-clip-text"][class*="text-transparent"],
+.dark .admin-shell [class*="text-transparent"][class*="bg-gradient"] {
+  background: linear-gradient(90deg, #f8fbff 0%, #d9f8ff 52%, #8fb1ff 100%) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  color: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+.dark .admin-shell [class*="bg-clip-text"][class*="text-transparent"]::before,
+.dark .admin-shell [class*="bg-clip-text"][class*="text-transparent"]::after,
+.dark .admin-shell [class*="text-transparent"][class*="bg-gradient"]::before,
+.dark .admin-shell [class*="text-transparent"][class*="bg-gradient"]::after {
+  display: none !important;
+}
+
+/* Keep table footers, pagination rails, and filter strips in the same clean navy system. */
+.dark .admin-content [class*="border-t"][class*="bg-white"],
+.dark .admin-content [class*="border-t"][class*="bg-slate-50"],
+.dark .admin-content [class*="rounded-b"][class*="bg-white"],
+.dark .admin-content [class*="rounded-b"][class*="bg-slate-50"],
+.dark .admin-content [class*="bg-background"],
+.dark .admin-content [class*="bg-muted"],
+.dark .admin-content [class*="bg-popover"] {
+  background: linear-gradient(180deg, rgba(12, 20, 34, 0.98), rgba(8, 12, 20, 0.98)) !important;
+  border-color: rgba(148, 163, 184, 0.16) !important;
+  color: #eaf1ff !important;
+}
+
+.dark .admin-content [class*="bg-white"] :is(input, textarea, select),
+.dark .admin-content [class*="bg-slate-50"] :is(input, textarea, select),
+.dark .admin-content [class*="bg-gray-50"] :is(input, textarea, select) {
+  background: rgba(10, 18, 32, 0.96) !important;
+  border-color: rgba(148, 163, 184, 0.22) !important;
+  color: #f4f8ff !important;
+}
+
 /* Print Styles */
 @media print {
   .no-print {
