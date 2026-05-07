@@ -36,20 +36,42 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { TechnicianPreviewModal } from '@/components/modals/TechnicianPreviewModal';
 
-const navItems = [
-  { path: '/admin', label: 'Dashboard', icon: LayoutDashboard },
-  { path: '/admin/jobs', label: 'Jobs', icon: ClipboardList },
-  { path: '/admin/intake', label: 'Intake Queue', icon: Inbox },
-  { path: '/admin/approvals', label: 'Invoice Approvals', icon: FileCheck },
-  { path: '/admin/invoices', label: 'Invoice History', icon: ScrollText },
-  { path: '/admin/chat', label: 'Platform Chat', icon: MessageSquareText },
-  { path: '/admin/technicians', label: 'Technicians', icon: Users },
-  { path: '/admin/accounts', label: 'Technician Accounts', icon: UserCog },
-  { path: '/admin/locations', label: 'Locations', icon: Building2 },
-  { path: '/admin/services', label: 'Services', icon: Wrench },
-  { path: '/admin/reports', label: 'Reports', icon: BarChart3 },
-  { path: '/admin/settings', label: 'Settings', icon: Settings },
+const navGroups = [
+  {
+    label: 'Operations',
+    items: [
+      { path: '/admin', label: 'Dashboard', icon: LayoutDashboard },
+      { path: '/admin/jobs', label: 'Jobs', icon: ClipboardList },
+      { path: '/admin/intake', label: 'Intake Queue', icon: Inbox },
+      { path: '/admin/chat', label: 'Platform Chat', icon: MessageSquareText },
+    ],
+  },
+  {
+    label: 'Billing',
+    items: [
+      { path: '/admin/approvals', label: 'Invoice Approvals', icon: FileCheck },
+      { path: '/admin/invoices', label: 'Invoice History', icon: ScrollText },
+    ],
+  },
+  {
+    label: 'Workforce',
+    items: [
+      { path: '/admin/technicians', label: 'Technicians', icon: Users },
+      { path: '/admin/accounts', label: 'Technician Accounts', icon: UserCog },
+      { path: '/admin/locations', label: 'Locations', icon: Building2 },
+      { path: '/admin/services', label: 'Services', icon: Wrench },
+    ],
+  },
+  {
+    label: 'Admin',
+    items: [
+      { path: '/admin/reports', label: 'Reports', icon: BarChart3 },
+      { path: '/admin/settings', label: 'Settings', icon: Settings },
+    ],
+  },
 ];
+
+const navItems = navGroups.flatMap((group) => group.items);
 
 function Sidebar({
   isOpen,
@@ -78,63 +100,103 @@ function Sidebar({
       {/* Sidebar */}
       <aside
         className={cn(
-          'admin-sidebar fixed lg:sticky top-0 left-0 z-50 h-screen w-72 bg-background border-r border-border',
-          'flex flex-col transition-transform duration-300 ease-in-out',
+          'admin-sidebar fixed left-0 top-0 z-50 flex h-screen w-72 flex-col border-r border-border bg-background',
+          'transition-transform duration-300 ease-in-out lg:sticky',
           isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         )}
       >
         {/* Logo */}
-        <div className="flex items-center gap-3 px-6 py-6 border-b border-border flex-shrink-0">
-          <div className="w-10 h-10 rounded-2xl bg-[linear-gradient(135deg,#111827,#0f172a)] dark:bg-[linear-gradient(135deg,#4f7cff,#79a1ff)] flex items-center justify-center shadow-[0_18px_40px_rgba(15,23,42,0.18)] dark:shadow-[0_18px_40px_rgba(79,124,255,0.28)]">
-            <Shield className="w-5 h-5 text-primary-foreground" />
-          </div>
-          <div>
-            <h1 className="font-semibold text-foreground leading-tight tracking-[-0.03em]">SM2 electronics</h1>
-            <p className="text-xs text-muted-foreground font-medium uppercase tracking-[0.22em]">Operational Center</p>
+        <div className="flex-shrink-0 px-5 pb-5 pt-5">
+          <div className="relative overflow-hidden rounded-[28px] border border-slate-200 bg-white p-4 shadow-[0_18px_50px_rgba(15,23,42,0.07)] dark:border-white/10 dark:bg-white/[0.04] dark:shadow-[0_18px_50px_rgba(2,6,23,0.24)]">
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(79,124,255,0.13),transparent_42%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(79,124,255,0.22),transparent_42%)]" />
+            <div className="relative flex items-center gap-3">
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#111827,#0f172a)] shadow-[0_18px_40px_rgba(15,23,42,0.18)] dark:bg-[linear-gradient(135deg,#4f7cff,#79a1ff)] dark:shadow-[0_18px_40px_rgba(79,124,255,0.28)]">
+                <Shield className="h-5 w-5 text-white" />
+              </div>
+              <div className="min-w-0">
+                <h1 className="truncate font-semibold leading-tight tracking-[-0.03em] text-slate-950 dark:text-white">SM2 electronics</h1>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-500 dark:text-slate-400">Operational Center</p>
+              </div>
+            </div>
+            <div className="relative mt-4 flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-white/10 dark:bg-white/[0.04]">
+              <div className="flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_0_4px_rgba(52,211,153,0.14)]" />
+                <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">Backend live</span>
+              </div>
+              <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
+            </div>
           </div>
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 overflow-y-auto py-6 px-4 space-y-1.5">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = activeItem === item.path || (item.path !== '/admin' && activeItem.startsWith(item.path));
+        <nav className="flex-1 space-y-6 overflow-y-auto px-4 pb-5">
+          {navGroups.map((group) => (
+            <div key={group.label} className="space-y-2">
+              <p className="px-3 text-[10px] font-semibold uppercase tracking-[0.26em] text-slate-400 dark:text-slate-500">
+                {group.label}
+              </p>
+              <div className="space-y-1.5">
+                {group.items.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = activeItem === item.path || (item.path !== '/admin' && activeItem.startsWith(item.path));
 
-            return (
-              <Link
-                key={item.path}
-                to={item.path}
-                onClick={onClose}
-                className={cn(
-                  'flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-medium transition-all duration-200 w-full text-left group',
-                  isActive
-                    ? 'bg-[#111827] text-white shadow-[0_18px_34px_rgba(15,23,42,0.12)] dark:bg-[linear-gradient(135deg,rgba(18,32,58,0.92),rgba(12,23,44,0.92))] dark:text-blue-100 dark:shadow-[0_18px_34px_rgba(6,11,24,0.24),inset_0_0_0_1px_rgba(79,124,255,0.24)]'
-                    : 'text-muted-foreground hover:bg-[#f3f4f6] hover:text-foreground dark:text-slate-400 dark:hover:bg-white/[0.05] dark:hover:text-slate-100'
-                )}
-              >
-                <div className={cn(
-                  'flex h-9 w-9 items-center justify-center rounded-xl border transition-all duration-200',
-                  isActive
-                    ? 'border-black/10 bg-white text-[#111827] dark:border-blue-300/20 dark:bg-blue-400/10 dark:text-blue-100'
-                    : 'border-slate-200 bg-white text-slate-500 group-hover:border-slate-300 group-hover:bg-slate-50 group-hover:text-slate-900 dark:border-white/6 dark:bg-white/[0.03] dark:text-slate-500 dark:group-hover:border-white/10 dark:group-hover:bg-white/[0.06] dark:group-hover:text-slate-200',
-                )}>
-                  <Icon className="w-4.5 h-4.5" />
-                </div>
-                <span className="flex-1">{item.label}</span>
-                {item.path === '/admin/chat' && unreadChatCount > 0 ? (
-                  <span className="rounded-full bg-[#111827] px-2 py-0.5 text-xs font-semibold text-white shadow-[0_10px_20px_rgba(15,23,42,0.16)] dark:bg-blue-100 dark:text-blue-700 dark:shadow-[0_10px_20px_rgba(79,124,255,0.22)]">
-                    {unreadChatCount}
-                  </span>
-                ) : null}
-                {item.path === '/admin/accounts' && pendingPasswordResetCount > 0 ? (
-                  <span className="rounded-full bg-rose-100 px-2 py-0.5 text-xs font-semibold text-rose-700">
-                    {pendingPasswordResetCount}
-                  </span>
-                ) : null}
-              </Link>
-            );
-          })}
+                  return (
+                    <Link
+                      key={item.path}
+                      to={item.path}
+                      onClick={onClose}
+                      className={cn(
+                        'group relative flex w-full items-center gap-3 rounded-[18px] px-3 py-2.5 text-left text-sm font-semibold transition-all duration-200',
+                        isActive
+                          ? 'bg-[#111827] text-white shadow-[0_18px_34px_rgba(15,23,42,0.14)] dark:bg-[linear-gradient(135deg,rgba(79,124,255,0.22),rgba(12,23,44,0.94))] dark:text-blue-50 dark:shadow-[0_18px_34px_rgba(6,11,24,0.24),inset_0_0_0_1px_rgba(79,124,255,0.26)]'
+                          : 'text-slate-600 hover:bg-slate-100 hover:text-slate-950 dark:text-slate-400 dark:hover:bg-white/[0.06] dark:hover:text-slate-100'
+                      )}
+                    >
+                      {isActive ? (
+                        <span className="absolute inset-y-2 left-0 w-1 rounded-r-full bg-white/80 dark:bg-blue-300" />
+                      ) : null}
+                      <div className={cn(
+                        'flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-2xl border transition-all duration-200',
+                        isActive
+                          ? 'border-black/10 bg-white text-[#111827] shadow-sm dark:border-blue-300/20 dark:bg-blue-400/15 dark:text-blue-100'
+                          : 'border-slate-200 bg-white text-slate-500 shadow-sm group-hover:border-slate-300 group-hover:bg-white group-hover:text-slate-950 dark:border-white/8 dark:bg-white/[0.04] dark:text-slate-500 dark:group-hover:border-white/12 dark:group-hover:bg-white/[0.08] dark:group-hover:text-slate-200',
+                      )}>
+                        <Icon className="h-4.5 w-4.5" />
+                      </div>
+                      <span className="min-w-0 flex-1 truncate">{item.label}</span>
+                      {item.path === '/admin/chat' && unreadChatCount > 0 ? (
+                        <span className="rounded-full bg-white px-2 py-0.5 text-xs font-semibold text-[#111827] shadow-sm dark:bg-blue-100 dark:text-blue-700">
+                          {unreadChatCount}
+                        </span>
+                      ) : null}
+                      {item.path === '/admin/accounts' && pendingPasswordResetCount > 0 ? (
+                        <span className="rounded-full bg-rose-100 px-2 py-0.5 text-xs font-semibold text-rose-700">
+                          {pendingPasswordResetCount}
+                        </span>
+                      ) : null}
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </nav>
+
+        <div className="flex-shrink-0 p-4">
+          <div className="rounded-[24px] border border-slate-200 bg-white p-4 shadow-[0_18px_48px_rgba(15,23,42,0.06)] dark:border-white/10 dark:bg-white/[0.04] dark:shadow-[0_18px_48px_rgba(2,6,23,0.22)]">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-blue-100 bg-blue-50 text-blue-600 dark:border-blue-300/20 dark:bg-blue-400/10 dark:text-blue-100">
+                <Bell className="h-4 w-4" />
+              </div>
+              <div className="min-w-0">
+                <p className="truncate text-sm font-semibold text-slate-950 dark:text-white">Control alerts</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  {unreadChatCount + pendingPasswordResetCount} needs review
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
 
       </aside>
     </>
