@@ -891,9 +891,9 @@
     color: #f4f8ff !important;
   }
 
-  .dark .admin-shell [class*="text-[#080c14"],
-  .dark .admin-shell [class*="text-[#0f172a"],
-  .dark .admin-shell [class*="text-[#111827"] {
+  .dark .admin-shell [class*="#080c14"],
+  .dark .admin-shell [class*="#0f172a"],
+  .dark .admin-shell [class*="#111827"] {
     color: #eaf1ff !important;
   }
 
@@ -963,6 +963,104 @@
   to {
     transform: rotate(360deg);
   }
+}
+
+/* Final admin dark sweep: keep after utility normalizers so pure dark mode wins everywhere. */
+.dark .admin-shell [class*="bg-white"],
+.dark .admin-shell [class*="bg-slate-50"],
+.dark .admin-shell [class*="bg-slate-100"],
+.dark .admin-shell [class*="bg-gray-50"],
+.dark .admin-shell [class*="bg-gray-100"],
+.dark .admin-shell [class*="bg-neutral-50"],
+.dark .admin-shell [class*="#ffffff"],
+.dark .admin-shell [class*="#fff"],
+.dark .admin-shell [class*="rgba(255,255,255"],
+.dark .admin-shell [class*="rgba(248,250,252"],
+.dark .admin-shell [class*="rgba(249,250,251"],
+.dark .admin-shell [class*="rgba(250,250,250"],
+.dark .admin-shell [class*="rgba(252,252,252"] {
+  background: linear-gradient(180deg, rgba(12, 20, 34, 0.96), rgba(8, 12, 20, 0.96)) !important;
+  border-color: rgba(148, 163, 184, 0.16) !important;
+  box-shadow:
+    0 18px 54px rgba(2, 6, 23, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
+}
+
+.dark .admin-shell thead,
+.dark .admin-shell tfoot,
+.dark .admin-shell [class*="from-white"],
+.dark .admin-shell [class*="to-white"],
+.dark .admin-shell [class*="via-white"],
+.dark .admin-shell [class*="from-slate-50"],
+.dark .admin-shell [class*="to-slate-50"],
+.dark .admin-shell [class*="via-slate-50"] {
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.98), rgba(8, 12, 20, 0.98)) !important;
+  border-color: rgba(148, 163, 184, 0.16) !important;
+}
+
+.dark .admin-shell input,
+.dark .admin-shell textarea,
+.dark .admin-shell select,
+.dark .admin-shell [role="combobox"],
+.dark .admin-shell [data-slot="select-trigger"] {
+  background: rgba(10, 18, 32, 0.94) !important;
+  border-color: rgba(148, 163, 184, 0.2) !important;
+  color: #f4f8ff !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
+}
+
+.dark .admin-shell input::placeholder,
+.dark .admin-shell textarea::placeholder {
+  color: #8ea3c5 !important;
+}
+
+.dark .admin-shell button:not([class*="bg-[#4f7cff"]):not([class*="bg-blue"]):not([class*="bg-cyan"]):not([class*="bg-teal"]):not([class*="bg-emerald"]),
+.dark .admin-shell [data-slot="button"][data-variant="outline"],
+.dark .admin-shell [data-slot="button"][data-variant="secondary"],
+.dark .admin-shell [data-slot="badge"] {
+  background: rgba(12, 20, 34, 0.9) !important;
+  border-color: rgba(148, 163, 184, 0.18) !important;
+  color: #eaf1ff !important;
+}
+
+.dark .admin-shell button:hover:not(:disabled),
+.dark .admin-shell [data-slot="button"]:hover:not(:disabled) {
+  background: rgba(23, 37, 64, 0.94) !important;
+  color: #ffffff !important;
+}
+
+.dark .admin-shell button:disabled,
+.dark .admin-shell [aria-disabled="true"],
+.dark .admin-shell [data-disabled] {
+  background: rgba(24, 34, 52, 0.78) !important;
+  border-color: rgba(148, 163, 184, 0.12) !important;
+  color: #8ea3c5 !important;
+  opacity: 1 !important;
+}
+
+.dark .admin-shell [data-slot="button"][data-variant="default"],
+.dark .admin-shell .admin-primary-action {
+  background: linear-gradient(135deg, #4f7cff, #22d3ee) !important;
+  border-color: rgba(125, 176, 255, 0.5) !important;
+  color: #ffffff !important;
+  box-shadow: 0 16px 34px rgba(79, 124, 255, 0.22) !important;
+}
+
+.dark .admin-shell [class*="text-slate-900"],
+.dark .admin-shell [class*="text-slate-950"],
+.dark .admin-shell [class*="text-gray-900"],
+.dark .admin-shell [class*="text-gray-950"],
+.dark .admin-shell [class*="text-[#080c14]"],
+.dark .admin-shell [class*="text-[#0f172a]"],
+.dark .admin-shell [class*="text-[#111827]"] {
+  color: #f4f8ff !important;
+}
+
+.dark .admin-shell [class*="text-slate-600"],
+.dark .admin-shell [class*="text-slate-700"],
+.dark .admin-shell [class*="text-gray-600"],
+.dark .admin-shell [class*="text-gray-700"] {
+  color: #aec0dd !important;
 }
 
 /* Print Styles */
