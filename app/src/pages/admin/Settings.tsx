@@ -12,7 +12,15 @@ import {
     PlusCircle,
     Building2,
     ShieldCheck,
+    Bell,
+    CreditCard,
+    ExternalLink,
+    MapPin,
+    Palette,
+    RotateCcw,
+    Upload,
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { MOCK_DEALERSHIPS as FALLBACK_DEALERSHIPS } from './Dealerships';
 import type { PriorityRule, UrgencyLevel } from '@/types';
 
@@ -52,6 +60,7 @@ import {
 } from "@/components/ui/table";
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/components/theme-provider';
+import { Textarea } from '@/components/ui/textarea';
 import {
     type InvoiceCompanyProfile,
     loadInvoiceCompanyProfile,
@@ -62,6 +71,7 @@ import {
     deleteAdminPriorityRule,
     fetchAdminCredentialSettings,
     fetchAdminDealerships,
+    fetchAdminTechnicians,
     fetchAdminPriorityRules,
     fetchAdminServices,
     fetchAdminInvoiceBrandingSettings,
@@ -73,6 +83,7 @@ import {
     type BackendDealership,
     type BackendPriorityRule,
     type BackendServiceCatalogItem,
+    type BackendTechnicianListItem,
 } from '@/lib/backend-api';
 import { useAuth } from '@/contexts/AuthContext';
 // --- Mock Data & Types ---
@@ -83,6 +94,33 @@ type DealershipOption = {
   id: string;
   backendId: string;
   name: string;
+};
+
+type CompanyProfileSettings = {
+    industryType: string;
+    timezone: string;
+    primaryColor: string;
+    customFooterText: string;
+    logoUrl?: string;
+};
+
+type NotificationPreferences = {
+    jobAssignedEmail: boolean;
+    jobCompletedEmail: boolean;
+    invoiceReadyEmail: boolean;
+    technicianSignupEmail: boolean;
+    chatDigestEmail: boolean;
+    technicianSmsAssignments: boolean;
+    customerBookingConfirmation: boolean;
+    customerCompletionSummary: boolean;
+};
+
+type BillingSubscriptionSettings = {
+    planName: string;
+    monthlyPrice: string;
+    renewalDate: string;
+    technicianLimit: number;
+    locationLimit: number;
 };
 
 // --- Components ---
@@ -128,6 +166,51 @@ const getDefaultNewRule = (): Partial<PriorityRule> => ({
 
 const ADMIN_REFRESH_EVENT = 'sm-dispatch:admin-refresh';
 const DEFAULT_ADMIN_EMAIL = 'admin@sm2dispatch.com';
+const COMPANY_PROFILE_SETTINGS_STORAGE_KEY = 'sm_dispatch_company_profile_settings';
+const NOTIFICATION_PREFERENCES_STORAGE_KEY = 'sm_dispatch_notification_preferences';
+const BILLING_SUBSCRIPTION_STORAGE_KEY = 'sm_dispatch_billing_subscription_settings';
+
+const DEFAULT_COMPANY_PROFILE_SETTINGS: CompanyProfileSettings = {
+    industryType: 'Automotive',
+    timezone: 'America/Toronto',
+    primaryColor: '#4f7cff',
+    customFooterText: 'Thank you for choosing SM2 electronics.',
+};
+
+const DEFAULT_NOTIFICATION_PREFERENCES: NotificationPreferences = {
+    jobAssignedEmail: true,
+    jobCompletedEmail: true,
+    invoiceReadyEmail: true,
+    technicianSignupEmail: true,
+    chatDigestEmail: true,
+    technicianSmsAssignments: true,
+    customerBookingConfirmation: true,
+    customerCompletionSummary: true,
+};
+
+const DEFAULT_BILLING_SUBSCRIPTION: BillingSubscriptionSettings = {
+    planName: 'DispatchIQ Growth',
+    monthlyPrice: '$149/mo',
+    renewalDate: '2026-06-01',
+    technicianLimit: 25,
+    locationLimit: 50,
+};
+
+const loadStoredObject = <T,>(key: string, fallback: T): T => {
+    if (typeof window === 'undefined') return fallback;
+    try {
+        const raw = window.localStorage.getItem(key);
+        if (!raw) return fallback;
+        return { ...fallback, ...JSON.parse(raw) } as T;
+    } catch {
+        return fallback;
+    }
+};
+
+const saveStoredObject = <T,>(key: string, value: T): void => {
+    if (typeof window === 'undefined') return;
+    window.localStorage.setItem(key, JSON.stringify(value));
+};
 
 const getDefaultAdminCredentialValues = () => ({
     adminEmail: DEFAULT_ADMIN_EMAIL,
@@ -145,8 +228,13 @@ export default function SettingsPage() {
     const [refreshing, setRefreshing] = useState(false);
     const [savedInvoiceCompany, setSavedInvoiceCompany] = useState<InvoiceCompanyProfile>(() => loadInvoiceCompanyProfile());
     const [invoiceCompany, setInvoiceCompany] = useState<InvoiceCompanyProfile>(() => loadInvoiceCompanyProfile());
+    const [companyProfileSettings, setCompanyProfileSettings] = useState<CompanyProfileSettings>(() => loadStoredObject(COMPANY_PROFILE_SETTINGS_STORAGE_KEY, DEFAULT_COMPANY_PROFILE_SETTINGS));
+    const [savedCompanyProfileSettings, setSavedCompanyProfileSettings] = useState<CompanyProfileSettings>(() => loadStoredObject(COMPANY_PROFILE_SETTINGS_STORAGE_KEY, DEFAULT_COMPANY_PROFILE_SETTINGS));
+    const [notificationPreferences, setNotificationPreferences] = useState<NotificationPreferences>(() => loadStoredObject(NOTIFICATION_PREFERENCES_STORAGE_KEY, DEFAULT_NOTIFICATION_PREFERENCES));
+    const [billingSubscription, setBillingSubscription] = useState<BillingSubscriptionSettings>(() => loadStoredObject(BILLING_SUBSCRIPTION_STORAGE_KEY, DEFAULT_BILLING_SUBSCRIPTION));
     const [priorityRules, setPriorityRules] = useState<PriorityRule[]>([]);
     const [dealershipOptions, setDealershipOptions] = useState<DealershipOption[]>([]);
+    const [technicianCount, setTechnicianCount] = useState(0);
     const [serviceOptions, setServiceOptions] = useState<Array<{ id: string; name: string }>>([]);
     const [isAddingRule, setIsAddingRule] = useState(false);
     const [newRule, setNewRule] = useState<Partial<PriorityRule>>(getDefaultNewRule());
@@ -162,12 +250,26 @@ export default function SettingsPage() {
     const [adminCredentialError, setAdminCredentialError] = useState<string | null>(null);
     const [isSavingAdminCredentials, setIsSavingAdminCredentials] = useState(false);
     const MOCK_DEALERSHIPS = dealershipOptions.length > 0 ? dealershipOptions : FALLBACK_DEALERSHIPS;
+    const activeRules = priorityRules.filter((rule) => rule.isActive);
+    const previewJobs = [
+        { id: 'Sample Critical', urgency: 'CRITICAL', base: 50 },
+        { id: 'Sample High', urgency: 'HIGH', base: 35 },
+        { id: 'Sample Medium', urgency: 'MEDIUM', base: 20 },
+    ].map((job) => ({
+        ...job,
+        score: job.base + activeRules.reduce((sum, rule) => sum + (rule.targetUrgency === job.urgency ? rule.rankingScore : 0), 0),
+    })).sort((a, b) => b.score - a.score);
 
     const { theme, setTheme } = useTheme();
     const refreshSettingsData = useCallback(async () => {
         const localProfile = loadInvoiceCompanyProfile();
         setSavedInvoiceCompany(localProfile);
         setInvoiceCompany(localProfile);
+        const storedCompanyProfile = loadStoredObject(COMPANY_PROFILE_SETTINGS_STORAGE_KEY, DEFAULT_COMPANY_PROFILE_SETTINGS);
+        setSavedCompanyProfileSettings(storedCompanyProfile);
+        setCompanyProfileSettings(storedCompanyProfile);
+        setNotificationPreferences(loadStoredObject(NOTIFICATION_PREFERENCES_STORAGE_KEY, DEFAULT_NOTIFICATION_PREFERENCES));
+        setBillingSubscription(loadStoredObject(BILLING_SUBSCRIPTION_STORAGE_KEY, DEFAULT_BILLING_SUBSCRIPTION));
 
         const adminToken = getStoredAdminToken();
         if (!hasBackendAdminToken || !adminToken) {
@@ -178,6 +280,7 @@ export default function SettingsPage() {
                 ...fallbackValues,
             }));
             setDealershipOptions([]);
+            setTechnicianCount(0);
             setServiceOptions([]);
             setPriorityRules([]);
             return;
@@ -189,12 +292,14 @@ export default function SettingsPage() {
                 brandingResult,
                 credentialsResult,
                 dealershipsResult,
+                techniciansResult,
                 servicesResult,
                 rulesResult,
             ] = await Promise.allSettled([
                 fetchAdminInvoiceBrandingSettings(adminToken),
                 fetchAdminCredentialSettings(adminToken),
                 fetchAdminDealerships(adminToken),
+                fetchAdminTechnicians(adminToken),
                 fetchAdminServices(adminToken, true),
                 fetchAdminPriorityRules(adminToken),
             ]);
@@ -242,6 +347,12 @@ export default function SettingsPage() {
                 );
             } else {
                 setDealershipOptions([]);
+            }
+
+            if (techniciansResult.status === 'fulfilled') {
+                setTechnicianCount((techniciansResult.value as BackendTechnicianListItem[]).length);
+            } else {
+                setTechnicianCount(0);
             }
 
             if (servicesResult.status === 'fulfilled') {
@@ -338,6 +449,53 @@ export default function SettingsPage() {
 
     const handleCancelInvoiceBranding = () => {
         setInvoiceCompany({ ...savedInvoiceCompany });
+        setCompanyProfileSettings({ ...savedCompanyProfileSettings });
+    };
+
+    const handleSaveCompanyProfile = async () => {
+        const normalizedCompanyProfileSettings: CompanyProfileSettings = {
+            ...companyProfileSettings,
+            industryType: companyProfileSettings.industryType.trim() || DEFAULT_COMPANY_PROFILE_SETTINGS.industryType,
+            timezone: companyProfileSettings.timezone.trim() || DEFAULT_COMPANY_PROFILE_SETTINGS.timezone,
+            primaryColor: companyProfileSettings.primaryColor.trim() || DEFAULT_COMPANY_PROFILE_SETTINGS.primaryColor,
+            customFooterText: companyProfileSettings.customFooterText.trim(),
+            logoUrl: companyProfileSettings.logoUrl?.trim() || undefined,
+        };
+        saveStoredObject(COMPANY_PROFILE_SETTINGS_STORAGE_KEY, normalizedCompanyProfileSettings);
+        setSavedCompanyProfileSettings(normalizedCompanyProfileSettings);
+        setCompanyProfileSettings(normalizedCompanyProfileSettings);
+        await saveInvoiceBrandingSettings("Company profile and invoice branding saved successfully.");
+    };
+
+    const handleLogoUpload = (file?: File) => {
+        if (!file) return;
+        if (!file.type.startsWith('image/')) {
+            alert('Please upload an image file for the logo.');
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = () => {
+            const logoUrl = typeof reader.result === 'string' ? reader.result : undefined;
+            setCompanyProfileSettings((prev) => ({ ...prev, logoUrl }));
+            setInvoiceCompany((prev) => ({ ...prev, logo_url: logoUrl }));
+        };
+        reader.readAsDataURL(file);
+    };
+
+    const handleSaveNotificationPreferences = () => {
+        saveStoredObject(NOTIFICATION_PREFERENCES_STORAGE_KEY, notificationPreferences);
+        alert('Notification preferences saved successfully.');
+    };
+
+    const handleSaveBillingSubscription = () => {
+        saveStoredObject(BILLING_SUBSCRIPTION_STORAGE_KEY, billingSubscription);
+        alert('Billing subscription settings saved locally.');
+    };
+
+    const handleResetPriorityRules = () => {
+        setNewRule(getDefaultNewRule());
+        alert('Default rule template restored. Existing saved rules were not removed.');
     };
 
     const handleSaveAdminCredentials = async () => {
@@ -609,6 +767,213 @@ export default function SettingsPage() {
                     </Card>
                 </div>
 
+                <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+                    <Card className={sectionCardClass}>
+                        <CardHeader className={sectionHeaderClass}>
+                            <CardTitle className="flex items-center gap-2 text-base font-semibold text-slate-950 dark:text-white">
+                                <span className="rounded-xl border border-blue-200 bg-blue-50 p-2 text-blue-700 dark:border-cyan-300/20 dark:bg-cyan-300/10 dark:text-cyan-100">
+                                    <Palette className="h-4 w-4" />
+                                </span>
+                                Company Profile & Branding
+                            </CardTitle>
+                            <CardDescription className="text-slate-600 dark:text-slate-300">
+                                Controls the tenant identity used in portals, PDF invoices, and branded UI elements.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-5 pt-0">
+                            <div className="grid gap-4 md:grid-cols-[180px_1fr]">
+                                <div className="rounded-[24px] border border-slate-200 bg-slate-50/80 p-4 dark:border-white/10 dark:bg-white/[0.03]">
+                                    <div className="flex h-24 items-center justify-center overflow-hidden rounded-2xl border border-dashed border-slate-300 bg-white dark:border-white/10 dark:bg-black/20">
+                                        {companyProfileSettings.logoUrl || invoiceCompany.logo_url ? (
+                                            <img src={companyProfileSettings.logoUrl || invoiceCompany.logo_url} alt="Company logo preview" className="max-h-full max-w-full object-contain" />
+                                        ) : (
+                                            <Upload className="h-7 w-7 text-slate-400" />
+                                        )}
+                                    </div>
+                                    <Label htmlFor="company_logo_upload" className="mt-3 flex h-9 cursor-pointer items-center justify-center rounded-full border border-slate-200 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-100 dark:hover:bg-white/[0.08]">
+                                        Upload logo
+                                    </Label>
+                                    <Input id="company_logo_upload" type="file" accept="image/*" className="hidden" onChange={(event) => handleLogoUpload(event.target.files?.[0])} />
+                                </div>
+                                <div className="grid gap-4 sm:grid-cols-2">
+                                    <div className="space-y-2">
+                                        <Label className="text-slate-700 dark:text-slate-200">Company Name</Label>
+                                        <Input className="border-slate-200 bg-white text-slate-900 dark:border-white/10 dark:bg-white/[0.04] dark:text-white" value={invoiceCompany.name} onChange={(e) => setInvoiceCompany({ ...invoiceCompany, name: e.target.value })} />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label className="text-slate-700 dark:text-slate-200">Industry Type</Label>
+                                        <Select value={companyProfileSettings.industryType} onValueChange={(value) => setCompanyProfileSettings((prev) => ({ ...prev, industryType: value }))}>
+                                            <SelectTrigger className="border-slate-200 bg-white text-slate-900 dark:border-white/10 dark:bg-white/[0.04] dark:text-white">
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="Automotive">Automotive</SelectItem>
+                                                <SelectItem value="HVAC">HVAC</SelectItem>
+                                                <SelectItem value="Appliance Repair">Appliance Repair</SelectItem>
+                                                <SelectItem value="General Field Service">General Field Service</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label className="text-slate-700 dark:text-slate-200">Timezone</Label>
+                                        <Select value={companyProfileSettings.timezone} onValueChange={(value) => setCompanyProfileSettings((prev) => ({ ...prev, timezone: value }))}>
+                                            <SelectTrigger className="border-slate-200 bg-white text-slate-900 dark:border-white/10 dark:bg-white/[0.04] dark:text-white">
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="America/Toronto">America/Toronto</SelectItem>
+                                                <SelectItem value="America/New_York">America/New_York</SelectItem>
+                                                <SelectItem value="America/Chicago">America/Chicago</SelectItem>
+                                                <SelectItem value="America/Los_Angeles">America/Los_Angeles</SelectItem>
+                                                <SelectItem value="Asia/Karachi">Asia/Karachi</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label className="text-slate-700 dark:text-slate-200">Primary Colour</Label>
+                                        <div className="flex gap-2">
+                                            <Input type="color" className="h-10 w-14 border-slate-200 p-1 dark:border-white/10" value={companyProfileSettings.primaryColor} onChange={(e) => setCompanyProfileSettings((prev) => ({ ...prev, primaryColor: e.target.value }))} />
+                                            <Input className="border-slate-200 bg-white text-slate-900 dark:border-white/10 dark:bg-white/[0.04] dark:text-white" value={companyProfileSettings.primaryColor} onChange={(e) => setCompanyProfileSettings((prev) => ({ ...prev, primaryColor: e.target.value }))} />
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label className="text-slate-700 dark:text-slate-200">Contact Email</Label>
+                                        <Input className="border-slate-200 bg-white text-slate-900 dark:border-white/10 dark:bg-white/[0.04] dark:text-white" value={invoiceCompany.email} onChange={(e) => setInvoiceCompany({ ...invoiceCompany, email: e.target.value })} />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label className="text-slate-700 dark:text-slate-200">Contact Phone</Label>
+                                        <Input className="border-slate-200 bg-white text-slate-900 dark:border-white/10 dark:bg-white/[0.04] dark:text-white" value={invoiceCompany.phone} onChange={(e) => setInvoiceCompany({ ...invoiceCompany, phone: e.target.value })} />
+                                    </div>
+                                    <div className="space-y-2 sm:col-span-2">
+                                        <Label className="text-slate-700 dark:text-slate-200">PDF Footer Text</Label>
+                                        <Textarea className="min-h-20 border-slate-200 bg-white text-slate-900 dark:border-white/10 dark:bg-white/[0.04] dark:text-white" value={companyProfileSettings.customFooterText} onChange={(e) => setCompanyProfileSettings((prev) => ({ ...prev, customFooterText: e.target.value }))} />
+                                    </div>
+                                </div>
+                            </div>
+                        </CardContent>
+                        <CardFooter className={sectionFooterClass}>
+                            <Button size="sm" className="ml-auto bg-slate-950 text-white hover:bg-slate-800 dark:bg-[#2F8E92] dark:hover:bg-[#267276]" onClick={handleSaveCompanyProfile} disabled={loading}>
+                                {loading && <RefreshCw className="mr-2 h-3 w-3 animate-spin" />}
+                                Save Company Profile
+                            </Button>
+                        </CardFooter>
+                    </Card>
+
+                    <div className="space-y-6">
+                        <Card className={sectionCardClass}>
+                            <CardHeader className={sectionHeaderClass}>
+                                <CardTitle className="flex items-center gap-2 text-base font-semibold text-slate-950 dark:text-white">
+                                    <span className="rounded-xl border border-emerald-200 bg-emerald-50 p-2 text-emerald-700 dark:border-emerald-300/20 dark:bg-emerald-300/10 dark:text-emerald-100">
+                                        <MapPin className="h-4 w-4" />
+                                    </span>
+                                    Locations / Dealerships
+                                </CardTitle>
+                                <CardDescription className="text-slate-600 dark:text-slate-300">Jump to centralized location management.</CardDescription>
+                            </CardHeader>
+                            <CardContent className="pt-0">
+                                <div className="rounded-[22px] border border-slate-200 bg-slate-50/80 p-4 dark:border-white/10 dark:bg-white/[0.03]">
+                                    <div className="text-2xl font-semibold text-slate-950 dark:text-white">{dealershipOptions.length}</div>
+                                    <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Active location records available for jobs and reports.</p>
+                                    <Button asChild size="sm" variant="outline" className="mt-4 rounded-full border-slate-200 bg-white text-slate-700 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-100">
+                                        <Link to="/admin/locations">
+                                            Open Locations
+                                            <ExternalLink className="ml-2 h-3.5 w-3.5" />
+                                        </Link>
+                                    </Button>
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        <Card className={sectionCardClass}>
+                            <CardHeader className={sectionHeaderClass}>
+                                <CardTitle className="flex items-center gap-2 text-base font-semibold text-slate-950 dark:text-white">
+                                    <span className="rounded-xl border border-amber-200 bg-amber-50 p-2 text-amber-700 dark:border-amber-300/20 dark:bg-amber-300/10 dark:text-amber-100">
+                                        <CreditCard className="h-4 w-4" />
+                                    </span>
+                                    Billing & Subscription
+                                </CardTitle>
+                                <CardDescription className="text-slate-600 dark:text-slate-300">Plan, limits, renewal, and billing portal access.</CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-4 pt-0">
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-3 dark:border-white/10 dark:bg-white/[0.03]">
+                                        <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400">Current Plan</p>
+                                        <p className="mt-2 font-semibold text-slate-950 dark:text-white">{billingSubscription.planName}</p>
+                                        <p className="text-xs text-slate-500">{billingSubscription.monthlyPrice}</p>
+                                    </div>
+                                    <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-3 dark:border-white/10 dark:bg-white/[0.03]">
+                                        <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400">Renewal</p>
+                                        <Input type="date" className="mt-2 h-9 border-slate-200 bg-white text-slate-900 dark:border-white/10 dark:bg-white/[0.04] dark:text-white" value={billingSubscription.renewalDate} onChange={(e) => setBillingSubscription((prev) => ({ ...prev, renewalDate: e.target.value }))} />
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-3 text-sm">
+                                    <div className="rounded-2xl border border-slate-200 bg-white p-3 dark:border-white/10 dark:bg-white/[0.03]">
+                                        <p className="text-slate-500">Technicians</p>
+                                        <p className="font-semibold text-slate-950 dark:text-white">{technicianCount} / {billingSubscription.technicianLimit}</p>
+                                    </div>
+                                    <div className="rounded-2xl border border-slate-200 bg-white p-3 dark:border-white/10 dark:bg-white/[0.03]">
+                                        <p className="text-slate-500">Locations</p>
+                                        <p className="font-semibold text-slate-950 dark:text-white">{dealershipOptions.length} / {billingSubscription.locationLimit}</p>
+                                    </div>
+                                </div>
+                            </CardContent>
+                            <CardFooter className={sectionFooterClass}>
+                                <div className="ml-auto flex gap-2">
+                                    <Button size="sm" variant="outline" className="border-slate-200 bg-white text-slate-700 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-100" onClick={handleSaveBillingSubscription}>
+                                        Save Billing View
+                                    </Button>
+                                    <Button size="sm" className="bg-slate-950 text-white hover:bg-slate-800 dark:bg-[#2F8E92] dark:hover:bg-[#267276]">
+                                        Stripe Portal
+                                        <ExternalLink className="ml-2 h-3.5 w-3.5" />
+                                    </Button>
+                                </div>
+                            </CardFooter>
+                        </Card>
+                    </div>
+                </div>
+
+                <Card className={sectionCardClass}>
+                    <CardHeader className={sectionHeaderClass}>
+                        <CardTitle className="flex items-center gap-2 text-base font-semibold text-slate-950 dark:text-white">
+                            <span className="rounded-xl border border-rose-200 bg-rose-50 p-2 text-rose-700 dark:border-rose-300/20 dark:bg-rose-300/10 dark:text-rose-100">
+                                <Bell className="h-4 w-4" />
+                            </span>
+                            Notification Preferences
+                        </CardTitle>
+                        <CardDescription className="text-slate-600 dark:text-slate-300">
+                            Configure admin, technician, customer, SMS, and chat digest notification behavior.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="grid gap-3 pt-0 md:grid-cols-2 xl:grid-cols-4">
+                        {[
+                            ['jobAssignedEmail', 'Job assigned email', 'Admin alert when a technician is assigned.'],
+                            ['jobCompletedEmail', 'Job completed email', 'Admin alert when a job is completed.'],
+                            ['invoiceReadyEmail', 'Invoice ready email', 'Admin alert when an invoice draft is ready.'],
+                            ['technicianSignupEmail', 'Technician signup email', 'Admin alert for new technician signup.'],
+                            ['chatDigestEmail', 'New chat digest', 'Email digest if unread for 30 minutes.'],
+                            ['technicianSmsAssignments', 'SMS job assignment', 'SMS alert to technicians for assigned jobs.'],
+                            ['customerBookingConfirmation', 'Booking confirmation', 'Customer booking confirmation email.'],
+                            ['customerCompletionSummary', 'Completion summary', 'Customer job completion summary email.'],
+                        ].map(([key, title, description]) => (
+                            <div key={key} className="flex items-start justify-between gap-3 rounded-[20px] border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-white/[0.03]">
+                                <div>
+                                    <p className="font-semibold text-slate-950 dark:text-white">{title}</p>
+                                    <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">{description}</p>
+                                </div>
+                                <Switch
+                                    checked={notificationPreferences[key as keyof NotificationPreferences]}
+                                    onCheckedChange={(checked) => setNotificationPreferences((prev) => ({ ...prev, [key]: checked }))}
+                                />
+                            </div>
+                        ))}
+                    </CardContent>
+                    <CardFooter className={sectionFooterClass}>
+                        <Button size="sm" className="ml-auto bg-slate-950 text-white hover:bg-slate-800 dark:bg-[#2F8E92] dark:hover:bg-[#267276]" onClick={handleSaveNotificationPreferences}>
+                            Save Notifications
+                        </Button>
+                    </CardFooter>
+                </Card>
+
             <div className="grid gap-6 xl:grid-cols-[1.35fr_0.95fr]">
 
                 <Card className={cn(sectionCardClass, 'xl:row-span-2')}>
@@ -799,18 +1164,49 @@ export default function SettingsPage() {
                                 </DialogContent>
                             </Dialog>
                         </div>
-                        <CardDescription className="text-slate-300">Manage rule-based escalation and sorting for inbound jobs.</CardDescription>
+                        <CardDescription className="text-slate-600 dark:text-slate-300">Manage rule-based escalation and sorting for inbound jobs. Active rule weights stack into each job ranking score.</CardDescription>
                     </CardHeader>
                     <CardContent className="pt-0">
-                        <div className="overflow-hidden rounded-[22px] border border-white/8 bg-black/10">
+                        <div className="mb-5 grid gap-3 lg:grid-cols-[1fr_auto]">
+                            <div className="rounded-[22px] border border-slate-200 bg-slate-50/80 p-4 dark:border-white/10 dark:bg-white/[0.03]">
+                                <div className="flex flex-wrap items-center justify-between gap-3">
+                                    <div>
+                                        <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">Live Preview</p>
+                                        <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Sample jobs re-ranked by current active urgency weights.</p>
+                                    </div>
+                                    <Button size="sm" variant="outline" className="rounded-full border-slate-200 bg-white text-slate-700 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-100" onClick={handleResetPriorityRules}>
+                                        <RotateCcw className="mr-2 h-3.5 w-3.5" />
+                                        Reset to defaults
+                                    </Button>
+                                </div>
+                                <div className="mt-4 grid gap-2 sm:grid-cols-3">
+                                    {previewJobs.map((job, index) => (
+                                        <div key={job.id} className="rounded-2xl border border-slate-200 bg-white p-3 dark:border-white/10 dark:bg-black/20">
+                                            <div className="flex items-center justify-between gap-2">
+                                                <span className="text-sm font-semibold text-slate-950 dark:text-white">{index + 1}. {job.id}</span>
+                                                <Badge variant="outline" className="border-blue-200 bg-blue-50 text-blue-700 dark:border-cyan-300/20 dark:bg-cyan-300/10 dark:text-cyan-100">Score {job.score}</Badge>
+                                            </div>
+                                            <p className="mt-1 text-xs text-slate-500">Base {job.base} + active {job.urgency.toLowerCase()} rules</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                            <div className="rounded-[22px] border border-slate-200 bg-white p-4 text-sm dark:border-white/10 dark:bg-white/[0.03]">
+                                <p className="font-semibold text-slate-950 dark:text-white">Rule attributes</p>
+                                <p className="mt-2 leading-6 text-slate-600 dark:text-slate-300">
+                                    Urgency, location zone, service type, technician skill match, and time since job creation are supported by the rule model and dispatch scoring surface.
+                                </p>
+                            </div>
+                        </div>
+                        <div className="overflow-hidden rounded-[22px] border border-slate-200 bg-white shadow-sm dark:border-white/8 dark:bg-black/10">
                             <Table>
-                                <TableHeader className="bg-white/[0.04]">
+                                <TableHeader className="bg-slate-50 dark:bg-white/[0.04]">
                                     <TableRow>
-                                        <TableHead className="w-[300px] text-slate-400">Rule & Description</TableHead>
-                                        <TableHead className="text-slate-400">Target</TableHead>
-                                        <TableHead className="text-slate-400">Ranking</TableHead>
-                                        <TableHead className="text-center text-slate-400">Active</TableHead>
-                                        <TableHead className="text-right text-slate-400">Actions</TableHead>
+                                        <TableHead className="w-[300px] text-slate-500 dark:text-slate-400">Rule & Description</TableHead>
+                                        <TableHead className="text-slate-500 dark:text-slate-400">Target</TableHead>
+                                        <TableHead className="text-slate-500 dark:text-slate-400">Ranking</TableHead>
+                                        <TableHead className="text-center text-slate-500 dark:text-slate-400">Active</TableHead>
+                                        <TableHead className="text-right text-slate-500 dark:text-slate-400">Actions</TableHead>
                                     </TableRow>
 
                                 </TableHeader>
@@ -818,7 +1214,7 @@ export default function SettingsPage() {
                                     {priorityRules.map(rule => {
                                         const dealer = MOCK_DEALERSHIPS.find(d => d.id === rule.dealershipId);
                                         return (
-                                            <TableRow key={rule.id} className="border-white/6">
+                                            <TableRow key={rule.id} className="border-slate-100 dark:border-white/6">
                                                 <TableCell className="py-3">
                                                     <div className="flex flex-col">
                                                         <span className="font-semibold text-sm text-slate-950 dark:text-white">{rule.description}</span>
@@ -836,7 +1232,7 @@ export default function SettingsPage() {
                                                     </Badge>
                                                 </TableCell>
 
-                                                <TableCell className="font-mono text-sm text-slate-100">+{rule.rankingScore}</TableCell>
+                                                <TableCell className="font-mono text-sm text-slate-700 dark:text-slate-100">+{rule.rankingScore}</TableCell>
 
                                                 <TableCell className="text-center">
                                                     <Switch
@@ -880,14 +1276,14 @@ export default function SettingsPage() {
                             </span>
                             Invoice Branding
                         </CardTitle>
-                        <CardDescription className="text-slate-300">
+                        <CardDescription className="text-slate-600 dark:text-slate-300">
                             Edit the full company profile shown on generated invoices and PDFs.
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="pt-0">
                         <div className="grid sm:grid-cols-2 gap-6">
                             <div className="space-y-2">
-                                <Label htmlFor="invoice_company_name" className="text-slate-200">Company Name</Label>
+                                <Label htmlFor="invoice_company_name" className="text-slate-700 dark:text-slate-200">Company Name</Label>
                                 <Input
                                     id="invoice_company_name"
                                     className="border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-slate-500"
@@ -897,7 +1293,7 @@ export default function SettingsPage() {
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="invoice_company_email" className="text-slate-200">Billing Email</Label>
+                                <Label htmlFor="invoice_company_email" className="text-slate-700 dark:text-slate-200">Billing Email</Label>
                                 <Input
                                     id="invoice_company_email"
                                     type="email"
@@ -908,7 +1304,7 @@ export default function SettingsPage() {
                                 />
                             </div>
                             <div className="space-y-2 sm:col-span-2">
-                                <Label htmlFor="invoice_company_street" className="text-slate-200">Street Address</Label>
+                                <Label htmlFor="invoice_company_street" className="text-slate-700 dark:text-slate-200">Street Address</Label>
                                 <Input
                                     id="invoice_company_street"
                                     className="border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-slate-500"
@@ -918,7 +1314,7 @@ export default function SettingsPage() {
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="invoice_company_city" className="text-slate-200">City</Label>
+                                <Label htmlFor="invoice_company_city" className="text-slate-700 dark:text-slate-200">City</Label>
                                 <Input
                                     id="invoice_company_city"
                                     className="border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-slate-500"
@@ -928,7 +1324,7 @@ export default function SettingsPage() {
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="invoice_company_state" className="text-slate-200">State / Province</Label>
+                                <Label htmlFor="invoice_company_state" className="text-slate-700 dark:text-slate-200">State / Province</Label>
                                 <Input
                                     id="invoice_company_state"
                                     className="border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-slate-500"
@@ -938,7 +1334,7 @@ export default function SettingsPage() {
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="invoice_company_zip" className="text-slate-200">ZIP / Postal Code</Label>
+                                <Label htmlFor="invoice_company_zip" className="text-slate-700 dark:text-slate-200">ZIP / Postal Code</Label>
                                 <Input
                                     id="invoice_company_zip"
                                     className="border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-slate-500"
@@ -948,7 +1344,7 @@ export default function SettingsPage() {
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="invoice_company_phone" className="text-slate-200">Phone</Label>
+                                <Label htmlFor="invoice_company_phone" className="text-slate-700 dark:text-slate-200">Phone</Label>
                                 <Input
                                     id="invoice_company_phone"
                                     className="border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-slate-500"
@@ -958,7 +1354,7 @@ export default function SettingsPage() {
                                 />
                             </div>
                             <div className="space-y-2 sm:col-span-2">
-                                <Label htmlFor="invoice_company_website" className="text-slate-200">Website</Label>
+                                <Label htmlFor="invoice_company_website" className="text-slate-700 dark:text-slate-200">Website</Label>
                                 <Input
                                     id="invoice_company_website"
                                     className="border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-slate-500"
@@ -971,7 +1367,7 @@ export default function SettingsPage() {
                     </CardContent>
                     <CardFooter className={sectionFooterClass}>
                         <div className="ml-auto flex items-center gap-2">
-                            <Button size="sm" variant="outline" className="border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]" onClick={handleCancelInvoiceBranding} disabled={loading}>
+                            <Button size="sm" variant="outline" className="border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-100 dark:hover:bg-white/[0.08]" onClick={handleCancelInvoiceBranding} disabled={loading}>
                                 Cancel
                             </Button>
                             <Button size="sm" className="bg-[#2F8E92] text-white shadow-[0_12px_30px_rgba(47,142,146,0.24)] hover:bg-[#267276]" onClick={handleSaveInvoiceBranding} disabled={loading}>
@@ -990,14 +1386,14 @@ export default function SettingsPage() {
                             </span>
                             Admin Access
                         </CardTitle>
-                        <CardDescription className="text-slate-300">
+                        <CardDescription className="text-slate-600 dark:text-slate-300">
                             Update the admin sign-in email and password from one place.
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="pt-0">
                         <div className="grid sm:grid-cols-2 gap-6">
                             <div className="space-y-2">
-                                <Label htmlFor="admin_account_email" className="text-slate-200">Admin Email</Label>
+                                <Label htmlFor="admin_account_email" className="text-slate-700 dark:text-slate-200">Admin Email</Label>
                                 <Input
                                     id="admin_account_email"
                                     type="email"
@@ -1008,7 +1404,7 @@ export default function SettingsPage() {
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="admin_current_password" className="text-slate-200">Current Password</Label>
+                                <Label htmlFor="admin_current_password" className="text-slate-700 dark:text-slate-200">Current Password</Label>
                                 <Input
                                     id="admin_current_password"
                                     type="password"
@@ -1019,7 +1415,7 @@ export default function SettingsPage() {
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="admin_new_password" className="text-slate-200">New Password (Optional)</Label>
+                                <Label htmlFor="admin_new_password" className="text-slate-700 dark:text-slate-200">New Password (Optional)</Label>
                                 <Input
                                     id="admin_new_password"
                                     type="password"
@@ -1030,7 +1426,7 @@ export default function SettingsPage() {
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="admin_confirm_password" className="text-slate-200">Confirm New Password</Label>
+                                <Label htmlFor="admin_confirm_password" className="text-slate-700 dark:text-slate-200">Confirm New Password</Label>
                                 <Input
                                     id="admin_confirm_password"
                                     type="password"
@@ -1050,7 +1446,7 @@ export default function SettingsPage() {
                             <Button
                                 size="sm"
                                 variant="outline"
-                                className="border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
+                                className="border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-100 dark:hover:bg-white/[0.08]"
                                 onClick={() => {
                                     setAdminCredentialForm({
                                         ...savedAdminCredentials,
