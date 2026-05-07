@@ -97,7 +97,7 @@ function Sidebar({
           'flex items-center border-b border-border flex-shrink-0 transition-all duration-300',
           isCollapsed ? 'gap-3 px-6 py-6 lg:justify-center lg:gap-0 lg:px-4 lg:py-5' : 'gap-3 px-6 py-6',
         )}>
-          <div className="w-10 h-10 rounded-2xl bg-[linear-gradient(135deg,#111827,#0f172a)] dark:bg-[linear-gradient(135deg,#4f7cff,#79a1ff)] flex items-center justify-center shadow-[0_18px_40px_rgba(15,23,42,0.18)] dark:shadow-[0_18px_40px_rgba(79,124,255,0.28)]">
+          <div className="w-10 h-10 rounded-2xl bg-[linear-gradient(135deg,#111827,#0f172a)] dark:bg-[#111111] flex items-center justify-center shadow-[0_18px_40px_rgba(15,23,42,0.18)] dark:shadow-[0_18px_40px_rgba(0,0,0,0.45),inset_0_0_0_1px_rgba(255,255,255,0.12)]">
             <Shield className="w-5 h-5 text-primary-foreground" />
           </div>
           <div className={cn('min-w-0 transition-all duration-200', isCollapsed && 'lg:hidden')}>
@@ -110,7 +110,7 @@ function Sidebar({
           <Button
             variant="ghost"
             size="icon"
-            className="h-10 w-10 rounded-full border border-slate-200 bg-white text-slate-700 shadow-[0_16px_34px_rgba(15,23,42,0.08)] hover:bg-slate-50 dark:border-white/10 dark:bg-white/[0.06] dark:text-slate-100 dark:hover:bg-white/[0.1]"
+            className="h-10 w-10 rounded-full border border-slate-200 bg-white text-slate-700 shadow-[0_16px_34px_rgba(15,23,42,0.08)] hover:bg-slate-50 dark:border-white/10 dark:bg-[#111111] dark:text-white dark:shadow-[0_14px_28px_rgba(0,0,0,0.42)] dark:hover:bg-[#1d1d1d]"
             onClick={onToggleCollapsed}
             title={isCollapsed ? 'Open sidebar' : 'Close sidebar'}
           >
@@ -136,8 +136,8 @@ function Sidebar({
                   isActive
                     ? isCollapsed
                       ? 'bg-[#111827] text-white shadow-[0_18px_34px_rgba(15,23,42,0.12)] lg:bg-transparent lg:shadow-none'
-                      : 'bg-[#111827] text-white shadow-[0_18px_34px_rgba(15,23,42,0.12)] dark:bg-[linear-gradient(135deg,rgba(18,32,58,0.92),rgba(12,23,44,0.92))] dark:text-blue-100 dark:shadow-[0_18px_34px_rgba(6,11,24,0.24),inset_0_0_0_1px_rgba(79,124,255,0.24)]'
-                    : 'text-muted-foreground hover:bg-[#f3f4f6] hover:text-foreground dark:text-slate-400 dark:hover:bg-white/[0.05] dark:hover:text-slate-100'
+                      : 'bg-[#111827] text-white shadow-[0_18px_34px_rgba(15,23,42,0.12)] dark:bg-[#242424] dark:text-white dark:shadow-[0_18px_34px_rgba(0,0,0,0.38),inset_0_0_0_1px_rgba(255,255,255,0.06)]'
+                    : 'text-muted-foreground hover:bg-[#f3f4f6] hover:text-foreground dark:text-zinc-300 dark:hover:bg-[#171717] dark:hover:text-white'
                 )}
               >
                 <div className={cn(
@@ -145,16 +145,16 @@ function Sidebar({
                   isCollapsed ? 'h-9 w-9 rounded-xl lg:h-11 lg:w-11 lg:rounded-full' : 'h-9 w-9 rounded-xl',
                   isActive
                     ? isCollapsed
-                      ? 'border-black/10 bg-[#111827] text-white shadow-[0_16px_34px_rgba(15,23,42,0.18)] dark:border-blue-300/30 dark:bg-blue-500 dark:text-white'
-                      : 'border-black/10 bg-white text-[#111827] dark:border-blue-300/20 dark:bg-blue-400/10 dark:text-blue-100'
-                    : 'border-slate-200 bg-white text-slate-500 group-hover:border-slate-300 group-hover:bg-slate-50 group-hover:text-slate-900 dark:border-white/6 dark:bg-white/[0.03] dark:text-slate-500 dark:group-hover:border-white/10 dark:group-hover:bg-white/[0.06] dark:group-hover:text-slate-200',
+                      ? 'border-black/10 bg-[#111827] text-white shadow-[0_16px_34px_rgba(15,23,42,0.18)] dark:border-white/12 dark:bg-[#2a2a2a] dark:text-white dark:shadow-[0_18px_34px_rgba(0,0,0,0.42)]'
+                      : 'border-black/10 bg-white text-[#111827] dark:border-white/12 dark:bg-[#111111] dark:text-white'
+                    : 'border-slate-200 bg-white text-slate-500 group-hover:border-slate-300 group-hover:bg-slate-50 group-hover:text-slate-900 dark:border-transparent dark:bg-transparent dark:text-zinc-200 dark:group-hover:border-white/10 dark:group-hover:bg-[#202020] dark:group-hover:text-white',
                 )}>
                   <Icon className="w-4.5 h-4.5" />
                 </div>
                 <span className={cn('flex-1 transition-all duration-200', isCollapsed && 'lg:hidden')}>{item.label}</span>
                 {item.path === '/admin/chat' && unreadChatCount > 0 ? (
                   <span className={cn(
-                    'rounded-full bg-[#111827] px-2 py-0.5 text-xs font-semibold text-white shadow-[0_10px_20px_rgba(15,23,42,0.16)] dark:bg-blue-100 dark:text-blue-700 dark:shadow-[0_10px_20px_rgba(79,124,255,0.22)]',
+                    'rounded-full bg-[#111827] px-2 py-0.5 text-xs font-semibold text-white shadow-[0_10px_20px_rgba(15,23,42,0.16)] dark:bg-[#f472b6] dark:text-white dark:shadow-[0_10px_24px_rgba(244,114,182,0.28)]',
                     isCollapsed && 'lg:absolute lg:right-1 lg:top-1 lg:flex lg:h-5 lg:min-w-5 lg:items-center lg:justify-center lg:p-0 lg:text-[10px]',
                   )}>
                     {unreadChatCount}
@@ -177,8 +177,8 @@ function Sidebar({
           <button
             onClick={logout}
             className={cn(
-              'flex items-center rounded-2xl text-sm font-semibold text-slate-500 transition-all hover:bg-rose-50 hover:text-rose-700 dark:text-slate-400 dark:hover:bg-rose-400/10 dark:hover:text-rose-200',
-              isCollapsed ? 'w-full gap-3 px-4 py-3 lg:h-11 lg:w-11 lg:justify-center lg:gap-0 lg:rounded-full lg:bg-white lg:px-0 lg:shadow-[0_16px_34px_rgba(15,23,42,0.08)] lg:dark:bg-white/[0.05]' : 'w-full gap-3 px-4 py-3',
+              'flex items-center rounded-2xl text-sm font-semibold text-slate-500 transition-all hover:bg-rose-50 hover:text-rose-700 dark:text-zinc-300 dark:hover:bg-[#1d1d1d] dark:hover:text-white',
+              isCollapsed ? 'w-full gap-3 px-4 py-3 lg:h-11 lg:w-11 lg:justify-center lg:gap-0 lg:rounded-full lg:bg-white lg:px-0 lg:shadow-[0_16px_34px_rgba(15,23,42,0.08)] lg:dark:bg-[#111111] lg:dark:shadow-[0_14px_28px_rgba(0,0,0,0.38)]' : 'w-full gap-3 px-4 py-3',
             )}
             title="Log out"
           >
