@@ -7,7 +7,6 @@ import {
     Moon,
     Sun,
     Monitor,
-    FileText,
     ListFilter,
     PlusCircle,
     Building2,
@@ -441,15 +440,6 @@ export default function SettingsPage() {
         } finally {
             setLoading(false);
         }
-    };
-
-    const handleSaveInvoiceBranding = async () => {
-        await saveInvoiceBrandingSettings("Invoice branding saved successfully.");
-    };
-
-    const handleCancelInvoiceBranding = () => {
-        setInvoiceCompany({ ...savedInvoiceCompany });
-        setCompanyProfileSettings({ ...savedCompanyProfileSettings });
     };
 
     const handleSaveCompanyProfile = async () => {
@@ -1167,7 +1157,7 @@ export default function SettingsPage() {
                         <CardDescription className="text-slate-600 dark:text-slate-300">Manage rule-based escalation and sorting for inbound jobs. Active rule weights stack into each job ranking score.</CardDescription>
                     </CardHeader>
                     <CardContent className="pt-0">
-                        <div className="mb-5 grid gap-3 lg:grid-cols-[1fr_auto]">
+                        <div className="mb-5 grid gap-3">
                             <div className="rounded-[22px] border border-slate-200 bg-slate-50/80 p-4 dark:border-white/10 dark:bg-white/[0.03]">
                                 <div className="flex flex-wrap items-center justify-between gap-3">
                                     <div>
@@ -1179,14 +1169,14 @@ export default function SettingsPage() {
                                         Reset to defaults
                                     </Button>
                                 </div>
-                                <div className="mt-4 grid gap-2 sm:grid-cols-3">
+                                <div className="mt-4 grid gap-3 md:grid-cols-3">
                                     {previewJobs.map((job, index) => (
-                                        <div key={job.id} className="rounded-2xl border border-slate-200 bg-white p-3 dark:border-white/10 dark:bg-black/20">
-                                            <div className="flex items-center justify-between gap-2">
-                                                <span className="text-sm font-semibold text-slate-950 dark:text-white">{index + 1}. {job.id}</span>
-                                                <Badge variant="outline" className="border-blue-200 bg-blue-50 text-blue-700 dark:border-cyan-300/20 dark:bg-cyan-300/10 dark:text-cyan-100">Score {job.score}</Badge>
+                                        <div key={job.id} className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-black/20">
+                                            <div className="flex items-start justify-between gap-3">
+                                                <span className="max-w-[140px] text-sm font-semibold leading-5 text-slate-950 dark:text-white">{index + 1}. {job.id}</span>
+                                                <Badge variant="outline" className="shrink-0 border-blue-200 bg-blue-50 text-blue-700 dark:border-cyan-300/20 dark:bg-cyan-300/10 dark:text-cyan-100">Score {job.score}</Badge>
                                             </div>
-                                            <p className="mt-1 text-xs text-slate-500">Base {job.base} + active {job.urgency.toLowerCase()} rules</p>
+                                            <p className="mt-3 text-xs leading-5 text-slate-500">Base {job.base} + active {job.urgency.toLowerCase()} rules</p>
                                         </div>
                                     ))}
                                 </div>
@@ -1268,116 +1258,6 @@ export default function SettingsPage() {
                 </Card>
 
                 <div className="space-y-6">
-                <Card className={sectionCardClass}>
-                    <CardHeader className={sectionHeaderClass}>
-                        <CardTitle className="text-base font-semibold flex items-center gap-2 text-slate-950 dark:text-white">
-                            <span className="rounded-xl border border-cyan-300/20 bg-cyan-300/10 p-2 text-cyan-100">
-                                <FileText className="w-4 h-4" />
-                            </span>
-                            Invoice Branding
-                        </CardTitle>
-                        <CardDescription className="text-slate-600 dark:text-slate-300">
-                            Edit the full company profile shown on generated invoices and PDFs.
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent className="pt-0">
-                        <div className="grid sm:grid-cols-2 gap-6">
-                            <div className="space-y-2">
-                                <Label htmlFor="invoice_company_name" className="text-slate-700 dark:text-slate-200">Company Name</Label>
-                                <Input
-                                    id="invoice_company_name"
-                                    className="border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-slate-500"
-                                    value={invoiceCompany.name}
-                                    onChange={(e) => setInvoiceCompany({ ...invoiceCompany, name: e.target.value })}
-                                    placeholder="SM2 electronics"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="invoice_company_email" className="text-slate-700 dark:text-slate-200">Billing Email</Label>
-                                <Input
-                                    id="invoice_company_email"
-                                    type="email"
-                                    className="border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-slate-500"
-                                    value={invoiceCompany.email}
-                                    onChange={(e) => setInvoiceCompany({ ...invoiceCompany, email: e.target.value })}
-                                    placeholder="billing@sm2dispatch.com"
-                                />
-                            </div>
-                            <div className="space-y-2 sm:col-span-2">
-                                <Label htmlFor="invoice_company_street" className="text-slate-700 dark:text-slate-200">Street Address</Label>
-                                <Input
-                                    id="invoice_company_street"
-                                    className="border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-slate-500"
-                                    value={invoiceCompany.street_address}
-                                    onChange={(e) => setInvoiceCompany({ ...invoiceCompany, street_address: e.target.value })}
-                                    placeholder="123 Dispatch Ave"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="invoice_company_city" className="text-slate-700 dark:text-slate-200">City</Label>
-                                <Input
-                                    id="invoice_company_city"
-                                    className="border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-slate-500"
-                                    value={invoiceCompany.city}
-                                    onChange={(e) => setInvoiceCompany({ ...invoiceCompany, city: e.target.value })}
-                                    placeholder="Quebec"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="invoice_company_state" className="text-slate-700 dark:text-slate-200">State / Province</Label>
-                                <Input
-                                    id="invoice_company_state"
-                                    className="border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-slate-500"
-                                    value={invoiceCompany.state}
-                                    onChange={(e) => setInvoiceCompany({ ...invoiceCompany, state: e.target.value })}
-                                    placeholder="QC"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="invoice_company_zip" className="text-slate-700 dark:text-slate-200">ZIP / Postal Code</Label>
-                                <Input
-                                    id="invoice_company_zip"
-                                    className="border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-slate-500"
-                                    value={invoiceCompany.zip_code}
-                                    onChange={(e) => setInvoiceCompany({ ...invoiceCompany, zip_code: e.target.value })}
-                                    placeholder="G1A 1A1"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="invoice_company_phone" className="text-slate-700 dark:text-slate-200">Phone</Label>
-                                <Input
-                                    id="invoice_company_phone"
-                                    className="border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-slate-500"
-                                    value={invoiceCompany.phone}
-                                    onChange={(e) => setInvoiceCompany({ ...invoiceCompany, phone: e.target.value })}
-                                    placeholder="+1-418-555-0100"
-                                />
-                            </div>
-                            <div className="space-y-2 sm:col-span-2">
-                                <Label htmlFor="invoice_company_website" className="text-slate-700 dark:text-slate-200">Website</Label>
-                                <Input
-                                    id="invoice_company_website"
-                                    className="border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-slate-500"
-                                    value={invoiceCompany.website}
-                                    onChange={(e) => setInvoiceCompany({ ...invoiceCompany, website: e.target.value })}
-                                    placeholder="https://www.sm2dispatch.com"
-                                />
-                            </div>
-                        </div>
-                    </CardContent>
-                    <CardFooter className={sectionFooterClass}>
-                        <div className="ml-auto flex items-center gap-2">
-                            <Button size="sm" variant="outline" className="border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-100 dark:hover:bg-white/[0.08]" onClick={handleCancelInvoiceBranding} disabled={loading}>
-                                Cancel
-                            </Button>
-                            <Button size="sm" className="bg-[#2F8E92] text-white shadow-[0_12px_30px_rgba(47,142,146,0.24)] hover:bg-[#267276]" onClick={handleSaveInvoiceBranding} disabled={loading}>
-                                {loading && <RefreshCw className="w-3 h-3 mr-2 animate-spin" />}
-                                {loading ? 'Saving...' : 'Save Invoice Branding'}
-                            </Button>
-                        </div>
-                    </CardFooter>
-                </Card>
-
                 <Card className={sectionCardClass}>
                     <CardHeader className={sectionHeaderClass}>
                         <CardTitle className="text-base font-semibold flex items-center gap-2 text-slate-950 dark:text-white">
