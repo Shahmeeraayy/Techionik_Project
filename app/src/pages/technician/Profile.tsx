@@ -13,6 +13,7 @@ import {
     Settings,
     Sparkles,
     Trash2,
+    Upload,
     User,
 } from 'lucide-react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
@@ -37,13 +38,13 @@ import {
 } from '@/lib/backend-api';
 
 const DAY_OPTIONS = [
-    { label: 'Mon', value: 0 },
-    { label: 'Tue', value: 1 },
-    { label: 'Wed', value: 2 },
-    { label: 'Thu', value: 3 },
-    { label: 'Fri', value: 4 },
-    { label: 'Sat', value: 5 },
-    { label: 'Sun', value: 6 },
+    { label: 'Monday', value: 0 },
+    { label: 'Tuesday', value: 1 },
+    { label: 'Wednesday', value: 2 },
+    { label: 'Thursday', value: 3 },
+    { label: 'Friday', value: 4 },
+    { label: 'Saturday', value: 5 },
+    { label: 'Sunday', value: 6 },
 ] as const;
 
 type OutOfOfficeRangeDraft = {
@@ -76,7 +77,8 @@ export default function ProfilePage() {
     const isPreviewMode = Boolean(previewTechId);
     const routeBase = isPreviewMode ? `/admin/tech-preview/${previewTechId}` : '/tech';
     const settingsRoute = `${routeBase}/profile/settings`;
-    const isSettingsView = location.pathname.endsWith('/profile/settings');
+    const isSettingsRoute = location.pathname.endsWith('/profile/settings');
+    const isSettingsView = true;
     const previewTech = useMemo(() => {
         if (!previewTechId) return null;
         return technicianAccounts.find((tech) => tech.id === previewTechId) ?? null;
@@ -212,6 +214,21 @@ export default function ProfilePage() {
         navigate(`${routeBase}/profile`);
     };
 
+    const handleProfilePhotoUpload = (file?: File | null) => {
+        if (!file) return;
+        if (!file.type.startsWith('image/')) {
+            window.alert('Please upload an image file.');
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = () => {
+            if (typeof reader.result === 'string') {
+                setProfilePictureUrl(reader.result);
+            }
+        };
+        reader.readAsDataURL(file);
+    };
+
     const handleRefresh = async () => {
         await loadBackendData();
     };
@@ -252,6 +269,7 @@ export default function ProfilePage() {
             const updated = await updateTechnicianMeProfile(token, {
                 full_name: fullName,
                 phone: phone || null,
+                profile_picture_url: profilePictureUrl || null,
             });
             setProfile(updated);
             window.alert('Profile updated successfully.');
@@ -481,9 +499,13 @@ export default function ProfilePage() {
                 {isSettingsView ? (
                     <>
                         <div className="flex items-center justify-between gap-3 px-1">
-                            <Button type="button" variant="ghost" onClick={openProfileView} className="justify-start px-1 text-slate-300 hover:text-white">
-                                <ArrowLeft className="w-4 h-4 mr-2" /> Back to Profile
-                            </Button>
+                            {isSettingsRoute ? (
+                                <Button type="button" variant="ghost" onClick={openProfileView} className="justify-start px-1 text-slate-300 hover:text-white">
+                                    <ArrowLeft className="w-4 h-4 mr-2" /> Back to Profile
+                                </Button>
+                            ) : (
+                                <div className="text-xs uppercase tracking-[0.24em] text-slate-500">Profile workspace</div>
+                            )}
                             <div className="text-xs uppercase tracking-[0.24em] text-slate-500">Settings workspace</div>
                         </div>
 
@@ -528,6 +550,31 @@ export default function ProfilePage() {
                                 </div>
                             ) : (
                                     <div className="space-y-3">
+                                    <div className="grid grid-cols-1 gap-3 md:grid-cols-[auto_1fr] md:items-end">
+                                        <div className="space-y-2">
+                                            <Label className="text-slate-300">Profile Photo</Label>
+                                            <label className="flex h-24 w-24 cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-cyan-300/25 bg-cyan-300/5 text-cyan-100 transition hover:bg-cyan-300/10">
+                                                <Upload className="mb-1 h-5 w-5" />
+                                                <span className="text-[11px] font-semibold">Upload</span>
+                                                <input
+                                                    type="file"
+                                                    accept="image/*"
+                                                    className="sr-only"
+                                                    onChange={(event) => handleProfilePhotoUpload(event.target.files?.[0])}
+                                                />
+                                            </label>
+                                        </div>
+                                        <div className="space-y-1">
+                                            <Label className="text-slate-300">Photo URL</Label>
+                                            <Input
+                                                className="border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500"
+                                                value={profilePictureUrl}
+                                                onChange={(event) => setProfilePictureUrl(event.target.value)}
+                                                placeholder="https://example.com/profile.jpg"
+                                            />
+                                            <p className="text-xs text-slate-500">Use an image URL or upload from this device.</p>
+                                        </div>
+                                    </div>
                                     <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                                         <div className="space-y-1">
                                             <Label className="text-slate-300">Full Name</Label>
@@ -537,6 +584,11 @@ export default function ProfilePage() {
                                             <Label className="text-slate-300">Phone</Label>
                                             <Input className="border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500" value={phone} onChange={(event) => setPhone(event.target.value)} />
                                         </div>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label className="text-slate-300">Email Address</Label>
+                                        <Input className="cursor-not-allowed border-white/10 bg-white/[0.025] text-slate-400" value={userEmail} readOnly />
+                                        <p className="text-xs text-slate-500">Email changes must be requested through the admin.</p>
                                     </div>
                                     <Button onClick={() => void saveProfile()} className="h-11 w-full bg-[#2F8E92] hover:bg-[#267276]" disabled={savingProfile}>
                                         <Save className="w-4 h-4 mr-2" />
@@ -617,14 +669,15 @@ export default function ProfilePage() {
 
                                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                                         <div className="space-y-1">
-                                            <Label className="text-slate-300">Start Time</Label>
+                                            <Label className="text-slate-300">Global Start Time</Label>
                                             <Input className="border-white/10 bg-white/[0.04] text-white" type="time" value={workingHoursStart} onChange={(event) => setWorkingHoursStart(event.target.value)} />
                                         </div>
                                         <div className="space-y-1">
-                                            <Label className="text-slate-300">End Time</Label>
+                                            <Label className="text-slate-300">Global End Time</Label>
                                             <Input className="border-white/10 bg-white/[0.04] text-white" type="time" value={workingHoursEnd} onChange={(event) => setWorkingHoursEnd(event.target.value)} />
                                         </div>
                                     </div>
+                                    <p className="text-xs text-slate-500">These hours apply to every selected working day.</p>
 
                                     <div className="flex items-center justify-between rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2">
                                         <div>
