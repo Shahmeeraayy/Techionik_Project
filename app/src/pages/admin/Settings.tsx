@@ -1164,39 +1164,39 @@ export default function SettingsPage() {
                     </CardHeader>
                     <CardContent className="pt-0">
                         <div className="mb-5 grid gap-3">
-                            <div className="rounded-[22px] border border-slate-200 bg-slate-50/80 p-4 dark:border-white/10 dark:bg-white/[0.03]">
+                            <div className="rounded-[22px] border border-white/10 bg-[rgba(255,255,255,0.03)] p-4">
                                 <div className="flex flex-wrap items-center justify-between gap-3">
                                     <div>
                                         <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">Live Preview</p>
                                         <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Sample jobs re-ranked by current active urgency weights.</p>
                                     </div>
-                                    <Button size="sm" variant="outline" className="rounded-full border-slate-200 bg-white text-slate-700 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-100" onClick={handleResetPriorityRules}>
+                                    <Button size="sm" variant="outline" className="rounded-full border-white/10 bg-[#0b1424] text-slate-100 hover:bg-[#122039] hover:text-white" onClick={handleResetPriorityRules}>
                                         <RotateCcw className="mr-2 h-3.5 w-3.5" />
                                         Reset to defaults
                                     </Button>
                                 </div>
                                 <div className="mt-4 grid gap-3 md:grid-cols-3">
                                     {previewJobs.map((job, index) => (
-                                        <div key={job.id} className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-black/20">
+                                        <div key={job.id} className="rounded-2xl border border-white/10 bg-black/20 p-4">
                                             <div className="flex items-start justify-between gap-3">
                                                 <span className="max-w-[140px] text-sm font-semibold leading-5 text-slate-950 dark:text-white">{index + 1}. {job.id}</span>
-                                                <Badge variant="outline" className="shrink-0 border-blue-200 bg-blue-50 text-blue-700 dark:border-cyan-300/20 dark:bg-cyan-300/10 dark:text-cyan-100">Score {job.score}</Badge>
+                                                <Badge variant="outline" className="shrink-0 border-cyan-300/20 bg-cyan-300/10 text-cyan-100">Score {job.score}</Badge>
                                             </div>
                                             <p className="mt-3 text-xs leading-5 text-slate-500">Base {job.base} + active {job.urgency.toLowerCase()} rules</p>
                                         </div>
                                     ))}
                                 </div>
                             </div>
-                            <div className="rounded-[22px] border border-slate-200 bg-white p-4 text-sm dark:border-white/10 dark:bg-white/[0.03]">
+                            <div className="rounded-[22px] border border-white/10 bg-[rgba(255,255,255,0.03)] p-4 text-sm">
                                 <p className="font-semibold text-slate-950 dark:text-white">Rule attributes</p>
                                 <p className="mt-2 leading-6 text-slate-600 dark:text-slate-300">
                                     Urgency, location zone, service type, technician skill match, and time since job creation are supported by the rule model and dispatch scoring surface.
                                 </p>
                             </div>
                         </div>
-                        <div className="overflow-hidden rounded-[22px] border border-slate-200 bg-white shadow-sm dark:border-white/8 dark:bg-black/10">
+                        <div className="overflow-hidden rounded-[22px] border border-white/8 bg-black/10 shadow-sm">
                             <Table>
-                                <TableHeader className="bg-slate-50 dark:bg-white/[0.04]">
+                                <TableHeader className="bg-[rgba(255,255,255,0.04)]">
                                     <TableRow>
                                         <TableHead className="w-[300px] text-slate-500 dark:text-slate-400">Rule & Description</TableHead>
                                         <TableHead className="text-slate-500 dark:text-slate-400">Target</TableHead>
@@ -1283,7 +1283,8 @@ export default function SettingsPage() {
                                 <Input
                                     id="admin_account_email"
                                     type="email"
-                                    className="border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-slate-500"
+                                    style={settingsDarkInputStyle}
+                                    className="border-white/10 text-white placeholder:text-slate-500"
                                     value={adminCredentialForm.adminEmail}
                                     onChange={(e) => setAdminCredentialForm((prev) => ({ ...prev, adminEmail: e.target.value }))}
                                     autoComplete="email"
@@ -1294,7 +1295,8 @@ export default function SettingsPage() {
                                 <Input
                                     id="admin_current_password"
                                     type="password"
-                                    className="border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-slate-500"
+                                    style={settingsDarkInputStyle}
+                                    className="border-white/10 text-white placeholder:text-slate-500"
                                     value={adminCredentialForm.currentPassword}
                                     onChange={(e) => setAdminCredentialForm((prev) => ({ ...prev, currentPassword: e.target.value }))}
                                     autoComplete="current-password"
@@ -1305,7 +1307,8 @@ export default function SettingsPage() {
                                 <Input
                                     id="admin_new_password"
                                     type="password"
-                                    className="border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-slate-500"
+                                    style={settingsDarkInputStyle}
+                                    className="border-white/10 text-white placeholder:text-slate-500"
                                     value={adminCredentialForm.newPassword}
                                     onChange={(e) => setAdminCredentialForm((prev) => ({ ...prev, newPassword: e.target.value }))}
                                     autoComplete="new-password"
@@ -1316,7 +1319,8 @@ export default function SettingsPage() {
                                 <Input
                                     id="admin_confirm_password"
                                     type="password"
-                                    className="border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-slate-500"
+                                    style={settingsDarkInputStyle}
+                                    className="border-white/10 text-white placeholder:text-slate-500"
                                     value={adminCredentialForm.confirmPassword}
                                     onChange={(e) => setAdminCredentialForm((prev) => ({ ...prev, confirmPassword: e.target.value }))}
                                     autoComplete="new-password"
@@ -1332,7 +1336,7 @@ export default function SettingsPage() {
                             <Button
                                 size="sm"
                                 variant="outline"
-                                className="border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-100 dark:hover:bg-white/[0.08]"
+                                className="border-white/10 bg-[#0b1424] text-slate-100 hover:bg-[#122039] hover:text-white"
                                 onClick={() => {
                                     setAdminCredentialForm({
                                         ...savedAdminCredentials,
