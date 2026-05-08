@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, type CSSProperties } from 'react';
 import {
     Search,
     RefreshCw,
@@ -392,6 +392,12 @@ const TECHNICIAN_EXPORT_COLUMNS = [
     'CurrentJob',
     'WorkingHours',
 ];
+
+const adminDarkInputStyle: CSSProperties = {
+    background: '#0b1424',
+    backgroundImage: 'none',
+    color: '#f8fbff',
+};
 
 export default function TechniciansPage() {
     const navigate = useNavigate();
@@ -1312,22 +1318,23 @@ export default function TechniciansPage() {
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-2">
                                         <Label className="text-slate-200">Full Name</Label>
-                                        <Input data-admin-dark-input="true" className="h-12 rounded-2xl border-white/10 !text-white placeholder:!text-slate-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] focus-visible:border-cyan-300/40 focus-visible:ring-cyan-300/15" placeholder="e.g. John Doe" value={newTechForm.name} onChange={e => setNewTechForm({ ...newTechForm, name: e.target.value })} />
+                                        <Input data-admin-dark-input="true" style={adminDarkInputStyle} className="h-12 rounded-2xl border-white/10 !text-white placeholder:!text-slate-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] focus-visible:border-cyan-300/40 focus-visible:ring-cyan-300/15" placeholder="e.g. John Doe" value={newTechForm.name} onChange={e => setNewTechForm({ ...newTechForm, name: e.target.value })} />
                                     </div>
                                     <div className="space-y-2">
                                         <Label className="text-slate-200">Email</Label>
-                                        <Input data-admin-dark-input="true" className="h-12 rounded-2xl border-white/10 !text-white placeholder:!text-slate-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] focus-visible:border-cyan-300/40 focus-visible:ring-cyan-300/15" placeholder="e.g. john@example.com" value={newTechForm.email} onChange={e => setNewTechForm({ ...newTechForm, email: e.target.value })} />
+                                        <Input data-admin-dark-input="true" style={adminDarkInputStyle} className="h-12 rounded-2xl border-white/10 !text-white placeholder:!text-slate-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] focus-visible:border-cyan-300/40 focus-visible:ring-cyan-300/15" placeholder="e.g. john@example.com" value={newTechForm.email} onChange={e => setNewTechForm({ ...newTechForm, email: e.target.value })} />
                                     </div>
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-2">
                                         <Label className="text-slate-200">Tech Code</Label>
-                                        <Input data-admin-dark-input="true" className="h-12 rounded-2xl border-white/10 !text-white placeholder:!text-slate-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] focus-visible:border-cyan-300/40 focus-visible:ring-cyan-300/15" placeholder="e.g. TECH-999" value={newTechForm.code} onChange={e => setNewTechForm({ ...newTechForm, code: e.target.value })} />
+                                        <Input data-admin-dark-input="true" style={adminDarkInputStyle} className="h-12 rounded-2xl border-white/10 !text-white placeholder:!text-slate-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] focus-visible:border-cyan-300/40 focus-visible:ring-cyan-300/15" placeholder="e.g. TECH-999" value={newTechForm.code} onChange={e => setNewTechForm({ ...newTechForm, code: e.target.value })} />
                                     </div>
                                     <div className="space-y-2">
                                         <Label className="text-slate-200">Phone</Label>
                                         <Input
                                             data-admin-dark-input="true"
+                                            style={adminDarkInputStyle}
                                             className="h-12 rounded-2xl border-white/10 !text-white placeholder:!text-slate-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] focus-visible:border-cyan-300/40 focus-visible:ring-cyan-300/15"
                                             placeholder={phoneExampleFormat}
                                             value={newTechForm.phone}
@@ -1337,11 +1344,11 @@ export default function TechniciansPage() {
                                 </div>
                                 <div className="space-y-2">
                                     <Label className="text-slate-200">Default Zones (comma separated)</Label>
-                                    <Input data-admin-dark-input="true" className="h-12 rounded-2xl border-white/10 !text-white placeholder:!text-slate-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] focus-visible:border-cyan-300/40 focus-visible:ring-cyan-300/15" placeholder="North, Downtown" value={newTechForm.zones} onChange={e => setNewTechForm({ ...newTechForm, zones: e.target.value })} />
+                                    <Input data-admin-dark-input="true" style={adminDarkInputStyle} className="h-12 rounded-2xl border-white/10 !text-white placeholder:!text-slate-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] focus-visible:border-cyan-300/40 focus-visible:ring-cyan-300/15" placeholder="North, Downtown" value={newTechForm.zones} onChange={e => setNewTechForm({ ...newTechForm, zones: e.target.value })} />
                                 </div>
                                 <div className="space-y-2">
                                     <Label className="text-slate-200">Default Skills (comma separated)</Label>
-                                    <Input data-admin-dark-input="true" className="h-12 rounded-2xl border-white/10 !text-white placeholder:!text-slate-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] focus-visible:border-cyan-300/40 focus-visible:ring-cyan-300/15" placeholder="Locksmith, Towing" value={newTechForm.skills} onChange={e => setNewTechForm({ ...newTechForm, skills: e.target.value })} />
+                                    <Input data-admin-dark-input="true" style={adminDarkInputStyle} className="h-12 rounded-2xl border-white/10 !text-white placeholder:!text-slate-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] focus-visible:border-cyan-300/40 focus-visible:ring-cyan-300/15" placeholder="Locksmith, Towing" value={newTechForm.skills} onChange={e => setNewTechForm({ ...newTechForm, skills: e.target.value })} />
                                 </div>
                             </div>
                             <DialogFooter>
