@@ -340,7 +340,7 @@ export default function AvailableJobsPage() {
     return (
         <div className="tech-shell pb-24 text-white">
             <div className="relative w-full pb-8">
-                <div className="pointer-events-none absolute inset-x-0 top-0 h-[320px] bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.12),rgba(34,211,238,0)_32%),radial-gradient(circle_at_top_right,rgba(16,185,129,0.1),rgba(16,185,129,0)_28%)]" />
+                <div className="pointer-events-none absolute inset-x-0 top-0 h-[320px] bg-[radial-gradient(circle_at_top_left,rgba(79,124,255,0.08),rgba(79,124,255,0)_32%),radial-gradient(circle_at_top_right,rgba(45,212,191,0.07),rgba(45,212,191,0)_28%)]" />
                 <div className="relative mx-auto w-full max-w-[1500px] space-y-6 px-4 pt-4 sm:px-6 lg:px-8">
                     <section className="relative overflow-hidden rounded-[30px] border border-white/10 bg-[linear-gradient(135deg,rgba(7,25,42,0.98),rgba(6,18,32,0.98))] shadow-[0_34px_120px_rgba(0,0,0,0.34)]">
                         <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] bg-[size:120px_120px] opacity-20" />
@@ -385,7 +385,7 @@ export default function AvailableJobsPage() {
                                     variant="outline"
                                     size="sm"
                                     onClick={handleRefresh}
-                                    className="h-11 gap-2 rounded-2xl border-white/10 bg-white/[0.03] px-4 text-slate-100 hover:bg-white/[0.08]"
+                                    className="h-11 gap-2 rounded-2xl border-white/10 bg-white/[0.03] px-4 text-slate-100 hover:bg-white/[0.08] disabled:bg-[#182234] disabled:text-slate-400"
                                     disabled={loading}
                                 >
                                     <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
