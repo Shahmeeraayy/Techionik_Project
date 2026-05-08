@@ -391,9 +391,9 @@ export default function Dashboard() {
 
     const lookup = new Map(snapshot.cards.map((card) => [card.id, card]));
     return [
-      lookup.get('completed-today'),
-      lookup.get('pending-review'),
-      lookup.get('approval-required'),
+      lookup.get('jobs-completed-today'),
+      lookup.get('pending-invoice-approvals'),
+      lookup.get('technicians-online'),
     ].filter((item): item is DashboardCard => Boolean(item));
   }, [snapshot]);
 
@@ -502,7 +502,7 @@ export default function Dashboard() {
               </h1>
 
               <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-600 dark:text-slate-300 sm:text-[15px]">
-                Live operational metrics from the Neon-backed admin APIs, styled like a real control room instead of a generic table wall.
+                Monitor jobs, technician capacity, invoice approvals, and operational risk from one live dispatch workspace.
               </p>
 
               <div className="mt-6 flex flex-wrap gap-3">

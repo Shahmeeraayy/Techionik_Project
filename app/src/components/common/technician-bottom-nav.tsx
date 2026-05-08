@@ -21,8 +21,8 @@ export default function TechnicianBottomNav({
     ] as const;
 
     return (
-        <div className="safe-area-bottom fixed bottom-0 left-0 right-0 z-50 px-3 pb-3 pt-2 sm:px-4">
-            <div className="mx-auto w-full max-w-[760px] rounded-[26px] border border-white/10 bg-[#08111f]/88 px-2 py-2 shadow-[0_20px_60px_rgba(0,0,0,0.34)] backdrop-blur-2xl">
+        <div className="safe-area-bottom pointer-events-none fixed bottom-0 left-0 right-0 z-50 px-3 pb-3 pt-2 sm:px-4">
+            <div className="tech-nav-dock pointer-events-auto mx-auto w-full max-w-[760px] rounded-[28px] px-2 py-2">
                 <div className="flex items-center justify-around gap-1">
                     {tabs.map((tab) => {
                         const Icon = tab.icon;
@@ -33,14 +33,17 @@ export default function TechnicianBottomNav({
                                 key={tab.id}
                                 onClick={() => navigate(tab.path)}
                                 className={cn(
-                                    'flex min-h-[60px] flex-1 flex-col items-center justify-center gap-1 rounded-2xl px-3 py-2.5 transition-all duration-200',
+                                    'group relative flex min-h-[60px] flex-1 flex-col items-center justify-center gap-1 overflow-hidden rounded-2xl px-2 py-2.5 transition-all duration-200',
                                     isActive
-                                        ? 'bg-[linear-gradient(135deg,rgba(47,142,146,0.22),rgba(75,102,241,0.16))] text-cyan-100 shadow-[inset_0_0_0_1px_rgba(94,234,212,0.12)]'
-                                        : 'text-slate-500 hover:bg-white/[0.04] hover:text-slate-200',
+                                        ? 'bg-[linear-gradient(135deg,rgba(79,124,255,0.26),rgba(34,211,238,0.16))] text-white shadow-[inset_0_0_0_1px_rgba(125,211,252,0.16),0_14px_34px_rgba(34,211,238,0.12)]'
+                                        : 'text-slate-500 hover:bg-white/[0.055] hover:text-slate-200',
                                 )}
                             >
-                                <Icon className={cn('h-5 w-5 transition-transform duration-200', isActive && 'scale-110')} />
-                                <span className={cn('text-[11px] font-semibold', isActive && 'font-bold')}>
+                                {isActive ? (
+                                    <span className="absolute inset-x-4 top-0 h-px bg-gradient-to-r from-transparent via-cyan-200/80 to-transparent" />
+                                ) : null}
+                                <Icon className={cn('h-5 w-5 transition-transform duration-200 group-hover:-translate-y-0.5', isActive && 'scale-110 text-cyan-100')} />
+                                <span className={cn('max-w-full truncate text-[10px] font-semibold sm:text-[11px]', isActive && 'font-bold')}>
                                     {tab.label}
                                 </span>
                             </button>

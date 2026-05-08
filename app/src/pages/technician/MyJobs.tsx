@@ -1105,7 +1105,7 @@ export default function MyJobsPage({
     const historyRecordsWithServiceChanges = completedJobs.filter((job) => job.service_entries.some((entry) => entry.source === 'technician')).length;
 
     return (
-        <div className="min-h-screen bg-[#020817] pb-28 text-white">
+        <div className="tech-shell pb-28 text-white">
             <div className="relative w-full pb-8">
                 <div className="pointer-events-none absolute inset-x-0 top-0 h-[320px] bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.12),rgba(34,211,238,0)_32%),radial-gradient(circle_at_top_right,rgba(16,185,129,0.1),rgba(16,185,129,0)_28%)]" />
                 <div className="relative mx-auto w-full max-w-[1500px] space-y-6 px-3 pt-4 sm:px-4 lg:px-6">
@@ -1561,5 +1561,4 @@ export default function MyJobsPage({
         </div>
     );
 }
-
 

@@ -3,10 +3,12 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from '@/components/ui/sonner';
 import { AdminLayout } from '@/layouts/AdminLayout';
+import { SiteMotion } from '@/components/motion/SiteMotion';
 import { HomeRoute, PublicOnly, RequireRole } from '@/components/auth/RouteGuards';
 import AdminLoginPage from '@/pages/auth/AdminLogin';
 import TechnicianLoginPage from '@/pages/auth/TechnicianLogin';
 import TechnicianSignupPage from '@/pages/auth/TechnicianSignup';
+import MarketingHome from '@/pages/marketing/Home';
 
 // Admin Pages
 import AdminDashboard from '@/pages/admin/Dashboard';
@@ -41,8 +43,9 @@ function App() {
   return (
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
       <AuthProvider>
+        <SiteMotion>
         <Routes>
-          <Route path="/" element={<HomeRoute />} />
+          <Route path="/" element={<MarketingHome />} />
 
           {/* Login Portals */}
           <Route path="/login" element={<PublicOnly><AdminLoginPage /></PublicOnly>} />
@@ -274,6 +277,7 @@ function App() {
 
           <Route path="*" element={<HomeRoute />} />
         </Routes>
+        </SiteMotion>
         <Toaster richColors position="top-right" />
       </AuthProvider>
     </ThemeProvider>
