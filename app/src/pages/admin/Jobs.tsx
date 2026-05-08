@@ -156,6 +156,10 @@ interface Job {
     admin_confirmed_at?: string | null;
     pending_assigned_technician_name?: string | null;
     pending_push_to_available?: boolean;
+    last_refused_at?: string | null;
+    last_refused_by_technician_name?: string | null;
+    last_refusal_reason?: string | null;
+    last_refusal_comment?: string | null;
 }
 
 
@@ -188,12 +192,14 @@ type QuickFilterCounts = {
     pendingReview: number;
     awaitingTechAcceptance: number;
     attentionRequired: number;
+    needsReassignment: number;
 };
 
 type QuickFilterKey =
     | 'pending_review'
     | 'awaiting_tech_acceptance'
-    | 'attention_required';
+    | 'attention_required'
+    | 'needs_reassignment';
 
 type JobSortMode = 'rank' | 'created_newest' | 'created_oldest' | 'urgency' | 'status' | 'job_id';
 type StatusFilterKey =
@@ -246,7 +252,7 @@ const bodyFontStyle: CSSProperties = {
     fontFamily: '"Manrope", "Inter", system-ui, sans-serif',
 };
 
-type JobsMetricTone = 'cyan' | 'violet' | 'blue';
+type JobsMetricTone = 'cyan' | 'violet' | 'blue' | 'amber';
 
 function jobsMetricCardClasses(tone: JobsMetricTone): string {
     return cn(
@@ -254,18 +260,21 @@ function jobsMetricCardClasses(tone: JobsMetricTone): string {
         tone === 'cyan' && 'border-slate-200 bg-[linear-gradient(180deg,#ffffff,#f8fafc)] hover:border-slate-300 dark:border-cyan-400/14 dark:bg-[linear-gradient(180deg,rgba(9,28,41,0.98),rgba(8,21,32,0.98))] dark:hover:border-cyan-300/24',
         tone === 'violet' && 'border-violet-200 bg-[linear-gradient(180deg,#ffffff,#faf7fd)] hover:border-violet-300 dark:border-violet-400/14 dark:bg-[linear-gradient(180deg,rgba(25,21,40,0.98),rgba(20,18,32,0.98))] dark:hover:border-violet-300/24',
         tone === 'blue' && 'border-blue-200 bg-[linear-gradient(180deg,#ffffff,#f8fbff)] hover:border-blue-300 dark:border-blue-400/14 dark:bg-[linear-gradient(180deg,rgba(10,24,43,0.98),rgba(8,19,33,0.98))] dark:hover:border-blue-300/24',
+        tone === 'amber' && 'border-amber-200 bg-[linear-gradient(180deg,#ffffff,#fffaf0)] hover:border-amber-300 dark:border-amber-400/14 dark:bg-[linear-gradient(180deg,rgba(39,25,10,0.98),rgba(28,20,12,0.98))] dark:hover:border-amber-300/24',
     );
 }
 
 function jobsMetricTopLineClasses(tone: JobsMetricTone): string {
     if (tone === 'violet') return 'via-violet-400/55 dark:via-violet-300/80';
     if (tone === 'blue') return 'via-blue-400/55 dark:via-blue-300/80';
+    if (tone === 'amber') return 'via-amber-400/55 dark:via-amber-300/80';
     return 'via-slate-900/35 dark:via-cyan-300/80';
 }
 
 function jobsMetricIconClasses(tone: JobsMetricTone): string {
     if (tone === 'violet') return 'border border-violet-200 bg-violet-50 text-violet-700 dark:border-violet-300/14 dark:bg-violet-300/10 dark:text-violet-100';
     if (tone === 'blue') return 'border border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-300/14 dark:bg-blue-300/10 dark:text-blue-100';
+    if (tone === 'amber') return 'border border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-300/14 dark:bg-amber-300/10 dark:text-amber-100';
     return 'border border-slate-200 bg-slate-100 text-slate-700 dark:border-cyan-300/14 dark:bg-cyan-300/10 dark:text-cyan-100';
 }
 
@@ -289,6 +298,7 @@ const EMPTY_QUICK_FILTER_COUNTS: QuickFilterCounts = {
     pendingReview: 0,
     awaitingTechAcceptance: 0,
     attentionRequired: 0,
+    needsReassignment: 0,
 };
 
 const normalizeText = (value: string) =>
@@ -601,6 +611,10 @@ const mapBackendJobToUiJob = (
                 ? null
                 : (row.updated_at || row.created_at),
         pending_push_to_available: false,
+        last_refused_at: row.last_refused_at ?? null,
+        last_refused_by_technician_name: row.last_refused_by_technician_name ?? null,
+        last_refusal_reason: row.last_refusal_reason ?? null,
+        last_refusal_comment: row.last_refusal_comment ?? null,
     };
 
     return applyDispatchRankingToJob(baseJob, dealershipOptions, serviceCatalog, dispatchRankingRules);
@@ -680,13 +694,31 @@ const isPendingReviewJob = (job: Job) =>
     || job.job_status === 'pending_admin_confirmation'
     || (job.requires_admin_confirmation === true && !job.admin_confirmed_at);
 
-const isAwaitingTechAcceptanceJob = (job: Job) => job.job_status === 'pending';
+const isAwaitingTechAcceptanceJob = (job: Job) => job.job_status === 'pending' && hasAnyTechnicianAssignment(job);
 
 const isAttentionRequiredJob = (job: Job) => job.attention_flag;
 
 const isTerminalJob = (job: Job) => job.job_status === 'completed' || job.job_status === 'cancelled';
 
 const isAssignableJob = (job: Job) => !isTerminalJob(job);
+
+const hasAssignedTechnician = (job: Job) => Boolean(job.assigned_technician_name?.trim());
+
+const hasPendingAssignedTechnician = (job: Job) => Boolean(job.pending_assigned_technician_name?.trim());
+
+const hasAnyTechnicianAssignment = (job: Job) => hasAssignedTechnician(job) || hasPendingAssignedTechnician(job);
+
+const hasTechnicianRefusalEvent = (job: Job) => Boolean(
+    job.last_refused_at
+    || job.last_refused_by_technician_name?.trim()
+    || job.last_refusal_reason?.trim()
+    || job.last_refusal_comment?.trim()
+);
+
+const isAwaitingReassignmentJob = (job: Job) =>
+    hasTechnicianRefusalEvent(job)
+    && !hasAnyTechnicianAssignment(job)
+    && (job.job_status === 'pending' || job.job_status === 'cancelled');
 
 const matchesQuickFilter = (job: Job, filter: QuickFilterKey) => {
     switch (filter) {
@@ -696,6 +728,8 @@ const matchesQuickFilter = (job: Job, filter: QuickFilterKey) => {
             return isAwaitingTechAcceptanceJob(job);
         case 'attention_required':
             return isAttentionRequiredJob(job);
+        case 'needs_reassignment':
+            return isAwaitingReassignmentJob(job);
         default:
             return true;
     }
@@ -706,11 +740,11 @@ const matchesStatusFilter = (job: Job, filter: StatusFilterKey) => {
         case 'all':
             return true;
         case 'unassigned':
-            return !job.assigned_technician_name && !job.pending_assigned_technician_name;
+            return !hasAnyTechnicianAssignment(job);
         case 'assigned':
-            return Boolean(job.assigned_technician_name);
+            return hasAnyTechnicianAssignment(job);
         case 'accepted':
-            return job.job_status === 'scheduled' || job.job_status === 'in_progress';
+            return hasAssignedTechnician(job) && job.job_status === 'scheduled';
         case 'in_progress':
             return job.job_status === 'in_progress';
         case 'delayed':
@@ -718,7 +752,7 @@ const matchesStatusFilter = (job: Job, filter: StatusFilterKey) => {
         case 'completed':
             return job.job_status === 'completed';
         case 'refused':
-            return job.job_status === 'cancelled';
+            return isAwaitingReassignmentJob(job);
         default:
             return true;
     }
@@ -729,10 +763,12 @@ const calculateQuickFilterCounts = (jobs: Job[]): QuickFilterCounts => (
         const needsAdminReview = isPendingReviewJob(job);
         const awaitingTechAcceptance = isAwaitingTechAcceptanceJob(job);
         const needsAttention = isAttentionRequiredJob(job);
+        const needsReassignment = isAwaitingReassignmentJob(job);
 
         if (needsAdminReview) counts.pendingReview += 1;
         if (awaitingTechAcceptance) counts.awaitingTechAcceptance += 1;
         if (needsAttention) counts.attentionRequired += 1;
+        if (needsReassignment) counts.needsReassignment += 1;
 
         return counts;
     }, { ...EMPTY_QUICK_FILTER_COUNTS })
@@ -759,6 +795,7 @@ function StatusBadge({ status, type }: { status: string; type: 'job' | 'invoice'
         in_progress: 'border-amber-300/20 bg-[linear-gradient(135deg,rgba(251,191,36,0.16),rgba(146,64,14,0.18))] text-amber-50 shadow-[0_10px_24px_rgba(146,64,14,0.16)]',
         completed: 'border-emerald-300/20 bg-[linear-gradient(135deg,rgba(52,211,153,0.16),rgba(6,95,70,0.18))] text-emerald-50 shadow-[0_10px_24px_rgba(6,95,70,0.16)]',
         cancelled: 'border-slate-300/20 bg-[linear-gradient(135deg,rgba(148,163,184,0.12),rgba(51,65,85,0.18))] text-slate-200 font-medium',
+        needs_reassignment: 'border-amber-300/25 bg-[linear-gradient(135deg,rgba(251,191,36,0.16),rgba(120,53,15,0.22))] text-amber-50 shadow-[0_10px_24px_rgba(120,53,15,0.18)]',
         unknown: 'border-zinc-300/20 bg-[linear-gradient(135deg,rgba(161,161,170,0.12),rgba(39,39,42,0.18))] text-zinc-100',
 
         // Invoice State
@@ -780,7 +817,7 @@ function StatusBadge({ status, type }: { status: string; type: 'job' | 'invoice'
     const labels: Record<string, string> = {
         admin_preview: 'Admin Preview',
         pending_admin_confirmation: 'Pending Admin Confirmation',
-        pending: 'Pending', scheduled: 'Scheduled', in_progress: 'In Progress', completed: 'Completed', cancelled: 'Cancelled', unknown: 'Unknown',
+        pending: 'Pending', scheduled: 'Scheduled', in_progress: 'In Progress', completed: 'Completed', cancelled: 'Cancelled', needs_reassignment: 'Needs Reassignment', unknown: 'Unknown',
         draft: 'Draft', pending_approval: 'Needs Approval', approved: 'Approved', synced: 'Synced', failed: 'Failed', void: 'Void',
         low: 'Low', normal: 'Medium', high: 'High', critical: 'Critical'
     };
@@ -1328,7 +1365,7 @@ export default function JobsPage() {
 
     useEffect(() => {
         fetchData();
-    }, [pagination.page, pagination.pageSize, searchQuery, urgencyFilter, dateFilter, activeQuickFilter, jobSortMode]);
+    }, [pagination.page, pagination.pageSize, searchQuery, urgencyFilter, statusFilter, dateFilter, activeQuickFilter, jobSortMode]);
 
     useEffect(() => {
         refreshJobs({ background: false });
@@ -2103,6 +2140,14 @@ export default function JobsPage() {
             icon: Truck,
             tone: 'blue' as const,
         },
+        {
+            key: 'reassignment',
+            label: 'Needs Reassignment',
+            value: quickFilterCounts.needsReassignment,
+            description: 'Technician refusals waiting for a new owner.',
+            icon: AlertCircle,
+            tone: 'amber' as const,
+        },
     ] as const;
     const queueQuickFilters = [
         {
@@ -2118,6 +2163,13 @@ export default function JobsPage() {
             count: quickFilterCounts.awaitingTechAcceptance,
             icon: Truck,
             activeClassName: 'border-blue-300/25 bg-blue-300/12 text-blue-100',
+        },
+        {
+            key: 'needs_reassignment' as const,
+            label: 'Needs Reassignment',
+            count: quickFilterCounts.needsReassignment,
+            icon: AlertCircle,
+            activeClassName: 'border-amber-300/25 bg-amber-300/12 text-amber-100',
         },
     ] as const;
 
@@ -2458,7 +2510,7 @@ export default function JobsPage() {
                 onConfirm={handleExport}
             />
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
                 {summaryCards.map((card) => {
                     const Icon = card.icon;
                     return (
@@ -2745,6 +2797,7 @@ export default function JobsPage() {
                             <TableBody>
                                 {data.map((job, index) => {
                                     const locationLabel = getJobLocationLabel(job, dealershipOptions);
+                                    const needsReassignment = isAwaitingReassignmentJob(job);
                                     const primaryTechnicianName = job.assigned_technician_name?.trim()
                                         ? job.assigned_technician_name
                                         : null;
@@ -2761,10 +2814,11 @@ export default function JobsPage() {
                                                 'group border-b border-white/7 bg-[#07101d]/70 transition-all duration-200 hover:bg-[#0d1a2d]',
                                                 index % 2 === 1 && 'bg-[#091321]/78',
                                                 job.attention_flag && 'bg-red-400/[0.04] hover:bg-red-400/[0.08]',
+                                                needsReassignment && 'bg-amber-400/[0.045] hover:bg-amber-400/[0.08]',
                                             )}
                                         >
                                             <TableCell className="relative pl-4">
-                                                {job.attention_flag ? (
+                                                {job.attention_flag || needsReassignment ? (
                                                     <div className="absolute left-0 top-3 bottom-3 w-[3px] rounded-full bg-gradient-to-b from-red-300 via-orange-300 to-red-500" />
                                                 ) : null}
                                                 <Checkbox
@@ -2833,6 +2887,19 @@ export default function JobsPage() {
                                                             <div className="text-[11px] text-violet-200/70">Pending admin confirmation</div>
                                                         </div>
                                                     </div>
+                                                ) : needsReassignment ? (
+                                                    <div className="inline-flex max-w-full items-center gap-2 rounded-2xl border border-amber-300/18 bg-amber-300/[0.08] px-2.5 py-2">
+                                                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-300/16 text-amber-100">
+                                                            <AlertCircle className="h-3.5 w-3.5" />
+                                                        </div>
+                                                        <div className="min-w-0">
+                                                            <OverflowText
+                                                                text={job.last_refused_by_technician_name?.trim() ? `Refused by ${job.last_refused_by_technician_name}` : 'Technician refused'}
+                                                                className="max-w-full text-sm font-medium text-amber-50"
+                                                            />
+                                                            <div className="text-[11px] text-amber-200/70">Needs reassignment</div>
+                                                        </div>
+                                                    </div>
                                                 ) : (
                                                     <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-[linear-gradient(135deg,rgba(148,163,184,0.08),rgba(30,41,59,0.18))] px-3 py-2 text-xs font-medium text-slate-300">
                                                         <User className="h-3.5 w-3.5" />
@@ -2872,7 +2939,7 @@ export default function JobsPage() {
                                                 </Popover>
                                             </TableCell>
                                             <TableCell className="py-4 align-middle">
-                                                <StatusBadge status={job.job_status} type="job" />
+                                                <StatusBadge status={needsReassignment ? 'needs_reassignment' : job.job_status} type="job" />
                                             </TableCell>
                                             <TableCell className="py-4 align-middle">
                                                 <div className="space-y-2 border-l border-white/10 pl-3">

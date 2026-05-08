@@ -252,6 +252,11 @@ export type BackendAdminJob = {
   requested_service_time?: string | null;
   source_system?: string | null;
   source_metadata?: Record<string, unknown> | null;
+  last_refused_at?: string | null;
+  last_refused_by_technician_id?: string | null;
+  last_refused_by_technician_name?: string | null;
+  last_refusal_reason?: string | null;
+  last_refusal_comment?: string | null;
 };
 
 export type BackendTechnicianJobFeedItem = {

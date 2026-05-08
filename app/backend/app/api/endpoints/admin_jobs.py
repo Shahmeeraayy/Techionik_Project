@@ -12,6 +12,7 @@ from ...core.security import AuthenticatedUser
 from ...models.dealership import Dealership
 from ...models.invoice import InvoiceLineItem
 from ...models.job import Job
+from ...models.job_event import JobEvent
 from ...models.technician import Technician
 from ...schemas.admin_jobs import (
     AdminJobAssignmentUpdateRequest,
@@ -50,6 +51,28 @@ def _serialize_admin_job_row(db: Session, job_row: Job) -> AdminJobListItemRespo
     job_services_service = JobServicesService(db)
     service_rows = job_services_service.list_service_rows(job_row)
     service_names = job_services_service.list_service_names(job_row)
+    latest_refusal_event = (
+        db.query(JobEvent)
+        .filter(JobEvent.job_id == job_row.id, JobEvent.event_type == "TECH_JOB_REFUSED")
+        .order_by(JobEvent.created_at.desc())
+        .first()
+    )
+    latest_refusal_payload = (
+        latest_refusal_event.payload_json
+        if latest_refusal_event is not None and isinstance(latest_refusal_event.payload_json, dict)
+        else {}
+    )
+    latest_refusal_technician_id = latest_refusal_payload.get("technician_id")
+    latest_refusal_technician = None
+    if latest_refusal_technician_id:
+        try:
+            latest_refusal_technician = (
+                db.query(Technician)
+                .filter(Technician.id == UUID(str(latest_refusal_technician_id)))
+                .first()
+            )
+        except ValueError:
+            latest_refusal_technician = None
 
     return AdminJobListItemResponse(
         id=job_row.id,
@@ -72,6 +95,11 @@ def _serialize_admin_job_row(db: Session, job_row: Job) -> AdminJobListItemRespo
         requested_service_time=job_row.requested_service_time,
         source_system=job_row.source_system,
         source_metadata=job_row.source_metadata,
+        last_refused_at=latest_refusal_event.created_at if latest_refusal_event is not None else None,
+        last_refused_by_technician_id=latest_refusal_technician.id if latest_refusal_technician is not None else None,
+        last_refused_by_technician_name=latest_refusal_technician.name if latest_refusal_technician is not None else None,
+        last_refusal_reason=latest_refusal_payload.get("reason"),
+        last_refusal_comment=latest_refusal_payload.get("comment"),
     )
 
 

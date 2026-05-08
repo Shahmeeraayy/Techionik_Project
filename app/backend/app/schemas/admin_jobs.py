@@ -37,6 +37,11 @@ class AdminJobListItemResponse(BaseModel):
     requested_service_time: Optional[time] = None
     source_system: Optional[str] = None
     source_metadata: Optional[Dict[str, Any]] = None
+    last_refused_at: Optional[datetime] = None
+    last_refused_by_technician_id: Optional[UUID] = None
+    last_refused_by_technician_name: Optional[str] = None
+    last_refusal_reason: Optional[str] = None
+    last_refusal_comment: Optional[str] = None
 
 
 class AdminJobAssignmentUpdateRequest(BaseModel):
