@@ -655,8 +655,8 @@ export default function InvoiceHistoryPage() {
                 <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(15,23,42,0.05),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(245,158,11,0.05),transparent_26%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(47,142,146,0.14),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(245,158,11,0.12),transparent_26%)]" />
                 <div className="relative flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
                     <div className="max-w-3xl space-y-4">
-                        <div className="inline-flex items-center gap-2 rounded-full border border-black/8 bg-slate-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-700 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300">
-                            <Sparkles className="h-3.5 w-3.5 text-slate-700 dark:text-cyan-200" />
+                        <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-[#0b1424] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                            <Sparkles className="h-3.5 w-3.5 text-cyan-200" />
                             Billing archive
                         </div>
                         <div className="space-y-3">
@@ -670,12 +670,12 @@ export default function InvoiceHistoryPage() {
                             </p>
                         </div>
                         <div className="flex flex-wrap items-center gap-2">
-                            <Badge variant="outline" className="h-9 rounded-full border-cyan-200 bg-cyan-50 px-3 text-cyan-700 dark:border-cyan-300/20 dark:bg-cyan-300/10 dark:text-cyan-100">
+                            <Badge variant="outline" className="h-9 rounded-full border-cyan-300/20 bg-cyan-300/10 px-3 text-cyan-100">
                                 <Activity className="mr-1.5 h-3.5 w-3.5" />
                                 {filteredHistory.length} records
                             </Badge>
-                            <Badge variant="outline" className="h-9 rounded-full border-black/8 bg-slate-50 px-3 text-slate-700 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300">
-                                <Send className="mr-1.5 h-3.5 w-3.5 text-emerald-600 dark:text-emerald-200" />
+                            <Badge variant="outline" className="h-9 rounded-full border-emerald-300/20 bg-emerald-300/10 px-3 text-emerald-100">
+                                <Send className="mr-1.5 h-3.5 w-3.5 text-emerald-200" />
                                 {sentCount} sent
                             </Badge>
                         </div>
@@ -685,7 +685,7 @@ export default function InvoiceHistoryPage() {
                             variant="outline"
                             size="sm"
                             onClick={() => void fetchHistory()}
-                            className="h-11 gap-2 rounded-2xl border-black/8 bg-white px-4 text-slate-700 hover:bg-slate-50 hover:text-slate-900 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-100 dark:hover:bg-white/[0.08] dark:hover:text-white"
+                            className="h-11 gap-2 rounded-2xl border-white/10 bg-[#0b1424] px-4 text-slate-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] hover:bg-[#122039] hover:text-white"
                         >
                             <RefreshCw className={cn('h-4 w-4 text-slate-500 dark:text-slate-300', loading && 'animate-spin')} />
                             Refresh
@@ -693,7 +693,7 @@ export default function InvoiceHistoryPage() {
                         <Button
                             variant="outline"
                             size="sm"
-                            className="h-11 gap-2 rounded-2xl border-black/8 bg-white px-4 text-slate-700 hover:bg-slate-50 hover:text-slate-900 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-100 dark:hover:bg-white/[0.08] dark:hover:text-white"
+                            className="h-11 gap-2 rounded-2xl border-white/10 bg-[#0b1424] px-4 text-slate-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] hover:bg-[#122039] hover:text-white"
                             onClick={() => setExportModalOpen(true)}
                         >
                             <Download className="h-4 w-4 text-slate-500 dark:text-slate-300" />
@@ -737,23 +737,23 @@ export default function InvoiceHistoryPage() {
                 })}
             </div>
 
-            <div className="relative overflow-hidden rounded-[28px] border border-black/8 bg-[linear-gradient(180deg,#ffffff,#fbfbfb)] shadow-[0_28px_90px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,23,38,0.98),rgba(7,18,31,0.98))] dark:shadow-[0_28px_90px_rgba(0,0,0,0.3)]">
-                <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-slate-900/20 to-transparent dark:via-cyan-200/60" />
-                <div className="pointer-events-none absolute inset-x-0 top-0 h-14 bg-gradient-to-r from-slate-200/55 via-transparent to-slate-100/30 dark:from-[#2F8E92]/6 dark:to-blue-500/5" />
+            <div className="relative overflow-hidden rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(8,23,38,0.98),rgba(7,18,31,0.98))] shadow-[0_28px_90px_rgba(0,0,0,0.3)]">
+                <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-200/60 to-transparent" />
+                <div className="pointer-events-none absolute inset-x-0 top-0 h-14 bg-gradient-to-r from-[#2F8E92]/6 via-transparent to-blue-500/5" />
                 <div className="relative p-4 md:p-5">
                     <div className="flex flex-col gap-4 xl:flex-row xl:items-center">
                         <div className="relative min-w-0 flex-1">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-slate-500" />
                             <Input
                                 placeholder="Search by invoice ID, job ID, location, or technician..."
-                                className="h-11 rounded-2xl border-black/8 bg-white pl-9 text-slate-900 placeholder:text-slate-400 shadow-none focus-visible:border-slate-300 focus-visible:ring-slate-200 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-slate-500 dark:focus-visible:border-cyan-300/35 dark:focus-visible:ring-cyan-300/15"
+                                className="h-11 rounded-2xl border-white/10 bg-[#0b1424] pl-9 text-white placeholder:text-slate-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] focus-visible:border-cyan-300/35 focus-visible:ring-cyan-300/15"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                             />
                         </div>
                         <div className="flex flex-wrap items-center gap-2">
                             <Select value={filterStatus} onValueChange={(value) => setFilterStatus(value as InvoiceStatusFilter)}>
-                                <SelectTrigger className="h-11 w-full rounded-2xl border-black/8 bg-white text-slate-900 shadow-none sm:w-[170px] dark:border-white/10 dark:bg-white/[0.04] dark:text-white">
+                                <SelectTrigger className="h-11 w-full rounded-2xl border-white/10 bg-[#0b1424] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] sm:w-[170px]">
                                     <SelectValue placeholder="Status" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -765,7 +765,7 @@ export default function InvoiceHistoryPage() {
                                     <SelectItem value="void">Void</SelectItem>
                                 </SelectContent>
                             </Select>
-                            <div className="flex items-center gap-2 rounded-2xl border border-black/8 bg-slate-50 p-1 dark:border-white/10 dark:bg-white/[0.03]">
+                            <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-[#0b1424] p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
                                 {([
                                     ['today', 'Today'],
                                     ['week', 'This week'],
@@ -777,8 +777,8 @@ export default function InvoiceHistoryPage() {
                                         type="button"
                                         variant="ghost"
                                         className={cn(
-                                            'h-9 rounded-xl px-3 text-xs text-slate-600 hover:bg-white hover:text-slate-900 dark:text-slate-300 dark:hover:bg-white/[0.06] dark:hover:text-white',
-                                            quickRange === value && 'bg-slate-900 text-white dark:bg-cyan-300/12 dark:text-cyan-100',
+                                            'h-9 rounded-xl px-3 text-xs text-slate-300 hover:bg-white/[0.06] hover:text-white',
+                                            quickRange === value && 'bg-cyan-300/12 text-cyan-100',
                                         )}
                                         onClick={() => setQuickRange(quickRange === value ? 'none' : value)}
                                     >
@@ -786,7 +786,7 @@ export default function InvoiceHistoryPage() {
                                     </Button>
                                 ))}
                             </div>
-                            <div className="flex items-center gap-2 rounded-2xl border border-black/8 bg-white px-3 py-2 dark:border-white/10 dark:bg-white/[0.03]">
+                            <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-[#0b1424] px-3 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
                                 <Calendar className="h-4 w-4 text-slate-400" />
                                 <span className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">From</span>
                                 <Input
@@ -796,10 +796,10 @@ export default function InvoiceHistoryPage() {
                                         setQuickRange('none');
                                         setFromDate(e.target.value);
                                     }}
-                                    className="h-8 w-[138px] border-0 bg-transparent px-0 text-slate-900 shadow-none focus-visible:ring-0 dark:text-white"
+                                    className="h-8 w-[138px] border-0 bg-transparent px-0 text-white shadow-none focus-visible:ring-0"
                                 />
                             </div>
-                            <div className="flex items-center gap-2 rounded-2xl border border-black/8 bg-white px-3 py-2 dark:border-white/10 dark:bg-white/[0.03]">
+                            <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-[#0b1424] px-3 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
                                 <Calendar className="h-4 w-4 text-slate-400" />
                                 <span className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">To</span>
                                 <Input
@@ -809,7 +809,7 @@ export default function InvoiceHistoryPage() {
                                         setQuickRange('none');
                                         setToDate(e.target.value);
                                     }}
-                                    className="h-8 w-[138px] border-0 bg-transparent px-0 text-slate-900 shadow-none focus-visible:ring-0 dark:text-white"
+                                    className="h-8 w-[138px] border-0 bg-transparent px-0 text-white shadow-none focus-visible:ring-0"
                                 />
                             </div>
                             {(searchQuery || filterStatus !== 'all' || quickRange !== 'none' || fromDate || toDate) ? (
@@ -828,15 +828,15 @@ export default function InvoiceHistoryPage() {
                 </div>
             </div>
 
-            <div className="relative flex min-h-[540px] flex-1 flex-col overflow-hidden rounded-[32px] border border-black/8 bg-white shadow-[0_34px_110px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,22,39,0.98),rgba(5,15,28,0.99))] dark:shadow-[0_34px_110px_rgba(0,0,0,0.34)]">
-                <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-slate-900/20 to-transparent dark:via-cyan-300/70" />
-                <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(15,23,42,0.03),transparent_28%),radial-gradient(circle_at_bottom_left,rgba(15,23,42,0.02),transparent_26%)] dark:bg-[radial-gradient(circle_at_top_right,rgba(47,142,146,0.12),transparent_28%),radial-gradient(circle_at_bottom_left,rgba(96,165,250,0.08),transparent_26%)]" />
-                <div className="relative flex items-center justify-between border-b border-black/8 px-5 py-4 dark:border-white/10">
+            <div className="relative flex min-h-[540px] flex-1 flex-col overflow-hidden rounded-[32px] border border-white/10 bg-[linear-gradient(180deg,rgba(8,22,39,0.98),rgba(5,15,28,0.99))] shadow-[0_34px_110px_rgba(0,0,0,0.34)]">
+                <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/70 to-transparent" />
+                <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(47,142,146,0.12),transparent_28%),radial-gradient(circle_at_bottom_left,rgba(96,165,250,0.08),transparent_26%)]" />
+                <div className="relative flex items-center justify-between border-b border-white/10 px-5 py-4">
                     <div>
                         <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Invoice ledger</div>
                         <div className="mt-1 text-sm text-slate-600 dark:text-slate-300">Searchable invoice records with lifecycle status, dates, downloadable detail, and row-level admin actions.</div>
                     </div>
-                    <Badge variant="outline" className="h-9 rounded-full border-black/8 bg-slate-50 px-3 text-slate-600 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300">
+                    <Badge variant="outline" className="h-9 rounded-full border-cyan-300/18 bg-cyan-300/10 px-3 text-cyan-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
                         {filteredHistory.length} visible
                     </Badge>
                 </div>
@@ -847,7 +847,7 @@ export default function InvoiceHistoryPage() {
                 ) : (
                     <div className="overflow-auto">
                         <Table className="min-w-[1120px]">
-                            <TableHeader className="sticky top-0 z-10 border-b border-black/8 bg-white/95 backdrop-blur-xl dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(11,25,42,0.98),rgba(10,20,35,0.92))]">
+                            <TableHeader className="sticky top-0 z-10 border-b border-white/10 bg-[linear-gradient(180deg,rgba(11,25,42,0.98),rgba(10,20,35,0.92))] backdrop-blur-xl">
                                 <TableRow className="border-white/0 hover:bg-transparent">
                                     <TableHead className="pl-6 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Invoice ID</TableHead>
                                     <TableHead className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Job ID</TableHead>
@@ -865,8 +865,8 @@ export default function InvoiceHistoryPage() {
                                     <TableRow className="border-white/0 hover:bg-transparent">
                                         <TableCell colSpan={9} className="px-6 py-16">
                                             <div className="flex flex-col items-center justify-center text-center">
-                                                <div className="mb-5 flex h-20 w-20 items-center justify-center rounded-[28px] border border-black/8 bg-slate-50 shadow-[0_18px_44px_rgba(15,23,42,0.06)] dark:border-white/10 dark:bg-white/[0.04] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
-                                                    <FileText className="h-8 w-8 text-slate-700 dark:text-cyan-200/80" />
+                                                <div className="mb-5 flex h-20 w-20 items-center justify-center rounded-[28px] border border-white/10 bg-white/[0.04] shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
+                                                    <FileText className="h-8 w-8 text-cyan-200/80" />
                                                 </div>
                                                 <h3 className="text-2xl font-semibold tracking-[-0.03em] text-slate-900 dark:text-white" style={displayFontStyle}>
                                                     No invoices in this view
@@ -875,14 +875,14 @@ export default function InvoiceHistoryPage() {
                                                     Adjust the history filters or refresh the dataset to widen the visible invoice ledger.
                                                 </p>
                                                 <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-                                                    <Badge variant="outline" className="border-black/8 bg-slate-50 px-3 py-1 text-slate-600 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-300">PDF download</Badge>
-                                                    <Badge variant="outline" className="border-black/8 bg-slate-50 px-3 py-1 text-slate-600 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-300">Send email</Badge>
-                                                    <Badge variant="outline" className="border-black/8 bg-slate-50 px-3 py-1 text-slate-600 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-300">Mark paid</Badge>
-                                                    <Badge variant="outline" className="border-black/8 bg-slate-50 px-3 py-1 text-slate-600 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-300">Void with reason</Badge>
+                                                    <Badge variant="outline" className="border-white/10 bg-white/[0.03] px-3 py-1 text-slate-300">PDF download</Badge>
+                                                    <Badge variant="outline" className="border-white/10 bg-white/[0.03] px-3 py-1 text-slate-300">Send email</Badge>
+                                                    <Badge variant="outline" className="border-white/10 bg-white/[0.03] px-3 py-1 text-slate-300">Mark paid</Badge>
+                                                    <Badge variant="outline" className="border-white/10 bg-white/[0.03] px-3 py-1 text-slate-300">Void with reason</Badge>
                                                 </div>
                                                 <Button
                                                     variant="outline"
-                                                    className="mt-6 h-11 rounded-2xl border-black/8 bg-white px-5 text-slate-700 hover:bg-slate-50 hover:text-slate-900 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-100 dark:hover:bg-white/[0.08] dark:hover:text-white"
+                                                    className="mt-6 h-11 rounded-2xl border-white/10 bg-white/[0.03] px-5 text-slate-100 hover:bg-white/[0.08] hover:text-white"
                                                     onClick={clearFilters}
                                                 >
                                                     Reset filters
@@ -911,7 +911,7 @@ export default function InvoiceHistoryPage() {
                                             </TableCell>
                                             <TableCell className="py-4">
                                                 <div className="flex items-center gap-3">
-                                                <div className="flex h-9 w-9 items-center justify-center rounded-2xl border border-black/8 bg-slate-50 text-slate-700 dark:border-white/10 dark:bg-white/[0.04] dark:text-cyan-100">
+                                                <div className="flex h-9 w-9 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] text-cyan-100">
                                                         <Building2 className="h-4 w-4" />
                                                     </div>
                                                     <OverflowText text={resolveInvoiceLocation(inv, dealerships)} className="max-w-[14rem] text-sm font-medium text-slate-800 dark:text-slate-100" />
@@ -948,7 +948,7 @@ export default function InvoiceHistoryPage() {
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"
-                                                    className="h-10 w-10 rounded-2xl border border-black/8 bg-white text-slate-500 opacity-0 transition-all hover:bg-slate-50 hover:text-slate-900 group-hover:opacity-100 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-300 dark:hover:bg-white/[0.08] dark:hover:text-white"
+                                                    className="h-10 w-10 rounded-2xl border border-white/10 bg-white/[0.03] text-slate-300 opacity-0 transition-all hover:bg-white/[0.08] hover:text-white group-hover:opacity-100"
                                                 >
                                                     <ArrowUpRight className="h-4 w-4" />
                                                 </Button>
