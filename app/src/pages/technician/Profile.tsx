@@ -53,6 +53,10 @@ type OutOfOfficeRangeDraft = {
     note?: string;
 };
 
+const TECH_INPUT_CLASS = '!border-white/10 !bg-[linear-gradient(180deg,rgba(15,32,51,0.96),rgba(7,19,33,0.98))] !text-slate-100 !shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] placeholder:!text-slate-500 focus-visible:!bg-slate-950/80 [color-scheme:dark]';
+const TECH_MUTED_INPUT_CLASS = cn(TECH_INPUT_CLASS, 'cursor-not-allowed !text-slate-400');
+const TECH_OUTLINE_BUTTON_CLASS = '!border-white/10 !bg-[linear-gradient(180deg,rgba(15,32,51,0.96),rgba(7,19,33,0.98))] !text-slate-100 !shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] hover:!bg-white/[0.08] hover:!text-white disabled:!bg-slate-900/70 disabled:!text-slate-500';
+
 function hasOverlap(ranges: OutOfOfficeRangeDraft[]): boolean {
     const normalized = ranges
         .map((range) => ({
@@ -462,7 +466,7 @@ export default function ProfilePage() {
                                     variant="outline"
                                     size="sm"
                                     onClick={() => void handleRefresh()}
-                                    className="h-11 gap-2 rounded-2xl border-white/10 bg-white/[0.03] px-4 text-slate-100 hover:bg-white/[0.08]"
+                                    className={cn('h-11 gap-2 rounded-2xl px-4', TECH_OUTLINE_BUTTON_CLASS)}
                                     disabled={loading}
                                 >
                                     <RefreshCw className={cn('w-4 h-4', loading && 'animate-spin')} />
@@ -567,7 +571,7 @@ export default function ProfilePage() {
                                         <div className="space-y-1">
                                             <Label className="text-slate-300">Photo URL</Label>
                                             <Input
-                                                className="border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500"
+                                                className={TECH_INPUT_CLASS}
                                                 value={profilePictureUrl}
                                                 onChange={(event) => setProfilePictureUrl(event.target.value)}
                                                 placeholder="https://example.com/profile.jpg"
@@ -578,16 +582,16 @@ export default function ProfilePage() {
                                     <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                                         <div className="space-y-1">
                                             <Label className="text-slate-300">Full Name</Label>
-                                            <Input className="border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500" value={fullName} onChange={(event) => setFullName(event.target.value)} />
+                                            <Input className={TECH_INPUT_CLASS} value={fullName} onChange={(event) => setFullName(event.target.value)} />
                                         </div>
                                         <div className="space-y-1">
                                             <Label className="text-slate-300">Phone</Label>
-                                            <Input className="border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500" value={phone} onChange={(event) => setPhone(event.target.value)} />
+                                            <Input className={TECH_INPUT_CLASS} value={phone} onChange={(event) => setPhone(event.target.value)} />
                                         </div>
                                     </div>
                                     <div className="space-y-1">
                                         <Label className="text-slate-300">Email Address</Label>
-                                        <Input className="cursor-not-allowed border-white/10 bg-white/[0.025] text-slate-400" value={userEmail} readOnly />
+                                        <Input className={TECH_MUTED_INPUT_CLASS} value={userEmail} readOnly />
                                         <p className="text-xs text-slate-500">Email changes must be requested through the admin.</p>
                                     </div>
                                     <Button onClick={() => void saveProfile()} className="h-11 w-full bg-[#2F8E92] hover:bg-[#267276]" disabled={savingProfile}>
@@ -670,11 +674,11 @@ export default function ProfilePage() {
                                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                                         <div className="space-y-1">
                                             <Label className="text-slate-300">Global Start Time</Label>
-                                            <Input className="border-white/10 bg-white/[0.04] text-white" type="time" value={workingHoursStart} onChange={(event) => setWorkingHoursStart(event.target.value)} />
+                                            <Input className={TECH_INPUT_CLASS} type="time" value={workingHoursStart} onChange={(event) => setWorkingHoursStart(event.target.value)} />
                                         </div>
                                         <div className="space-y-1">
                                             <Label className="text-slate-300">Global End Time</Label>
-                                            <Input className="border-white/10 bg-white/[0.04] text-white" type="time" value={workingHoursEnd} onChange={(event) => setWorkingHoursEnd(event.target.value)} />
+                                            <Input className={TECH_INPUT_CLASS} type="time" value={workingHoursEnd} onChange={(event) => setWorkingHoursEnd(event.target.value)} />
                                         </div>
                                     </div>
                                     <p className="text-xs text-slate-500">These hours apply to every selected working day.</p>
@@ -690,11 +694,11 @@ export default function ProfilePage() {
                                     <div className="space-y-2">
                                         <Label className="text-slate-300">Out-of-office ranges</Label>
                                         <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
-                                            <Input className="border-white/10 bg-white/[0.04] text-white" type="date" value={newRange.start_date} onChange={(event) => setNewRange((prev) => ({ ...prev, start_date: event.target.value }))} />
-                                            <Input className="border-white/10 bg-white/[0.04] text-white" type="date" value={newRange.end_date} onChange={(event) => setNewRange((prev) => ({ ...prev, end_date: event.target.value }))} />
-                                            <Input className="border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500" value={newRange.note || ''} onChange={(event) => setNewRange((prev) => ({ ...prev, note: event.target.value }))} placeholder="Note (optional)" />
+                                            <Input className={TECH_INPUT_CLASS} type="date" value={newRange.start_date} onChange={(event) => setNewRange((prev) => ({ ...prev, start_date: event.target.value }))} />
+                                            <Input className={TECH_INPUT_CLASS} type="date" value={newRange.end_date} onChange={(event) => setNewRange((prev) => ({ ...prev, end_date: event.target.value }))} />
+                                            <Input className={TECH_INPUT_CLASS} value={newRange.note || ''} onChange={(event) => setNewRange((prev) => ({ ...prev, note: event.target.value }))} placeholder="Note (optional)" />
                                         </div>
-                                        <Button type="button" variant="outline" onClick={addOutOfOfficeRange} className="h-10 w-full border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]">
+                                        <Button type="button" variant="outline" onClick={addOutOfOfficeRange} className={cn('h-10 w-full', TECH_OUTLINE_BUTTON_CLASS)}>
                                             <Plus className="w-4 h-4 mr-2" /> Add Range
                                         </Button>
                                         <div className="space-y-2">
@@ -741,7 +745,7 @@ export default function ProfilePage() {
                                     <div className="space-y-1">
                                         <Label htmlFor="technician_current_password" className="text-slate-300">Current Password</Label>
                                         <Input
-                                            className="border-white/10 bg-white/[0.04] text-white"
+                                            className={TECH_INPUT_CLASS}
                                             id="technician_current_password"
                                             type="password"
                                             autoComplete="current-password"
@@ -752,7 +756,7 @@ export default function ProfilePage() {
                                     <div className="space-y-1">
                                         <Label htmlFor="technician_new_password" className="text-slate-300">New Password</Label>
                                         <Input
-                                            className="border-white/10 bg-white/[0.04] text-white"
+                                            className={TECH_INPUT_CLASS}
                                             id="technician_new_password"
                                             type="password"
                                             autoComplete="new-password"
@@ -763,7 +767,7 @@ export default function ProfilePage() {
                                     <div className="space-y-1">
                                         <Label htmlFor="technician_confirm_password" className="text-slate-300">Confirm New Password</Label>
                                         <Input
-                                            className="border-white/10 bg-white/[0.04] text-white"
+                                            className={TECH_INPUT_CLASS}
                                             id="technician_confirm_password"
                                             type="password"
                                             autoComplete="new-password"
@@ -794,7 +798,7 @@ export default function ProfilePage() {
                                 <Button
                                     onClick={handleLogout}
                                     variant="outline"
-                                    className="h-11 min-w-[150px] border-red-500/25 text-red-200 hover:bg-red-500/10 hover:text-red-100"
+                                    className="h-11 min-w-[150px] !border-red-400/25 !bg-red-500/10 !text-red-100 hover:!bg-red-500/15 hover:!text-white"
                                 >
                                     <LogOut className="w-5 h-5 mr-2" />
                                     {isPreviewMode ? 'Exit Preview' : 'Logout'}
