@@ -18,7 +18,6 @@ import {
     AlertCircle,
     Loader2,
     RefreshCw,
-    Code,
     Trash2,
     Send,
     Save,
@@ -216,6 +215,20 @@ function normalizeJobStatus(status?: string | null): JobStatus {
         default:
             return 'pending';
     }
+}
+
+function formatDetailDateTime(value: string): string {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+        return 'Not available';
+    }
+    return date.toLocaleString(undefined, {
+        month: 'short',
+        day: '2-digit',
+        year: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+    });
 }
 
 function normalizeInvoiceState(source: BackendAdminJob): InvoiceState {
@@ -442,11 +455,9 @@ function StatusBadge({ status, type }: { status: string; type: 'job' | 'invoice'
 }
 
 function TimelineItem({ event, isLast }: { event: TimelineEvent; isLast: boolean }) {
-    const [expanded, setExpanded] = useState(false);
-
     const icons: Record<string, any> = {
         MESSAGE_RECEIVED: FileText,
-        PARSED: Code,
+        PARSED: CheckCircle2,
         STATUS_CHANGED: RefreshCw,
         TECH_ASSIGNED: User,
         INVOICE_APPROVAL_REQUESTED: DollarSign,
@@ -476,24 +487,6 @@ function TimelineItem({ event, isLast }: { event: TimelineEvent; isLast: boolean
                     <Badge variant="outline" className="text-[10px] h-5 px-1.5 ml-auto font-medium text-muted-foreground bg-muted/50">{event.actor}</Badge>
                 </div>
                 <p className="text-sm text-muted-foreground pb-1">{event.description}</p>
-
-                {event.payload && (
-                    <div className="mt-2">
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-6 text-xs text-gray-500 hover:text-gray-900 p-0"
-                            onClick={() => setExpanded(!expanded)}
-                        >
-                            {expanded ? 'Hide Details' : 'View Payload'}
-                        </Button>
-                        {expanded && (
-                            <div className="mt-2 p-3 bg-gray-900 text-gray-50 rounded-md text-xs font-mono overflow-auto max-h-40">
-                                <pre>{JSON.stringify(event.payload, null, 2)}</pre>
-                            </div>
-                        )}
-                    </div>
-                )}
             </div>
         </div>
     );
@@ -1105,33 +1098,39 @@ export default function JobDetailPage() {
                                 Source Intake
                             </CardTitle>
                             <CardDescription>
-                                Original intake context preserved with the job record.
+                                Clean intake summary for dispatch review.
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            <div className="grid gap-4 md:grid-cols-2">
-                                <div>
-                                    <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">Source</h4>
-                                    <div className="text-sm font-medium text-foreground">{job.source_system || 'Admin/manual entry'}</div>
-                                </div>
-                                <div>
-                                    <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">Reference</h4>
-                                    <div className="text-sm font-medium text-foreground">
-                                        {typeof job.source_metadata?.intake_id === 'string'
+                            <div className="grid gap-3 md:grid-cols-2">
+                                {[
+                                    {
+                                        label: 'Source',
+                                        value: job.source_system === 'admin_ui' ? 'Admin entry' : job.source_system || 'Manual entry',
+                                    },
+                                    {
+                                        label: 'Reference',
+                                        value: typeof job.source_metadata?.intake_id === 'string'
                                             ? job.source_metadata.intake_id
                                             : typeof job.source_metadata?.source_record_id === 'string'
                                                 ? job.source_metadata.source_record_id
-                                                : job.job_code}
+                                                : job.job_code,
+                                    },
+                                    {
+                                        label: 'Created',
+                                        value: formatDetailDateTime(job.created_at),
+                                    },
+                                    {
+                                        label: 'Updated',
+                                        value: formatDetailDateTime(job.updated_at),
+                                    },
+                                ].map((item) => (
+                                    <div key={item.label} className="rounded-2xl border border-border bg-muted/30 px-4 py-3">
+                                        <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">{item.label}</h4>
+                                        <div className="text-sm font-medium text-foreground">{item.value}</div>
                                     </div>
-                                </div>
+                                ))}
                             </div>
-                            {job.source_metadata ? (
-                                <div className="rounded-lg border border-border bg-muted/40 p-3">
-                                    <pre className="max-h-44 overflow-auto whitespace-pre-wrap text-xs text-muted-foreground">
-                                        {JSON.stringify(job.source_metadata, null, 2)}
-                                    </pre>
-                                </div>
-                            ) : null}
                         </CardContent>
                     </Card>
 
