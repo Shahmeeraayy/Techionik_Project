@@ -646,6 +646,17 @@
     background-clip: padding-box;
   }
 
+  .admin-shell .admin-sidebar .admin-sidebar-nav {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .admin-shell .admin-sidebar .admin-sidebar-nav::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+
   .admin-shell {
     background:
       radial-gradient(960px 520px at 18% -120px, rgba(17, 24, 39, 0.035), rgba(255, 255, 255, 0) 54%),

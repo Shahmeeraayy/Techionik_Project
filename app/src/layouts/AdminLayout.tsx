@@ -39,14 +39,14 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { TechnicianPreviewModal } from '@/components/modals/TechnicianPreviewModal';
 
 const navItems = [
-  { path: '/admin', label: 'Dashboard', icon: LayoutDashboard },
-  { path: '/admin/jobs', label: 'Jobs', icon: ClipboardList },
-  { path: '/admin/intake', label: 'Intake Queue', icon: Inbox },
-  { path: '/admin/approvals', label: 'Invoice Approvals', icon: FileCheck },
-  { path: '/admin/invoices', label: 'Invoice History', icon: ScrollText },
-  { path: '/admin/chat', label: 'Platform Chat', icon: MessageSquareText },
-  { path: '/admin/technicians', label: 'Technicians', icon: Users },
-  { path: '/admin/accounts', label: 'Technician Accounts', icon: UserCog },
+  { path: '/admin', label: 'Overview', icon: LayoutDashboard },
+  { path: '/admin/jobs', label: 'Operations', icon: ClipboardList },
+  { path: '/admin/intake', label: 'Request Queue', icon: Inbox },
+  { path: '/admin/approvals', label: 'Approvals', icon: FileCheck },
+  { path: '/admin/invoices', label: 'Billing', icon: ScrollText },
+  { path: '/admin/chat', label: 'Messages', icon: MessageSquareText },
+  { path: '/admin/technicians', label: 'Team', icon: Users },
+  { path: '/admin/accounts', label: 'Accounts', icon: UserCog },
   { path: '/admin/locations', label: 'Locations', icon: Building2 },
   { path: '/admin/services', label: 'Services', icon: Wrench },
   { path: '/admin/reports', label: 'Reports', icon: BarChart3 },
@@ -95,9 +95,9 @@ function Sidebar({
         {/* Logo */}
         <div className={cn(
           'flex items-center border-b border-border flex-shrink-0 transition-all duration-300',
-          isCollapsed ? 'gap-3 px-6 py-6 lg:justify-center lg:gap-0 lg:px-4 lg:py-5' : 'gap-3 px-6 py-6',
+          isCollapsed ? 'gap-3 px-5 py-4 lg:justify-center lg:gap-0 lg:px-4 lg:py-4' : 'gap-3 px-5 py-4',
         )}>
-          <div className="w-10 h-10 rounded-2xl bg-[linear-gradient(135deg,#111827,#0f172a)] dark:bg-[#111111] flex items-center justify-center shadow-[0_18px_40px_rgba(15,23,42,0.18)] dark:shadow-[0_18px_40px_rgba(0,0,0,0.45),inset_0_0_0_1px_rgba(255,255,255,0.12)]">
+          <div className="w-9 h-9 rounded-2xl bg-[linear-gradient(135deg,#111827,#0f172a)] dark:bg-[#111111] flex items-center justify-center shadow-[0_18px_40px_rgba(15,23,42,0.18)] dark:shadow-[0_18px_40px_rgba(0,0,0,0.45),inset_0_0_0_1px_rgba(255,255,255,0.12)]">
             <Shield className="w-5 h-5 text-primary-foreground" />
           </div>
           <div className={cn('min-w-0 transition-all duration-200', isCollapsed && 'lg:hidden')}>
@@ -106,7 +106,7 @@ function Sidebar({
           </div>
         </div>
 
-        <div className={cn('flex px-4 py-4', isCollapsed ? 'justify-end lg:justify-center' : 'justify-end')}>
+        <div className={cn('flex px-4 py-3', isCollapsed ? 'justify-end lg:justify-center' : 'justify-end')}>
           <Button
             variant="ghost"
             size="icon"
@@ -119,7 +119,7 @@ function Sidebar({
         </div>
 
         {/* Navigation */}
-        <nav className={cn('flex-1 overflow-y-auto px-4 pb-6 space-y-2', isCollapsed && 'lg:px-3')}>
+        <nav className={cn('admin-sidebar-nav flex-1 overflow-y-auto px-3 pb-3 space-y-1.5', isCollapsed && 'lg:px-3')}>
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeItem === item.path || (item.path !== '/admin' && activeItem.startsWith(item.path));
@@ -131,8 +131,8 @@ function Sidebar({
                 onClick={onClose}
                 title={isCollapsed ? item.label : undefined}
                 className={cn(
-                  'relative flex items-center rounded-2xl text-sm font-medium transition-all duration-200 w-full text-left group',
-                  isCollapsed ? 'gap-3 px-4 py-3 lg:justify-center lg:gap-0 lg:px-0 lg:py-2.5' : 'gap-3 px-4 py-3',
+                  'relative flex items-center rounded-[18px] text-sm font-medium transition-all duration-200 w-full text-left group',
+                  isCollapsed ? 'gap-3 px-3 py-2 lg:justify-center lg:gap-0 lg:px-0 lg:py-2' : 'gap-3 px-3 py-2',
                   isActive
                     ? isCollapsed
                       ? 'bg-[#111827] text-white shadow-[0_18px_34px_rgba(15,23,42,0.12)] lg:bg-transparent lg:shadow-none'
@@ -142,7 +142,7 @@ function Sidebar({
               >
                 <div className={cn(
                   'flex items-center justify-center border transition-all duration-200',
-                  isCollapsed ? 'h-9 w-9 rounded-xl lg:h-11 lg:w-11 lg:rounded-full' : 'h-9 w-9 rounded-xl',
+                  isCollapsed ? 'h-8 w-8 rounded-xl lg:h-10 lg:w-10 lg:rounded-full' : 'h-8 w-8 rounded-xl',
                   isActive
                     ? isCollapsed
                       ? 'border-black/10 bg-[#111827] text-white shadow-[0_16px_34px_rgba(15,23,42,0.18)] dark:border-white/12 dark:bg-[#2a2a2a] dark:text-white dark:shadow-[0_18px_34px_rgba(0,0,0,0.42)]'
