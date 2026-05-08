@@ -2624,11 +2624,11 @@ export default function JobsPage() {
                                         <SelectItem value="job_id">Job ID</SelectItem>
                                     </SelectContent>
                                 </Select>
-                                <Badge variant="outline" className="h-8 rounded-full border-black/8 bg-slate-50 text-slate-600 dark:border-white/8 dark:bg-white/[0.03] dark:text-slate-400">
+                                <Badge variant="outline" className="h-8 rounded-full border-white/10 bg-[#0b1424] px-3 text-slate-300 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
                                     {jobSortBadgeLabel}
                                 </Badge>
                                 {activeFilterCount > 0 ? (
-                                    <Badge variant="outline" className="h-8 rounded-full border-black/8 bg-slate-50 text-slate-800 dark:border-white/8 dark:bg-white/[0.03] dark:text-white">
+                                    <Badge variant="outline" className="h-8 rounded-full border-cyan-300/20 bg-cyan-300/10 px-3 text-cyan-100">
                                         {activeFilterCount} active filter{activeFilterCount === 1 ? '' : 's'}
                                     </Badge>
                                 ) : null}
@@ -2639,32 +2639,32 @@ export default function JobsPage() {
             </div>
 
             {/* 3. Jobs Table */}
-            <div className="admin-jobs-board relative flex min-h-[620px] flex-1 flex-col overflow-hidden rounded-[28px] border border-black/8 bg-white shadow-[0_24px_72px_rgba(15,23,42,0.08)] dark:border-white/8 dark:bg-[linear-gradient(180deg,rgba(8,22,38,0.985),rgba(6,15,27,0.99))] dark:shadow-[0_24px_72px_rgba(0,0,0,0.28)]">
+            <div className="admin-jobs-board relative flex min-h-[620px] flex-1 flex-col overflow-hidden rounded-[28px] border border-white/8 bg-[linear-gradient(180deg,rgba(8,22,38,0.985),rgba(6,15,27,0.99))] shadow-[0_24px_72px_rgba(0,0,0,0.28)]">
                 <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-slate-900/20 to-transparent dark:via-cyan-300/70" />
                 <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(15,23,42,0.03),transparent_26%),radial-gradient(circle_at_bottom_left,rgba(15,23,42,0.02),transparent_24%)] dark:bg-[radial-gradient(circle_at_top_right,rgba(47,142,146,0.10),transparent_26%),radial-gradient(circle_at_bottom_left,rgba(59,130,246,0.06),transparent_24%)]" />
 
                 <div className="relative flex flex-col gap-4 border-b border-black/8 px-5 py-5 dark:border-white/8 lg:flex-row lg:items-start lg:justify-between">
                     <div className="space-y-3">
-                        <div className="inline-flex items-center gap-2 rounded-full border border-black/8 bg-slate-50 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-600 dark:border-white/8 dark:bg-white/[0.03] dark:text-slate-400">
-                            <Activity className="h-3.5 w-3.5 text-slate-600 dark:text-cyan-200" />
+                        <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-[#0b1424] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-cyan-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                            <Activity className="h-3.5 w-3.5 text-cyan-200" />
                             Dispatch Queue
                         </div>
                         <div className="space-y-2">
-                            <h2 className="text-[1.35rem] font-semibold tracking-[-0.03em] text-slate-900 dark:text-white" style={displayFontStyle}>
+                            <h2 className="text-[1.35rem] font-semibold tracking-[-0.03em] text-white" style={displayFontStyle}>
                                 Jobs at operational depth
                             </h2>
-                            <p className="max-w-2xl text-sm leading-6 text-slate-600 dark:text-slate-400" style={bodyFontStyle}>
+                            <p className="max-w-2xl text-sm leading-6 text-slate-400" style={bodyFontStyle}>
                                 Review live dispatch records, monitor assignment readiness, and move jobs through the queue without falling back to a basic spreadsheet surface.
                             </p>
                         </div>
                     </div>
                     <div className="flex flex-wrap items-center gap-2 text-xs">
-                        <Badge variant="outline" className="h-9 rounded-full border-black/8 bg-slate-50 px-3 text-slate-600 dark:border-white/8 dark:bg-white/[0.035] dark:text-slate-300">
-                            <ClipboardList className="mr-1.5 h-3.5 w-3.5 text-slate-600 dark:text-cyan-200" />
+                        <Badge variant="outline" className="h-9 rounded-full border-cyan-300/18 bg-cyan-300/10 px-3 text-cyan-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                            <ClipboardList className="mr-1.5 h-3.5 w-3.5 text-cyan-200" />
                             {pagination.total} total jobs
                         </Badge>
-                        <Badge variant="outline" className="h-9 rounded-full border-black/8 bg-slate-50 px-3 text-slate-600 dark:border-white/8 dark:bg-white/[0.035] dark:text-slate-300">
-                            <ShieldCheck className="mr-1.5 h-3.5 w-3.5 text-emerald-600 dark:text-emerald-200" />
+                        <Badge variant="outline" className="h-9 rounded-full border-emerald-300/18 bg-emerald-300/10 px-3 text-emerald-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                            <ShieldCheck className="mr-1.5 h-3.5 w-3.5 text-emerald-200" />
                             Queue synced
                         </Badge>
                         {selectedRows.size > 0 ? (
