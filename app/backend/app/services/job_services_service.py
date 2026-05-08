@@ -71,6 +71,8 @@ class JobServicesService:
         service_name: str,
         source: str,
         notes: str | None = None,
+        quantity: Decimal | int | float | str | None = None,
+        unit_price: Decimal | int | float | str | None = None,
         created_by_user_id: UUID | None = None,
         audit_actor_type: str | None = None,
     ) -> JobService:
@@ -88,8 +90,8 @@ class JobServicesService:
             service_catalog_id=self._resolve_service_catalog_id(normalized),
             source=source,
             notes=(notes or "").strip() or None,
-            quantity=Decimal("1.00"),
-            unit_price=self._default_unit_price_for_service(job, normalized, index=next_sort_order),
+            quantity=Decimal(str(quantity)) if quantity is not None else Decimal("1.00"),
+            unit_price=Decimal(str(unit_price)) if unit_price is not None else self._default_unit_price_for_service(job, normalized, index=next_sort_order),
             sort_order=next_sort_order,
             created_by_user_id=created_by_user_id,
         )
@@ -109,6 +111,8 @@ class JobServicesService:
                         "service_name": normalized,
                         "source": source,
                         "notes": row.notes,
+                        "quantity": str(row.quantity),
+                        "unit_price": str(row.unit_price),
                         "created_by_user_id": str(created_by_user_id) if created_by_user_id is not None else None,
                     },
                 )
@@ -130,6 +134,8 @@ class JobServicesService:
         service_id: UUID,
         service_name: str,
         notes: str | None = None,
+        quantity: Decimal | int | float | str | None = None,
+        unit_price: Decimal | int | float | str | None = None,
         created_by_user_id: UUID | None = None,
         audit_actor_type: str | None = None,
     ) -> JobService:
@@ -145,6 +151,10 @@ class JobServicesService:
         row.service_name_snapshot = normalized
         row.service_catalog_id = self._resolve_service_catalog_id(normalized)
         row.notes = (notes or "").strip() or None
+        if quantity is not None:
+            row.quantity = Decimal(str(quantity))
+        if unit_price is not None:
+            row.unit_price = Decimal(str(unit_price))
         if row.unit_price is None or Decimal(str(row.unit_price)) < Decimal("0"):
             row.unit_price = self._default_unit_price_for_service(job, normalized, index=row.sort_order)
         if row.quantity is None or Decimal(str(row.quantity)) <= Decimal("0"):
@@ -162,6 +172,8 @@ class JobServicesService:
                         "service_id": str(row.id),
                         "service_name": normalized,
                         "notes": row.notes,
+                        "quantity": str(row.quantity),
+                        "unit_price": str(row.unit_price),
                         "created_by_user_id": str(created_by_user_id) if created_by_user_id is not None else None,
                     },
                 )

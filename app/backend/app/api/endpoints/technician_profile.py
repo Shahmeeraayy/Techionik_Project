@@ -163,6 +163,8 @@ def add_service_to_my_job(
         job_id,
         service_name=payload.service_name,
         notes=payload.notes,
+        quantity=payload.quantity,
+        unit_price=payload.unit_price,
     )
     feed = TechnicianJobsService(db).get_job_feed(current_user.user_id)
     for item in [*feed.my_jobs, *feed.available_jobs]:
@@ -185,6 +187,8 @@ def update_service_on_my_job(
         service_id=service_id,
         service_name=payload.service_name,
         notes=payload.notes,
+        quantity=payload.quantity,
+        unit_price=payload.unit_price,
     )
     feed = TechnicianJobsService(db).get_job_feed(current_user.user_id)
     for item in [*feed.my_jobs, *feed.available_jobs]:

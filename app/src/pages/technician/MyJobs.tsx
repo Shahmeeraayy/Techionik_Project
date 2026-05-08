@@ -5,6 +5,9 @@ import {
     User,
     Briefcase,
     MapPin,
+    Mail,
+    Phone,
+    Car,
     Play,
     CheckCircle2,
     XCircle,
@@ -76,6 +79,13 @@ interface MyJob {
     original_service_name: string;
     service_names: string[];
     service_entries: AddedServiceEntry[];
+    location_name?: string;
+    location_address?: string;
+    customer_name?: string;
+    customer_phone?: string;
+    customer_email?: string;
+    admin_notes?: string;
+    vehicle_summary?: string;
     job_status: JobStatus;
     urgency?: Urgency;
     scheduled_time?: string;
@@ -88,6 +98,22 @@ type AddedServiceEntry = {
     service_name: string;
     notes?: string;
     source?: string;
+    quantity?: number;
+    unit_price?: number;
+};
+
+type ServiceCatalogOption = {
+    name: string;
+    default_price: number;
+};
+
+const toNumber = (value: string | number | null | undefined, fallback = 0): number => {
+    if (typeof value === 'number') return Number.isFinite(value) ? value : fallback;
+    if (typeof value === 'string') {
+        const parsed = Number(value);
+        return Number.isFinite(parsed) ? parsed : fallback;
+    }
+    return fallback;
 };
 
 const mapBackendFeedItemToMyJob = (item: BackendTechnicianJobFeedItem): MyJob | null => {
@@ -116,7 +142,7 @@ const mapBackendFeedItemToMyJob = (item: BackendTechnicianJobFeedItem): MyJob | 
             : mappedStatus === 'in_progress'
             ? ['done', 'delay']
             : mappedStatus === 'delayed'
-                ? ['start', 'refuse']
+                ? ['start']
                 : mappedStatus === 'completed'
                     ? []
                     : mappedStatus === 'unknown'
@@ -139,6 +165,8 @@ const mapBackendFeedItemToMyJob = (item: BackendTechnicianJobFeedItem): MyJob | 
         service_name: entry.service_name,
         notes: entry.notes || undefined,
         source: entry.source,
+        quantity: toNumber(entry.quantity, 1),
+        unit_price: toNumber(entry.unit_price, 0),
     }));
 
     return {
@@ -149,6 +177,13 @@ const mapBackendFeedItemToMyJob = (item: BackendTechnicianJobFeedItem): MyJob | 
         original_service_name: primaryServiceName,
         service_names: normalizedServiceNames.length > 0 ? normalizedServiceNames : [primaryServiceName],
         service_entries: serviceEntries,
+        location_name: item.location_name || item.dealership_name || 'Service location',
+        location_address: item.location_address || item.zone_name || undefined,
+        customer_name: item.customer_name || item.dealership_name || undefined,
+        customer_phone: item.customer_phone || undefined,
+        customer_email: item.customer_email || undefined,
+        admin_notes: item.admin_notes || undefined,
+        vehicle_summary: item.vehicle_summary || undefined,
         job_status: mappedStatus,
         urgency: 'normal',
         scheduled_time: scheduledTime,
@@ -332,10 +367,74 @@ function JobCard({
                     )}
                 </div>
 
+                <div className="grid gap-3 rounded-2xl border border-gray-200 bg-gray-50/80 p-3 text-sm dark:border-gray-700 dark:bg-gray-900/40 sm:grid-cols-2">
+                    <div>
+                        <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                            <MapPin className="h-3.5 w-3.5 text-[#2F8E92] dark:text-teal-400" />
+                            Location
+                        </p>
+                        <OverflowText text={job.location_name || job.dealership_name} className="mt-1 max-w-[18rem] font-semibold text-gray-900 dark:text-white" />
+                        <OverflowText text={job.location_address || job.zone || 'Address not provided'} className="mt-0.5 max-w-[18rem] text-xs text-gray-500 dark:text-gray-400" />
+                    </div>
+                    <div>
+                        <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                            <Car className="h-3.5 w-3.5 text-[#2F8E92] dark:text-teal-400" />
+                            Vehicle
+                        </p>
+                        <OverflowText text={job.vehicle_summary || 'Vehicle details not provided'} className="mt-1 max-w-[18rem] font-semibold text-gray-900 dark:text-white" />
+                    </div>
+                    <div className="sm:col-span-2">
+                        <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                            <User className="h-3.5 w-3.5 text-[#2F8E92] dark:text-teal-400" />
+                            Customer
+                        </p>
+                        <div className="mt-2 flex flex-wrap items-center gap-2">
+                            <span className="rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100">
+                                {job.customer_name || job.dealership_name}
+                            </span>
+                            {job.customer_phone ? (
+                                <a href={`tel:${job.customer_phone}`} className="inline-flex items-center gap-1.5 rounded-full border border-[#2F8E92]/25 bg-[#2F8E92]/10 px-3 py-1.5 text-xs font-semibold text-[#2F8E92] dark:text-teal-300">
+                                    <Phone className="h-3.5 w-3.5" />
+                                    Call
+                                </a>
+                            ) : null}
+                            {job.customer_email ? (
+                                <a href={`mailto:${job.customer_email}`} className="inline-flex items-center gap-1.5 rounded-full border border-[#2F8E92]/25 bg-[#2F8E92]/10 px-3 py-1.5 text-xs font-semibold text-[#2F8E92] dark:text-teal-300">
+                                    <Mail className="h-3.5 w-3.5" />
+                                    Email
+                                </a>
+                            ) : null}
+                        </div>
+                    </div>
+                    {job.admin_notes ? (
+                        <div className="rounded-xl border border-amber-300/30 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-100 sm:col-span-2">
+                            {job.admin_notes}
+                        </div>
+                    ) : null}
+                </div>
+
                 <div className="rounded-xl border border-gray-200 bg-gray-50/80 p-3 dark:border-gray-700 dark:bg-gray-900/40">
+                    <div className="mb-3 rounded-xl bg-white/70 p-3 dark:bg-gray-800/60">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                            Requested Services
+                        </p>
+                        <div className="mt-2 space-y-2 text-sm text-gray-700 dark:text-gray-200">
+                            {(job.service_entries.filter((entry) => entry.source !== 'technician').length > 0
+                                ? job.service_entries.filter((entry) => entry.source !== 'technician')
+                                : job.service_names.map((serviceName) => ({ service_name: serviceName, quantity: 1, unit_price: 0 }))
+                            ).map((service) => (
+                                <div key={`${job.job_id}-requested-${service.service_name}`} className="flex items-center justify-between gap-3 rounded-lg border border-gray-200 bg-white px-3 py-2 dark:border-gray-700 dark:bg-gray-900/50">
+                                    <OverflowText text={service.service_name} className="max-w-[16rem] font-medium" />
+                                    <span className="shrink-0 text-xs text-gray-500 dark:text-gray-400">
+                                        {toNumber(service.quantity, 1).toFixed(2)} x ${toNumber(service.unit_price, 0).toFixed(2)}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
                     <div className="mb-2 flex items-center justify-between gap-3">
                         <span className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                            Service Selection
+                            My Service Lines
                         </span>
                         {canManageServices && selectedServiceName !== job.original_service_name && (
                             <span className="text-[11px] font-medium text-[#2F8E92] dark:text-teal-400">
@@ -343,27 +442,9 @@ function JobCard({
                             </span>
                         )}
                     </div>
-                    {canManageServices ? (
-                        <Select
-                            value={selectedServiceName}
-                            onValueChange={(value) => onSelectService(job.job_id, value)}
-                        >
-                            <SelectTrigger className="h-11 rounded-xl border-gray-200 bg-white text-left dark:border-gray-700 dark:bg-gray-800">
-                                <SelectValue placeholder="Select service" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {serviceOptions.map((serviceName) => (
-                                    <SelectItem key={`${job.job_id}-${serviceName}`} value={serviceName}>
-                                        {serviceName}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    ) : (
-                        <div className="rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100">
-                            {selectedServiceName}
-                        </div>
-                    )}
+                    <div className="rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100">
+                        {selectedServiceName}
+                    </div>
                     <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
                         Dealership requested: <OverflowText text={job.original_service_name} className="inline max-w-[16rem] font-medium text-gray-700 dark:text-gray-200" />
                     </p>
@@ -404,6 +485,9 @@ function JobCard({
                                                 Technician added
                                             </p>
                                             <OverflowText text={service.service_name} as="p" className="max-w-[15rem] text-sm font-medium text-gray-800 dark:text-gray-100" />
+                                            <p className="mt-1 text-xs font-medium text-gray-500 dark:text-gray-400">
+                                                {toNumber(service.quantity, 1).toFixed(2)} x ${toNumber(service.unit_price, 0).toFixed(2)}
+                                            </p>
                                             {service.notes && (
                                                 <OverflowText text={service.notes} as="p" lines={2} className="mt-1 max-w-[15rem] text-xs text-gray-500 dark:text-gray-400" />
                                             )}
@@ -584,6 +668,9 @@ export default function MyJobsPage({
     const [refuseComment, setRefuseComment] = useState('');
     const [addServiceName, setAddServiceName] = useState('');
     const [addServiceNotes, setAddServiceNotes] = useState('');
+    const [addServiceQuantity, setAddServiceQuantity] = useState('1');
+    const [addServiceUnitPrice, setAddServiceUnitPrice] = useState('0');
+    const [servicePriceByName, setServicePriceByName] = useState<Record<string, number>>({});
 
     // Action Loading
     const [confirmLoading, setConfirmLoading] = useState(false);
@@ -713,6 +800,7 @@ export default function MyJobsPage({
                     .filter((name, index, list) => name.length > 0 && list.indexOf(name) === index)
                     .sort((a, b) => a.localeCompare(b));
                 setServiceOptions(next);
+                setServicePriceByName(Object.fromEntries(rows.map((row: BackendServiceCatalogItem) => [row.name?.trim() || '', toNumber(row.default_price)]).filter(([name]) => Boolean(name))));
             } catch {
                 setServiceOptions([]);
             }
@@ -733,6 +821,7 @@ export default function MyJobsPage({
                 .filter((name, index, list) => name.length > 0 && list.indexOf(name) === index)
                 .sort((a, b) => a.localeCompare(b));
             setServiceOptions(next);
+            setServicePriceByName(Object.fromEntries(rows.map((row: BackendServiceCatalogItem) => [row.name?.trim() || '', toNumber(row.default_price)]).filter(([name]) => Boolean(name))));
         } catch {
             setServiceOptions([]);
         }
@@ -765,7 +854,10 @@ export default function MyJobsPage({
         setSelectedJobId(jobId);
         setEditingServiceId(null);
         setAddServiceNotes('');
-        setAddServiceName(targetJob ? getAvailableAdditionalServices(targetJob)[0] ?? '' : '');
+        const firstService = targetJob ? getAvailableAdditionalServices(targetJob)[0] ?? '' : '';
+        setAddServiceName(firstService);
+        setAddServiceQuantity('1');
+        setAddServiceUnitPrice(String(servicePriceByName[firstService] ?? 0));
         setAddServiceModalOpen(true);
     };
 
@@ -774,6 +866,8 @@ export default function MyJobsPage({
         setEditingServiceId(service.id ?? null);
         setAddServiceName(service.service_name);
         setAddServiceNotes(service.notes ?? '');
+        setAddServiceQuantity(String(service.quantity ?? 1));
+        setAddServiceUnitPrice(String(service.unit_price ?? servicePriceByName[service.service_name] ?? 0));
         setAddServiceModalOpen(true);
     };
 
@@ -783,6 +877,15 @@ export default function MyJobsPage({
         setEditingServiceId(null);
         setAddServiceName('');
         setAddServiceNotes('');
+        setAddServiceQuantity('1');
+        setAddServiceUnitPrice('0');
+    };
+
+    const handleAddServiceNameChange = (serviceName: string) => {
+        setAddServiceName(serviceName);
+        if (!editingServiceId) {
+            setAddServiceUnitPrice(String(servicePriceByName[serviceName] ?? 0));
+        }
     };
 
     const handleConfirmAddService = () => {
@@ -792,7 +895,13 @@ export default function MyJobsPage({
 
         const serviceName = addServiceName.trim();
         const serviceNotes = addServiceNotes.trim() || undefined;
+        const serviceQuantity = Math.max(0, toNumber(addServiceQuantity, 1));
+        const serviceUnitPrice = Math.max(0, toNumber(addServiceUnitPrice, servicePriceByName[serviceName] ?? 0));
         const isEditing = Boolean(editingServiceId);
+        if (serviceQuantity <= 0) {
+            toast.error('Service quantity must be greater than 0.');
+            return;
+        }
 
         if (previewTechId) {
             setJobs((prev) => prev.map((job) => (
@@ -806,6 +915,8 @@ export default function MyJobsPage({
                                         ...entry,
                                         service_name: serviceName,
                                         notes: serviceNotes,
+                                        quantity: serviceQuantity,
+                                        unit_price: serviceUnitPrice,
                                     }
                                     : entry
                             ))
@@ -815,6 +926,8 @@ export default function MyJobsPage({
                                     id: `preview-${Date.now()}`,
                                     service_name: serviceName,
                                     notes: serviceNotes,
+                                    quantity: serviceQuantity,
+                                    unit_price: serviceUnitPrice,
                                     source: 'technician',
                                 },
                             ],
@@ -847,10 +960,14 @@ export default function MyJobsPage({
             ? updateTechnicianMyJobService(token, selectedJobId, editingServiceId, {
                 service_name: serviceName,
                 notes: serviceNotes,
+                quantity: serviceQuantity,
+                unit_price: serviceUnitPrice,
             })
             : addTechnicianMyJobService(token, selectedJobId, {
                 service_name: serviceName,
                 notes: serviceNotes,
+                quantity: serviceQuantity,
+                unit_price: serviceUnitPrice,
             });
 
         void request
@@ -1136,6 +1253,13 @@ export default function MyJobsPage({
         : 'Live assignments currently active for this technician, ready for field updates.';
     const visibleCount = isHistoryMode ? completedJobs.length : activeJobs.length;
     const historyRecordsWithServiceChanges = completedJobs.filter((job) => job.service_entries.some((entry) => entry.source === 'technician')).length;
+    const selectedJob = selectedJobId ? jobs.find((job) => job.job_id === selectedJobId) ?? null : null;
+    const selectedJobServiceLines = selectedJob
+        ? [
+            ...selectedJob.service_entries.filter((entry) => entry.source !== 'technician'),
+            ...selectedJob.service_entries.filter((entry) => entry.source === 'technician'),
+        ]
+        : [];
 
     return (
         <div className="tech-shell pb-28 text-white">
@@ -1340,47 +1464,43 @@ export default function MyJobsPage({
                     <div className="space-y-4 py-4">
                         <div className="space-y-2">
                             <Label htmlFor="service-type">Service Type</Label>
-                            <Select value={addServiceName} onValueChange={setAddServiceName}>
-                                <SelectTrigger id="service-type">
-                                    <SelectValue placeholder="Select service" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {(selectedJobId ? (
-                                        editingServiceId
-                                            ? Array.from(new Set([
-                                                addServiceName,
-                                                ...getAvailableAdditionalServices(jobs.find((job) => job.job_id === selectedJobId) || {
-                                                    job_id: '',
-                                                    job_code: '',
-                                                    dealership_name: '',
-                                                    service_name: '',
-                                                    original_service_name: '',
-                                                    service_names: [],
-                                                    service_entries: [],
-                                                    job_status: 'unknown',
-                                                    zone: '',
-                                                    allowed_actions: [],
-                                                }),
-                                            ].filter(Boolean)))
-                                            : getAvailableAdditionalServices(jobs.find((job) => job.job_id === selectedJobId) || {
-                                        job_id: '',
-                                        job_code: '',
-                                        dealership_name: '',
-                                        service_name: '',
-                                        original_service_name: '',
-                                        service_names: [],
-                                        service_entries: [],
-                                        job_status: 'unknown',
-                                        zone: '',
-                                        allowed_actions: [],
-                                    })
-                                    ) : []).map((service) => (
-                                        <SelectItem key={`add-service-${service}`} value={service}>
-                                            {service}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                            <Input
+                                id="service-type"
+                                list="technician-service-options"
+                                value={addServiceName}
+                                onChange={(event) => handleAddServiceNameChange(event.target.value)}
+                                placeholder="Pick from catalog or type custom service"
+                            />
+                            <datalist id="technician-service-options">
+                                {serviceOptions.map((service) => (
+                                    <option key={`catalog-${service}`} value={service} />
+                                ))}
+                            </datalist>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-2">
+                                <Label htmlFor="service-quantity">Quantity</Label>
+                                <Input
+                                    id="service-quantity"
+                                    type="number"
+                                    min="0.01"
+                                    step="0.01"
+                                    value={addServiceQuantity}
+                                    onChange={(event) => setAddServiceQuantity(event.target.value)}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="service-unit-price">Unit Price</Label>
+                                <Input
+                                    id="service-unit-price"
+                                    type="number"
+                                    min="0"
+                                    step="0.01"
+                                    value={addServiceUnitPrice}
+                                    onChange={(event) => setAddServiceUnitPrice(event.target.value)}
+                                />
+                            </div>
                         </div>
 
                         <div className="space-y-2">
@@ -1433,7 +1553,8 @@ export default function MyJobsPage({
                                 <SelectContent>
                                     <SelectItem value="15">15 minutes</SelectItem>
                                     <SelectItem value="30">30 minutes</SelectItem>
-                                    <SelectItem value="60">60 minutes</SelectItem>
+                                    <SelectItem value="60">1 hour</SelectItem>
+                                    <SelectItem value="120">2 hours</SelectItem>
                                     <SelectItem value="custom">Custom</SelectItem>
                                 </SelectContent>
                             </Select>
@@ -1564,9 +1685,33 @@ export default function MyJobsPage({
                     </DialogHeader>
 
                     <div className="py-4">
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                            This action will mark the job as completed and move it to your completed jobs list.
+                        <p className="text-sm text-slate-300">
+                            Review all service lines before confirming. These lines flow into the invoice draft for admin review.
                         </p>
+                        <div className="mt-4 max-h-[260px] space-y-2 overflow-auto rounded-2xl border border-white/10 bg-white/[0.04] p-3">
+                            {(selectedJobServiceLines.length > 0 ? selectedJobServiceLines : selectedJob?.service_names.map((name) => ({ service_name: name, quantity: 1, unit_price: 0 })) ?? []).map((service) => (
+                                <div key={`complete-${service.service_name}`} className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-black/10 px-3 py-2">
+                                    <OverflowText text={service.service_name} className="max-w-[15rem] text-sm font-medium text-white" />
+                                    <span className="shrink-0 text-xs text-slate-400">
+                                        {toNumber(service.quantity, 1).toFixed(2)} x ${toNumber(service.unit_price, 0).toFixed(2)}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                        {selectedJobId ? (
+                            <Button
+                                type="button"
+                                variant="outline"
+                                className="mt-3 w-full justify-start border-dashed border-[#2F8E92]/40 text-[#2F8E92] hover:bg-[#2F8E92]/5 dark:border-teal-500/40 dark:text-teal-300"
+                                onClick={() => {
+                                    setDoneModalOpen(false);
+                                    handleOpenAddService(selectedJobId);
+                                }}
+                            >
+                                <Plus className="mr-2 h-4 w-4" />
+                                Add Final Service Line
+                            </Button>
+                        ) : null}
                     </div>
 
                     <DialogFooter className="flex-col sm:flex-row gap-2">

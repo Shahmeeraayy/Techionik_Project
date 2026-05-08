@@ -264,6 +264,12 @@ export type BackendTechnicianJobFeedItem = {
   job_code: string;
   status: string;
   dealership_name?: string | null;
+  location_name?: string | null;
+  location_address?: string | null;
+  customer_name?: string | null;
+  customer_phone?: string | null;
+  customer_email?: string | null;
+  admin_notes?: string | null;
   service_name?: string | null;
   service_names?: string[];
   service_entries?: Array<{
@@ -1613,7 +1619,7 @@ export async function delayTechnicianMyJob(
 export async function addTechnicianMyJobService(
   token: string,
   jobId: string,
-  payload: { service_name: string; notes?: string },
+  payload: { service_name: string; notes?: string; quantity?: string | number; unit_price?: string | number },
 ): Promise<BackendTechnicianJobFeedItem> {
   return requestJson<BackendTechnicianJobFeedItem>(`/technicians/me/jobs/${jobId}/services`, {
     method: 'POST',
@@ -1626,7 +1632,7 @@ export async function updateTechnicianMyJobService(
   token: string,
   jobId: string,
   serviceId: string,
-  payload: { service_name: string; notes?: string },
+  payload: { service_name: string; notes?: string; quantity?: string | number; unit_price?: string | number },
 ): Promise<BackendTechnicianJobFeedItem> {
   return requestJson<BackendTechnicianJobFeedItem>(`/technicians/me/jobs/${jobId}/services/${serviceId}`, {
     method: 'PATCH',

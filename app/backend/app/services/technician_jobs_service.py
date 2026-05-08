@@ -49,6 +49,12 @@ class TechnicianJobsService:
                 job_code=job.job_code,
                 status=status.value,
                 dealership_name=dealership.name if dealership is not None else None,
+                location_name=job.location or (dealership.name if dealership is not None else None),
+                location_address=job.customer_address or (dealership.address if dealership is not None else None),
+                customer_name=job.customer_name or (dealership.name if dealership is not None else None),
+                customer_phone=dealership.phone if dealership is not None else None,
+                customer_email=dealership.email if dealership is not None else None,
+                admin_notes=dealership.notes if dealership is not None else None,
                 service_name=service_names[0] if service_names else job.service_type,
                 service_names=service_names,
                 service_entries=job_services_service.serialize_service_rows(service_rows),
@@ -122,7 +128,7 @@ class TechnicianJobsService:
                 raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Job is not assigned to current technician")
 
             current_status = normalize_status(row.status)
-            if current_status not in {DispatchJobStatus.PENDING, DispatchJobStatus.SCHEDULED, DispatchJobStatus.DELAYED}:
+            if current_status not in {DispatchJobStatus.PENDING, DispatchJobStatus.SCHEDULED}:
                 raise HTTPException(
                     status_code=status.HTTP_409_CONFLICT,
                     detail=f"Job in status {current_status.value} cannot be refused",
@@ -147,7 +153,7 @@ class TechnicianJobsService:
         self.db.refresh(row)
         return row
 
-    def add_service_to_my_job(self, technician_id: UUID, job_id: UUID, *, service_name: str, notes: str | None) -> Job:
+    def add_service_to_my_job(self, technician_id: UUID, job_id: UUID, *, service_name: str, notes: str | None, quantity: Any = None, unit_price: Any = None) -> Job:
         with self.db.begin():
             row = self._lock_assigned_job(job_id=job_id)
             if row.assigned_tech_id != technician_id:
@@ -165,6 +171,8 @@ class TechnicianJobsService:
                 service_name=service_name,
                 source="technician",
                 notes=notes,
+                quantity=quantity,
+                unit_price=unit_price,
                 created_by_user_id=technician_id,
                 audit_actor_type="TECHNICIAN",
             )
@@ -180,6 +188,8 @@ class TechnicianJobsService:
         service_id: UUID,
         service_name: str,
         notes: str | None,
+        quantity: Any = None,
+        unit_price: Any = None,
     ) -> Job:
         with self.db.begin():
             row = self._lock_assigned_job(job_id=job_id)
@@ -206,6 +216,8 @@ class TechnicianJobsService:
                     service_id=service_id,
                     service_name=service_name,
                     notes=notes,
+                    quantity=quantity,
+                    unit_price=unit_price,
                     created_by_user_id=technician_id,
                     audit_actor_type="TECHNICIAN",
                 )

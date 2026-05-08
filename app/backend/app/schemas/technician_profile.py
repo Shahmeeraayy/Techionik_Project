@@ -418,6 +418,12 @@ class TechnicianJobFeedItem(BaseModel):
     job_code: str
     status: str
     dealership_name: Optional[str] = None
+    location_name: Optional[str] = None
+    location_address: Optional[str] = None
+    customer_name: Optional[str] = None
+    customer_phone: Optional[str] = None
+    customer_email: Optional[str] = None
+    admin_notes: Optional[str] = None
     service_name: Optional[str] = None
     service_names: List[str] = Field(default_factory=list)
     service_entries: List[TechnicianJobServiceResponse] = Field(default_factory=list)
@@ -466,6 +472,8 @@ class TechnicianJobActionResponse(BaseModel):
 class TechnicianJobAddServiceRequest(BaseModel):
     service_name: str = Field(..., min_length=1, max_length=255)
     notes: Optional[str] = None
+    quantity: Optional[Decimal] = Field(default=None, gt=0)
+    unit_price: Optional[Decimal] = Field(default=None, ge=0)
 
     @validator("service_name")
     def validate_service_name(cls, value: str):
@@ -485,6 +493,8 @@ class TechnicianJobAddServiceRequest(BaseModel):
 class TechnicianJobUpdateServiceRequest(BaseModel):
     service_name: str = Field(..., min_length=1, max_length=255)
     notes: Optional[str] = None
+    quantity: Optional[Decimal] = Field(default=None, gt=0)
+    unit_price: Optional[Decimal] = Field(default=None, ge=0)
 
     @validator("service_name")
     def validate_service_name(cls, value: str):
