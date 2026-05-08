@@ -354,7 +354,7 @@ function StatusBadge({ status }: { status: OperationalStatus }) {
     const className = {
         available: 'border-emerald-300/45 bg-emerald-50 text-emerald-700 dark:border-emerald-300/20 dark:bg-emerald-300/12 dark:text-emerald-100',
         in_progress: 'border-amber-300/55 bg-amber-50 text-amber-700 dark:border-amber-300/20 dark:bg-amber-300/12 dark:text-amber-100',
-        offline: 'border-slate-200 bg-slate-50 text-slate-600 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-300',
+        offline: 'border-slate-500/30 bg-slate-500/10 text-slate-300',
         out_of_office: 'border-violet-300/45 bg-violet-50 text-violet-700 dark:border-violet-300/20 dark:bg-violet-300/12 dark:text-violet-100',
     }[status];
 
@@ -1259,13 +1259,13 @@ export default function TechniciansPage() {
             <div className="relative space-y-6">
 
             {/* 1. Header */}
-            <section className="relative overflow-hidden rounded-[32px] border border-slate-200 bg-[linear-gradient(135deg,#ffffff,#f7fbff)] shadow-[0_28px_90px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-[linear-gradient(135deg,rgba(7,25,42,0.98),rgba(6,18,32,0.98))] dark:shadow-[0_34px_120px_rgba(0,0,0,0.34)]">
+            <section className="relative overflow-hidden rounded-[32px] border border-white/10 bg-[linear-gradient(135deg,rgba(7,25,42,0.98),rgba(6,18,32,0.98))] shadow-[0_34px_120px_rgba(0,0,0,0.34)]">
                 <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(15,23,42,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(15,23,42,0.035)_1px,transparent_1px)] bg-[size:120px_120px] opacity-40 dark:bg-[linear-gradient(rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] dark:opacity-20" />
                 <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent dark:via-cyan-200/70" />
                 <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(79,124,255,0.10),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(34,211,238,0.10),transparent_26%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(47,142,146,0.14),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(245,158,11,0.12),transparent_26%)]" />
                 <div className="relative flex flex-col gap-5 p-6 xl:flex-row xl:items-end xl:justify-between xl:p-8">
                     <div className="max-w-3xl">
-                        <div className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-blue-700 dark:border-cyan-300/20 dark:bg-cyan-300/10 dark:text-cyan-100">
+                        <div className="inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-100">
                             <User className="h-3.5 w-3.5" />
                             Field Workforce
                         </div>
@@ -1285,16 +1285,16 @@ export default function TechniciansPage() {
                             <Badge variant="outline" className="border-amber-300/20 bg-amber-300/10 px-3 py-1 text-amber-100">
                                 {busyTechniciansCount} busy now
                             </Badge>
-                            <Badge variant="outline" className="border-slate-200 bg-white px-3 py-1 text-slate-600 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300">
+                            <Badge variant="outline" className="border-white/10 bg-white/[0.04] px-3 py-1 text-slate-300">
                                 {zoneFilterOptions.length} zones
                             </Badge>
                         </div>
                     </div>
                     <div className="flex flex-wrap items-center justify-end gap-3">
-                    <Button variant="outline" size="sm" onClick={() => void fetchTechs()} className="h-10 gap-2 rounded-full border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-100 dark:hover:bg-white/[0.08]" disabled={loading}>
+                    <Button variant="outline" size="sm" onClick={() => void fetchTechs()} className="h-10 gap-2 rounded-full border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]" disabled={loading}>
                         <RefreshCw className={cn('w-4 h-4 text-cyan-200', loading && 'animate-spin')} /> Refresh
                     </Button>
-                    <Button variant="outline" size="sm" onClick={() => setExportModalOpen(true)} className="h-10 gap-2 rounded-full border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-100 dark:hover:bg-white/[0.08]">
+                    <Button variant="outline" size="sm" onClick={() => setExportModalOpen(true)} className="h-10 gap-2 rounded-full border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]">
                         <FileDown className="w-4 h-4" /> Export
                     </Button>
                     <Dialog open={addTechModalOpen} onOpenChange={setAddTechModalOpen}>
@@ -1393,7 +1393,7 @@ export default function TechniciansPage() {
                                 <h2 className="text-base font-semibold text-slate-950 dark:text-white">Technician Filters</h2>
                                 <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Search by name, email, or zone and narrow by readiness, coverage, and skill fit.</p>
                             </div>
-                            <Badge variant="outline" className="w-fit border-slate-200 bg-slate-50 text-slate-600 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-300">
+                            <Badge variant="outline" className="w-fit border-white/10 bg-white/[0.03] text-slate-300">
                                 Showing {filteredTechs.length} of {totalTechCount}
                             </Badge>
                         </div>
@@ -1402,14 +1402,14 @@ export default function TechniciansPage() {
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                                 <Input
                                     placeholder="Search by name, email, phone, or zone..."
-                                    className="h-11 rounded-full border-slate-200 bg-white pl-9 text-slate-900 placeholder:text-slate-400 transition-all focus:bg-white dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:bg-white/[0.06]"
+                                    className="h-11 rounded-full border-white/10 bg-[#0b1424] pl-9 text-slate-100 placeholder:text-slate-500 transition-all focus:bg-[#122039]"
                                     value={searchQuery}
                                     onChange={e => setSearchQuery(e.target.value)}
                                 />
                             </div>
                             <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
                                 <Select value={filterStatus} onValueChange={setFilterStatus}>
-                                    <SelectTrigger className="h-11 w-full border-slate-200 bg-white text-slate-800 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-100 sm:w-[140px]">
+                                    <SelectTrigger className="h-11 w-full border-white/10 bg-[#0b1424] text-slate-100 sm:w-[140px]">
                                         <SelectValue placeholder="Status" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -1422,7 +1422,7 @@ export default function TechniciansPage() {
                                 </Select>
 
                                 <Select value={filterZone} onValueChange={setFilterZone}>
-                                    <SelectTrigger className="h-11 w-full border-slate-200 bg-white text-slate-800 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-100 sm:w-[160px]">
+                                    <SelectTrigger className="h-11 w-full border-white/10 bg-[#0b1424] text-slate-100 sm:w-[160px]">
                                         <div className="flex items-center gap-2">
                                             <MapPin className="w-4 h-4" />
                                             <SelectValue placeholder="Zone" />
@@ -1439,7 +1439,7 @@ export default function TechniciansPage() {
                                 </Select>
 
                                 <Select value={filterSkill} onValueChange={setFilterSkill}>
-                                    <SelectTrigger className="h-11 w-full border-slate-200 bg-white text-slate-800 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-100 sm:w-[170px]">
+                                    <SelectTrigger className="h-11 w-full border-white/10 bg-[#0b1424] text-slate-100 sm:w-[170px]">
                                         <div className="flex items-center gap-2">
                                             <Briefcase className="w-4 h-4" />
                                             <SelectValue placeholder="Skills" />
@@ -1490,13 +1490,13 @@ export default function TechniciansPage() {
                                 <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500 dark:text-slate-400">Technician Board</div>
                                 <div className="text-sm text-slate-600 dark:text-slate-200">Active workforce records with status, routing zones, and current dispatch readiness.</div>
                             </div>
-                            <Badge variant="outline" className="rounded-full border-slate-200 bg-slate-50 px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-slate-600 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300">
+                            <Badge variant="outline" className="rounded-full border-cyan-300/18 bg-cyan-300/10 px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-cyan-100">
                                 {filteredTechs.length} visible
                             </Badge>
                         </div>
                         <div className="overflow-auto">
                             <Table className="min-w-[1320px]">
-                                <TableHeader className="sticky top-0 z-10 border-b border-slate-200 bg-slate-50/95 backdrop-blur-xl dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(11,25,42,0.98),rgba(10,20,35,0.92))]">
+                                <TableHeader className="sticky top-0 z-10 border-b border-white/10 bg-[linear-gradient(180deg,rgba(11,25,42,0.98),rgba(10,20,35,0.92))] backdrop-blur-xl">
                                     <TableRow className="border-white/0 hover:bg-transparent">
                                         <TableHead className="pl-6 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Technician Name</TableHead>
                                         <TableHead className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Email</TableHead>
@@ -1513,8 +1513,8 @@ export default function TechniciansPage() {
                                         <TableRow
                                             key={tech.id}
                                             className={cn(
-                                                'group cursor-pointer border-b border-slate-100 transition-colors hover:bg-slate-50 dark:border-white/6 dark:hover:bg-white/[0.045]',
-                                                index % 2 === 1 && 'bg-slate-50/40 dark:bg-white/[0.015]',
+                                                'group cursor-pointer border-b border-white/6 transition-colors hover:bg-white/[0.045]',
+                                                index % 2 === 1 && 'bg-white/[0.015]',
                                             )}
                                             onClick={() => handleOpenProfile(tech)}
                                         >
@@ -1552,7 +1552,7 @@ export default function TechniciansPage() {
                                             <TableCell className="py-4">
                                                 <div className="flex flex-wrap items-center gap-1.5">
                                                     {tech.zones.slice(0, 2).map((zone) => (
-                                                        <Badge key={zone} variant="secondary" className="h-5 border border-slate-200 bg-slate-50 px-2 py-0 text-[10px] text-slate-600 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300">
+                                                        <Badge key={zone} variant="secondary" className="h-5 border border-white/10 bg-white/[0.04] px-2 py-0 text-[10px] text-slate-300">
                                                             {zone}
                                                         </Badge>
                                                     ))}
