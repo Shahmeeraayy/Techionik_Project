@@ -1317,6 +1317,15 @@
   color: #eaf1ff !important;
 }
 
+.dark .admin-shell .admin-jobs-filters input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1) brightness(1.6);
+  opacity: 0.85;
+}
+
+.dark .admin-shell .admin-jobs-board {
+  background: linear-gradient(180deg, rgba(8, 18, 32, 0.98), rgba(5, 10, 20, 0.99)) !important;
+}
+
 .dark .admin-shell .admin-jobs-table tbody tr {
   background: rgba(8, 16, 30, 0.72) !important;
 }
@@ -1327,6 +1336,145 @@
 
 .dark .admin-shell .admin-jobs-table tbody tr:hover {
   background: rgba(20, 34, 58, 0.88) !important;
+}
+
+@media (max-width: 1180px) {
+  .admin-shell .admin-jobs-board {
+    min-height: auto !important;
+  }
+
+  .admin-shell .admin-jobs-table table {
+    table-layout: auto !important;
+  }
+
+  .admin-shell .admin-jobs-table th,
+  .admin-shell .admin-jobs-table td {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .admin-shell .admin-jobs-filters .min-w-\[300px\] {
+    min-width: 0 !important;
+  }
+
+  .admin-shell .admin-jobs-filters [class*="overflow-x-auto"] {
+    overflow-x: visible !important;
+    flex-wrap: wrap !important;
+  }
+
+  .admin-shell .admin-jobs-filters [data-slot="select-trigger"],
+  .admin-shell .admin-jobs-filters input[type="date"] {
+    width: 100% !important;
+  }
+
+  .admin-shell .admin-jobs-table {
+    padding: 0.875rem !important;
+  }
+
+  .admin-shell .admin-jobs-table table,
+  .admin-shell .admin-jobs-table thead,
+  .admin-shell .admin-jobs-table tbody,
+  .admin-shell .admin-jobs-table tr,
+  .admin-shell .admin-jobs-table th,
+  .admin-shell .admin-jobs-table td {
+    display: block !important;
+    width: 100% !important;
+  }
+
+  .admin-shell .admin-jobs-table thead {
+    display: none !important;
+  }
+
+  .admin-shell .admin-jobs-table tbody {
+    display: grid !important;
+    gap: 0.875rem;
+  }
+
+  .admin-shell .admin-jobs-table tr {
+    overflow: hidden !important;
+    border: 1px solid rgba(148, 163, 184, 0.18) !important;
+    border-radius: 1.25rem;
+    background: rgba(255, 255, 255, 0.92) !important;
+    box-shadow: 0 18px 42px rgba(15, 23, 42, 0.08);
+  }
+
+  .dark .admin-shell .admin-jobs-table tr {
+    background: rgba(9, 16, 30, 0.96) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
+  }
+
+  .admin-shell .admin-jobs-table td {
+    border-bottom: 1px solid rgba(148, 163, 184, 0.12) !important;
+    padding: 0.75rem 1rem !important;
+  }
+
+  .admin-shell .admin-jobs-table td:last-child {
+    border-bottom: 0 !important;
+  }
+
+  .admin-shell .admin-jobs-table td:first-child {
+    display: flex !important;
+    justify-content: flex-end;
+    padding-bottom: 0 !important;
+  }
+
+  .admin-shell .admin-jobs-table td:nth-child(n+2)::before {
+    display: block;
+    margin-bottom: 0.35rem;
+    color: #64748b;
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+
+  .dark .admin-shell .admin-jobs-table td:nth-child(n+2)::before {
+    color: #8ea3c5;
+  }
+
+  .admin-shell .admin-jobs-table td:nth-child(2)::before { content: "Job"; }
+  .admin-shell .admin-jobs-table td:nth-child(3)::before { content: "Service"; }
+  .admin-shell .admin-jobs-table td:nth-child(4)::before { content: "Location"; }
+  .admin-shell .admin-jobs-table td:nth-child(5)::before { content: "Vehicle"; }
+  .admin-shell .admin-jobs-table td:nth-child(6)::before { content: "Technician"; }
+  .admin-shell .admin-jobs-table td:nth-child(7)::before { content: "Urgency"; }
+  .admin-shell .admin-jobs-table td:nth-child(8)::before { content: "Rank"; }
+  .admin-shell .admin-jobs-table td:nth-child(9)::before { content: "Status"; }
+  .admin-shell .admin-jobs-table td:nth-child(10)::before { content: "Dates"; }
+  .admin-shell .admin-jobs-table td:nth-child(11)::before { content: "Actions"; }
+
+  .admin-shell .admin-jobs-table td:nth-child(11) {
+    text-align: left !important;
+  }
+
+  .admin-shell .admin-jobs-table td:nth-child(11) > div {
+    align-items: stretch !important;
+    width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .admin-shell .admin-content {
+    padding: 1rem !important;
+  }
+
+  .admin-shell .admin-page-frame {
+    border-radius: 0 !important;
+  }
+
+  .admin-shell .admin-jobs-board {
+    border-radius: 1.25rem !important;
+  }
+
+  .admin-shell .admin-jobs-board > div:first-child {
+    padding: 1rem !important;
+  }
+
+  .admin-shell .admin-jobs-filters > div:last-child {
+    padding: 1rem !important;
+  }
 }
 
 /* Print Styles */

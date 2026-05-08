@@ -2639,7 +2639,7 @@ export default function JobsPage() {
             </div>
 
             {/* 3. Jobs Table */}
-            <div className="relative flex min-h-[620px] flex-1 flex-col overflow-hidden rounded-[28px] border border-black/8 bg-white shadow-[0_24px_72px_rgba(15,23,42,0.08)] dark:border-white/8 dark:bg-[linear-gradient(180deg,rgba(8,22,38,0.985),rgba(6,15,27,0.99))] dark:shadow-[0_24px_72px_rgba(0,0,0,0.28)]">
+            <div className="admin-jobs-board relative flex min-h-[620px] flex-1 flex-col overflow-hidden rounded-[28px] border border-black/8 bg-white shadow-[0_24px_72px_rgba(15,23,42,0.08)] dark:border-white/8 dark:bg-[linear-gradient(180deg,rgba(8,22,38,0.985),rgba(6,15,27,0.99))] dark:shadow-[0_24px_72px_rgba(0,0,0,0.28)]">
                 <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-slate-900/20 to-transparent dark:via-cyan-300/70" />
                 <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(15,23,42,0.03),transparent_26%),radial-gradient(circle_at_bottom_left,rgba(15,23,42,0.02),transparent_24%)] dark:bg-[radial-gradient(circle_at_top_right,rgba(47,142,146,0.10),transparent_26%),radial-gradient(circle_at_bottom_left,rgba(59,130,246,0.06),transparent_24%)]" />
 
@@ -2785,20 +2785,20 @@ export default function JobsPage() {
                                                 </button>
                                             </TableCell>
                                             <TableCell className="py-4">
-                                                <div className="rounded-[16px] border border-white/6 bg-white/[0.025] px-3 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
-                                                    <OverflowText text={job.service_name} className="max-w-full text-sm font-semibold text-white" />
+                                                <div className="rounded-[16px] border border-black/8 bg-slate-50 px-3 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] dark:border-white/6 dark:bg-white/[0.025] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+                                                    <OverflowText text={job.service_name} className="max-w-full text-sm font-semibold text-slate-900 dark:text-white" />
                                                     <div className="mt-1 text-xs text-slate-500">
                                                         {job.service_names.length > 1 ? `${job.service_names.length} catalog services linked` : 'Primary dispatch service'}
                                                     </div>
                                                 </div>
                                             </TableCell>
                                             <TableCell className="py-4">
-                                                <div className="flex items-start gap-2 rounded-[16px] border border-white/6 bg-white/[0.025] px-3 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
-                                                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-cyan-300/12 bg-cyan-300/[0.08] text-cyan-100 shadow-[0_14px_24px_rgba(8,145,178,0.12)]">
+                                                <div className="flex items-start gap-2 rounded-[16px] border border-black/8 bg-slate-50 px-3 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] dark:border-white/6 dark:bg-white/[0.025] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+                                                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-cyan-200 bg-cyan-50 text-cyan-700 shadow-[0_14px_24px_rgba(8,145,178,0.08)] dark:border-cyan-300/12 dark:bg-cyan-300/[0.08] dark:text-cyan-100 dark:shadow-[0_14px_24px_rgba(8,145,178,0.12)]">
                                                         <Building2Icon className="h-4 w-4" />
                                                     </div>
                                                     <div className="min-w-0">
-                                                        <OverflowText text={job.dealership_name} className="max-w-full text-sm font-semibold text-white" />
+                                                        <OverflowText text={job.dealership_name} className="max-w-full text-sm font-semibold text-slate-900 dark:text-white" />
                                                         <div className="mt-1 inline-flex items-center gap-1 text-xs text-slate-500">
                                                             <MapPin className="h-3 w-3" />
                                                             {locationLabel}
@@ -2807,7 +2807,7 @@ export default function JobsPage() {
                                                 </div>
                                             </TableCell>
                                             <TableCell className="py-4">
-                                                <div className="rounded-[16px] border border-white/6 bg-white/[0.025] px-3 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+                                                <div className="rounded-[16px] border border-black/8 bg-slate-50 px-3 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] dark:border-white/6 dark:bg-white/[0.025] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
                                                     <OverflowText text={job.vehicle_summary} className="max-w-full text-sm font-medium text-slate-700 dark:text-slate-100" />
                                                     <div className="mt-1 text-xs text-slate-500">Dispatch-ready vehicle profile</div>
                                                 </div>
@@ -2887,7 +2887,7 @@ export default function JobsPage() {
                                                 </div>
                                             </TableCell>
                                             <TableCell className="py-4 pr-4 text-right align-top">
-                                                <div className="inline-flex max-w-full flex-col items-end gap-2 rounded-[18px] border border-white/6 bg-white/[0.025] p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+                                                <div className="inline-flex max-w-full flex-col items-end gap-2 rounded-[18px] border border-black/8 bg-slate-50 p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] dark:border-white/6 dark:bg-white/[0.025] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
                                                     {(job.job_status === 'admin_preview' || job.job_status === 'pending_admin_confirmation') && Boolean(
                                                         (job.pending_assigned_technician_name ?? job.assigned_technician_name)?.trim()
                                                     ) ? (
@@ -2935,10 +2935,10 @@ export default function JobsPage() {
                 )}
 
                 {/* Pagination & Footer */}
-                <div className="relative flex flex-col gap-4 border-t border-white/10 bg-[linear-gradient(180deg,rgba(8,18,31,0.88),rgba(6,15,26,0.96))] px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
-                    <div className="flex flex-wrap items-center gap-2 text-sm text-slate-400" style={bodyFontStyle}>
+                <div className="relative flex flex-col gap-4 border-t border-black/8 bg-slate-50 px-5 py-4 dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,18,31,0.88),rgba(6,15,26,0.96))] lg:flex-row lg:items-center lg:justify-between">
+                    <div className="flex flex-wrap items-center gap-2 text-sm text-slate-500 dark:text-slate-400" style={bodyFontStyle}>
                         <span>
-                            Showing <span className="font-medium text-white">{footerStart}</span> to <span className="font-medium text-white">{footerEnd}</span> of <span className="font-medium text-white">{pagination.total}</span> jobs
+                            Showing <span className="font-medium text-slate-900 dark:text-white">{footerStart}</span> to <span className="font-medium text-slate-900 dark:text-white">{footerEnd}</span> of <span className="font-medium text-slate-900 dark:text-white">{pagination.total}</span> jobs
                         </span>
                         {selectedRows.size > 0 ? (
                             <Badge variant="outline" className="h-8 rounded-full border-cyan-300/20 bg-cyan-300/10 px-3 text-cyan-100">
@@ -2950,12 +2950,12 @@ export default function JobsPage() {
 
                     <div className="flex flex-wrap items-center gap-4 md:gap-6">
                         <div className="flex items-center gap-2">
-                            <span className="text-sm text-slate-400">Rows per page</span>
+                            <span className="text-sm text-slate-500 dark:text-slate-400">Rows per page</span>
                             <Select
                                 value={pagination.pageSize.toString()}
                                 onValueChange={(val) => setPagination((prev) => ({ ...prev, pageSize: Number(val), page: 1 }))}
                             >
-                                <SelectTrigger className="h-9 w-[84px] rounded-2xl border-white/10 bg-white/[0.04] text-white shadow-none">
+                                <SelectTrigger className="h-9 w-[84px] rounded-2xl border-black/8 bg-white text-slate-900 shadow-none dark:border-white/10 dark:bg-white/[0.04] dark:text-white">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -2970,19 +2970,19 @@ export default function JobsPage() {
                             <Button
                                 variant="outline"
                                 size="icon"
-                                className="h-9 w-9 rounded-2xl border-white/10 bg-white/[0.04] text-slate-200 hover:bg-white/[0.08] hover:text-white"
+                                className="h-9 w-9 rounded-2xl border-black/8 bg-white text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-200 dark:hover:bg-white/[0.08] dark:hover:text-white"
                                 disabled={pagination.page === 1}
                                 onClick={() => setPagination((prev) => ({ ...prev, page: prev.page - 1 }))}
                             >
                                 <ChevronLeft className="h-4 w-4" />
                             </Button>
-                            <div className="rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-sm font-medium text-white">
+                            <div className="rounded-full border border-black/8 bg-white px-4 py-2 text-sm font-medium text-slate-900 dark:border-white/10 dark:bg-white/[0.04] dark:text-white">
                                 Page {pagination.page} of {pagination.totalPages}
                             </div>
                             <Button
                                 variant="outline"
                                 size="icon"
-                                className="h-9 w-9 rounded-2xl border-white/10 bg-white/[0.04] text-slate-200 hover:bg-white/[0.08] hover:text-white"
+                                className="h-9 w-9 rounded-2xl border-black/8 bg-white text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-200 dark:hover:bg-white/[0.08] dark:hover:text-white"
                                 disabled={pagination.page >= pagination.totalPages}
                                 onClick={() => setPagination((prev) => ({ ...prev, page: prev.page + 1 }))}
                             >
