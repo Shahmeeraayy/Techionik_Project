@@ -963,7 +963,7 @@ export default function InvoiceHistoryPage() {
             </div>
 
             <Sheet open={drawerOpen} onOpenChange={setDrawerOpen}>
-                <SheetContent className="flex w-full flex-col border-l border-white/10 bg-[linear-gradient(180deg,rgba(7,21,37,0.99),rgba(4,13,24,1))] p-0 text-white sm:max-w-2xl">
+                <SheetContent className="flex w-full flex-col overflow-hidden border-l border-white/10 bg-[linear-gradient(180deg,rgba(7,21,37,0.99),rgba(4,13,24,1))] p-0 text-white sm:max-w-2xl">
                     {selectedInvoice && (
                         (() => {
                             const displayStatus = resolveInvoiceDisplayStatus(selectedInvoice);
@@ -1027,7 +1027,7 @@ export default function InvoiceHistoryPage() {
                                 </div>
                             </div>
 
-                            <ScrollArea className="flex-1">
+                            <ScrollArea className="min-h-0 flex-1">
                                 <div className="space-y-6 p-6">
                                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                         <div className="rounded-[24px] border border-white/10 bg-white/[0.03] p-4">
@@ -1152,46 +1152,47 @@ export default function InvoiceHistoryPage() {
                                             </div>
                                         </div>
                                     </div>
-
-                                    <div className="flex flex-col gap-3 border-t border-white/10 pt-2 sm:flex-row">
-                                        <Button
-                                            className="h-12 flex-1 gap-2 rounded-2xl border-white/10 bg-white/[0.04] text-slate-100 hover:bg-white/[0.08] hover:text-white"
-                                            variant="outline"
-                                            onClick={() => handleDownloadPdf(selectedInvoice)}
-                                        >
-                                            <Download className="h-4 w-4" />
-                                            Download PDF
-                                        </Button>
-                                        <Button
-                                            className="h-12 flex-1 gap-2 rounded-2xl border-white/10 bg-white/[0.04] text-slate-100 hover:bg-white/[0.08] hover:text-white"
-                                            variant="outline"
-                                            onClick={() => void handleSendInvoiceEmail(selectedInvoice)}
-                                            disabled={actionLoading === 'send'}
-                                        >
-                                            <Send className="h-4 w-4" />
-                                            Send Invoice Email
-                                        </Button>
-                                        <Button
-                                            className="h-12 flex-1 gap-2 rounded-2xl border-emerald-300/20 bg-emerald-300/10 text-emerald-50 hover:bg-emerald-300/15"
-                                            variant="outline"
-                                            onClick={() => void handleMarkAsPaid(selectedInvoice)}
-                                            disabled={actionLoading === 'paid' || displayStatus.value === 'paid' || displayStatus.value === 'void'}
-                                        >
-                                            <CheckCircle2 className="h-4 w-4" />
-                                            Mark as Paid
-                                        </Button>
-                                        <Button
-                                            className="h-12 flex-1 gap-2 rounded-2xl border-rose-300/20 bg-rose-300/10 text-rose-50 hover:bg-rose-300/15"
-                                            variant="outline"
-                                            onClick={() => setVoidDialogOpen(true)}
-                                            disabled={actionLoading === 'void' || displayStatus.value === 'void'}
-                                        >
-                                            <AlertTriangle className="h-4 w-4" />
-                                            Void Invoice
-                                        </Button>
-                                    </div>
                                 </div>
                             </ScrollArea>
+                            <div className="shrink-0 border-t border-white/10 bg-[linear-gradient(180deg,rgba(7,21,37,0.96),rgba(4,13,24,1))] p-4 shadow-[0_-18px_45px_rgba(0,0,0,0.32)]">
+                                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                    <Button
+                                        className="h-12 min-w-0 gap-2 rounded-2xl border-white/10 bg-white/[0.04] px-3 text-sm text-slate-100 hover:bg-white/[0.08] hover:text-white"
+                                        variant="outline"
+                                        onClick={() => handleDownloadPdf(selectedInvoice)}
+                                    >
+                                        <Download className="h-4 w-4 shrink-0" />
+                                        <span className="truncate">Download PDF</span>
+                                    </Button>
+                                    <Button
+                                        className="h-12 min-w-0 gap-2 rounded-2xl border-white/10 bg-white/[0.04] px-3 text-sm text-slate-100 hover:bg-white/[0.08] hover:text-white"
+                                        variant="outline"
+                                        onClick={() => void handleSendInvoiceEmail(selectedInvoice)}
+                                        disabled={actionLoading === 'send'}
+                                    >
+                                        <Send className="h-4 w-4 shrink-0" />
+                                        <span className="truncate">{actionLoading === 'send' ? 'Preparing Email' : 'Send Invoice Email'}</span>
+                                    </Button>
+                                    <Button
+                                        className="h-12 min-w-0 gap-2 rounded-2xl border-emerald-300/20 bg-emerald-300/10 px-3 text-sm text-emerald-50 hover:bg-emerald-300/15"
+                                        variant="outline"
+                                        onClick={() => void handleMarkAsPaid(selectedInvoice)}
+                                        disabled={actionLoading === 'paid' || displayStatus.value === 'paid' || displayStatus.value === 'void'}
+                                    >
+                                        <CheckCircle2 className="h-4 w-4 shrink-0" />
+                                        <span className="truncate">{actionLoading === 'paid' ? 'Marking Paid' : 'Mark as Paid'}</span>
+                                    </Button>
+                                    <Button
+                                        className="h-12 min-w-0 gap-2 rounded-2xl border-rose-300/20 bg-rose-300/10 px-3 text-sm text-rose-50 hover:bg-rose-300/15"
+                                        variant="outline"
+                                        onClick={() => setVoidDialogOpen(true)}
+                                        disabled={actionLoading === 'void' || displayStatus.value === 'void'}
+                                    >
+                                        <AlertTriangle className="h-4 w-4 shrink-0" />
+                                        <span className="truncate">Void Invoice</span>
+                                    </Button>
+                                </div>
+                            </div>
                         </>
                             );
                         })()
