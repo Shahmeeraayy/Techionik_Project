@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, type CSSProperties } from 'react';
 import {
     AlertCircle,
     Pencil,
@@ -215,9 +215,14 @@ const getDefaultAdminCredentialValues = () => ({
     adminEmail: DEFAULT_ADMIN_EMAIL,
 });
 
-const sectionCardClass = 'overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_22px_70px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(9,24,39,0.96),rgba(6,17,29,0.96))] dark:shadow-[0_24px_80px_rgba(0,0,0,0.28)]';
-const sectionHeaderClass = 'border-b border-slate-200 bg-[linear-gradient(180deg,rgba(248,250,252,0.88),rgba(255,255,255,0))] pb-5 dark:border-white/8 dark:bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0))]';
-const sectionFooterClass = 'border-t border-slate-200 bg-slate-50/80 py-4 dark:border-white/8 dark:bg-white/[0.03]';
+const sectionCardClass = 'overflow-hidden rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(9,24,39,0.96),rgba(6,17,29,0.96))] shadow-[0_24px_80px_rgba(0,0,0,0.28)]';
+const sectionHeaderClass = 'border-b border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0))] pb-5';
+const sectionFooterClass = 'border-t border-white/8 bg-[rgba(255,255,255,0.03)] py-4';
+const settingsDarkInputStyle: CSSProperties = {
+    background: '#0b1424',
+    backgroundImage: 'none',
+    color: '#f8fbff',
+};
 
 
 
@@ -772,15 +777,15 @@ export default function SettingsPage() {
                         </CardHeader>
                         <CardContent className="space-y-5 pt-0">
                             <div className="grid gap-4 md:grid-cols-[180px_1fr]">
-                                <div className="rounded-[24px] border border-slate-200 bg-slate-50/80 p-4 dark:border-white/10 dark:bg-white/[0.03]">
-                                    <div className="flex h-24 items-center justify-center overflow-hidden rounded-2xl border border-dashed border-slate-300 bg-white dark:border-white/10 dark:bg-black/20">
+                                <div className="rounded-[24px] border border-white/10 bg-[rgba(255,255,255,0.03)] p-4">
+                                    <div className="flex h-24 items-center justify-center overflow-hidden rounded-2xl border border-dashed border-white/12 bg-black/20">
                                         {companyProfileSettings.logoUrl || invoiceCompany.logo_url ? (
                                             <img src={companyProfileSettings.logoUrl || invoiceCompany.logo_url} alt="Company logo preview" className="max-h-full max-w-full object-contain" />
                                         ) : (
                                             <Upload className="h-7 w-7 text-slate-400" />
                                         )}
                                     </div>
-                                    <Label htmlFor="company_logo_upload" className="mt-3 flex h-9 cursor-pointer items-center justify-center rounded-full border border-slate-200 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-100 dark:hover:bg-white/[0.08]">
+                                    <Label htmlFor="company_logo_upload" className="mt-3 flex h-9 cursor-pointer items-center justify-center rounded-full border border-white/10 bg-[#0b1424] text-xs font-semibold text-slate-100 transition-colors hover:bg-[#122039] hover:text-white">
                                         Upload logo
                                     </Label>
                                     <Input id="company_logo_upload" type="file" accept="image/*" className="hidden" onChange={(event) => handleLogoUpload(event.target.files?.[0])} />
@@ -788,12 +793,12 @@ export default function SettingsPage() {
                                 <div className="grid gap-4 sm:grid-cols-2">
                                     <div className="space-y-2">
                                         <Label className="text-slate-700 dark:text-slate-200">Company Name</Label>
-                                        <Input className="border-slate-200 bg-white text-slate-900 dark:border-white/10 dark:bg-white/[0.04] dark:text-white" value={invoiceCompany.name} onChange={(e) => setInvoiceCompany({ ...invoiceCompany, name: e.target.value })} />
+                                        <Input style={settingsDarkInputStyle} className="border-white/10 text-white placeholder:text-slate-500" value={invoiceCompany.name} onChange={(e) => setInvoiceCompany({ ...invoiceCompany, name: e.target.value })} />
                                     </div>
                                     <div className="space-y-2">
                                         <Label className="text-slate-700 dark:text-slate-200">Industry Type</Label>
                                         <Select value={companyProfileSettings.industryType} onValueChange={(value) => setCompanyProfileSettings((prev) => ({ ...prev, industryType: value }))}>
-                                            <SelectTrigger className="border-slate-200 bg-white text-slate-900 dark:border-white/10 dark:bg-white/[0.04] dark:text-white">
+                                            <SelectTrigger className="border-white/10 bg-[#0b1424] text-white">
                                                 <SelectValue />
                                             </SelectTrigger>
                                             <SelectContent>
@@ -807,7 +812,7 @@ export default function SettingsPage() {
                                     <div className="space-y-2">
                                         <Label className="text-slate-700 dark:text-slate-200">Timezone</Label>
                                         <Select value={companyProfileSettings.timezone} onValueChange={(value) => setCompanyProfileSettings((prev) => ({ ...prev, timezone: value }))}>
-                                            <SelectTrigger className="border-slate-200 bg-white text-slate-900 dark:border-white/10 dark:bg-white/[0.04] dark:text-white">
+                                            <SelectTrigger className="border-white/10 bg-[#0b1424] text-white">
                                                 <SelectValue />
                                             </SelectTrigger>
                                             <SelectContent>
@@ -822,21 +827,21 @@ export default function SettingsPage() {
                                     <div className="space-y-2">
                                         <Label className="text-slate-700 dark:text-slate-200">Primary Colour</Label>
                                         <div className="flex gap-2">
-                                            <Input type="color" className="h-10 w-14 border-slate-200 p-1 dark:border-white/10" value={companyProfileSettings.primaryColor} onChange={(e) => setCompanyProfileSettings((prev) => ({ ...prev, primaryColor: e.target.value }))} />
-                                            <Input className="border-slate-200 bg-white text-slate-900 dark:border-white/10 dark:bg-white/[0.04] dark:text-white" value={companyProfileSettings.primaryColor} onChange={(e) => setCompanyProfileSettings((prev) => ({ ...prev, primaryColor: e.target.value }))} />
+                                            <Input type="color" style={settingsDarkInputStyle} className="h-10 w-14 border-white/10 p-1" value={companyProfileSettings.primaryColor} onChange={(e) => setCompanyProfileSettings((prev) => ({ ...prev, primaryColor: e.target.value }))} />
+                                            <Input style={settingsDarkInputStyle} className="border-white/10 text-white placeholder:text-slate-500" value={companyProfileSettings.primaryColor} onChange={(e) => setCompanyProfileSettings((prev) => ({ ...prev, primaryColor: e.target.value }))} />
                                         </div>
                                     </div>
                                     <div className="space-y-2">
                                         <Label className="text-slate-700 dark:text-slate-200">Contact Email</Label>
-                                        <Input className="border-slate-200 bg-white text-slate-900 dark:border-white/10 dark:bg-white/[0.04] dark:text-white" value={invoiceCompany.email} onChange={(e) => setInvoiceCompany({ ...invoiceCompany, email: e.target.value })} />
+                                        <Input style={settingsDarkInputStyle} className="border-white/10 text-white placeholder:text-slate-500" value={invoiceCompany.email} onChange={(e) => setInvoiceCompany({ ...invoiceCompany, email: e.target.value })} />
                                     </div>
                                     <div className="space-y-2">
                                         <Label className="text-slate-700 dark:text-slate-200">Contact Phone</Label>
-                                        <Input className="border-slate-200 bg-white text-slate-900 dark:border-white/10 dark:bg-white/[0.04] dark:text-white" value={invoiceCompany.phone} onChange={(e) => setInvoiceCompany({ ...invoiceCompany, phone: e.target.value })} />
+                                        <Input style={settingsDarkInputStyle} className="border-white/10 text-white placeholder:text-slate-500" value={invoiceCompany.phone} onChange={(e) => setInvoiceCompany({ ...invoiceCompany, phone: e.target.value })} />
                                     </div>
                                     <div className="space-y-2 sm:col-span-2">
                                         <Label className="text-slate-700 dark:text-slate-200">PDF Footer Text</Label>
-                                        <Textarea className="min-h-20 border-slate-200 bg-white text-slate-900 dark:border-white/10 dark:bg-white/[0.04] dark:text-white" value={companyProfileSettings.customFooterText} onChange={(e) => setCompanyProfileSettings((prev) => ({ ...prev, customFooterText: e.target.value }))} />
+                                        <Textarea style={settingsDarkInputStyle} className="min-h-20 border-white/10 text-white placeholder:text-slate-500" value={companyProfileSettings.customFooterText} onChange={(e) => setCompanyProfileSettings((prev) => ({ ...prev, customFooterText: e.target.value }))} />
                                     </div>
                                 </div>
                             </div>
@@ -945,7 +950,7 @@ export default function SettingsPage() {
                             ['customerBookingConfirmation', 'Booking confirmation', 'Customer booking confirmation email.'],
                             ['customerCompletionSummary', 'Completion summary', 'Customer job completion summary email.'],
                         ].map(([key, title, description]) => (
-                            <div key={key} className="flex items-start justify-between gap-3 rounded-[20px] border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-white/[0.03]">
+                            <div key={key} className="flex items-start justify-between gap-3 rounded-[20px] border border-white/10 bg-[linear-gradient(180deg,rgba(13,24,40,0.82),rgba(8,17,29,0.86))] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] transition-colors hover:border-cyan-300/20 hover:bg-[linear-gradient(180deg,rgba(15,29,48,0.9),rgba(9,19,33,0.92))]">
                                 <div>
                                     <p className="font-semibold text-slate-950 dark:text-white">{title}</p>
                                     <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">{description}</p>
@@ -953,6 +958,7 @@ export default function SettingsPage() {
                                 <Switch
                                     checked={notificationPreferences[key as keyof NotificationPreferences]}
                                     onCheckedChange={(checked) => setNotificationPreferences((prev) => ({ ...prev, [key]: checked }))}
+                                    className="border border-white/10 data-[state=checked]:bg-[#2F8E92] data-[state=unchecked]:bg-[#101b2c]"
                                 />
                             </div>
                         ))}
