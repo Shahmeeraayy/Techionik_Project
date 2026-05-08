@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import {
   Calendar,
   Download,
@@ -48,8 +48,13 @@ const QUICK_RANGE_LABEL: Record<QuickRange, string> = {
 const numberFmt = new Intl.NumberFormat('en-US');
 const percentFmt = new Intl.NumberFormat('en-US', { maximumFractionDigits: 1 });
 const currencyFmt = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
-const sectionCardClass = 'overflow-hidden rounded-[28px] border border-slate-200/80 bg-white shadow-[0_24px_70px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(9,24,39,0.96),rgba(6,17,29,0.96))] dark:shadow-[0_24px_80px_rgba(0,0,0,0.28)]';
-const sectionHeaderClass = 'border-b border-slate-200/80 bg-[linear-gradient(180deg,rgba(248,250,252,0.95),rgba(255,255,255,0))] p-6 dark:border-white/8 dark:bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0))]';
+const sectionCardClass = 'overflow-hidden rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(9,24,39,0.96),rgba(6,17,29,0.96))] shadow-[0_24px_80px_rgba(0,0,0,0.28)]';
+const sectionHeaderClass = 'border-b border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0))] p-6';
+const reportDarkInputStyle: CSSProperties = {
+  background: '#0b1424',
+  backgroundImage: 'none',
+  color: '#f8fbff',
+};
 
 function metricCardClass(tone: 'cyan' | 'emerald' | 'amber' | 'violet' | 'rose'): string {
   return cn(
@@ -116,28 +121,28 @@ function resolveQuickRange(range: QuickRange): { fromDate: string; toDate: strin
 
 function statusBadgeTone(row: BackendInvoiceStatusRow): string {
   if (row.is_critical) {
-    return 'bg-orange-50 border-orange-200 text-orange-700';
+    return 'border-orange-300/20 bg-orange-300/10 text-orange-100';
   }
   if (row.state.toLowerCase() === 'paid' || row.state.toLowerCase() === 'verified') {
-    return 'bg-emerald-50 border-emerald-200 text-emerald-700';
+    return 'border-emerald-300/20 bg-emerald-300/10 text-emerald-100';
   }
   if (row.state.toLowerCase() === 'sent') {
-    return 'bg-blue-50 border-blue-200 text-blue-700';
+    return 'border-blue-300/20 bg-blue-300/10 text-blue-100';
   }
-  return 'bg-gray-50 border-gray-200 text-gray-700';
+  return 'border-white/10 bg-[rgba(255,255,255,0.04)] text-slate-100';
 }
 
 function dispatchBadgeTone(row: BackendDispatchStatusRow): string {
   if (row.status.toLowerCase() === 'completed') {
-    return 'bg-emerald-50 border-emerald-200 text-emerald-700';
+    return 'border-emerald-300/20 bg-emerald-300/10 text-emerald-100';
   }
   if (row.status.toLowerCase() === 'delayed') {
-    return 'bg-orange-50 border-orange-200 text-orange-700';
+    return 'border-orange-300/20 bg-orange-300/10 text-orange-100';
   }
   if (row.status.toLowerCase() === 'cancelled') {
-    return 'bg-red-50 border-red-200 text-red-700';
+    return 'border-red-300/20 bg-red-300/10 text-red-100';
   }
-  return 'bg-slate-50 border-slate-200 text-slate-700';
+  return 'border-white/10 bg-[rgba(255,255,255,0.04)] text-slate-100';
 }
 
 export default function ReportsPage() {
@@ -347,10 +352,10 @@ export default function ReportsPage() {
               <Badge variant="outline" className="border-cyan-300/20 bg-cyan-300/10 px-3 py-1 text-cyan-100">
                 {QUICK_RANGE_LABEL[quickRange]}
               </Badge>
-              <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-slate-300">
+              <span className="rounded-full border border-white/10 bg-[rgba(255,255,255,0.04)] px-3 py-2 text-xs text-slate-300">
                 Range: {activeRangeLabel}
               </span>
-              <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-slate-300">
+              <span className="rounded-full border border-white/10 bg-[rgba(255,255,255,0.04)] px-3 py-2 text-xs text-slate-300">
                 Last updated: {lastUpdated ? lastUpdated.toLocaleTimeString() : '--'}
               </span>
             </div>
@@ -363,7 +368,7 @@ export default function ReportsPage() {
               <div className="space-y-2">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Quick Range</p>
                 <Select value={quickRange} onValueChange={(value) => handleQuickRangeChange(value as QuickRange)}>
-                  <SelectTrigger className="h-11 rounded-2xl border-slate-200 bg-white text-slate-900 shadow-sm dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-100">
+                  <SelectTrigger className="h-11 rounded-2xl border-white/10 bg-[#0b1424] text-slate-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
                     <SelectValue placeholder="Range" />
                   </SelectTrigger>
                   <SelectContent>
@@ -379,12 +384,13 @@ export default function ReportsPage() {
 
               <div className="space-y-2">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Custom Range</p>
-                <div className="grid min-h-11 grid-cols-1 items-center gap-2 rounded-2xl border border-slate-200 bg-white px-3 py-2 shadow-sm sm:grid-cols-[1fr_auto_1fr] dark:border-white/10 dark:bg-white/[0.04]">
+                <div className="grid min-h-11 grid-cols-1 items-center gap-2 rounded-2xl border border-white/10 bg-[#0b1424] px-3 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] sm:grid-cols-[1fr_auto_1fr]">
                   <Input
                     type="date"
                     value={fromDate}
                     onChange={(event) => setFromDate(event.target.value)}
-                    className="h-8 min-w-[150px] border-0 bg-transparent px-1 text-xs text-slate-900 shadow-none focus-visible:ring-0 dark:text-slate-100"
+                    style={reportDarkInputStyle}
+                    className="h-8 min-w-[150px] border-0 px-1 text-xs text-slate-100 shadow-none focus-visible:ring-0"
                   />
                   <span className="hidden items-center gap-1 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400 sm:flex">
                     <Calendar className="h-3.5 w-3.5" />
@@ -394,7 +400,8 @@ export default function ReportsPage() {
                     type="date"
                     value={toDate}
                     onChange={(event) => setToDate(event.target.value)}
-                    className="h-8 min-w-[150px] border-0 bg-transparent px-1 text-xs text-slate-900 shadow-none focus-visible:ring-0 dark:text-slate-100"
+                    style={reportDarkInputStyle}
+                    className="h-8 min-w-[150px] border-0 px-1 text-xs text-slate-100 shadow-none focus-visible:ring-0"
                   />
                 </div>
               </div>
@@ -409,14 +416,14 @@ export default function ReportsPage() {
                   {loading ? 'Applying...' : 'Apply Filters'}
                 </Button>
 
-                <Button variant="outline" size="sm" className="h-11 gap-2 rounded-full border-slate-200 bg-white text-slate-700 shadow-sm hover:bg-slate-50 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-100 dark:hover:bg-white/[0.08]" onClick={handleExport} disabled={!overview || loading}>
+                <Button variant="outline" size="sm" className="h-11 gap-2 rounded-full border-white/10 bg-[rgba(255,255,255,0.03)] text-slate-100 shadow-sm hover:bg-[rgba(255,255,255,0.08)]" onClick={handleExport} disabled={!overview || loading}>
                   <Download className="w-4 h-4" /> Export Section CSVs
                 </Button>
 
                 <Button
                   variant="outline"
                   size="sm"
-                  className="h-11 gap-2 rounded-full border-slate-200 bg-white text-slate-700 shadow-sm hover:bg-slate-50 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-100 dark:hover:bg-white/[0.08]"
+                  className="h-11 gap-2 rounded-full border-white/10 bg-[rgba(255,255,255,0.03)] text-slate-100 shadow-sm hover:bg-[rgba(255,255,255,0.08)]"
                   onClick={handleRefresh}
                   disabled={!canRunRange || loading}
                   title="Refresh"
@@ -537,7 +544,7 @@ export default function ReportsPage() {
                   ['Accepted', `${overview?.dispatch_overview?.accepted_rate ?? 0}%`],
                   ['Refused', `${overview?.dispatch_overview?.refused_rate ?? 0}%`],
                 ].map(([label, value]) => (
-                  <div key={label} className="rounded-2xl border border-slate-200 bg-slate-50/80 p-3 dark:border-white/8 dark:bg-white/[0.03]">
+                  <div key={label} className="rounded-2xl border border-white/8 bg-[rgba(255,255,255,0.03)] p-3">
                     <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400">{label}</p>
                     <p className="mt-2 text-xl font-semibold text-slate-950 dark:text-white">{value}</p>
                   </div>
@@ -547,7 +554,7 @@ export default function ReportsPage() {
                 <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">Jobs by urgency</p>
                 {(overview?.dispatch_overview?.jobs_by_urgency ?? []).length ? (
                   overview?.dispatch_overview?.jobs_by_urgency.map((row) => (
-                    <div key={row.status} className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2 text-sm dark:border-white/8 dark:bg-white/[0.03]">
+                    <div key={row.status} className="flex items-center justify-between rounded-xl border border-white/8 bg-[rgba(255,255,255,0.03)] px-3 py-2 text-sm">
                       <span className="text-slate-700 dark:text-slate-300">{row.status}</span>
                       <span className="font-semibold text-slate-950 dark:text-white">{row.count} ({row.percentage}%)</span>
                     </div>
@@ -566,22 +573,22 @@ export default function ReportsPage() {
             </div>
             <div className="space-y-4 p-6 pt-5">
               <div className="grid grid-cols-3 gap-3">
-                <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-3 dark:border-white/8 dark:bg-white/[0.03]">
+                <div className="rounded-2xl border border-white/8 bg-[rgba(255,255,255,0.03)] p-3">
                   <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400">Records</p>
                   <p className="mt-2 text-xl font-semibold text-slate-950 dark:text-white">{overview?.intake_analytics?.total_intake_records ?? 0}</p>
                 </div>
-                <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-3 dark:border-white/8 dark:bg-white/[0.03]">
+                <div className="rounded-2xl border border-white/8 bg-[rgba(255,255,255,0.03)] p-3">
                   <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400">Convert</p>
                   <p className="mt-2 text-xl font-semibold text-slate-950 dark:text-white">{overview?.intake_analytics?.conversion_rate ?? 0}%</p>
                 </div>
-                <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-3 dark:border-white/8 dark:bg-white/[0.03]">
+                <div className="rounded-2xl border border-white/8 bg-[rgba(255,255,255,0.03)] p-3">
                   <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400">To job</p>
                   <p className="mt-2 text-xl font-semibold text-slate-950 dark:text-white">{overview?.intake_analytics?.average_time_to_job_creation ?? '0m'}</p>
                 </div>
               </div>
               {(overview?.intake_analytics?.source_channels ?? []).length ? (
                 overview?.intake_analytics?.source_channels.map((row) => (
-                  <div key={row.source_channel} className="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2 text-sm dark:border-white/8 dark:bg-white/[0.03]">
+                  <div key={row.source_channel} className="rounded-xl border border-white/8 bg-[rgba(255,255,255,0.03)] px-3 py-2 text-sm">
                     <div className="flex items-center justify-between">
                       <span className="text-slate-700 dark:text-slate-300">{row.source_channel}</span>
                       <span className="font-semibold text-slate-950 dark:text-white">{row.converted_jobs}/{row.intake_records}</span>
@@ -606,7 +613,7 @@ export default function ReportsPage() {
             <div className="space-y-4 p-6 pt-5">
               <div className="space-y-2">
                 {capacityUtilizationRows.length ? capacityUtilizationRows.map((row) => (
-                  <div key={row.day_of_week} className="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2 dark:border-white/8 dark:bg-white/[0.03]">
+                  <div key={row.day_of_week} className="rounded-xl border border-white/8 bg-[rgba(255,255,255,0.03)] px-3 py-2">
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-slate-700 dark:text-slate-300">{row.day_of_week}</span>
                       <span className="font-semibold text-slate-950 dark:text-white">{row.jobs_count} jobs</span>
@@ -614,7 +621,7 @@ export default function ReportsPage() {
                     <p className="mt-1 text-xs text-slate-500">{row.jobs_per_technician} jobs/tech - {row.technician_utilization}% utilization</p>
                   </div>
                 )) : (
-                  <p className="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-3 text-sm text-slate-500 dark:border-white/8 dark:bg-white/[0.03] dark:text-slate-400">
+                  <p className="rounded-xl border border-white/8 bg-[rgba(255,255,255,0.03)] px-3 py-3 text-sm text-slate-400">
                     No utilization rows yet for this range.
                   </p>
                 )}
@@ -623,7 +630,7 @@ export default function ReportsPage() {
                 <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">Peak windows</p>
                 <div className="flex flex-wrap gap-2">
                   {peakDemandRows.length ? peakDemandRows.map((row) => (
-                    <Badge key={row.hour} variant="outline" className="border-slate-200 bg-white text-slate-700 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300">
+                    <Badge key={row.hour} variant="outline" className="border-white/10 bg-[rgba(255,255,255,0.04)] text-slate-300">
                       {row.hour} - {row.jobs_count}
                     </Badge>
                   )) : <span className="text-sm text-slate-500 dark:text-slate-400">No peak windows yet.</span>}
@@ -659,10 +666,10 @@ export default function ReportsPage() {
               ) : overview?.dispatch_performance.length ? (
                 <div className="space-y-3">
                   {overview.dispatch_performance.map((row) => (
-                    <div key={row.status} className="space-y-2 rounded-[20px] border border-slate-200 bg-slate-50/80 p-4 dark:border-white/8 dark:bg-white/[0.03]">
+                    <div key={row.status} className="space-y-2 rounded-[20px] border border-white/8 bg-[rgba(255,255,255,0.03)] p-4">
                       <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center gap-2">
-                          <Badge variant="outline" className={cn(dispatchBadgeTone(row), 'border text-xs dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-100')}>{row.status}</Badge>
+                          <Badge variant="outline" className={cn(dispatchBadgeTone(row), 'border text-xs')}>{row.status}</Badge>
                           <span className="text-sm text-slate-400">{numberFmt.format(row.count)} jobs</span>
                         </div>
                         <span className="text-sm font-semibold text-slate-950 dark:text-white">{percentFmt.format(row.percentage)}%</span>
@@ -695,18 +702,18 @@ export default function ReportsPage() {
                   <Skeleton className="h-10 w-full bg-white/10" />
                 </div>
               ) : overview?.invoice_performance.length ? (
-                <div className="overflow-hidden rounded-[20px] border border-slate-200 bg-white shadow-sm dark:border-white/8 dark:bg-black/10">
-                  <div className="flex items-start justify-between gap-3 border-b border-slate-200 bg-slate-50/80 px-5 py-4 dark:border-white/8 dark:bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0))]">
+                <div className="overflow-hidden rounded-[20px] border border-white/8 bg-black/10 shadow-sm">
+                  <div className="flex items-start justify-between gap-3 border-b border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0))] px-5 py-4">
                     <div className="space-y-1.5">
                       <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500 dark:text-slate-400">Invoice States</div>
                       <div className="text-sm text-slate-600 dark:text-slate-200">Lifecycle counts and billed totals for the selected report window.</div>
                     </div>
-                  <Badge variant="outline" className="rounded-full border-slate-200 bg-white px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-slate-600 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300">
+                  <Badge variant="outline" className="rounded-full border-white/10 bg-[rgba(255,255,255,0.04)] px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-slate-300">
                       {overview.invoice_performance.length} states
                     </Badge>
                   </div>
                   <Table>
-                    <TableHeader className="sticky top-0 z-10 border-b border-slate-200 bg-white/95 backdrop-blur-xl dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(11,25,42,0.98),rgba(10,20,35,0.92))]">
+                    <TableHeader className="sticky top-0 z-10 border-b border-white/10 bg-[linear-gradient(180deg,rgba(11,25,42,0.98),rgba(10,20,35,0.92))] backdrop-blur-xl">
                       <TableRow className="border-white/0 hover:bg-transparent">
                         <TableHead className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">State</TableHead>
                         <TableHead className="text-right text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Count</TableHead>
@@ -715,9 +722,9 @@ export default function ReportsPage() {
                     </TableHeader>
                     <TableBody>
                       {overview.invoice_performance.map((row, index) => (
-                        <TableRow key={row.state} className={cn('border-b border-slate-100 dark:border-white/6', index % 2 === 1 && 'bg-slate-50/60 dark:bg-white/[0.015]')}>
+                        <TableRow key={row.state} className={cn('border-b border-white/6', index % 2 === 1 && 'bg-[rgba(255,255,255,0.015)]')}>
                           <TableCell>
-                            <Badge variant="outline" className={cn(statusBadgeTone(row), 'border text-xs dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-100')}>{row.state}</Badge>
+                            <Badge variant="outline" className={cn(statusBadgeTone(row), 'border text-xs')}>{row.state}</Badge>
                           </TableCell>
                           <TableCell className="text-right text-slate-700 dark:text-slate-200">{numberFmt.format(row.count)}</TableCell>
                           <TableCell className="text-right font-medium text-slate-950 dark:text-white">{currencyFmt.format(row.total_amount)}</TableCell>
@@ -726,7 +733,7 @@ export default function ReportsPage() {
                     </TableBody>
                   </Table>
                   {(overview.invoice_metrics?.blocked_reasons ?? []).length ? (
-                    <div className="border-t border-slate-200 px-5 py-4 dark:border-white/8">
+                    <div className="border-t border-white/8 px-5 py-4">
                       <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">Blocked reasons</p>
                       <div className="flex flex-wrap gap-2">
                         {overview.invoice_metrics?.blocked_reasons.map((row) => (
@@ -757,7 +764,8 @@ export default function ReportsPage() {
               value={technicianFilter}
               onChange={(event) => setTechnicianFilter(event.target.value)}
               placeholder="Filter technician..."
-              className="h-10 rounded-full border-white/10 bg-white/[0.04] text-slate-100 placeholder:text-slate-500 lg:w-72"
+              style={reportDarkInputStyle}
+              className="h-10 rounded-full border-white/10 text-slate-100 placeholder:text-slate-500 lg:w-72"
             />
           </div>
           <div className="p-6 pt-5">
@@ -768,18 +776,18 @@ export default function ReportsPage() {
                 <Skeleton className="h-10 w-full bg-white/10" />
               </div>
             ) : filteredTechnicianRows.length ? (
-              <div className="overflow-hidden rounded-[20px] border border-slate-200 bg-white shadow-sm dark:border-white/8 dark:bg-black/10">
-                <div className="flex items-start justify-between gap-3 border-b border-slate-200 bg-slate-50/80 px-5 py-4 dark:border-white/8 dark:bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0))]">
+              <div className="overflow-hidden rounded-[20px] border border-white/8 bg-black/10 shadow-sm">
+                <div className="flex items-start justify-between gap-3 border-b border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0))] px-5 py-4">
                   <div className="space-y-1.5">
                     <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500 dark:text-slate-400">Technician Performance Board</div>
                     <div className="text-sm text-slate-600 dark:text-slate-200">Assignment, completion, delay, and revenue metrics by technician.</div>
                   </div>
-                  <Badge variant="outline" className="rounded-full border-slate-200 bg-white px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-slate-600 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300">
+                  <Badge variant="outline" className="rounded-full border-white/10 bg-[rgba(255,255,255,0.04)] px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-slate-300">
                     {filteredTechnicianRows.length} visible
                   </Badge>
                 </div>
                 <Table>
-                  <TableHeader className="sticky top-0 z-10 border-b border-slate-200 bg-white/95 backdrop-blur-xl dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(11,25,42,0.98),rgba(10,20,35,0.92))]">
+                  <TableHeader className="sticky top-0 z-10 border-b border-white/10 bg-[linear-gradient(180deg,rgba(11,25,42,0.98),rgba(10,20,35,0.92))] backdrop-blur-xl">
                     <TableRow className="border-white/0 hover:bg-transparent">
                       <TableHead className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Technician</TableHead>
                       <TableHead className="text-right text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Assigned</TableHead>
@@ -794,7 +802,7 @@ export default function ReportsPage() {
                   </TableHeader>
                   <TableBody>
                     {filteredTechnicianRows.map((row, index) => (
-                      <TableRow key={row.id} className={cn('border-b border-slate-100 dark:border-white/6', index % 2 === 1 && 'bg-slate-50/60 dark:bg-white/[0.015]')}>
+                      <TableRow key={row.id} className={cn('border-b border-white/6', index % 2 === 1 && 'bg-[rgba(255,255,255,0.015)]')}>
                         <TableCell className="font-medium text-slate-950 dark:text-white">{row.name}</TableCell>
                         <TableCell className="text-right text-slate-700 dark:text-slate-200">{numberFmt.format(row.jobs_assigned)}</TableCell>
                         <TableCell className="text-right text-slate-700 dark:text-slate-200">{numberFmt.format(row.jobs_completed)}</TableCell>
@@ -829,7 +837,8 @@ export default function ReportsPage() {
               value={dealershipFilter}
               onChange={(event) => setDealershipFilter(event.target.value)}
               placeholder="Filter dealership..."
-              className="h-10 rounded-full border-white/10 bg-white/[0.04] text-slate-100 placeholder:text-slate-500 lg:w-72"
+              style={reportDarkInputStyle}
+              className="h-10 rounded-full border-white/10 text-slate-100 placeholder:text-slate-500 lg:w-72"
             />
           </div>
           <div className="p-6 pt-5">
@@ -840,18 +849,18 @@ export default function ReportsPage() {
                 <Skeleton className="h-10 w-full bg-white/10" />
               </div>
             ) : filteredDealershipRows.length ? (
-              <div className="overflow-hidden rounded-[20px] border border-slate-200 bg-white shadow-sm dark:border-white/8 dark:bg-black/10">
-                <div className="flex items-start justify-between gap-3 border-b border-slate-200 bg-slate-50/80 px-5 py-4 dark:border-white/8 dark:bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0))]">
+              <div className="overflow-hidden rounded-[20px] border border-white/8 bg-black/10 shadow-sm">
+                <div className="flex items-start justify-between gap-3 border-b border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0))] px-5 py-4">
                   <div className="space-y-1.5">
                     <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500 dark:text-slate-400">Location Performance Board</div>
                     <div className="text-sm text-slate-600 dark:text-slate-200">Job volume, invoice value, requested services, completion time, and SLA compliance.</div>
                   </div>
-                  <Badge variant="outline" className="rounded-full border-slate-200 bg-white px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-slate-600 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300">
+                  <Badge variant="outline" className="rounded-full border-white/10 bg-[rgba(255,255,255,0.04)] px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-slate-300">
                     {filteredDealershipRows.length} visible
                   </Badge>
                 </div>
                 <Table>
-                  <TableHeader className="sticky top-0 z-10 border-b border-slate-200 bg-white/95 backdrop-blur-xl dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(11,25,42,0.98),rgba(10,20,35,0.92))]">
+                  <TableHeader className="sticky top-0 z-10 border-b border-white/10 bg-[linear-gradient(180deg,rgba(11,25,42,0.98),rgba(10,20,35,0.92))] backdrop-blur-xl">
                     <TableRow className="border-white/0 hover:bg-transparent">
                       <TableHead className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Dealership</TableHead>
                       <TableHead className="text-right text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Job Volume</TableHead>
@@ -864,7 +873,7 @@ export default function ReportsPage() {
                   </TableHeader>
                   <TableBody>
                     {filteredDealershipRows.map((row, index) => (
-                      <TableRow key={row.id} className={cn('border-b border-slate-100 dark:border-white/6', index % 2 === 1 && 'bg-slate-50/60 dark:bg-white/[0.015]')}>
+                      <TableRow key={row.id} className={cn('border-b border-white/6', index % 2 === 1 && 'bg-[rgba(255,255,255,0.015)]')}>
                         <TableCell className="font-medium text-slate-950 dark:text-white">{row.name}</TableCell>
                         <TableCell className="text-right text-slate-700 dark:text-slate-200">{numberFmt.format(row.job_volume ?? row.jobs_created)}</TableCell>
                         <TableCell className="text-right text-slate-700 dark:text-slate-200">{numberFmt.format(row.jobs_completed)}</TableCell>
