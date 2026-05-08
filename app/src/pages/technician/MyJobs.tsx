@@ -229,8 +229,8 @@ function StatusBadge({ status }: { status: JobStatus }) {
     };
 
     const labels: Record<JobStatus, string> = {
-        pending: 'Pending',
-        scheduled: 'Scheduled',
+        pending: 'Assigned',
+        scheduled: 'Accepted',
         in_progress: 'In Progress',
         delayed: 'Delayed',
         completed: 'Completed',
@@ -275,12 +275,8 @@ function UrgencyBadge({ urgency }: { urgency: Urgency }) {
 
 function JobCard({
     job,
-    serviceOptions,
-    selectedServiceName,
-    selectedServices,
     addedServices,
     canManageServices,
-    onSelectService,
     onOpenAddService,
     onEditAddedService,
     onRemoveAddedService,
@@ -291,12 +287,8 @@ function JobCard({
     onRefuse,
 }: {
     job: MyJob;
-    serviceOptions: string[];
-    selectedServiceName: string;
-    selectedServices: string[];
     addedServices: AddedServiceEntry[];
     canManageServices: boolean;
-    onSelectService: (jobId: string, serviceName: string) => void;
     onOpenAddService: (jobId: string) => void;
     onEditAddedService: (jobId: string, service: AddedServiceEntry) => void;
     onRemoveAddedService: (jobId: string, service: AddedServiceEntry) => void;
@@ -436,42 +428,17 @@ function JobCard({
                         <span className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
                             My Service Lines
                         </span>
-                        {canManageServices && selectedServiceName !== job.original_service_name && (
-                            <span className="text-[11px] font-medium text-[#2F8E92] dark:text-teal-400">
-                                Updated by technician
+                        {addedServices.length > 0 && (
+                            <span className="rounded-full border border-[#2F8E92]/25 bg-[#2F8E92]/10 px-2 py-0.5 text-[11px] font-semibold text-[#2F8E92] dark:border-teal-400/30 dark:bg-teal-400/10 dark:text-teal-200">
+                                {addedServices.length} added
                             </span>
                         )}
                     </div>
-                    <div className="rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100">
-                        {selectedServiceName}
-                    </div>
-                    <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                        Dealership requested: <OverflowText text={job.original_service_name} className="inline max-w-[16rem] font-medium text-gray-700 dark:text-gray-200" />
-                    </p>
-                    {canManageServices && (
-                        <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => onOpenAddService(job.job_id)}
-                            className="mt-3 h-10 w-full justify-start rounded-xl border-dashed border-[#2F8E92]/40 text-[#2F8E92] hover:bg-[#2F8E92]/5 dark:border-teal-500/40 dark:text-teal-400 dark:hover:bg-teal-500/10"
-                        >
-                            <Plus className="mr-2 h-4 w-4" />
-                            Add Additional Service
-                        </Button>
-                    )}
-                    <div className="mt-3 rounded-xl bg-white/70 p-3 dark:bg-gray-800/60">
-                        <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                            Selected Services
-                        </p>
-                        <div className="mt-2 space-y-1 text-sm text-gray-700 dark:text-gray-200">
-                            {selectedServices.map((serviceName) => (
-                                <div key={`${job.job_id}-selected-${serviceName}`} className="flex gap-2">
-                                    <span className="text-[#2F8E92] dark:text-teal-400">•</span>
-                                    <OverflowText text={serviceName} className="max-w-[16rem]" />
-                                </div>
-                            ))}
+                    {addedServices.length === 0 && (
+                        <div className="rounded-xl border border-dashed border-gray-200 bg-white/70 px-3 py-3 text-sm text-gray-500 dark:border-gray-700 dark:bg-gray-800/45 dark:text-gray-400">
+                            No technician service lines yet. Add one only when extra work is performed in the field.
                         </div>
-                    </div>
+                    )}
                     {addedServices.length > 0 && (
                         <div className="mt-2 space-y-2">
                             {addedServices.map((service) => (
@@ -520,6 +487,17 @@ function JobCard({
                                 </div>
                             ))}
                         </div>
+                    )}
+                    {canManageServices && (
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => onOpenAddService(job.job_id)}
+                            className="mt-3 h-10 w-full justify-start rounded-xl border border-dashed border-[#2F8E92]/35 bg-[#2F8E92]/10 text-[#A7F3F5] hover:border-[#5EEAD4]/55 hover:bg-[#2F8E92]/18 hover:text-white dark:border-teal-400/30 dark:bg-teal-400/10 dark:text-teal-100 dark:hover:bg-teal-400/15"
+                        >
+                            <Plus className="mr-2 h-4 w-4" />
+                            Add Service Line
+                        </Button>
                     )}
                 </div>
 
@@ -646,7 +624,6 @@ export default function MyJobsPage({
     const focusedJobId = searchParams.get('jobId');
     const [jobs, setJobs] = useState<MyJob[]>([]);
     const [serviceOptions, setServiceOptions] = useState<string[]>([]);
-    const [selectedServicesByJob, setSelectedServicesByJob] = useState<Record<string, string>>({});
     const [loading, setLoading] = useState(true);
     const isHistoryMode = viewMode === 'history';
 
@@ -685,42 +662,7 @@ export default function MyJobsPage({
         if (!options?.fromCache) {
             writeOfflineCurrentJobs(cacheOwnerId, orderedJobs);
         }
-        setSelectedServicesByJob((prev) => {
-            const next = { ...prev };
-            for (const job of orderedJobs) {
-                if (!next[job.job_id]) {
-                    next[job.job_id] = job.service_name;
-                }
-            }
-            return next;
-        });
     };
-
-    useEffect(() => {
-        if (typeof window === 'undefined') {
-            return;
-        }
-
-        try {
-            const raw = window.localStorage.getItem('sm_dispatch_job_service_overrides');
-            if (!raw) {
-                return;
-            }
-            const parsed = JSON.parse(raw) as Record<string, string>;
-            if (parsed && typeof parsed === 'object') {
-                setSelectedServicesByJob(parsed);
-            }
-        } catch {
-            // Ignore invalid local state.
-        }
-    }, []);
-
-    useEffect(() => {
-        if (typeof window === 'undefined') {
-            return;
-        }
-        window.localStorage.setItem('sm_dispatch_job_service_overrides', JSON.stringify(selectedServicesByJob));
-    }, [selectedServicesByJob]);
 
     useEffect(() => {
         applyJobs(readOfflineCurrentJobs(cacheOwnerId), { fromCache: true });
@@ -827,21 +769,9 @@ export default function MyJobsPage({
         }
     };
 
-    const getJobSelectedService = (job: MyJob): string => {
-        return selectedServicesByJob[job.job_id] || job.service_name;
-    };
-
-    const handleSelectService = (jobId: string, serviceName: string) => {
-        setSelectedServicesByJob((prev) => ({
-            ...prev,
-            [jobId]: serviceName,
-        }));
-    };
-
     const getSelectedServices = (job: MyJob): string[] => {
-        const selected = getJobSelectedService(job);
         const added = job.service_entries.map((entry) => entry.service_name);
-        return Array.from(new Set([selected, ...added].filter(Boolean)));
+        return Array.from(new Set([...job.service_names, ...added].filter(Boolean)));
     };
 
     const getAvailableAdditionalServices = (job: MyJob): string[] => {
@@ -933,10 +863,7 @@ export default function MyJobsPage({
                             ],
                         service_names: Array.from(
                             new Set([
-                                ...job.service_entries
-                                    .filter((entry) => entry.source !== 'technician')
-                                    .map((entry) => entry.service_name),
-                                getJobSelectedService(job),
+                                ...job.service_names,
                                 ...(isEditing
                                     ? job.service_entries.map((entry) => (
                                         entry.id === editingServiceId ? serviceName : entry.service_name
@@ -993,12 +920,15 @@ export default function MyJobsPage({
                     return job;
                 }
                 const nextEntries = job.service_entries.filter((entry) => entry.id !== service.id);
+                const requestedServiceNames = nextEntries
+                    .filter((entry) => entry.source !== 'technician')
+                    .map((entry) => entry.service_name);
                 return {
                     ...job,
                     service_entries: nextEntries,
                     service_names: Array.from(
                         new Set([
-                            getJobSelectedService(job),
+                            ...(requestedServiceNames.length > 0 ? requestedServiceNames : [job.original_service_name || job.service_name]),
                             ...nextEntries.map((entry) => entry.service_name),
                         ].filter(Boolean)),
                     ),
@@ -1365,14 +1295,8 @@ export default function MyJobsPage({
                                             <JobCard
                                                 key={job.job_id}
                                                 job={job}
-                                                serviceOptions={[
-                                                    ...new Set([...job.service_names, ...serviceOptions]),
-                                                ]}
-                                                selectedServiceName={getJobSelectedService(job)}
-                                                selectedServices={getSelectedServices(job)}
                                                 addedServices={job.service_entries.filter((entry) => entry.source === 'technician')}
                                                 canManageServices={false}
-                                                onSelectService={handleSelectService}
                                                 onOpenAddService={handleOpenAddService}
                                                 onEditAddedService={handleOpenEditService}
                                                 onRemoveAddedService={handleRemoveAddedService}
@@ -1407,14 +1331,8 @@ export default function MyJobsPage({
                                             <JobCard
                                                 key={job.job_id}
                                                 job={job}
-                                                serviceOptions={[
-                                                    ...new Set([...job.service_names, ...serviceOptions]),
-                                                ]}
-                                                selectedServiceName={getJobSelectedService(job)}
-                                                selectedServices={getSelectedServices(job)}
                                                 addedServices={job.service_entries.filter((entry) => entry.source === 'technician')}
                                                 canManageServices={job.job_status !== 'pending'}
-                                                onSelectService={handleSelectService}
                                                 onOpenAddService={handleOpenAddService}
                                                 onEditAddedService={handleOpenEditService}
                                                 onRemoveAddedService={handleRemoveAddedService}
@@ -1739,3 +1657,4 @@ export default function MyJobsPage({
         </div>
     );
 }
+
