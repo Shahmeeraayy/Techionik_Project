@@ -757,6 +757,19 @@ export default function JobDetailPage() {
         }, 2000);
     };
 
+    const handleViewInvoice = () => {
+        if (!job) return;
+
+        const invoiceUrl = job.invoice.pdf_url;
+        if (invoiceUrl && invoiceUrl !== '#') {
+            window.open(invoiceUrl, '_blank', 'noopener,noreferrer');
+            return;
+        }
+
+        toast.info('No invoice file is attached to this job yet. Open Billing to find generated invoices.');
+        navigate('/admin/invoices');
+    };
+
     const handlePushToQueue = async () => {
         if (!job) return;
         const token = getStoredAdminToken();
@@ -1280,7 +1293,11 @@ export default function JobDetailPage() {
 
                                 {job.invoice_state === 'synced' && (
                                     <div className="space-y-3">
-                                        <Button className="w-full bg-green-50 text-green-700 hover:bg-green-100 border border-green-200 shadow-sm">
+                                        <Button
+                                            type="button"
+                                            className="w-full bg-green-50 text-green-700 hover:bg-green-100 border border-green-200 shadow-sm"
+                                            onClick={handleViewInvoice}
+                                        >
                                             <ExternalLink className="w-4 h-4 mr-2" />
                                             View Invoice
                                         </Button>
