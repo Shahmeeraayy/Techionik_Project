@@ -1535,6 +1535,17 @@ export async function fetchTechnicianJobsFeed(token: string): Promise<BackendTec
   return requestJson<BackendTechnicianJobFeed>('/technicians/me/jobs-feed', { token });
 }
 
+export async function registerTechnicianPushSubscription(
+  token: string,
+  subscription: PushSubscriptionJSON,
+): Promise<{ status: string }> {
+  return requestJson<{ status: string }>('/technicians/me/push-subscriptions', {
+    method: 'POST',
+    token,
+    body: subscription,
+  });
+}
+
 export async function startTechnicianMyJob(
   token: string,
   jobId: string,

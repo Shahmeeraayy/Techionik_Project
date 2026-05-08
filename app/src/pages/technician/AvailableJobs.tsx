@@ -24,6 +24,7 @@ import {
     fetchTechnicianJobsFeed,
     getStoredAdminToken,
     getStoredTechnicianToken,
+    registerTechnicianPushSubscription,
     type BackendTechnicianJobFeedItem,
 } from '@/lib/backend-api';
 import { DISPATCH_JOB_STATUS, normalizeDispatchJobStatus } from '@/lib/job-status';
@@ -75,6 +76,13 @@ const writeOfflineJobs = (technicianId: string, jobs: AvailableJob[]) => {
     } catch {
         // Local storage can be unavailable in private browsing; the service worker still caches shell/API reads.
     }
+};
+
+const urlBase64ToUint8Array = (base64String: string) => {
+    const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+    const base64 = `${base64String}${padding}`.replace(/-/g, '+').replace(/_/g, '/');
+    const rawData = window.atob(base64);
+    return Uint8Array.from([...rawData].map((char) => char.charCodeAt(0)));
 };
 
 const mapBackendPortalJobsItem = (item: BackendTechnicianJobFeedItem): AvailableJob => {
@@ -348,6 +356,25 @@ export default function AvailableJobsPage() {
         }
     };
 
+    const registerPushSubscription = async () => {
+        const vapidPublicKey = import.meta.env.VITE_VAPID_PUBLIC_KEY as string | undefined;
+        const token = getStoredTechnicianToken();
+        if (!vapidPublicKey || !token || !('serviceWorker' in navigator) || !('PushManager' in window)) return;
+        if (!('Notification' in window) || Notification.permission !== 'granted') return;
+
+        try {
+            const registration = await navigator.serviceWorker.ready;
+            const existing = await registration.pushManager.getSubscription();
+            const subscription = existing ?? await registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
+            });
+            await registerTechnicianPushSubscription(token, subscription.toJSON());
+        } catch {
+            // Backend push endpoints or browser push may be unavailable in local/dev; foreground polling still works.
+        }
+    };
+
     const applyJobs = (nextJobs: AvailableJob[], options?: { fromCache?: boolean }) => {
         const sortedJobs = sortJobsByNewest(nextJobs);
         setJobs(sortedJobs);
@@ -410,7 +437,7 @@ export default function AvailableJobsPage() {
     }, [currentTechId, isPreviewMode, user?.id, user?.role]);
 
     useEffect(() => {
-        void requestNotificationPermission();
+        void requestNotificationPermission().then(registerPushSubscription);
     }, []);
 
     useEffect(() => {
@@ -499,6 +526,13 @@ export default function AvailableJobsPage() {
                                     variant="outline"
                                     size="sm"
                                     onClick={handleRefresh}
+                                    style={loading ? {
+                                        background: '#182234',
+                                        backgroundImage: 'none',
+                                        color: '#8ea3c5',
+                                        borderColor: 'rgba(148, 163, 184, 0.12)',
+                                        opacity: 1,
+                                    } : undefined}
                                     className="h-11 gap-2 rounded-2xl border-white/10 bg-white/[0.03] px-4 text-slate-100 hover:bg-white/[0.08] disabled:bg-[#182234] disabled:text-slate-400"
                                     disabled={loading}
                                 >

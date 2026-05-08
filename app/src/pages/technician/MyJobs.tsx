@@ -17,7 +17,7 @@ import {
     Trash2,
     Sparkles,
 } from 'lucide-react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import {
@@ -155,6 +155,30 @@ const mapBackendFeedItemToMyJob = (item: BackendTechnicianJobFeedItem): MyJob | 
         zone: item.zone_name || 'Unspecified',
         allowed_actions: allowedActions,
     };
+};
+
+const offlineCurrentJobsKey = (technicianId: string) => `sm2_technician_current_jobs_cache:${technicianId}`;
+
+const readOfflineCurrentJobs = (technicianId: string): MyJob[] => {
+    try {
+        const raw = window.localStorage.getItem(offlineCurrentJobsKey(technicianId));
+        if (!raw) return [];
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed?.jobs) ? parsed.jobs : [];
+    } catch {
+        return [];
+    }
+};
+
+const writeOfflineCurrentJobs = (technicianId: string, jobs: MyJob[]) => {
+    try {
+        window.localStorage.setItem(offlineCurrentJobsKey(technicianId), JSON.stringify({
+            cachedAt: new Date().toISOString(),
+            jobs,
+        }));
+    } catch {
+        // Ignore private browsing/storage errors.
+    }
 };
 
 // --- Components ---
@@ -531,8 +555,11 @@ export default function MyJobsPage({
     viewMode?: 'current' | 'history';
 }) {
     const { techId: previewTechId } = useParams();
+    const [searchParams] = useSearchParams();
     const routeBase = previewTechId ? `/admin/tech-preview/${previewTechId}` : '/tech';
     const { user } = useAuth();
+    const cacheOwnerId = previewTechId ?? user?.id ?? 'technician';
+    const focusedJobId = searchParams.get('jobId');
     const [jobs, setJobs] = useState<MyJob[]>([]);
     const [serviceOptions, setServiceOptions] = useState<string[]>([]);
     const [selectedServicesByJob, setSelectedServicesByJob] = useState<Record<string, string>>({});
@@ -560,6 +587,27 @@ export default function MyJobsPage({
 
     // Action Loading
     const [confirmLoading, setConfirmLoading] = useState(false);
+    const [offlineMode, setOfflineMode] = useState(false);
+
+    const applyJobs = (nextJobs: MyJob[], options?: { fromCache?: boolean }) => {
+        const orderedJobs = focusedJobId
+            ? [...nextJobs].sort((a, b) => Number(b.job_id === focusedJobId) - Number(a.job_id === focusedJobId))
+            : nextJobs;
+        setJobs(orderedJobs);
+        setOfflineMode(Boolean(options?.fromCache));
+        if (!options?.fromCache) {
+            writeOfflineCurrentJobs(cacheOwnerId, orderedJobs);
+        }
+        setSelectedServicesByJob((prev) => {
+            const next = { ...prev };
+            for (const job of orderedJobs) {
+                if (!next[job.job_id]) {
+                    next[job.job_id] = job.service_name;
+                }
+            }
+            return next;
+        });
+    };
 
     useEffect(() => {
         if (typeof window === 'undefined') {
@@ -588,8 +636,9 @@ export default function MyJobsPage({
     }, [selectedServicesByJob]);
 
     useEffect(() => {
+        applyJobs(readOfflineCurrentJobs(cacheOwnerId), { fromCache: true });
         void fetchJobs();
-    }, [previewTechId, user?.id, user?.role]);
+    }, [previewTechId, user?.id, user?.role, focusedJobId]);
 
     useEffect(() => {
         void fetchServiceOptions();
@@ -613,7 +662,7 @@ export default function MyJobsPage({
         if (previewTechId) {
             const adminToken = getStoredAdminToken();
             if (!adminToken) {
-                setJobs([]);
+                applyJobs(readOfflineCurrentJobs(cacheOwnerId), { fromCache: true });
                 setLoading(false);
                 return;
             }
@@ -622,18 +671,9 @@ export default function MyJobsPage({
                 const mapped = [...feed.available_jobs, ...feed.my_jobs]
                     .map(mapBackendFeedItemToMyJob)
                     .filter((job): job is MyJob => job !== null);
-                setJobs(mapped);
-                setSelectedServicesByJob((prev) => {
-                    const next = { ...prev };
-                    for (const job of mapped) {
-                        if (!next[job.job_id]) {
-                            next[job.job_id] = job.service_name;
-                        }
-                    }
-                    return next;
-                });
+                applyJobs(mapped);
             } catch {
-                setJobs([]);
+                applyJobs(readOfflineCurrentJobs(cacheOwnerId), { fromCache: true });
             }
             setLoading(false);
             return;
@@ -641,7 +681,7 @@ export default function MyJobsPage({
 
         const token = getStoredTechnicianToken();
         if (!token || user?.role !== 'technician') {
-            setJobs([]);
+            applyJobs(readOfflineCurrentJobs(cacheOwnerId), { fromCache: true });
             setLoading(false);
             return;
         }
@@ -651,18 +691,9 @@ export default function MyJobsPage({
             const mapped = [...feed.available_jobs, ...feed.my_jobs]
                 .map(mapBackendFeedItemToMyJob)
                 .filter((job): job is MyJob => job !== null);
-            setJobs(mapped);
-            setSelectedServicesByJob((prev) => {
-                const next = { ...prev };
-                for (const job of mapped) {
-                    if (!next[job.job_id]) {
-                        next[job.job_id] = job.service_name;
-                    }
-                }
-                return next;
-            });
+            applyJobs(mapped);
         } catch {
-            setJobs([]);
+            applyJobs(readOfflineCurrentJobs(cacheOwnerId), { fromCache: true });
         }
         setLoading(false);
     };
@@ -1098,7 +1129,9 @@ export default function MyJobsPage({
             },
         ];
     const boardTitle = isHistoryMode ? 'History Board' : 'Current Job Board';
-    const boardDescription = isHistoryMode
+    const boardDescription = offlineMode
+        ? 'Offline cached job details are available on this device.'
+        : isHistoryMode
         ? 'Completed technician records with service detail, technician changes, and final field actions.'
         : 'Live assignments currently active for this technician, ready for field updates.';
     const visibleCount = isHistoryMode ? completedJobs.length : activeJobs.length;
@@ -1561,4 +1594,3 @@ export default function MyJobsPage({
         </div>
     );
 }
-
