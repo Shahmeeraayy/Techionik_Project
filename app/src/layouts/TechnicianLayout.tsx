@@ -35,15 +35,15 @@ function DesktopSidebar() {
   const { user, logout } = useAuth();
 
   return (
-    <aside className="hidden lg:flex flex-col w-64 h-screen sticky top-0 bg-white border-r border-gray-100">
+    <aside className="hidden lg:flex flex-col w-64 h-screen sticky top-0 border-r border-white/10 bg-[#050505] shadow-[18px_0_60px_rgba(0,0,0,0.26)]">
       {/* Logo */}
-      <div className="flex items-center gap-3 px-6 py-5 border-b border-gray-100">
-        <div className="w-9 h-9 rounded-xl bg-[#2F8E92] flex items-center justify-center">
+      <div className="flex items-center gap-3 border-b border-white/10 px-6 py-5">
+        <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-cyan-300/20 bg-cyan-300/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
           <Wrench className="w-5 h-5 text-white" />
         </div>
         <div>
-          <h1 className="font-semibold text-gray-900 leading-tight">SM2 electronics</h1>
-          <p className="text-xs text-gray-500">Technician Portal</p>
+          <h1 className="font-semibold leading-tight text-white">SM2 electronics</h1>
+          <p className="text-xs uppercase tracking-[0.16em] text-slate-400">Technician Portal</p>
         </div>
       </div>
 
@@ -57,12 +57,12 @@ function DesktopSidebar() {
             <Link
               key={item.path}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors w-full text-left ${isActive
-                  ? 'bg-[#E6F4F4] text-[#2F8E92]'
-                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  ? 'border border-white/10 bg-[#242424] text-white shadow-[0_12px_30px_rgba(0,0,0,0.28)]'
+                  : 'text-slate-400 hover:bg-white/[0.06] hover:text-white'
                 }`}
               to={item.path}
             >
-              <Icon className={`w-5 h-5 ${isActive ? 'text-[#2F8E92]' : 'text-gray-400'}`} />
+              <Icon className={`w-5 h-5 ${isActive ? 'text-cyan-100' : 'text-slate-500'}`} />
               {item.label}
             </Link>
           );
@@ -70,24 +70,24 @@ function DesktopSidebar() {
       </nav>
 
       {/* User menu */}
-      <div className="p-4 border-t border-gray-100">
+      <div className="border-t border-white/10 p-4">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-3 w-full p-2 rounded-xl hover:bg-gray-50 transition-colors">
+            <button className="flex w-full items-center gap-3 rounded-xl p-2 transition-colors hover:bg-white/[0.06]">
               <Avatar className="w-9 h-9">
                 <AvatarImage src={user?.avatar} alt={user?.name} />
-                <AvatarFallback className="bg-[#E6F4F4] text-[#2F8E92] text-sm">
+                <AvatarFallback className="bg-cyan-300/10 text-sm text-cyan-100">
                   {user?.name?.split(' ').map(n => n[0]).join('')}
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1 text-left">
-                <p className="text-sm font-medium text-gray-900">{user?.name}</p>
-                <p className="text-xs text-gray-500">Technician</p>
+                <p className="text-sm font-medium text-white">{user?.name}</p>
+                <p className="text-xs text-slate-400">Technician</p>
               </div>
-              <ChevronDown className="w-4 h-4 text-gray-400" />
+              <ChevronDown className="w-4 h-4 text-slate-500" />
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
+          <DropdownMenuContent align="end" className="w-56 border-white/10 bg-[#0b1424] text-slate-100">
 
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={logout} className="cursor-pointer text-rose-600">
@@ -105,18 +105,18 @@ function MobileHeader({ onMenuClick }: { onMenuClick: () => void }) {
   const { user } = useAuth();
 
   return (
-    <header className="lg:hidden sticky top-0 z-30 bg-white border-b border-gray-100 px-4 py-3">
+    <header className="sticky top-0 z-30 border-b border-white/10 bg-[#080c14]/95 px-4 py-3 backdrop-blur-xl lg:hidden">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-[#2F8E92] flex items-center justify-center">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-cyan-300/20 bg-cyan-300/10">
             <Wrench className="w-4 h-4 text-white" />
           </div>
-          <span className="font-semibold text-gray-900">SM2 electronics</span>
+          <span className="font-semibold text-white">SM2 electronics</span>
         </div>
         <div className="flex items-center gap-2">
           <Avatar className="w-8 h-8">
             <AvatarImage src={user?.avatar} alt={user?.name} />
-            <AvatarFallback className="bg-[#E6F4F4] text-[#2F8E92] text-xs">
+            <AvatarFallback className="bg-cyan-300/10 text-xs text-cyan-100">
               {user?.name?.split(' ').map(n => n[0]).join('')}
             </AvatarFallback>
           </Avatar>
@@ -134,7 +134,7 @@ function MobileNav() {
   const activeItem = location.pathname;
 
   return (
-    <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-100">
+    <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-white/10 bg-[#080c14]/95 backdrop-blur-xl lg:hidden">
       <div className="flex items-center justify-around px-2 py-2">
         {navItems.map((item) => {
           const Icon = item.icon;
@@ -143,7 +143,7 @@ function MobileNav() {
           return (
             <Link
               key={item.path}
-              className={`flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-colors ${isActive ? 'text-[#2F8E92]' : 'text-gray-400 hover:text-gray-600'
+              className={`flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-colors ${isActive ? 'bg-white/[0.06] text-cyan-100' : 'text-slate-500 hover:text-slate-200'
                 }`}
               to={item.path}
             >
@@ -168,9 +168,9 @@ function MobileMenu({ isOpen, onClose }: { isOpen: boolean; onClose: () => void 
         className="fixed inset-0 bg-black/50 z-50"
         onClick={onClose}
       />
-      <div className="fixed top-0 right-0 bottom-0 w-64 bg-white z-50 p-4 shadow-xl">
+      <div className="fixed bottom-0 right-0 top-0 z-50 w-64 border-l border-white/10 bg-[#080c14] p-4 shadow-xl">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="font-semibold text-gray-900">Menu</h2>
+          <h2 className="font-semibold text-white">Menu</h2>
           <Button variant="ghost" size="icon" onClick={onClose}>
             <X className="w-5 h-5" />
           </Button>
@@ -183,7 +183,7 @@ function MobileMenu({ isOpen, onClose }: { isOpen: boolean; onClose: () => void 
               logout();
               onClose();
             }}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-rose-600 hover:bg-rose-50"
+            className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-rose-200 hover:bg-rose-400/10"
           >
             <LogOut className="w-5 h-5" />
             Log out
@@ -198,7 +198,7 @@ export function TechnicianLayout({ children }: { children: React.ReactNode }) {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-[#F6F7F9]">
+    <div className="tech-shell min-h-screen">
       <MobileHeader onMenuClick={() => setMenuOpen(true)} />
       <MobileMenu isOpen={menuOpen} onClose={() => setMenuOpen(false)} />
 
