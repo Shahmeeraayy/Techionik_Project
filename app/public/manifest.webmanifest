@@ -1,0 +1,34 @@
+{
+  "name": "SM2 Technician Portal",
+  "short_name": "SM2 Tech",
+  "description": "Field technician workspace for assigned jobs, current job updates, history, chat, and profile.",
+  "start_url": "/tech/jobs",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#080c14",
+  "theme_color": "#080c14",
+  "orientation": "portrait",
+  "categories": ["business", "productivity"],
+  "icons": [
+    {
+      "src": "/pwa-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Assigned Jobs",
+      "short_name": "Jobs",
+      "url": "/tech/jobs",
+      "icons": [{ "src": "/pwa-icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+    },
+    {
+      "name": "Current Job",
+      "short_name": "Current",
+      "url": "/tech/current-job",
+      "icons": [{ "src": "/pwa-icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+    }
+  ]
+}

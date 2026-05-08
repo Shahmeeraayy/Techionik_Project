@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef, type TouchEvent } from 'react';
 import {
     RefreshCw,
     MapPin,
@@ -52,6 +52,30 @@ const getJobTimestamp = (value: string) => {
 const sortJobsByNewest = (jobs: AvailableJob[]) => (
     [...jobs].sort((a, b) => getJobTimestamp(b.created_at) - getJobTimestamp(a.created_at))
 );
+
+const offlineJobsKey = (technicianId: string) => `sm2_technician_jobs_cache:${technicianId}`;
+
+const readOfflineJobs = (technicianId: string): AvailableJob[] => {
+    try {
+        const raw = window.localStorage.getItem(offlineJobsKey(technicianId));
+        if (!raw) return [];
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed?.jobs) ? parsed.jobs : [];
+    } catch {
+        return [];
+    }
+};
+
+const writeOfflineJobs = (technicianId: string, jobs: AvailableJob[]) => {
+    try {
+        window.localStorage.setItem(offlineJobsKey(technicianId), JSON.stringify({
+            cachedAt: new Date().toISOString(),
+            jobs,
+        }));
+    } catch {
+        // Local storage can be unavailable in private browsing; the service worker still caches shell/API reads.
+    }
+};
 
 const mapBackendPortalJobsItem = (item: BackendTechnicianJobFeedItem): AvailableJob => {
     const normalizedStatus = normalizeDispatchJobStatus(item.status);
@@ -133,7 +157,7 @@ function JobCard({
     onOpenCurrentJob,
 }: {
     job: AvailableJob;
-    onOpenCurrentJob: () => void;
+    onOpenCurrentJob: (jobId: string) => void;
 }) {
     const statusStyles: Record<AvailableJob['status'], string> = {
         pending: 'bg-amber-100 text-amber-700 border-amber-300',
@@ -151,7 +175,18 @@ function JobCard({
     };
 
     return (
-        <div className="overflow-hidden rounded-[26px] border border-white/10 bg-[linear-gradient(180deg,rgba(9,24,39,0.96),rgba(6,17,29,0.98))] shadow-[0_24px_80px_rgba(0,0,0,0.28)]">
+        <div
+            role="button"
+            tabIndex={0}
+            onClick={() => onOpenCurrentJob(job.job_id)}
+            onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    onOpenCurrentJob(job.job_id);
+                }
+            }}
+            className="cursor-pointer overflow-hidden rounded-[26px] border border-white/10 bg-[linear-gradient(180deg,rgba(9,24,39,0.96),rgba(6,17,29,0.98))] shadow-[0_24px_80px_rgba(0,0,0,0.28)] transition-all duration-200 hover:-translate-y-0.5 hover:border-cyan-300/24 hover:shadow-[0_28px_90px_rgba(34,211,238,0.1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/40"
+        >
             <div className="p-5 pb-4 space-y-3">
                 {/* Job Code & Time */}
                 <div className="flex items-start justify-between gap-3">
@@ -202,7 +237,10 @@ function JobCard({
             <div className="px-5 pb-5">
                 <div className="grid grid-cols-1 gap-3">
                     <Button
-                        onClick={onOpenCurrentJob}
+                        onClick={(event) => {
+                            event.stopPropagation();
+                            onOpenCurrentJob(job.job_id);
+                        }}
                         className={cn(
                             "h-12 text-base font-semibold rounded-xl transition-all duration-200",
                             "bg-[#2F8E92] text-white hover:bg-[#267276]",
@@ -223,7 +261,11 @@ function JobCard({
 export default function AvailableJobsPage() {
     const [jobs, setJobs] = useState<AvailableJob[]>([]);
     const [loading, setLoading] = useState(true);
+    const [isPullRefreshing, setIsPullRefreshing] = useState(false);
+    const [offlineMode, setOfflineMode] = useState(false);
     const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+    const touchStartYRef = useRef<number | null>(null);
+    const knownJobIdsRef = useRef<Set<string>>(new Set());
     const { techId: previewTechId } = useParams();
     const { user, technicianAccounts } = useAuth();
     const navigate = useNavigate();
@@ -268,12 +310,62 @@ export default function AvailableJobsPage() {
         zones: new Set(jobs.map((job) => job.zone).filter(Boolean)).size,
     }), [jobs]);
 
+    const notifyNewAssignments = async (incomingJobs: AvailableJob[]) => {
+        const previousIds = knownJobIdsRef.current;
+        const newJobs = incomingJobs.filter((job) => !previousIds.has(job.job_id));
+        knownJobIdsRef.current = new Set(incomingJobs.map((job) => job.job_id));
+
+        if (!previousIds.size || !newJobs.length || typeof window === 'undefined') return;
+        if (!('Notification' in window) || Notification.permission !== 'granted') return;
+
+        const [job] = newJobs;
+        const body = `${job.dealership_name} - ${job.service_name}`;
+        const url = `${currentJobPath}?jobId=${encodeURIComponent(job.job_id)}`;
+        const registration = 'serviceWorker' in navigator ? await navigator.serviceWorker.ready.catch(() => null) : null;
+
+        if (registration?.active) {
+            registration.active.postMessage({
+                type: 'SM2_SHOW_JOB_NOTIFICATION',
+                title: 'New assigned job',
+                body,
+                url,
+            });
+            return;
+        }
+
+        new Notification('New assigned job', {
+            body,
+            icon: '/pwa-icon.svg',
+        });
+    };
+
+    const requestNotificationPermission = async () => {
+        if (!('Notification' in window) || Notification.permission !== 'default') return;
+        try {
+            await Notification.requestPermission();
+        } catch {
+            // Permission prompts are browser-controlled; ignore if unavailable.
+        }
+    };
+
+    const applyJobs = (nextJobs: AvailableJob[], options?: { fromCache?: boolean }) => {
+        const sortedJobs = sortJobsByNewest(nextJobs);
+        setJobs(sortedJobs);
+        setOfflineMode(Boolean(options?.fromCache));
+        if (!options?.fromCache) {
+            writeOfflineJobs(currentTechId, sortedJobs);
+            void notifyNewAssignments(sortedJobs);
+        } else {
+            knownJobIdsRef.current = new Set(sortedJobs.map((job) => job.job_id));
+        }
+    };
+
     const fetchJobs = async () => {
         setLoading(true);
         if (isPreviewMode) {
             const adminToken = getStoredAdminToken();
             if (!adminToken) {
-                setJobs([]);
+                applyJobs(readOfflineJobs(currentTechId), { fromCache: true });
                 setLastUpdated(new Date());
                 setLoading(false);
                 return;
@@ -283,9 +375,9 @@ export default function AvailableJobsPage() {
                 const mergedJobs = [...feed.available_jobs, ...feed.my_jobs]
                     .map(mapBackendPortalJobsItem)
                     .filter((job) => job.status !== 'unknown');
-                setJobs(sortJobsByNewest(mergedJobs));
+                applyJobs(mergedJobs);
             } catch {
-                setJobs([]);
+                applyJobs(readOfflineJobs(currentTechId), { fromCache: true });
             }
             setLastUpdated(new Date());
             setLoading(false);
@@ -294,7 +386,7 @@ export default function AvailableJobsPage() {
 
         const token = getStoredTechnicianToken();
         if (!token || user?.role !== 'technician') {
-            setJobs([]);
+            applyJobs(readOfflineJobs(currentTechId), { fromCache: true });
             setLastUpdated(new Date());
             setLoading(false);
             return;
@@ -304,17 +396,22 @@ export default function AvailableJobsPage() {
             const mergedJobs = [...feed.available_jobs, ...feed.my_jobs]
                 .map(mapBackendPortalJobsItem)
                 .filter((job) => job.status !== 'unknown');
-            setJobs(sortJobsByNewest(mergedJobs));
+            applyJobs(mergedJobs);
         } catch {
-            setJobs([]);
+            applyJobs(readOfflineJobs(currentTechId), { fromCache: true });
         }
         setLastUpdated(new Date());
         setLoading(false);
     };
 
     useEffect(() => {
+        applyJobs(readOfflineJobs(currentTechId), { fromCache: true });
         void fetchJobs();
     }, [currentTechId, isPreviewMode, user?.id, user?.role]);
+
+    useEffect(() => {
+        void requestNotificationPermission();
+    }, []);
 
     useEffect(() => {
         if (isPreviewMode) return;
@@ -329,16 +426,33 @@ export default function AvailableJobsPage() {
         };
     }, [isPreviewMode, currentTechId, user?.id, user?.role]);
 
-    const handleOpenCurrentJob = () => {
-        navigate(currentJobPath);
+    const handleOpenCurrentJob = (jobId: string) => {
+        navigate(`${currentJobPath}?jobId=${encodeURIComponent(jobId)}`);
     };
 
-    const handleRefresh = () => {
-        fetchJobs();
+    const handleRefresh = async () => {
+        await fetchJobs();
+    };
+
+    const handleTouchStart = (event: TouchEvent<HTMLDivElement>) => {
+        if (window.scrollY > 0) return;
+        touchStartYRef.current = event.touches[0]?.clientY ?? null;
+    };
+
+    const handleTouchEnd = async (event: TouchEvent<HTMLDivElement>) => {
+        const startY = touchStartYRef.current;
+        touchStartYRef.current = null;
+        if (startY === null || loading || isPullRefreshing) return;
+        const endY = event.changedTouches[0]?.clientY ?? startY;
+        if (endY - startY < 72 || window.scrollY > 4) return;
+
+        setIsPullRefreshing(true);
+        await fetchJobs();
+        setIsPullRefreshing(false);
     };
 
     return (
-        <div className="tech-shell pb-24 text-white">
+        <div className="tech-shell pb-24 text-white" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
             <div className="relative w-full pb-8">
                 <div className="pointer-events-none absolute inset-x-0 top-0 h-[320px] bg-[radial-gradient(circle_at_top_left,rgba(79,124,255,0.08),rgba(79,124,255,0)_32%),radial-gradient(circle_at_top_right,rgba(45,212,191,0.07),rgba(45,212,191,0)_28%)]" />
                 <div className="relative mx-auto w-full max-w-[1500px] space-y-6 px-4 pt-4 sm:px-6 lg:px-8">
@@ -376,7 +490,7 @@ export default function AvailableJobsPage() {
                                 </p>
                                 {lastUpdated ? (
                                     <p className="mt-1 text-xs text-slate-500">
-                                        Updated {lastUpdated.toLocaleTimeString()}
+                                        {offlineMode ? 'Offline cache' : 'Updated'} {lastUpdated.toLocaleTimeString()}
                                     </p>
                                 ) : null}
                             </div>
@@ -389,7 +503,7 @@ export default function AvailableJobsPage() {
                                     disabled={loading}
                                 >
                                     <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
-                                    Refresh
+                                    {isPullRefreshing ? 'Refreshing...' : 'Refresh'}
                                 </Button>
                             </div>
                         </div>
@@ -439,7 +553,9 @@ export default function AvailableJobsPage() {
                             <div className="flex items-start justify-between gap-3">
                                 <div className="space-y-2">
                                     <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Technician Board</div>
-                                    <div className="text-sm text-slate-200">Assignments sent from dispatch and ready for action in the field.</div>
+                                    <div className="text-sm text-slate-200">
+                                        {offlineMode ? 'Offline cached assignments available on this device.' : 'Assignments sent from dispatch and ready for action in the field.'}
+                                    </div>
                                 </div>
                                 <Badge variant="outline" className="rounded-full border-white/10 bg-white/[0.04] px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-slate-300">
                                     {jobsByStatus.total} visible
