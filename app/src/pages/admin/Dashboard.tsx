@@ -213,7 +213,10 @@ function buildSnapshot(input: {
     { id: 'active-locations', label: 'Active Locations', value: activeLocationsCount, icon: Building2, tone: 'blue', navigateTo: '/admin/dealerships' },
   ];
 
-  const refusedUnassignedCount = jobs.filter((job) => job.status === 'cancelled' && !job.assigned_technician_id).length;
+  const awaitingReassignmentCount = jobs.filter((job) => (
+    !job.assigned_technician_id
+    && ['pending', 'delayed', 'cancelled'].includes(job.status)
+  )).length;
   const blockedOver24hCount = invoices.filter((invoice) => {
     const dueDate = new Date(invoice.due_date).getTime();
     return invoice.status === 'overdue' && Date.now() - dueDate > 24 * 60 * 60 * 1000;
@@ -223,9 +226,9 @@ function buildSnapshot(input: {
   const alerts: DashboardAlert[] = [
     {
       id: 'refused-jobs',
-      title: 'Refused jobs with no reassignment',
-      description: `${refusedUnassignedCount} refused job(s) remain without a reassigned technician.`,
-      tone: refusedUnassignedCount > 0 ? 'critical' : 'info',
+      title: 'Jobs awaiting reassignment',
+      description: `${awaitingReassignmentCount} unassigned pending/refused job(s) need a technician assignment.`,
+      tone: awaitingReassignmentCount > 0 ? 'critical' : 'info',
     },
     {
       id: 'blocked-invoices',
