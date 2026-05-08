@@ -1248,7 +1248,7 @@ export default function TechniciansPage() {
     };
 
     const sectionCardClass = 'overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_22px_70px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(9,24,39,0.96),rgba(6,17,29,0.96))] dark:shadow-[0_24px_80px_rgba(0,0,0,0.28)]';
-    const sectionHeaderClass = 'border-b border-slate-200 bg-[linear-gradient(180deg,rgba(248,250,252,0.88),rgba(255,255,255,0))] p-6 dark:border-white/8 dark:bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0))]';
+    const sectionHeaderClass = 'border-b border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0))] p-6';
 
     return (
         <div className="relative w-full pb-10">
@@ -1312,22 +1312,22 @@ export default function TechniciansPage() {
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-2">
                                         <Label className="text-slate-200">Full Name</Label>
-                                        <Input className="h-12 rounded-2xl border-white/10 bg-[#0b1424] text-white placeholder:text-slate-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] focus-visible:border-cyan-300/40 focus-visible:ring-cyan-300/15" placeholder="e.g. John Doe" value={newTechForm.name} onChange={e => setNewTechForm({ ...newTechForm, name: e.target.value })} />
+                                        <Input className="h-12 rounded-2xl border-white/10 !bg-[#0b1424] !text-white placeholder:!text-slate-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] focus-visible:!bg-[#0b1424] focus-visible:border-cyan-300/40 focus-visible:ring-cyan-300/15" placeholder="e.g. John Doe" value={newTechForm.name} onChange={e => setNewTechForm({ ...newTechForm, name: e.target.value })} />
                                     </div>
                                     <div className="space-y-2">
                                         <Label className="text-slate-200">Email</Label>
-                                        <Input className="h-12 rounded-2xl border-white/10 bg-[#0b1424] text-white placeholder:text-slate-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] focus-visible:border-cyan-300/40 focus-visible:ring-cyan-300/15" placeholder="e.g. john@example.com" value={newTechForm.email} onChange={e => setNewTechForm({ ...newTechForm, email: e.target.value })} />
+                                        <Input className="h-12 rounded-2xl border-white/10 !bg-[#0b1424] !text-white placeholder:!text-slate-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] focus-visible:!bg-[#0b1424] focus-visible:border-cyan-300/40 focus-visible:ring-cyan-300/15" placeholder="e.g. john@example.com" value={newTechForm.email} onChange={e => setNewTechForm({ ...newTechForm, email: e.target.value })} />
                                     </div>
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-2">
                                         <Label className="text-slate-200">Tech Code</Label>
-                                        <Input className="h-12 rounded-2xl border-white/10 bg-[#0b1424] text-white placeholder:text-slate-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] focus-visible:border-cyan-300/40 focus-visible:ring-cyan-300/15" placeholder="e.g. TECH-999" value={newTechForm.code} onChange={e => setNewTechForm({ ...newTechForm, code: e.target.value })} />
+                                        <Input className="h-12 rounded-2xl border-white/10 !bg-[#0b1424] !text-white placeholder:!text-slate-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] focus-visible:!bg-[#0b1424] focus-visible:border-cyan-300/40 focus-visible:ring-cyan-300/15" placeholder="e.g. TECH-999" value={newTechForm.code} onChange={e => setNewTechForm({ ...newTechForm, code: e.target.value })} />
                                     </div>
                                     <div className="space-y-2">
                                         <Label className="text-slate-200">Phone</Label>
                                         <Input
-                                            className="h-12 rounded-2xl border-white/10 bg-[#0b1424] text-white placeholder:text-slate-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] focus-visible:border-cyan-300/40 focus-visible:ring-cyan-300/15"
+                                            className="h-12 rounded-2xl border-white/10 !bg-[#0b1424] !text-white placeholder:!text-slate-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] focus-visible:!bg-[#0b1424] focus-visible:border-cyan-300/40 focus-visible:ring-cyan-300/15"
                                             placeholder={phoneExampleFormat}
                                             value={newTechForm.phone}
                                             onChange={e => setNewTechForm({ ...newTechForm, phone: formatUsPhoneInput(e.target.value) })}
@@ -1336,11 +1336,11 @@ export default function TechniciansPage() {
                                 </div>
                                 <div className="space-y-2">
                                     <Label className="text-slate-200">Default Zones (comma separated)</Label>
-                                    <Input className="h-12 rounded-2xl border-white/10 bg-[#0b1424] text-white placeholder:text-slate-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] focus-visible:border-cyan-300/40 focus-visible:ring-cyan-300/15" placeholder="North, Downtown" value={newTechForm.zones} onChange={e => setNewTechForm({ ...newTechForm, zones: e.target.value })} />
+                                    <Input className="h-12 rounded-2xl border-white/10 !bg-[#0b1424] !text-white placeholder:!text-slate-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] focus-visible:!bg-[#0b1424] focus-visible:border-cyan-300/40 focus-visible:ring-cyan-300/15" placeholder="North, Downtown" value={newTechForm.zones} onChange={e => setNewTechForm({ ...newTechForm, zones: e.target.value })} />
                                 </div>
                                 <div className="space-y-2">
                                     <Label className="text-slate-200">Default Skills (comma separated)</Label>
-                                    <Input className="h-12 rounded-2xl border-white/10 bg-[#0b1424] text-white placeholder:text-slate-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] focus-visible:border-cyan-300/40 focus-visible:ring-cyan-300/15" placeholder="Locksmith, Towing" value={newTechForm.skills} onChange={e => setNewTechForm({ ...newTechForm, skills: e.target.value })} />
+                                    <Input className="h-12 rounded-2xl border-white/10 !bg-[#0b1424] !text-white placeholder:!text-slate-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] focus-visible:!bg-[#0b1424] focus-visible:border-cyan-300/40 focus-visible:ring-cyan-300/15" placeholder="Locksmith, Towing" value={newTechForm.skills} onChange={e => setNewTechForm({ ...newTechForm, skills: e.target.value })} />
                                 </div>
                             </div>
                             <DialogFooter>
@@ -1485,7 +1485,7 @@ export default function TechniciansPage() {
                     </div>
                 ) : (
                     <div className="overflow-hidden">
-                        <div className="flex items-start justify-between gap-3 border-b border-slate-200 bg-[linear-gradient(180deg,rgba(248,250,252,0.88),rgba(255,255,255,0))] px-6 py-5 dark:border-white/8 dark:bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0))]">
+                        <div className="flex items-start justify-between gap-3 border-b border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0))] px-6 py-5">
                             <div className="space-y-2">
                                 <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500 dark:text-slate-400">Technician Board</div>
                                 <div className="text-sm text-slate-600 dark:text-slate-200">Active workforce records with status, routing zones, and current dispatch readiness.</div>
@@ -1589,7 +1589,13 @@ export default function TechniciansPage() {
                                                 <div onClick={(e) => e.stopPropagation()}>
                                                     <DropdownMenu>
                                                         <DropdownMenuTrigger asChild>
-                                                            <Button variant="ghost" size="icon" className="h-10 w-10 rounded-2xl border border-white/10 bg-white/[0.03] text-slate-300 opacity-0 transition-all hover:bg-white/[0.08] hover:text-white group-hover:opacity-100">
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="h-10 w-10 rounded-2xl border border-white/10 bg-white/[0.03] text-slate-300 transition-all hover:bg-white/[0.08] hover:text-white"
+                                                                onClick={(event) => event.stopPropagation()}
+                                                                onPointerDown={(event) => event.stopPropagation()}
+                                                            >
                                                                 <MoreVertical className="h-4 w-4" />
                                                             </Button>
                                                         </DropdownMenuTrigger>
