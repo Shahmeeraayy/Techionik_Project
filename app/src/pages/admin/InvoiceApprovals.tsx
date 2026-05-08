@@ -127,6 +127,13 @@ type EditableServiceLine = {
     tax_code: string;
     tax_rate: number;
 };
+type BillToDraft = {
+    name: string;
+    street: string;
+    city: string;
+    state: string;
+    zip_code: string;
+};
 type ServiceCatalogOption = {
     name: string;
     default_price: number;
@@ -166,6 +173,9 @@ const getApprovalLocationLabel = (
 const getBlockedLocationLabel = (
     invoice: Pick<BackendPendingInvoiceApprovalIssue, 'dealership_name'>,
 ) => invoice.dealership_name;
+
+const BILL_TO_NAME_BLOCKER = 'Missing customer/dealership bill-to name';
+const BILL_TO_ADDRESS_BLOCKER = 'Missing customer/dealership bill-to address';
 
 const toLocalDateValue = (value?: string | null) => {
     if (!value) return '';
@@ -233,6 +243,13 @@ export default function InvoiceApprovalsPage() {
     const [exportModalOpen, setExportModalOpen] = useState(false);
     const [isEditingInvoice, setIsEditingInvoice] = useState(false);
     const [editableServices, setEditableServices] = useState<EditableServiceLine[]>([]);
+    const [billToDraft, setBillToDraft] = useState<BillToDraft>({
+        name: '',
+        street: '',
+        city: '',
+        state: '',
+        zip_code: '',
+    });
     const [serviceSuggestions, setServiceSuggestions] = useState<string[]>([]);
     const [serviceCatalogOptions, setServiceCatalogOptions] = useState<ServiceCatalogOption[]>([]);
 
@@ -342,8 +359,11 @@ export default function InvoiceApprovalsPage() {
     }), [blockedInvoices, filterDealership, filterFromDate, filterTechnician, filterToDate, searchQuery]);
 
     const visibleEstimatedTotal = useMemo(
-        () => filteredInvoices.reduce((sum, invoice) => sum + toNumber(invoice.estimated_total), 0),
-        [filteredInvoices],
+        () => {
+            const activeRows = queueTab === 'approval' ? filteredInvoices : filteredBlockedInvoices;
+            return activeRows.reduce((sum, invoice) => sum + toNumber(invoice.estimated_total), 0);
+        },
+        [filteredBlockedInvoices, filteredInvoices, queueTab],
     );
 
     const uniqueDealershipCount = useMemo(
@@ -376,6 +396,14 @@ export default function InvoiceApprovalsPage() {
         tax_rate: toNumber(service.tax_rate),
     }));
 
+    const toBillToDraft = (invoice: BackendPendingInvoiceApprovalDetail): BillToDraft => ({
+        name: invoice.bill_to?.name?.trim() || invoice.dealership_name || '',
+        street: invoice.bill_to?.street?.trim() || '',
+        city: invoice.bill_to?.city?.trim() || '',
+        state: invoice.bill_to?.state?.trim() || '',
+        zip_code: invoice.bill_to?.zip_code?.trim() || '',
+    });
+
     const handleOpenDrawer = async (invoice: PendingInvoice | BlockedInvoice) => {
         const adminToken = getStoredAdminToken();
         if (!adminToken) {
@@ -386,6 +414,7 @@ export default function InvoiceApprovalsPage() {
             const detail = await fetchPendingInvoiceApprovalDetail(adminToken, invoice.job_id);
             setSelectedInvoice(detail);
             setEditableServices(toEditableServices(detail));
+            setBillToDraft(toBillToDraft(detail));
             setIsEditingInvoice(false);
             setDrawerOpen(true);
         } catch (error) {
@@ -430,6 +459,20 @@ export default function InvoiceApprovalsPage() {
             })),
         };
     }, [editableServices, selectedInvoice]);
+
+    const billToHasName = billToDraft.name.trim().length > 0;
+    const billToHasStreet = billToDraft.street.trim().length > 0;
+    const unresolvedBlockingReasons = selectedInvoice
+        ? selectedInvoice.blocking_reasons.filter((reason) => {
+            if (reason === BILL_TO_NAME_BLOCKER) return !billToHasName;
+            if (reason === BILL_TO_ADDRESS_BLOCKER) return !billToHasStreet;
+            return true;
+        })
+        : [];
+    const hasInvalidApprovalLines =
+        editableServices.length === 0 ||
+        editableServices.some((service) => service.name.trim().length === 0 || service.quantity <= 0 || service.price <= 0);
+    const approvalDisabled = unresolvedBlockingReasons.length > 0 || !billToHasName || !billToHasStreet || hasInvalidApprovalLines;
 
     const resetEditableServices = () => {
         if (!selectedInvoice) return;
@@ -557,6 +600,14 @@ export default function InvoiceApprovalsPage() {
             alert('All service quantities and prices must be greater than 0.');
             return;
         }
+        if (!billToHasName || !billToHasStreet) {
+            alert('Bill-to name and street address are required before invoice approval.');
+            return;
+        }
+        if (unresolvedBlockingReasons.length > 0) {
+            alert(`Resolve these blockers before approval: ${unresolvedBlockingReasons.join(', ')}`);
+            return;
+        }
         setIsApproving(true);
         setConfirmDialogOpen(false);
         try {
@@ -574,6 +625,13 @@ export default function InvoiceApprovalsPage() {
                 status: 'sent',
                 terms: 'NET_15',
                 shipping: 0,
+                bill_to: {
+                    name: billToDraft.name.trim(),
+                    street: billToDraft.street.trim(),
+                    city: billToDraft.city.trim() || null,
+                    state: billToDraft.state.trim() || null,
+                    zip_code: billToDraft.zip_code.trim() || null,
+                },
             });
 
             setInvoices((prev) => prev.filter((inv) => inv.job_id !== selectedInvoice.job_id));
@@ -608,7 +666,7 @@ export default function InvoiceApprovalsPage() {
                 Service: invoice.service_summary,
                 SubmittedDate: invoice.completed_at ? new Date(invoice.completed_at).toLocaleString() : '',
                 TimeInQueue: formatQueueDuration(invoice.completed_at),
-                EstimatedTotal: 0,
+                EstimatedTotal: toNumber(invoice.estimated_total),
                 InvoiceState: 'blocked',
                 BlockingReasons: invoice.blocking_reasons.join(' | '),
             }))
@@ -996,7 +1054,7 @@ export default function InvoiceApprovalsPage() {
                                         </TableCell>
                                         <TableCell className="py-4 text-right">
                                             <div className="text-lg font-semibold tracking-[-0.04em] text-amber-700 dark:text-amber-100" style={displayFontStyle}>
-                                                ${queueTab === 'approval' ? toNumber((inv as PendingInvoice).estimated_total).toFixed(2) : '0.00'}
+                                                ${toNumber(inv.estimated_total).toFixed(2)}
                                             </div>
                                         </TableCell>
                                         <TableCell className="py-4">
@@ -1163,6 +1221,68 @@ export default function InvoiceApprovalsPage() {
                                             </div>
                                         </section>
                                     )}
+                                    <section className="rounded-xl border border-cyan-500/15 bg-slate-900/80 p-4 shadow-[0_0_0_1px_rgba(34,211,238,0.04)]">
+                                        <div className="mb-4 flex items-start justify-between gap-3">
+                                            <div>
+                                                <h3 className="text-sm font-bold text-slate-100">Bill-to details</h3>
+                                                <p className="mt-1 text-xs text-slate-400">Required for invoice generation. Fill missing fields here before approving.</p>
+                                            </div>
+                                            {billToHasName && billToHasStreet ? (
+                                                <Badge variant="outline" className="border-emerald-500/30 bg-emerald-500/10 text-emerald-200">Ready</Badge>
+                                            ) : (
+                                                <Badge variant="outline" className="border-amber-500/30 bg-amber-500/10 text-amber-200">Needs address</Badge>
+                                            )}
+                                        </div>
+                                        <div className="grid gap-3 sm:grid-cols-2">
+                                            <div>
+                                                <Label className="mb-1.5 block text-[11px] uppercase tracking-wide text-slate-400">Bill-to name</Label>
+                                                <Input
+                                                    className="h-10 border-border/60 bg-slate-950/80 text-slate-100 placeholder:text-slate-500"
+                                                    value={billToDraft.name}
+                                                    onChange={(event) => setBillToDraft((prev) => ({ ...prev, name: event.target.value }))}
+                                                    placeholder="Customer or dealership name"
+                                                />
+                                            </div>
+                                            <div>
+                                                <Label className="mb-1.5 block text-[11px] uppercase tracking-wide text-slate-400">Street address</Label>
+                                                <Input
+                                                    className="h-10 border-border/60 bg-slate-950/80 text-slate-100 placeholder:text-slate-500"
+                                                    value={billToDraft.street}
+                                                    onChange={(event) => setBillToDraft((prev) => ({ ...prev, street: event.target.value }))}
+                                                    placeholder="Bill-to street address"
+                                                />
+                                            </div>
+                                            <div>
+                                                <Label className="mb-1.5 block text-[11px] uppercase tracking-wide text-slate-400">City</Label>
+                                                <Input
+                                                    className="h-10 border-border/60 bg-slate-950/80 text-slate-100 placeholder:text-slate-500"
+                                                    value={billToDraft.city}
+                                                    onChange={(event) => setBillToDraft((prev) => ({ ...prev, city: event.target.value }))}
+                                                    placeholder="City"
+                                                />
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <div>
+                                                    <Label className="mb-1.5 block text-[11px] uppercase tracking-wide text-slate-400">State</Label>
+                                                    <Input
+                                                        className="h-10 border-border/60 bg-slate-950/80 text-slate-100 placeholder:text-slate-500"
+                                                        value={billToDraft.state}
+                                                        onChange={(event) => setBillToDraft((prev) => ({ ...prev, state: event.target.value }))}
+                                                        placeholder="State"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <Label className="mb-1.5 block text-[11px] uppercase tracking-wide text-slate-400">Zip</Label>
+                                                    <Input
+                                                        className="h-10 border-border/60 bg-slate-950/80 text-slate-100 placeholder:text-slate-500"
+                                                        value={billToDraft.zip_code}
+                                                        onChange={(event) => setBillToDraft((prev) => ({ ...prev, zip_code: event.target.value }))}
+                                                        placeholder="Zip"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </section>
                                     <section className="grid grid-cols-2 gap-4 rounded-xl border border-cyan-500/15 bg-slate-900/80 p-4 shadow-[0_0_0_1px_rgba(34,211,238,0.04)]">
                                         <div>
                                             <h4 className="mb-1 text-xs font-semibold uppercase tracking-wider text-slate-400">Location</h4>
@@ -1437,7 +1557,7 @@ export default function InvoiceApprovalsPage() {
                                             <DialogTrigger asChild>
                                             <Button
                                                 className="flex-[2] bg-[#2F8E92] hover:bg-[#267276] text-white shadow-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60"
-                                                disabled={selectedInvoice.blocking_reasons.length > 0}
+                                                disabled={approvalDisabled}
                                             >
                                                 <CheckCircle2 className="w-4 h-4 mr-2" />
                                                 Approve & Generate

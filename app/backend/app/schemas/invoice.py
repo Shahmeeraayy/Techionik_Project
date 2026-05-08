@@ -344,6 +344,9 @@ class InvoicePendingApprovalIssueResponse(BaseModel):
     service_summary: str
     vehicle_summary: str
     completed_at: Optional[datetime] = None
+    estimated_subtotal: Decimal = Decimal("0")
+    estimated_sales_tax: Decimal = Decimal("0")
+    estimated_total: Decimal = Decimal("0")
     blocking_reasons: List[str] = Field(default_factory=list)
 
 

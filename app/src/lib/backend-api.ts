@@ -456,6 +456,9 @@ export type BackendPendingInvoiceApprovalIssue = {
   service_summary: string;
   vehicle_summary: string;
   completed_at?: string | null;
+  estimated_subtotal?: string | number;
+  estimated_sales_tax?: string | number;
+  estimated_total?: string | number;
   blocking_reasons: string[];
 };
 
@@ -1420,6 +1423,20 @@ export async function createInvoice(
     customer_message?: string;
     approval_note?: string;
     status?: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
+    bill_to?: {
+      name?: string | null;
+      street?: string | null;
+      city?: string | null;
+      state?: string | null;
+      zip_code?: string | null;
+    } | null;
+    ship_to?: {
+      name?: string | null;
+      street?: string | null;
+      city?: string | null;
+      state?: string | null;
+      zip_code?: string | null;
+    } | null;
   },
 ): Promise<BackendInvoice> {
   return requestJson<BackendInvoice>('/invoices', {

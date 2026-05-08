@@ -716,6 +716,7 @@ class InvoiceService:
         dispatch_job_ids: list[UUID],
         *,
         current_invoice_id: Optional[UUID] = None,
+        allow_missing_job_billing: bool = False,
     ) -> tuple[List[InvoiceLineItemPayload], InvoiceBillingPayload, list[UUID]]:
         if not dispatch_job_ids:
             return [], InvoiceBillingPayload(), []
@@ -755,6 +756,24 @@ class InvoiceService:
             bill_to_zip_code = (job.customer_zip_code or (dealership.postal_code if dealership else None) or None)
 
             if not bill_to_name or not bill_to_address:
+                if allow_missing_job_billing:
+                    resolved_lines = self._resolve_job_dispatch_line_inputs(job)
+                    for line in resolved_lines:
+                        quantity = _to_money(line.quantity if line.quantity is not None else Decimal("1"))
+                        rate = _to_money(line.rate)
+                        if quantity <= ZERO:
+                            raise HTTPException(
+                                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                                detail=f"Job {job.job_code} has invalid service quantity for invoicing",
+                            )
+                        if rate <= ZERO:
+                            raise HTTPException(
+                                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                                detail=f"Job {job.job_code} has missing service pricing for invoicing",
+                            )
+                    line_items.extend(resolved_lines)
+                    linked_job_ids.append(job.id)
+                    continue
                 raise HTTPException(
                     status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                     detail=f"Job {job.job_code} is missing customer billing data",
@@ -1103,6 +1122,25 @@ class InvoiceService:
             blockers, effective_lines = self._collect_pending_approval_blockers(job=job, dealership=dealership, draft=draft)
             if not blockers:
                 continue
+            estimated_subtotal = ZERO
+            estimated_sales_tax = ZERO
+            for line in effective_lines:
+                quantity = _to_money(line.quantity if line.quantity is not None else Decimal("1"))
+                rate = _to_money(line.rate)
+                if quantity <= ZERO or rate <= ZERO:
+                    continue
+                amount = compute_line_item_amount(quantity, rate)
+                try:
+                    line_tax_rate = self._resolve_tax_rate(
+                        tax_code=(line.tax_code or job.tax_code or "EXEMPT"),
+                        payload_tax_rate=line.tax_rate if line.tax_rate is not None else job.tax_rate,
+                    )
+                except HTTPException:
+                    line_tax_rate = ZERO
+                estimated_subtotal += amount
+                estimated_sales_tax += _to_money(amount * line_tax_rate)
+            estimated_subtotal = _to_money(estimated_subtotal)
+            estimated_sales_tax = _to_money(estimated_sales_tax)
 
             payload.append(
                 InvoicePendingApprovalIssueResponse(
@@ -1115,6 +1153,9 @@ class InvoiceService:
                     ) or (job.service_type or "Dispatch Service"),
                     vehicle_summary=job.vehicle or "-",
                     completed_at=job.completed_at,
+                    estimated_subtotal=estimated_subtotal,
+                    estimated_sales_tax=estimated_sales_tax,
+                    estimated_total=compute_total(estimated_subtotal, estimated_sales_tax, ZERO),
                     blocking_reasons=blockers,
                 )
             )
@@ -1131,9 +1172,17 @@ class InvoiceService:
         return self._to_response(row)
 
     def create_invoice(self, payload: InvoiceCreateRequest) -> InvoiceResponse:
-        dispatch_lines, dispatch_billing, dispatch_job_ids = self._build_dispatch_line_items(payload.dispatch_job_ids)
-        company = self._resolve_company_payload(payload.company, payload.company_info)
         requested_billing = self._payload_to_billing(payload.billing, payload.bill_to, payload.ship_to)
+        has_requested_bill_to = bool(
+            requested_billing
+            and requested_billing.bill_to_name
+            and requested_billing.bill_to_address
+        )
+        dispatch_lines, dispatch_billing, dispatch_job_ids = self._build_dispatch_line_items(
+            payload.dispatch_job_ids,
+            allow_missing_job_billing=has_requested_bill_to,
+        )
+        company = self._resolve_company_payload(payload.company, payload.company_info)
         billing = self._resolve_billing_payload(requested_billing, dispatch_billing)
         invoice_date = payload.invoice_date or date.today()
         due_date = self._resolve_due_date(invoice_date, payload.terms, payload.custom_term_days)
