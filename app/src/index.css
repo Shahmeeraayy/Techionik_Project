@@ -1502,12 +1502,12 @@
 /* Jobs board: fixed table, no white scroll rail in dark mode. */
 .dark .admin-shell .admin-jobs-table {
   background: linear-gradient(180deg, rgba(8, 16, 30, 0.98), rgba(6, 12, 23, 0.98)) !important;
-  overflow-x: hidden !important;
+  overflow-x: auto !important;
 }
 
 .dark .admin-shell .admin-jobs-table table {
-  width: 100% !important;
-  min-width: 0 !important;
+  width: max(100%, 1480px) !important;
+  min-width: 1480px !important;
   table-layout: fixed !important;
 }
 
@@ -1522,8 +1522,14 @@
 }
 
 .dark .admin-shell .admin-jobs-table *::-webkit-scrollbar {
-  height: 0 !important;
+  height: 8px !important;
   width: 8px;
+}
+
+.dark .admin-shell .admin-jobs-table *::-webkit-scrollbar-thumb {
+  background: rgba(71, 85, 105, 0.72);
+  border: 2px solid rgba(8, 12, 20, 0.96);
+  border-radius: 999px;
 }
 
 .dark .admin-shell .admin-jobs-table + div,

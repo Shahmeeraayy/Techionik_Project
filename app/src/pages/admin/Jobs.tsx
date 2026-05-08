@@ -2709,9 +2709,9 @@ export default function JobsPage() {
                         </Button>
                     </div>
                 ) : (
-                    <div className="admin-jobs-table relative flex-1 overflow-hidden">
-                        <Table className="w-full table-fixed">
-                            <TableHeader className="sticky top-0 z-10 border-b border-black/8 bg-white/95 backdrop-blur-xl dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(9,24,40,0.98),rgba(8,19,33,0.94))]">
+                    <div className="admin-jobs-table relative flex-1 overflow-x-auto overflow-y-hidden">
+                        <Table className="min-w-[1480px] table-fixed">
+                            <TableHeader className="sticky top-0 z-10 border-b border-white/10 bg-[linear-gradient(180deg,rgba(9,24,40,0.98),rgba(8,19,33,0.94))] backdrop-blur-xl">
                                 <TableRow className="border-white/0 hover:bg-transparent">
                                     <TableHead className="w-[38px] pl-4">
                                         <Checkbox
@@ -2731,15 +2731,15 @@ export default function JobsPage() {
                                             <ArrowUpDown className="ml-2 h-3.5 w-3.5" />
                                         </Button>
                                     </TableHead>
-                                    <TableHead className="w-[13%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Service Type</TableHead>
-                                    <TableHead className="w-[14%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Dealership / Location</TableHead>
-                                    <TableHead className="w-[11%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Vehicle</TableHead>
+                                    <TableHead className="w-[14%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Service Type</TableHead>
+                                    <TableHead className="w-[15%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Dealership / Location</TableHead>
+                                    <TableHead className="w-[12%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Vehicle</TableHead>
                                     <TableHead className="w-[12%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Assigned Tech</TableHead>
                                     <TableHead className="w-[6%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Urgency</TableHead>
                                     <TableHead className="w-[7%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Rank</TableHead>
                                     <TableHead className="w-[7%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Status</TableHead>
-                                    <TableHead className="w-[10%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Dates</TableHead>
-                                    <TableHead className="w-[9%] pr-4 text-right text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Actions</TableHead>
+                                    <TableHead className="w-[9%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Dates</TableHead>
+                                    <TableHead className="w-[10%] pr-4 text-right text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -2758,9 +2758,9 @@ export default function JobsPage() {
                                         <TableRow
                                             key={job.job_id}
                                             className={cn(
-                                                'group border-b border-white/6 bg-transparent transition-all duration-200 hover:bg-white/[0.04]',
-                                                index % 2 === 1 && 'bg-white/[0.012]',
-                                                job.attention_flag && 'bg-red-400/[0.035] hover:bg-red-400/[0.07]',
+                                                'group border-b border-white/7 bg-[#07101d]/70 transition-all duration-200 hover:bg-[#0d1a2d]',
+                                                index % 2 === 1 && 'bg-[#091321]/78',
+                                                job.attention_flag && 'bg-red-400/[0.04] hover:bg-red-400/[0.08]',
                                             )}
                                         >
                                             <TableCell className="relative pl-4">
@@ -2772,33 +2772,33 @@ export default function JobsPage() {
                                                     onCheckedChange={(checked) => handleSelectRow(job.job_id, checked as boolean)}
                                                 />
                                             </TableCell>
-                                            <TableCell className="py-4">
+                                            <TableCell className="py-4 align-middle">
                                                 <button
                                                     type="button"
                                                     onClick={() => navigate(`/admin/jobs/${job.job_id}`)}
                                                     className="group/id rounded-2xl px-1 py-1 text-left transition-colors"
                                                 >
-                                                    <div className="text-sm font-semibold text-slate-900 transition-colors group-hover:text-slate-700 group-hover/id:text-slate-700 dark:text-white dark:group-hover:text-cyan-100 dark:group-hover/id:text-cyan-100" style={displayFontStyle}>
+                                                    <div className="text-sm font-semibold text-white transition-colors group-hover:text-cyan-100 group-hover/id:text-cyan-100" style={displayFontStyle}>
                                                         {job.job_code}
                                                     </div>
                                                     <div className="mt-1 max-w-full truncate text-xs text-slate-500">{job.job_id}</div>
                                                 </button>
                                             </TableCell>
-                                            <TableCell className="py-4">
-                                                <div className="rounded-[16px] border border-black/8 bg-slate-50 px-3 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] dark:border-white/6 dark:bg-white/[0.025] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
-                                                    <OverflowText text={job.service_name} className="max-w-full text-sm font-semibold text-slate-900 dark:text-white" />
+                                            <TableCell className="py-4 align-middle">
+                                                <div className="min-w-0 border-l border-white/10 pl-3">
+                                                    <OverflowText text={job.service_name} className="max-w-full text-sm font-semibold text-white" />
                                                     <div className="mt-1 text-xs text-slate-500">
                                                         {job.service_names.length > 1 ? `${job.service_names.length} catalog services linked` : 'Primary dispatch service'}
                                                     </div>
                                                 </div>
                                             </TableCell>
-                                            <TableCell className="py-4">
-                                                <div className="flex items-start gap-2 rounded-[16px] border border-black/8 bg-slate-50 px-3 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] dark:border-white/6 dark:bg-white/[0.025] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
-                                                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-cyan-200 bg-cyan-50 text-cyan-700 shadow-[0_14px_24px_rgba(8,145,178,0.08)] dark:border-cyan-300/12 dark:bg-cyan-300/[0.08] dark:text-cyan-100 dark:shadow-[0_14px_24px_rgba(8,145,178,0.12)]">
+                                            <TableCell className="py-4 align-middle">
+                                                <div className="flex min-w-0 items-center gap-3">
+                                                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl border border-cyan-300/12 bg-cyan-300/[0.08] text-cyan-100 shadow-[0_14px_24px_rgba(8,145,178,0.12)]">
                                                         <Building2Icon className="h-4 w-4" />
                                                     </div>
                                                     <div className="min-w-0">
-                                                        <OverflowText text={job.dealership_name} className="max-w-full text-sm font-semibold text-slate-900 dark:text-white" />
+                                                        <OverflowText text={job.dealership_name} className="max-w-full text-sm font-semibold text-white" />
                                                         <div className="mt-1 inline-flex items-center gap-1 text-xs text-slate-500">
                                                             <MapPin className="h-3 w-3" />
                                                             {locationLabel}
@@ -2806,15 +2806,15 @@ export default function JobsPage() {
                                                     </div>
                                                 </div>
                                             </TableCell>
-                                            <TableCell className="py-4">
-                                                <div className="rounded-[16px] border border-black/8 bg-slate-50 px-3 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] dark:border-white/6 dark:bg-white/[0.025] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
-                                                    <OverflowText text={job.vehicle_summary} className="max-w-full text-sm font-medium text-slate-700 dark:text-slate-100" />
+                                            <TableCell className="py-4 align-middle">
+                                                <div className="min-w-0">
+                                                    <OverflowText text={job.vehicle_summary} className="max-w-full text-sm font-semibold text-slate-100" />
                                                     <div className="mt-1 text-xs text-slate-500">Dispatch-ready vehicle profile</div>
                                                 </div>
                                             </TableCell>
-                                            <TableCell className="py-4">
+                                            <TableCell className="py-4 align-middle">
                                                 {primaryTechnicianName ? (
-                                                    <div className="inline-flex max-w-full items-center gap-2 rounded-2xl border border-emerald-300/18 bg-emerald-300/[0.08] px-2.5 py-2">
+                                                    <div className="inline-flex max-w-full items-center gap-2 rounded-2xl border border-emerald-300/16 bg-emerald-300/[0.07] px-2.5 py-2">
                                                         <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-300/20 text-[10px] font-semibold uppercase tracking-[0.12em] text-emerald-100">
                                                             {primaryTechnicianName.substring(0, 2)}
                                                         </div>
@@ -2840,10 +2840,10 @@ export default function JobsPage() {
                                                     </div>
                                                 )}
                                             </TableCell>
-                                            <TableCell className="py-4">
+                                            <TableCell className="py-4 align-middle">
                                                 <StatusBadge status={job.urgency} type="urgency" />
                                             </TableCell>
-                                            <TableCell className="py-4">
+                                            <TableCell className="py-4 align-middle">
                                                 <Popover>
                                                     <PopoverTrigger asChild>
                                                         <button
@@ -2871,13 +2871,13 @@ export default function JobsPage() {
                                                     </PopoverContent>
                                                 </Popover>
                                             </TableCell>
-                                            <TableCell className="py-4">
+                                            <TableCell className="py-4 align-middle">
                                                 <StatusBadge status={job.job_status} type="job" />
                                             </TableCell>
-                                            <TableCell className="py-4">
-                                                <div className="space-y-2">
+                                            <TableCell className="py-4 align-middle">
+                                                <div className="space-y-2 border-l border-white/10 pl-3">
                                                     <div>
-                                                        <div className="text-sm font-medium text-slate-700 dark:text-slate-100">{formatJobDate(job.created_at)}</div>
+                                                        <div className="text-sm font-semibold text-slate-100">{formatJobDate(job.created_at)}</div>
                                                         <div className="text-[11px] text-slate-500">{formatJobTime(job.created_at)}</div>
                                                     </div>
                                                     <div className="border-t border-white/6 pt-2">
@@ -2886,8 +2886,8 @@ export default function JobsPage() {
                                                     </div>
                                                 </div>
                                             </TableCell>
-                                            <TableCell className="py-4 pr-4 text-right align-top">
-                                                <div className="inline-flex max-w-full flex-col items-end gap-2 rounded-[18px] border border-black/8 bg-slate-50 p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] dark:border-white/6 dark:bg-white/[0.025] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+                                            <TableCell className="py-4 pr-4 text-right align-middle">
+                                                <div className="ml-auto flex max-w-[132px] flex-col items-stretch gap-2">
                                                     {(job.job_status === 'admin_preview' || job.job_status === 'pending_admin_confirmation') && Boolean(
                                                         (job.pending_assigned_technician_name ?? job.assigned_technician_name)?.trim()
                                                     ) ? (
@@ -2904,24 +2904,24 @@ export default function JobsPage() {
                                                         <Button
                                                             size="sm"
                                                             variant="outline"
-                                                            className="h-8 w-full rounded-2xl border-cyan-300/20 bg-[linear-gradient(135deg,rgba(34,211,238,0.16),rgba(8,145,178,0.10))] px-2 text-[11px] text-cyan-50 hover:bg-cyan-300/15 hover:text-white"
+                                                            className="h-8 w-full justify-start rounded-2xl border-cyan-300/20 bg-[linear-gradient(135deg,rgba(34,211,238,0.16),rgba(8,145,178,0.10))] px-2.5 text-[11px] text-cyan-50 hover:bg-cyan-300/15 hover:text-white"
                                                             onClick={() => handlePushToQueue(job)}
                                                         >
-                                                            <ArrowRight className="mr-2 h-3.5 w-3.5" />
-                                                            Push to Queue
+                                                            <ArrowRight className="mr-1.5 h-3.5 w-3.5" />
+                                                            Push
                                                         </Button>
                                                     ) : null}
                                                     {isAssignableJob(job) ? (
                                                         <Button
                                                             size="sm"
                                                             variant="outline"
-                                                            className="h-8 w-full rounded-2xl border-white/10 bg-[linear-gradient(135deg,rgba(148,163,184,0.10),rgba(30,41,59,0.16))] px-2 text-[11px] text-slate-100 hover:bg-white/[0.08] hover:text-white"
+                                                            className="h-8 w-full justify-start rounded-2xl border-white/10 bg-[linear-gradient(135deg,rgba(148,163,184,0.10),rgba(30,41,59,0.16))] px-2.5 text-[11px] text-slate-100 hover:bg-white/[0.08] hover:text-white"
                                                             onClick={() => handleAssignTechnician(job)}
                                                         >
-                                                            <User className="mr-2 h-3.5 w-3.5" />
+                                                            <User className="mr-1.5 h-3.5 w-3.5" />
                                                             {job.job_status === 'scheduled' && Boolean(job.assigned_technician_name?.trim())
-                                                                ? 'Re-assign tech'
-                                                                : 'Assign tech'}
+                                                                ? 'Reassign'
+                                                                : 'Assign'}
                                                         </Button>
                                                     ) : null}
                                                 </div>
