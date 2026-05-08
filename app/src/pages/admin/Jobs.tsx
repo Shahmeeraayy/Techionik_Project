@@ -2491,7 +2491,7 @@ export default function JobsPage() {
             </div>
 
             {/* 2. Filter Bar (Enterprise Grade) */}
-            <div className="relative overflow-hidden rounded-[24px] border border-black/8 bg-[linear-gradient(180deg,#ffffff,#fbfbfb)] shadow-[0_20px_60px_rgba(15,23,42,0.08)] dark:border-white/8 dark:bg-[linear-gradient(180deg,rgba(9,22,38,0.985),rgba(7,18,30,0.985))] dark:shadow-[0_20px_60px_rgba(0,0,0,0.24)]">
+            <div className="admin-jobs-filters relative overflow-hidden rounded-[24px] border border-black/8 bg-[linear-gradient(180deg,#ffffff,#fbfbfb)] shadow-[0_20px_60px_rgba(15,23,42,0.08)] dark:border-white/8 dark:bg-[linear-gradient(180deg,rgba(9,22,38,0.985),rgba(7,18,30,0.985))] dark:shadow-[0_20px_60px_rgba(0,0,0,0.24)]">
                 <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-slate-900/20 to-transparent dark:via-cyan-200/60" />
                 <div className="absolute inset-x-0 top-0 h-12 bg-gradient-to-r from-slate-200/50 via-transparent to-slate-100/35 pointer-events-none dark:from-[#2F8E92]/5 dark:to-blue-500/4" />
                 <div className="relative space-y-4 p-4 md:p-5">
@@ -2719,7 +2719,7 @@ export default function JobsPage() {
                                             onCheckedChange={handleSelectAll}
                                         />
                                     </TableHead>
-                                    <TableHead className="w-[8%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+                                    <TableHead className="w-[11%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
                                         <Button
                                             variant="ghost"
                                             size="sm"
@@ -2731,16 +2731,15 @@ export default function JobsPage() {
                                             <ArrowUpDown className="ml-2 h-3.5 w-3.5" />
                                         </Button>
                                     </TableHead>
-                                    <TableHead className="w-[11%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Service Type</TableHead>
-                                    <TableHead className="w-[12%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Dealership / Location</TableHead>
-                                    <TableHead className="w-[10%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Vehicle</TableHead>
-                                    <TableHead className="w-[11%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Assigned Tech</TableHead>
+                                    <TableHead className="w-[13%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Service Type</TableHead>
+                                    <TableHead className="w-[14%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Dealership / Location</TableHead>
+                                    <TableHead className="w-[11%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Vehicle</TableHead>
+                                    <TableHead className="w-[12%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Assigned Tech</TableHead>
                                     <TableHead className="w-[6%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Urgency</TableHead>
                                     <TableHead className="w-[7%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Rank</TableHead>
                                     <TableHead className="w-[7%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Status</TableHead>
-                                    <TableHead className="w-[8%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Created</TableHead>
-                                    <TableHead className="w-[8%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Updated</TableHead>
-                                    <TableHead className="w-[10%] pr-4 text-right text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Actions</TableHead>
+                                    <TableHead className="w-[10%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Dates</TableHead>
+                                    <TableHead className="w-[9%] pr-4 text-right text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -2782,7 +2781,7 @@ export default function JobsPage() {
                                                     <div className="text-sm font-semibold text-slate-900 transition-colors group-hover:text-slate-700 group-hover/id:text-slate-700 dark:text-white dark:group-hover:text-cyan-100 dark:group-hover/id:text-cyan-100" style={displayFontStyle}>
                                                         {job.job_code}
                                                     </div>
-                                                    <div className="mt-1 max-w-[9rem] truncate text-xs text-slate-500">{job.job_id}</div>
+                                                    <div className="mt-1 max-w-full truncate text-xs text-slate-500">{job.job_id}</div>
                                                 </button>
                                             </TableCell>
                                             <TableCell className="py-4">
@@ -2876,15 +2875,15 @@ export default function JobsPage() {
                                                 <StatusBadge status={job.job_status} type="job" />
                                             </TableCell>
                                             <TableCell className="py-4">
-                                                <div className="space-y-1">
-                                                    <div className="text-sm font-medium text-slate-700 dark:text-slate-100">{formatJobDate(job.created_at)}</div>
-                                                    <div className="text-[11px] text-slate-500">{formatJobTime(job.created_at)}</div>
-                                                </div>
-                                            </TableCell>
-                                            <TableCell className="py-4">
-                                                <div className="space-y-1">
-                                                    <div className="text-sm font-medium text-slate-700 dark:text-slate-100">{formatJobDate(job.updated_at)}</div>
-                                                    <div className="text-[11px] text-slate-500">{formatJobTime(job.updated_at)}</div>
+                                                <div className="space-y-2">
+                                                    <div>
+                                                        <div className="text-sm font-medium text-slate-700 dark:text-slate-100">{formatJobDate(job.created_at)}</div>
+                                                        <div className="text-[11px] text-slate-500">{formatJobTime(job.created_at)}</div>
+                                                    </div>
+                                                    <div className="border-t border-white/6 pt-2">
+                                                        <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">Updated</div>
+                                                        <div className="mt-0.5 text-[11px] text-slate-400">{formatJobDate(job.updated_at)} · {formatJobTime(job.updated_at)}</div>
+                                                    </div>
                                                 </div>
                                             </TableCell>
                                             <TableCell className="py-4 pr-4 text-right align-top">
