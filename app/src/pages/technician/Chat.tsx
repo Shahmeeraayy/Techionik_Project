@@ -71,7 +71,7 @@ function AttachmentCard({ attachment }: { attachment: BackendChatAttachment }) {
       href={attachment.data_url}
       target="_blank"
       rel="noreferrer"
-      className="overflow-hidden rounded-2xl border border-white/10 bg-[linear-gradient(180deg,rgba(9,24,39,0.98),rgba(6,17,29,0.98))] shadow-[0_14px_34px_rgba(0,0,0,0.24)]"
+      className="w-full max-w-[420px] overflow-hidden rounded-2xl border border-white/10 bg-[linear-gradient(180deg,rgba(9,24,39,0.98),rgba(6,17,29,0.98))] shadow-[0_14px_34px_rgba(0,0,0,0.24)]"
     >
       {attachment.mime_type.startsWith('image/') ? (
         <div className="aspect-[1/0.9] overflow-hidden bg-slate-950">
@@ -342,7 +342,11 @@ export default function TechnicianChatPage() {
                           {message.attachments.length > 0 ? (
                             <div className={cn(
                               'mt-3 grid gap-2',
-                              message.attachments.length >= 3 ? 'grid-cols-3' : 'grid-cols-2',
+                              message.attachments.length === 1
+                                ? 'grid-cols-1'
+                                : message.attachments.length === 2
+                                  ? 'grid-cols-2'
+                                  : 'grid-cols-3',
                             )}>
                               {message.attachments.map((attachment) => (
                                 <AttachmentCard key={attachment.id} attachment={attachment} />
