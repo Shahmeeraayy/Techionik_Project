@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import hmac
 from datetime import datetime, timezone
+import re
 import bcrypt
 
 from fastapi import HTTPException, status
@@ -14,10 +15,12 @@ from ..core.config import ADMIN_DEFAULT_PASSWORD, ADMIN_EMAIL, DEFAULT_TENANT_ID
 from ..core.security import AuthenticatedUser
 from ..models.admin_credential_settings import AdminCredentialSettings
 from ..models.admin_user import AdminUser
+from ..models.tenant import Tenant, TenantMembership
 
 
 ADMIN_CREDENTIAL_SETTINGS_KEY = "default"
 PBKDF2_ITERATIONS = 600_000
+WORKSPACE_SLUG_PATTERN = re.compile(r"[^a-z0-9]+")
 
 
 def hash_password(password: str) -> str:
@@ -81,6 +84,8 @@ class AdminCredentialSettingsService:
         return row
 
     def _sync_settings_row_from_admin(self, admin_user: AdminUser) -> None:
+        if admin_user.tenant_id and admin_user.tenant_id != UUID(DEFAULT_TENANT_ID):
+            return
         row = self._get_or_create_settings_row()
         row.admin_email = admin_user.email
         row.password_hash = admin_user.password_hash
@@ -92,9 +97,34 @@ class AdminCredentialSettingsService:
     def _get_admin_user_by_email(self, email: str) -> AdminUser | None:
         return (
             self.db.query(AdminUser)
+            .execution_options(skip_tenant_scope=True)
             .filter(AdminUser.email == email.strip().lower())
             .first()
         )
+
+    def _get_tenant_by_slug(self, slug: str) -> Tenant | None:
+        return (
+            self.db.query(Tenant)
+            .filter(Tenant.slug == slug.strip().lower())
+            .first()
+        )
+
+    def _normalize_workspace_slug(self, value: str) -> str:
+        normalized = WORKSPACE_SLUG_PATTERN.sub("-", value.strip().lower()).strip("-")
+        normalized = re.sub(r"-{2,}", "-", normalized)
+        if len(normalized) < 3:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Workspace URL must be at least 3 characters",
+            )
+        if len(normalized) > 96:
+            normalized = normalized[:96].rstrip("-")
+        if normalized in {"admin", "api", "app", "book", "www", "tech"}:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="That workspace URL is reserved",
+            )
+        return normalized
 
     def _bootstrap_owner_from_legacy_settings(self) -> AdminUser:
         settings_row = self._get_or_create_settings_row()
@@ -146,6 +176,92 @@ class AdminCredentialSettingsService:
         self.db.commit()
         self.db.refresh(user)
         return user
+
+    def signup_owner_account(
+        self,
+        *,
+        company_name: str,
+        workspace_slug: str,
+        full_name: str,
+        email: str,
+        password: str,
+    ) -> AdminUser:
+        normalized_company_name = company_name.strip()
+        normalized_full_name = full_name.strip()
+        normalized_email = email.strip().lower()
+        normalized_password = password.strip()
+        normalized_workspace_slug = self._normalize_workspace_slug(workspace_slug)
+
+        if len(normalized_password) < 6:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Password must be at least 6 characters",
+            )
+        if not normalized_company_name:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Company name is required",
+            )
+        if not normalized_full_name:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Full name is required",
+            )
+
+        if self._get_admin_user_by_email(normalized_email) is not None:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="An admin account already exists with this email",
+            )
+
+        if self._get_tenant_by_slug(normalized_workspace_slug) is not None:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="That workspace URL is already taken",
+            )
+
+        tenant = Tenant(
+            slug=normalized_workspace_slug,
+            name=normalized_company_name,
+            cache_prefix=f"tenant:{normalized_workspace_slug}",
+            estimated_response_time_message="We will contact you within 2 business hours.",
+            feature_flags={
+                "booking_portal": False,
+                "status_lookup": False,
+            },
+        )
+        self.db.add(tenant)
+        self.db.flush()
+
+        previous_tenant_id = self.db.info.get("tenant_id")
+        self.db.info["tenant_id"] = tenant.id
+        try:
+            owner = AdminUser(
+                full_name=normalized_full_name,
+                email=normalized_email,
+                password_hash=hash_password(normalized_password),
+                tenant_role="owner",
+                status="active",
+            )
+            self.db.add(owner)
+            self.db.flush()
+
+            membership = TenantMembership(
+                tenant_id=tenant.id,
+                auth_user_id=owner.id,
+                role="owner",
+                is_active=True,
+            )
+            self.db.add(membership)
+            self._sync_settings_row_from_admin(owner)
+            self.db.commit()
+            self.db.refresh(owner)
+            return owner
+        except Exception:
+            self.db.rollback()
+            raise
+        finally:
+            self.db.info["tenant_id"] = previous_tenant_id
 
     def _serialize_admin(self, admin_user: AdminUser) -> dict[str, object]:
         return {
