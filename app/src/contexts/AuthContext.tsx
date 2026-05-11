@@ -493,8 +493,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         let nextUser = restoredUser.user;
         let nextTechnicians = parsedTechnicians;
         let nextHasBackendTechnicianToken = Boolean(technicianToken && technicianToken.trim());
+        const shouldRestoreTechnicianFromToken =
+          Boolean(technicianToken)
+          && (!restoredUser.user || restoredUser.user.role === 'technician');
 
-        if (restoredUser.user?.role === 'technician' && technicianToken) {
+        if (shouldRestoreTechnicianFromToken && technicianToken) {
           try {
             const backendProfile = await fetchTechnicianMeProfile(technicianToken);
             const nowIso = new Date().toISOString();
