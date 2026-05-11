@@ -71,20 +71,20 @@ function AttachmentCard({ attachment }: { attachment: BackendChatAttachment }) {
       href={attachment.data_url}
       target="_blank"
       rel="noreferrer"
-      className="overflow-hidden rounded-2xl border border-black/10 bg-white/95"
+      className="overflow-hidden rounded-2xl border border-white/10 bg-[linear-gradient(180deg,rgba(9,24,39,0.98),rgba(6,17,29,0.98))] shadow-[0_14px_34px_rgba(0,0,0,0.24)]"
     >
       {attachment.mime_type.startsWith('image/') ? (
         <div className="aspect-[1/0.9] overflow-hidden bg-slate-950">
           <img src={attachment.data_url} alt={attachment.name} className="h-full w-full object-cover" />
         </div>
       ) : (
-        <div className="flex aspect-[1/0.9] items-center justify-center bg-slate-100 text-slate-700">
+        <div className="flex aspect-[1/0.9] items-center justify-center bg-[#09131d] text-slate-300">
           <File className="h-7 w-7" />
         </div>
       )}
       <div className="space-y-1 px-3 py-2">
-        <p className="truncate text-xs font-medium text-slate-800">{attachment.name}</p>
-        <p className="text-[11px] text-slate-500">{sizeLabel}</p>
+        <p className="truncate text-xs font-medium text-slate-100">{attachment.name}</p>
+        <p className="text-[11px] text-slate-400">{sizeLabel}</p>
       </div>
     </a>
   );
@@ -255,10 +255,10 @@ export default function TechnicianChatPage() {
               </div>
               <div className="flex items-center gap-3 self-start lg:self-end">
                 <Button
-                  variant="outline"
+                  variant="ghost"
                   size="sm"
                   onClick={handleEnableNotifications}
-                  className="h-11 gap-2 rounded-2xl border-white/10 bg-white/[0.03] px-4 text-slate-100 hover:bg-white/[0.08]"
+                  className="h-11 gap-2 rounded-2xl border border-white/12 bg-[linear-gradient(180deg,rgba(15,23,42,0.98),rgba(8,12,20,0.98))] px-4 text-slate-100 shadow-[0_14px_34px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.055)] hover:bg-[linear-gradient(180deg,rgba(24,38,64,0.98),rgba(12,20,34,0.98))] hover:text-white"
                 >
                   <Bell className="h-4 w-4" />
                   {notificationEnabled ? 'Notifications On' : 'Enable Alerts'}
@@ -293,7 +293,7 @@ export default function TechnicianChatPage() {
                     value={historySearch}
                     onChange={(event) => setHistorySearch(event.target.value)}
                     placeholder="Search message history"
-                    className="h-10 rounded-full border-white/10 bg-white/[0.04] pl-9 text-white placeholder:text-slate-500"
+                    className="h-10 rounded-full border-white/10 bg-[linear-gradient(180deg,rgba(10,18,32,0.96),rgba(8,14,26,0.96))] pl-9 text-slate-100 placeholder:text-slate-500"
                   />
                 </div>
               </div>
@@ -332,7 +332,7 @@ export default function TechnicianChatPage() {
                           className={cn(
                             'rounded-[24px] border px-4 py-3 shadow-[0_10px_25px_rgba(0,0,0,0.14)]',
                             message.sender_role === 'technician'
-                              ? 'border-white/10 bg-white text-slate-900'
+                              ? 'border-cyan-300/18 bg-[linear-gradient(180deg,rgba(18,52,74,0.96),rgba(10,32,48,0.96))] text-cyan-50'
                               : message.is_broadcast
                                 ? 'border-cyan-300/20 bg-cyan-300/12 text-cyan-50'
                                 : 'border-white/10 bg-[#070f11] text-white',
@@ -386,10 +386,10 @@ export default function TechnicianChatPage() {
                 <div className="flex items-end gap-3">
                   <Button
                     type="button"
-                    variant="outline"
+                    variant="ghost"
                     size="icon"
                     onClick={() => fileInputRef.current?.click()}
-                    className="h-12 w-12 shrink-0 rounded-full border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
+                    className="h-12 w-12 shrink-0 rounded-full border border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.98),rgba(8,12,20,0.98))] text-slate-100 shadow-[0_12px_30px_rgba(0,0,0,0.24)] hover:bg-[linear-gradient(180deg,rgba(24,38,64,0.98),rgba(12,20,34,0.98))] hover:text-white"
                     disabled={isPreviewMode}
                   >
                     <Paperclip className="h-4 w-4" />
@@ -413,7 +413,7 @@ export default function TechnicianChatPage() {
                   <Button
                     type="button"
                     onClick={() => void handleSend()}
-                    className="h-12 w-12 shrink-0 rounded-full bg-[#070f11] text-white shadow-[0_12px_30px_rgba(0,0,0,0.3)] hover:bg-[#0b1418]"
+                    className="h-12 w-12 shrink-0 rounded-full bg-[linear-gradient(135deg,#4f7cff,#7aa2ff)] text-white shadow-[0_18px_40px_rgba(79,124,255,0.24)] hover:bg-[linear-gradient(135deg,#5d88ff,#89adff)]"
                     disabled={isPreviewMode}
                   >
                     <Send className="h-4 w-4" />
