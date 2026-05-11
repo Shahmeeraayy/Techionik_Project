@@ -554,7 +554,7 @@ export default function ProfilePage() {
                                 </div>
                             ) : (
                                     <div className="space-y-3">
-                                    <div className="grid grid-cols-1 gap-3 md:grid-cols-[auto_1fr] md:items-end">
+                                    <div className="space-y-3">
                                         <div className="space-y-2">
                                             <Label className="text-slate-300">Profile Photo</Label>
                                             <label className="flex h-24 w-24 cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-cyan-300/25 bg-cyan-300/5 text-cyan-100 transition hover:bg-cyan-300/10">
@@ -568,16 +568,7 @@ export default function ProfilePage() {
                                                 />
                                             </label>
                                         </div>
-                                        <div className="space-y-1">
-                                            <Label className="text-slate-300">Photo URL</Label>
-                                            <Input
-                                                className={TECH_INPUT_CLASS}
-                                                value={profilePictureUrl}
-                                                onChange={(event) => setProfilePictureUrl(event.target.value)}
-                                                placeholder="https://example.com/profile.jpg"
-                                            />
-                                            <p className="text-xs text-slate-500">Use an image URL or upload from this device.</p>
-                                        </div>
+                                        <p className="text-xs text-slate-500">Upload a photo from this device to update your profile image.</p>
                                     </div>
                                     <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                                         <div className="space-y-1">
@@ -797,8 +788,8 @@ export default function ProfilePage() {
                                 </div>
                                 <Button
                                     onClick={handleLogout}
-                                    variant="outline"
-                                    className="h-11 min-w-[150px] !border-red-400/25 !bg-red-500/10 !text-red-100 hover:!bg-red-500/15 hover:!text-white"
+                                    variant="ghost"
+                                    className="h-11 min-w-[150px] border border-red-400/25 bg-[linear-gradient(180deg,rgba(76,18,28,0.88),rgba(44,12,19,0.92))] text-red-100 shadow-[0_14px_34px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.04)] hover:bg-[linear-gradient(180deg,rgba(96,24,36,0.92),rgba(56,15,24,0.96))] hover:text-white"
                                 >
                                     <LogOut className="w-5 h-5 mr-2" />
                                     {isPreviewMode ? 'Exit Preview' : 'Logout'}
@@ -875,8 +866,8 @@ export default function ProfilePage() {
                                 </div>
                                 <Button
                                     onClick={handleLogout}
-                                    variant="outline"
-                                    className="h-11 min-w-[150px] border-red-500/25 text-red-200 hover:bg-red-500/10 hover:text-red-100"
+                                    variant="ghost"
+                                    className="h-11 min-w-[150px] border border-red-400/25 bg-[linear-gradient(180deg,rgba(76,18,28,0.88),rgba(44,12,19,0.92))] text-red-100 shadow-[0_14px_34px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.04)] hover:bg-[linear-gradient(180deg,rgba(96,24,36,0.92),rgba(56,15,24,0.96))] hover:text-white"
                                 >
                                     <LogOut className="w-5 h-5 mr-2" />
                                     {isPreviewMode ? 'Exit Preview' : 'Logout'}
