@@ -1,10 +1,10 @@
 from sqlalchemy import Boolean, Column, DateTime, JSON, String, Text, text
 from sqlalchemy.sql import func
 
-from .base import Base
+from .base import Base, TenantScopedMixin
 
 
-class BookingPortalSettings(Base):
+class BookingPortalSettings(TenantScopedMixin, Base):
     __tablename__ = "booking_portal_settings"
 
     key = Column(String(32), primary_key=True, default="default")

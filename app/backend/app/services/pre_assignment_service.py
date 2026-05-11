@@ -215,6 +215,7 @@ class PreAssignmentService:
                     and_(
                         technician_skills.c.technician_id == Technician.id,
                         technician_skills.c.skill_id == row.skill_id,
+                        technician_skills.c.tenant_id == self.db.info.get("tenant_id"),
                     )
                 )
             )
@@ -223,6 +224,7 @@ class PreAssignmentService:
                     and_(
                         technician_zones.c.technician_id == Technician.id,
                         technician_zones.c.zone_id == row.zone_id,
+                        technician_zones.c.tenant_id == self.db.info.get("tenant_id"),
                     )
                 )
             )

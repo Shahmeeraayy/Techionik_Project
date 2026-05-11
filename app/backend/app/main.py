@@ -26,6 +26,13 @@ from .api.endpoints import (
     technician_time_off,
 )
 from .core.config import CORS_ALLOW_ORIGINS
+from .core.security import decode_access_token
+from .core.tenant import (
+    TenantContext,
+    extract_request_tenant_metadata,
+    reset_current_tenant_context,
+    set_current_tenant_context,
+)
 from .models.job import Job
 from .models.base import Base
 from .services.job_services_service import JobServicesService
@@ -76,6 +83,43 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def inject_tenant_context(request: Request, call_next):
+    bearer_token = request.headers.get("authorization", "").strip()
+    authenticated_user = None
+    if bearer_token.lower().startswith("bearer "):
+        try:
+            authenticated_user = decode_access_token(bearer_token[7:].strip())
+        except Exception:
+            authenticated_user = None
+
+    request_tenant = extract_request_tenant_metadata(request)
+    context = TenantContext(
+        tenant_id=authenticated_user.tenant_id if authenticated_user else request_tenant["tenant_id"],
+        tenant_slug=request_tenant["tenant_slug"],
+        user_id=authenticated_user.user_id if authenticated_user else None,
+        role=authenticated_user.role.value if authenticated_user else None,
+        tenant_role=authenticated_user.tenant_role if authenticated_user else None,
+    )
+    if isinstance(context.tenant_id, str):
+        from uuid import UUID
+
+        context = TenantContext(
+            tenant_id=UUID(context.tenant_id),
+            tenant_slug=context.tenant_slug,
+            user_id=context.user_id,
+            role=context.role,
+            tenant_role=context.tenant_role,
+        )
+
+    request.state.tenant_context = context
+    token = set_current_tenant_context(context)
+    try:
+        return await call_next(request)
+    finally:
+        reset_current_tenant_context(token)
 
 app.include_router(admin_technicians.router)
 app.include_router(admin_chat.router)

@@ -3,10 +3,10 @@ from uuid import uuid4
 from sqlalchemy import Boolean, CheckConstraint, Column, DateTime, Numeric, String, Text, Uuid, text
 from sqlalchemy.sql import func
 
-from .base import Base
+from .base import Base, TenantScopedMixin
 
 
-class ServiceCatalog(Base):
+class ServiceCatalog(TenantScopedMixin, Base):
     __tablename__ = "service_catalog"
 
     id = Column(Uuid(as_uuid=True), primary_key=True, default=uuid4)

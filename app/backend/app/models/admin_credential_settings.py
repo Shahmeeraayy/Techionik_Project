@@ -1,10 +1,10 @@
 from sqlalchemy import Column, DateTime, String, text
 from sqlalchemy.sql import func
 
-from .base import Base
+from .base import Base, TenantScopedMixin
 
 
-class AdminCredentialSettings(Base):
+class AdminCredentialSettings(TenantScopedMixin, Base):
     __tablename__ = "admin_credential_settings"
 
     key = Column(String(64), primary_key=True, server_default=text("'default'"))

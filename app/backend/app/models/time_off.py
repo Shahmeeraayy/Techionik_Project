@@ -4,10 +4,10 @@ from sqlalchemy import CheckConstraint, Column, Date, DateTime, ForeignKey, Stri
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
-from .base import Base
+from .base import Base, TenantScopedMixin
 
 
-class TimeOff(Base):
+class TimeOff(TenantScopedMixin, Base):
     __tablename__ = "technician_time_off"
 
     id = Column(Uuid(as_uuid=True), primary_key=True, default=uuid4)

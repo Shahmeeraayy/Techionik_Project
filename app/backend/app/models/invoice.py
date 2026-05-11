@@ -16,10 +16,10 @@ from sqlalchemy import (
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
-from .base import Base
+from .base import Base, TenantScopedMixin
 
 
-class Invoice(Base):
+class Invoice(TenantScopedMixin, Base):
     __tablename__ = "invoices"
 
     id = Column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
@@ -84,7 +84,7 @@ class Invoice(Base):
     )
 
 
-class InvoiceLineItem(Base):
+class InvoiceLineItem(TenantScopedMixin, Base):
     __tablename__ = "invoice_line_items"
 
     id = Column(Uuid(as_uuid=True), primary_key=True, default=uuid4)

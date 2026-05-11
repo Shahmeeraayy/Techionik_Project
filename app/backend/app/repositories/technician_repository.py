@@ -21,6 +21,10 @@ class TechnicianRepository:
     def __init__(self, db: Session):
         self.db = db
 
+    @property
+    def tenant_id(self):
+        return self.db.info.get("tenant_id")
+
     def list_technicians(self) -> List[Technician]:
         return self.db.query(Technician).order_by(Technician.name.asc()).all()
 
@@ -78,7 +82,10 @@ class TechnicianRepository:
         return (
             self.db.query(Zone)
             .join(technician_zones, technician_zones.c.zone_id == Zone.id)
-            .filter(technician_zones.c.technician_id == technician_id)
+            .filter(
+                technician_zones.c.technician_id == technician_id,
+                technician_zones.c.tenant_id == self.tenant_id,
+            )
             .order_by(Zone.name.asc())
             .all()
         )
@@ -87,7 +94,10 @@ class TechnicianRepository:
         return (
             self.db.query(Skill)
             .join(technician_skills, technician_skills.c.skill_id == Skill.id)
-            .filter(technician_skills.c.technician_id == technician_id)
+            .filter(
+                technician_skills.c.technician_id == technician_id,
+                technician_skills.c.tenant_id == self.tenant_id,
+            )
             .order_by(Skill.name.asc())
             .all()
         )
@@ -130,6 +140,7 @@ class TechnicianRepository:
                 and_(
                     technician_zones.c.technician_id == technician_id,
                     technician_zones.c.zone_id == zone_id,
+                    technician_zones.c.tenant_id == self.tenant_id,
                 )
             )
         ).first()
@@ -137,7 +148,11 @@ class TechnicianRepository:
             return False
 
         self.db.execute(
-            insert(technician_zones).values(technician_id=technician_id, zone_id=zone_id)
+            insert(technician_zones).values(
+                tenant_id=self.tenant_id,
+                technician_id=technician_id,
+                zone_id=zone_id,
+            )
         )
         self.db.flush()
         return True
@@ -148,6 +163,7 @@ class TechnicianRepository:
                 and_(
                     technician_zones.c.technician_id == technician_id,
                     technician_zones.c.zone_id == zone_id,
+                    technician_zones.c.tenant_id == self.tenant_id,
                 )
             )
         )
@@ -160,6 +176,7 @@ class TechnicianRepository:
                 and_(
                     technician_skills.c.technician_id == technician_id,
                     technician_skills.c.skill_id == skill_id,
+                    technician_skills.c.tenant_id == self.tenant_id,
                 )
             )
         ).first()
@@ -167,7 +184,11 @@ class TechnicianRepository:
             return False
 
         self.db.execute(
-            insert(technician_skills).values(technician_id=technician_id, skill_id=skill_id)
+            insert(technician_skills).values(
+                tenant_id=self.tenant_id,
+                technician_id=technician_id,
+                skill_id=skill_id,
+            )
         )
         self.db.flush()
         return True
@@ -178,6 +199,7 @@ class TechnicianRepository:
                 and_(
                     technician_skills.c.technician_id == technician_id,
                     technician_skills.c.skill_id == skill_id,
+                    technician_skills.c.tenant_id == self.tenant_id,
                 )
             )
         )
@@ -360,6 +382,7 @@ class TechnicianRepository:
                     and_(
                         technician_zones.c.technician_id == technician_id,
                         technician_zones.c.zone_id == zone_id,
+                        technician_zones.c.tenant_id == self.tenant_id,
                     )
                 )
             ).first()
@@ -376,6 +399,7 @@ class TechnicianRepository:
                     and_(
                         technician_skills.c.technician_id == technician_id,
                         technician_skills.c.skill_id == skill_id,
+                        technician_skills.c.tenant_id == self.tenant_id,
                     )
                 )
             ).first()

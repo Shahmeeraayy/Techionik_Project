@@ -3,10 +3,10 @@ from uuid import uuid4
 from sqlalchemy import Boolean, CheckConstraint, Column, ForeignKey, Integer, Time, UniqueConstraint, Uuid, text
 from sqlalchemy.orm import relationship
 
-from .base import Base
+from .base import Base, TenantScopedMixin
 
 
-class WorkingHours(Base):
+class WorkingHours(TenantScopedMixin, Base):
     __tablename__ = "technician_working_hours"
 
     id = Column(Uuid(as_uuid=True), primary_key=True, default=uuid4)

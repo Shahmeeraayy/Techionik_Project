@@ -1,10 +1,10 @@
 from sqlalchemy import Column, DateTime, String, Text
 from sqlalchemy.sql import func
 
-from .base import Base
+from .base import Base, TenantScopedMixin
 
 
-class InvoiceBrandingSettings(Base):
+class InvoiceBrandingSettings(TenantScopedMixin, Base):
     __tablename__ = "invoice_branding_settings"
 
     key = Column(String(32), primary_key=True, default="default")

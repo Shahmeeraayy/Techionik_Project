@@ -61,6 +61,7 @@
 4. Run app: `uvicorn app.main:app --reload --host 0.0.0.0 --port 8000`
 
 See `SUPABASE_SETUP.md` for the recommended Supabase connection flow.
+See `MULTI_TENANCY.md` for the new tenant isolation and RLS foundation.
 
 ## Migration Notes
 - `001_technician_module.sql` and `002_admin_technician_profile.sql` are core schema migrations.

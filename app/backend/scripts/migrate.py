@@ -3,10 +3,12 @@ import pathlib
 import sys
 from dataclasses import dataclass
 from datetime import datetime, time, timezone
+import time as time_module
 from typing import Iterable
+from uuid import UUID
 
 from sqlalchemy import and_, create_engine, insert, select, text
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, OperationalError
 from sqlalchemy.orm import Session
 
 SCRIPT_DIR = pathlib.Path(__file__).resolve().parent
@@ -14,8 +16,8 @@ BACKEND_ROOT = SCRIPT_DIR.parent
 if str(BACKEND_ROOT) not in sys.path:
     sys.path.insert(0, str(BACKEND_ROOT))
 
-from app.core.config import DATABASE_URL
-from app.models import Job, JobService, Skill, Technician, WorkingHours, Zone, technician_skills, technician_zones
+from app.core.config import DATABASE_URL, DEFAULT_TENANT_ID, DEFAULT_TENANT_NAME, DEFAULT_TENANT_SLUG
+from app.models import Job, JobService, Skill, Technician, Tenant, WorkingHours, Zone, technician_skills, technician_zones
 from app.models.base import Base
 
 
@@ -36,6 +38,7 @@ MIGRATIONS: list[Migration] = [
     Migration("008_dispatch_job_invoice_fields.sql"),
     Migration("009_technician_profile_email_change_requests.sql"),
     Migration("010_job_services.sql"),
+    Migration("011_supabase_multitenancy.sql"),
 ]
 
 
@@ -92,6 +95,18 @@ def mark_versions_applied(conn, versions: Iterable[str]) -> None:
         except IntegrityError:
             # Idempotent behavior across SQLite/PostgreSQL if the version is already present.
             continue
+
+
+def execute_sql_migration(conn, migration: Migration) -> None:
+    migration_path = BACKEND_ROOT / "migrations" / migration.filename
+    sql = migration_path.read_text(encoding="utf-8").strip()
+    if not sql:
+        return
+    cursor = conn.connection.cursor()
+    try:
+        cursor.execute(sql)
+    finally:
+        cursor.close()
 
 
 def ensure_sqlite_technician_password_column(conn) -> None:
@@ -163,8 +178,100 @@ def ensure_sqlite_technician_password_column(conn) -> None:
     ensure_column("service_catalog", "description", "TEXT")
 
 
+def ensure_multi_tenant_columns(conn) -> None:
+    tenant_tables = [
+        "admin_credential_settings",
+        "audit_logs",
+        "booking_portal_settings",
+        "booking_requests",
+        "chat_messages",
+        "dealerships",
+        "email_outbox",
+        "invoice_approval_drafts",
+        "invoice_branding_settings",
+        "invoice_line_items",
+        "invoices",
+        "job_events",
+        "job_rejections",
+        "job_services",
+        "jobs",
+        "priority_rules",
+        "service_catalog",
+        "technician_signup_requests",
+        "skills",
+        "technician_email_change_requests",
+        "technician_password_reset_requests",
+        "technician_skills",
+        "technician_time_off",
+        "technician_working_hours",
+        "technician_zones",
+        "technicians",
+        "zones",
+    ]
+
+    default_tenant_literal = DEFAULT_TENANT_ID
+    for table_name in tenant_tables:
+        if DATABASE_URL.startswith("sqlite"):
+            columns = {
+                row[1]
+                for row in conn.exec_driver_sql(f"PRAGMA table_info('{table_name}')").fetchall()
+            }
+            if columns and "tenant_id" not in columns:
+                conn.exec_driver_sql(
+                    f"ALTER TABLE {table_name} ADD COLUMN tenant_id CHAR(36) NOT NULL DEFAULT '{default_tenant_literal}'"
+                )
+            continue
+
+        columns = {
+            row[0]
+            for row in conn.execute(
+                text(
+                    """
+                    SELECT column_name
+                    FROM information_schema.columns
+                    WHERE table_name = :table_name
+                    """
+                ),
+                {"table_name": table_name},
+            ).fetchall()
+        }
+        if columns and "tenant_id" not in columns:
+            conn.exec_driver_sql(
+                f"ALTER TABLE {table_name} ADD COLUMN tenant_id UUID NOT NULL DEFAULT '{default_tenant_literal}'"
+            )
+
+
+def ensure_multi_tenant_columns_with_retry(engine, attempts: int = 3) -> None:
+    for attempt in range(1, attempts + 1):
+        try:
+            with engine.begin() as conn:
+                ensure_multi_tenant_columns(conn)
+            return
+        except OperationalError:
+            if attempt == attempts:
+                raise
+            time_module.sleep(1.5 * attempt)
+
+
+def ensure_default_tenant(engine) -> None:
+    with Session(engine) as session:
+        tenant_id = UUID(DEFAULT_TENANT_ID)
+        existing = session.query(Tenant).filter(Tenant.id == tenant_id).first()
+        if existing is None:
+            session.add(
+                Tenant(
+                    id=tenant_id,
+                    slug=DEFAULT_TENANT_SLUG,
+                    name=DEFAULT_TENANT_NAME,
+                    cache_prefix=DEFAULT_TENANT_SLUG,
+                )
+            )
+            session.commit()
+
+
 def backfill_job_services(engine) -> None:
     with Session(engine) as session:
+        session.info["tenant_id"] = UUID(DEFAULT_TENANT_ID)
         rows = session.query(Job).all()
         changed = False
 
@@ -200,6 +307,8 @@ def backfill_job_services(engine) -> None:
 
 def seed_development_data(engine) -> None:
     with Session(engine) as session:
+        tenant_id = UUID(DEFAULT_TENANT_ID)
+        session.info["tenant_id"] = tenant_id
         zone_names = ["Quebec", "Levis", "Donnacona", "St-Raymond"]
         skill_names = [
             "PPF",
@@ -304,6 +413,7 @@ def seed_development_data(engine) -> None:
             if exists is None:
                 session.execute(
                     insert(technician_zones).values(
+                        tenant_id=tenant_id,
                         technician_id=tech_row[0],
                         zone_id=zone_row[0],
                     )
@@ -326,6 +436,7 @@ def seed_development_data(engine) -> None:
             if exists is None:
                 session.execute(
                     insert(technician_skills).values(
+                        tenant_id=tenant_id,
                         technician_id=tech_row[0],
                         skill_id=skill_row[0],
                     )
@@ -376,6 +487,10 @@ def run() -> None:
         Base.metadata.create_all(bind=conn)
         ensure_sqlite_technician_password_column(conn)
 
+    ensure_multi_tenant_columns_with_retry(engine)
+
+    ensure_default_tenant(engine)
+
     pending = [version for version in selected_versions if version not in applied]
     for version in selected_versions:
         if version in applied:
@@ -390,6 +505,9 @@ def run() -> None:
 
     with engine.begin() as conn:
         ensure_migration_table(conn)
+        for migration in selected:
+            if migration.filename in pending and not DATABASE_URL.startswith("sqlite"):
+                execute_sql_migration(conn, migration)
         mark_versions_applied(conn, pending)
 
     for version in pending:

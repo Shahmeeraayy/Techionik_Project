@@ -81,6 +81,7 @@ JWT_SECRET_KEY = (
     if APP_ENV == "development"
     else get_required_env("JWT_SECRET_KEY")
 )
+SUPABASE_JWT_SECRET = get_env("SUPABASE_JWT_SECRET", "")
 JWT_ALGORITHM = get_env("JWT_ALGORITHM", "HS256")
 CORS_ALLOW_ORIGINS = get_env_csv(
     "CORS_ALLOW_ORIGINS",
@@ -98,6 +99,11 @@ COMPANY_EMAIL = get_env("COMPANY_EMAIL", "billing@sm2dispatch.com")
 COMPANY_WEBSITE = get_env("COMPANY_WEBSITE", "https://www.sm2dispatch.com")
 ADMIN_EMAIL = get_env("ADMIN_EMAIL", "admin@sm2dispatch.com").strip().lower()
 ADMIN_DEFAULT_PASSWORD = get_env("ADMIN_DEFAULT_PASSWORD", "admin123")
+DEFAULT_TENANT_ID = get_env("DEFAULT_TENANT_ID", "00000000-0000-0000-0000-000000000001")
+DEFAULT_TENANT_SLUG = get_env("DEFAULT_TENANT_SLUG", "default")
+DEFAULT_TENANT_NAME = get_env("DEFAULT_TENANT_NAME", COMPANY_NAME)
+TENANT_HOST_SUFFIX = get_env("TENANT_HOST_SUFFIX", "dispatchiq.com")
+TENANT_CACHE_PREFIX = get_env("TENANT_CACHE_PREFIX", "dispatchiq")
 
 if APP_ENV != "development" and JWT_SECRET_KEY.startswith("change-me"):
     raise RuntimeError("JWT_SECRET_KEY must be set to a secure value outside development")

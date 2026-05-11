@@ -8,7 +8,7 @@ from uuid import UUID
 
 from fastapi import HTTPException, status
 
-from .config import JWT_ALGORITHM, JWT_SECRET_KEY
+from .config import JWT_ALGORITHM, JWT_SECRET_KEY, SUPABASE_JWT_SECRET
 from .enums import UserRole
 
 
@@ -16,6 +16,9 @@ from .enums import UserRole
 class AuthenticatedUser:
     user_id: UUID
     role: UserRole
+    tenant_id: UUID | None = None
+    tenant_role: str | None = None
+    claims: dict | None = None
 
 def _encode_segment(payload: dict) -> str:
     raw = json.dumps(payload, separators=(",", ":"), sort_keys=True).encode("utf-8")
@@ -50,6 +53,9 @@ def create_access_token(
     user_id: UUID,
     role: UserRole,
     expires_at: datetime,
+    tenant_id: UUID | None = None,
+    tenant_role: str | None = None,
+    extra_claims: dict | None = None,
 ) -> str:
     if JWT_ALGORITHM.upper() != "HS256":
         raise RuntimeError("Only HS256 JWT signing is supported")
@@ -65,7 +71,16 @@ def create_access_token(
         "sub": str(user_id),
         "role": role.value,
         "exp": int(expiry.timestamp()),
+        "tenant_id": str(tenant_id) if tenant_id else None,
+        "tenant_role": tenant_role or role.value,
+        "app_metadata": {
+            "tenant_id": str(tenant_id) if tenant_id else None,
+            "tenant_role": tenant_role or role.value,
+            "role": role.value,
+        },
     }
+    if extra_claims:
+        payload.update(extra_claims)
 
     header_segment = _encode_segment(header)
     payload_segment = _encode_segment(payload)
@@ -106,14 +121,23 @@ def decode_access_token(token: str) -> AuthenticatedUser:
         )
 
     signing_input = f"{header_segment}.{payload_segment}".encode("utf-8")
-    expected_signature = hmac.new(
-        JWT_SECRET_KEY.encode("utf-8"),
-        signing_input,
-        hashlib.sha256,
-    ).digest()
     provided_signature = _decode_signature(signature_segment)
+    candidate_secrets = [JWT_SECRET_KEY]
+    if SUPABASE_JWT_SECRET and SUPABASE_JWT_SECRET not in candidate_secrets:
+        candidate_secrets.append(SUPABASE_JWT_SECRET)
 
-    if not hmac.compare_digest(expected_signature, provided_signature):
+    signature_matches = False
+    for secret in candidate_secrets:
+        expected_signature = hmac.new(
+            secret.encode("utf-8"),
+            signing_input,
+            hashlib.sha256,
+        ).digest()
+        if hmac.compare_digest(expected_signature, provided_signature):
+            signature_matches = True
+            break
+
+    if not signature_matches:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid authentication token",
@@ -137,6 +161,13 @@ def decode_access_token(token: str) -> AuthenticatedUser:
     try:
         raw_sub = payload.get("sub")
         raw_role = payload.get("role")
+        app_metadata = payload.get("app_metadata") or {}
+        raw_tenant_id = (
+            payload.get("tenant_id")
+            or app_metadata.get("tenant_id")
+            or (payload.get("user_metadata") or {}).get("tenant_id")
+        )
+        raw_tenant_role = payload.get("tenant_role") or app_metadata.get("tenant_role")
     except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -165,4 +196,20 @@ def decode_access_token(token: str) -> AuthenticatedUser:
             detail="Unsupported user role",
         ) from exc
 
-    return AuthenticatedUser(user_id=user_id, role=role)
+    tenant_id = None
+    if raw_tenant_id:
+        try:
+            tenant_id = UUID(str(raw_tenant_id))
+        except ValueError as exc:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Token tenant_id must be a UUID",
+            ) from exc
+
+    return AuthenticatedUser(
+        user_id=user_id,
+        role=role,
+        tenant_id=tenant_id,
+        tenant_role=str(raw_tenant_role).lower() if raw_tenant_role else role.value,
+        claims=payload,
+    )

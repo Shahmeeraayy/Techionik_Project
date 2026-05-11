@@ -4,10 +4,10 @@ from sqlalchemy import Boolean, CheckConstraint, Column, DateTime, ForeignKey, J
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
-from .base import Base
+from .base import Base, TenantScopedMixin
 
 
-class ChatMessage(Base):
+class ChatMessage(TenantScopedMixin, Base):
     __tablename__ = "chat_messages"
 
     id = Column(Uuid(as_uuid=True), primary_key=True, default=uuid4)

@@ -1,9 +1,9 @@
 from sqlalchemy import Column, String, DateTime, ForeignKey, Text, Uuid
 from sqlalchemy.orm import relationship
-from .base import Base
+from .base import Base, TenantScopedMixin
 from sqlalchemy.sql import func
 
-class JobRejection(Base):
+class JobRejection(TenantScopedMixin, Base):
     __tablename__ = "job_rejections"
 
     job_id = Column(Uuid(as_uuid=True), ForeignKey("jobs.id", ondelete="CASCADE"), primary_key=True)

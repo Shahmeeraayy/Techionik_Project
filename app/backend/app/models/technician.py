@@ -4,10 +4,10 @@ from sqlalchemy import JSON, Boolean, CheckConstraint, Column, DateTime, Integer
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
-from .base import Base
+from .base import Base, TenantScopedMixin
 
 
-class Technician(Base):
+class Technician(TenantScopedMixin, Base):
     __tablename__ = "technicians"
 
     id = Column(Uuid(as_uuid=True), primary_key=True, default=uuid4)

@@ -4,10 +4,10 @@ from sqlalchemy import CheckConstraint, Column, DateTime, ForeignKey, String, Te
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
-from .base import Base
+from .base import Base, TenantScopedMixin
 
 
-class TechnicianEmailChangeRequest(Base):
+class TechnicianEmailChangeRequest(TenantScopedMixin, Base):
     __tablename__ = "technician_email_change_requests"
 
     id = Column(Uuid(as_uuid=True), primary_key=True, default=uuid4)

@@ -3,10 +3,10 @@ from uuid import uuid4
 from sqlalchemy import CheckConstraint, Column, DateTime, ForeignKey, JSON, String, Uuid
 from sqlalchemy.sql import func
 
-from .base import Base
+from .base import Base, TenantScopedMixin
 
 
-class JobEvent(Base):
+class JobEvent(TenantScopedMixin, Base):
     __tablename__ = "job_events"
 
     id = Column(Uuid(as_uuid=True), primary_key=True, default=uuid4)

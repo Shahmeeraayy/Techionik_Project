@@ -3,10 +3,10 @@ from uuid import uuid4
 from sqlalchemy import CheckConstraint, Column, DateTime, JSON, String, Uuid
 from sqlalchemy.sql import func
 
-from .base import Base
+from .base import Base, TenantScopedMixin
 
 
-class AuditLog(Base):
+class AuditLog(TenantScopedMixin, Base):
     __tablename__ = "audit_logs"
 
     id = Column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
