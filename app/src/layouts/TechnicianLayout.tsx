@@ -35,7 +35,7 @@ function DesktopSidebar() {
   const { user, logout } = useAuth();
 
   return (
-    <aside className="hidden lg:flex flex-col w-64 h-screen sticky top-0 border-r border-white/10 bg-[#050505] shadow-[18px_0_60px_rgba(0,0,0,0.26)]">
+    <aside className="tech-sidebar hidden lg:flex flex-col w-64 h-screen sticky top-0 border-r border-white/10 bg-[#050505] shadow-[18px_0_60px_rgba(0,0,0,0.26)]">
       {/* Logo */}
       <div className="flex items-center gap-3 border-b border-white/10 px-6 py-5">
         <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-cyan-300/20 bg-cyan-300/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
@@ -105,7 +105,7 @@ function MobileHeader({ onMenuClick }: { onMenuClick: () => void }) {
   const { user } = useAuth();
 
   return (
-    <header className="sticky top-0 z-30 border-b border-white/10 bg-[#080c14]/95 px-4 py-3 backdrop-blur-xl lg:hidden">
+    <header className="tech-mobile-topbar sticky top-0 z-30 border-b border-white/10 bg-[#080c14]/95 px-4 py-3 backdrop-blur-xl lg:hidden">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-cyan-300/20 bg-cyan-300/10">
@@ -134,7 +134,7 @@ function MobileNav() {
   const activeItem = location.pathname;
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-white/10 bg-[#080c14]/95 backdrop-blur-xl lg:hidden">
+    <nav className="tech-mobile-nav fixed bottom-0 left-0 right-0 z-40 border-t border-white/10 bg-[#080c14]/95 backdrop-blur-xl lg:hidden">
       <div className="flex items-center justify-around px-2 py-2">
         {navItems.map((item) => {
           const Icon = item.icon;
@@ -168,7 +168,7 @@ function MobileMenu({ isOpen, onClose }: { isOpen: boolean; onClose: () => void 
         className="fixed inset-0 bg-black/50 z-50"
         onClick={onClose}
       />
-      <div className="fixed bottom-0 right-0 top-0 z-50 w-64 border-l border-white/10 bg-[#080c14] p-4 shadow-xl">
+      <div className="tech-mobile-menu fixed bottom-0 right-0 top-0 z-50 w-64 border-l border-white/10 bg-[#080c14] p-4 shadow-xl">
         <div className="flex items-center justify-between mb-6">
           <h2 className="font-semibold text-white">Menu</h2>
           <Button variant="ghost" size="icon" onClick={onClose}>
@@ -206,9 +206,11 @@ export function TechnicianLayout({ children }: { children: React.ReactNode }) {
         <DesktopSidebar />
 
         {/* Main content */}
-        <main className="flex-1 min-w-0 pb-20 lg:pb-0">
-          <div className="p-4 lg:p-8">
-            {children}
+        <main className="flex-1 min-w-0 pb-20 lg:p-4 lg:pb-4">
+          <div className="tech-page-frame min-h-screen overflow-hidden rounded-none lg:min-h-[calc(100vh-2rem)] lg:rounded-[32px]">
+            <div className="tech-content min-h-screen p-4 lg:min-h-[calc(100vh-2rem)] lg:p-8">
+              {children}
+            </div>
           </div>
         </main>
       </div>
