@@ -231,6 +231,24 @@ function toPasswordResetRequestSummary(
   };
 }
 
+function upsertTechnicianAccount(
+  accounts: TechnicianAccount[],
+  nextAccount: TechnicianAccount,
+): TechnicianAccount[] {
+  const existingIndex = accounts.findIndex((item) => item.id === nextAccount.id);
+  if (existingIndex === -1) {
+    return [nextAccount, ...accounts];
+  }
+
+  const next = [...accounts];
+  next[existingIndex] = {
+    ...next[existingIndex],
+    ...nextAccount,
+    createdAt: next[existingIndex].createdAt,
+  };
+  return next;
+}
+
 function mapBackendTechnicianAccounts(
   backendRows: Array<{
     id: string;
@@ -461,32 +479,84 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isAuthLoading, setIsAuthLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    try {
-      const restoredUser = parseStoredUser();
-      setUser(restoredUser.user);
-      setAuthStorageScope(restoredUser.scope);
-      setTechnicianAccounts(parseStoredTechnicians());
-      setPendingTechnicianRequests(parseStoredSignupRequests());
-      setRejectedTechnicianRequests(parseStoredRejectedSignupRequests());
-      setPendingTechnicianPasswordResetRequests([]);
+    let isMounted = true;
 
-      const adminToken = getStoredAdminToken();
-      const technicianToken = getStoredTechnicianToken();
+    const restoreAuthState = async () => {
+      try {
+        const restoredUser = parseStoredUser();
+        const parsedTechnicians = parseStoredTechnicians();
+        const parsedPendingRequests = parseStoredSignupRequests();
+        const parsedRejectedRequests = parseStoredRejectedSignupRequests();
+        const adminToken = getStoredAdminToken();
+        const technicianToken = getStoredTechnicianToken();
 
-      setHasBackendAdminToken(Boolean(adminToken && adminToken.trim()));
-      setHasBackendTechnicianToken(Boolean(technicianToken && technicianToken.trim()));
-    } catch (error) {
-      console.error('Failed to restore auth session from storage.', error);
-      setUser(null);
-      setTechnicianAccounts(DEFAULT_TECHNICIAN_ACCOUNTS);
-      setPendingTechnicianRequests([]);
-      setRejectedTechnicianRequests([]);
-      setPendingTechnicianPasswordResetRequests([]);
-      setHasBackendAdminToken(false);
-      setHasBackendTechnicianToken(false);
-    } finally {
-      setIsAuthLoading(false);
-    }
+        let nextUser = restoredUser.user;
+        let nextTechnicians = parsedTechnicians;
+        let nextHasBackendTechnicianToken = Boolean(technicianToken && technicianToken.trim());
+
+        if (restoredUser.user?.role === 'technician' && technicianToken) {
+          try {
+            const backendProfile = await fetchTechnicianMeProfile(technicianToken);
+            const nowIso = new Date().toISOString();
+            const restoredAccount: TechnicianAccount = {
+              id: backendProfile.id,
+              name: backendProfile.full_name || backendProfile.name,
+              email: normalizeEmail(backendProfile.email),
+              phone: backendProfile.phone ?? undefined,
+              password: parsedTechnicians.find((item) => item.id === backendProfile.id)?.password,
+              avatar: backendProfile.profile_picture_url ?? technicianUser.avatar,
+              isActive: backendProfile.status === 'active',
+              createdAt: parsedTechnicians.find((item) => item.id === backendProfile.id)?.createdAt ?? nowIso,
+              updatedAt: nowIso,
+              lastLoginAt: parsedTechnicians.find((item) => item.id === backendProfile.id)?.lastLoginAt ?? nowIso,
+            };
+
+            nextTechnicians = upsertTechnicianAccount(parsedTechnicians, restoredAccount);
+            nextUser = toTechnicianUser(restoredAccount);
+          } catch (error) {
+            console.error('Failed to restore technician session from backend token.', error);
+            clearStoredTechnicianToken();
+            nextUser = null;
+            nextHasBackendTechnicianToken = false;
+          }
+        }
+
+        if (!isMounted) {
+          return;
+        }
+
+        setUser(nextUser);
+        setAuthStorageScope(restoredUser.scope);
+        setTechnicianAccounts(nextTechnicians);
+        setPendingTechnicianRequests(parsedPendingRequests);
+        setRejectedTechnicianRequests(parsedRejectedRequests);
+        setPendingTechnicianPasswordResetRequests([]);
+        setHasBackendAdminToken(Boolean(adminToken && adminToken.trim()));
+        setHasBackendTechnicianToken(nextHasBackendTechnicianToken);
+      } catch (error) {
+        console.error('Failed to restore auth session from storage.', error);
+        if (!isMounted) {
+          return;
+        }
+        setUser(null);
+        setTechnicianAccounts(DEFAULT_TECHNICIAN_ACCOUNTS);
+        setPendingTechnicianRequests([]);
+        setRejectedTechnicianRequests([]);
+        setPendingTechnicianPasswordResetRequests([]);
+        setHasBackendAdminToken(false);
+        setHasBackendTechnicianToken(false);
+      } finally {
+        if (isMounted) {
+          setIsAuthLoading(false);
+        }
+      }
+    };
+
+    void restoreAuthState();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const refreshBackendAdminData = useCallback(async () => {
@@ -509,12 +579,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (user?.role !== 'technician') {
+    if (isAuthLoading || user?.role !== 'technician') {
       return;
     }
 
     const account = technicianAccounts.find((item) => item.id === user.id);
-    if (!account || !account.isActive) {
+    if (!account) {
+      return;
+    }
+
+    if (!account.isActive) {
       setUser(null);
       return;
     }
@@ -529,7 +603,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (needsSync) {
       setUser(synced);
     }
-  }, [technicianAccounts, user]);
+  }, [isAuthLoading, technicianAccounts, user]);
 
   useEffect(() => {
     if (user) {
