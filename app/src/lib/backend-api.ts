@@ -149,6 +149,22 @@ export type BackendTechnicianPasswordResetRequestNotificationResponse = {
   message: string;
 };
 
+export type BackendTechnicianPasswordResetLinkIssueResponse = {
+  request: BackendTechnicianPasswordResetRequest;
+  reset_url: string;
+};
+
+export type BackendTechnicianPasswordResetLinkValidationResponse = {
+  request_id: string;
+  technician_name?: string | null;
+  technician_email: string;
+  expires_at: string;
+};
+
+export type BackendTechnicianPasswordResetCompleteResponse = {
+  message: string;
+};
+
 export type BackendChatAttachment = {
   id: string;
   name: string;
@@ -1180,6 +1196,33 @@ export async function resolveAdminTechnicianPasswordResetRequest(
     method: 'POST',
     token,
     body: { remarks },
+  });
+}
+
+export async function issueAdminTechnicianPasswordResetLink(
+  token: string,
+  technicianId: string,
+): Promise<BackendTechnicianPasswordResetLinkIssueResponse> {
+  return requestJson<BackendTechnicianPasswordResetLinkIssueResponse>('/admin/technician-password-reset-requests/issue', {
+    method: 'POST',
+    token,
+    body: { technician_id: technicianId },
+  });
+}
+
+export async function fetchTechnicianPasswordResetLink(
+  requestId: string,
+): Promise<BackendTechnicianPasswordResetLinkValidationResponse> {
+  return requestJson<BackendTechnicianPasswordResetLinkValidationResponse>(`/auth/technician-password-reset-request/${requestId}`);
+}
+
+export async function completeTechnicianPasswordReset(
+  requestId: string,
+  payload: { new_password: string },
+): Promise<BackendTechnicianPasswordResetCompleteResponse> {
+  return requestJson<BackendTechnicianPasswordResetCompleteResponse>(`/auth/technician-password-reset-request/${requestId}/complete`, {
+    method: 'POST',
+    body: payload,
   });
 }
 

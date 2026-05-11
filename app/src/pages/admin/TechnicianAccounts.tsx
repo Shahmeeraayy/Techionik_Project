@@ -47,6 +47,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { formatPhoneForDisplay, formatUsPhoneInput } from '@/lib/phone';
 import { cn } from '@/lib/utils';
+import { getStoredAdminToken, issueAdminTechnicianPasswordResetLink } from '@/lib/backend-api';
 
 type EditFormState = {
   name: string;
@@ -116,6 +117,7 @@ export default function TechnicianAccountsPage() {
   const [formError, setFormError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isSendingResetLinkFor, setIsSendingResetLinkFor] = useState<string | null>(null);
   const [syncError, setSyncError] = useState<string | null>(null);
   const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null);
 
@@ -298,10 +300,28 @@ export default function TechnicianAccountsPage() {
     }
   };
 
-  const handleSendResetLink = (payload: { email: string; name: string }) => {
-    const subject = encodeURIComponent('SM2 electronics technician password reset');
-    const body = encodeURIComponent(`Hello ${payload.name},\n\nThis is your technician account password reset message from SM2 electronics. Please use the secure reset flow provided by the admin team to complete your password reset.\n\nIf you did not request this, please contact support.\n`);
-    window.location.href = `mailto:${payload.email}?subject=${subject}&body=${body}`;
+  const handleSendResetLink = async (payload: { technicianId: string; email: string; name: string }) => {
+    const adminToken = getStoredAdminToken();
+    if (!adminToken) {
+      window.alert('Admin session is required to send password reset links.');
+      return;
+    }
+
+    setIsSendingResetLinkFor(payload.technicianId);
+    try {
+      const issued = await issueAdminTechnicianPasswordResetLink(adminToken, payload.technicianId);
+      const resetLink = `${window.location.origin}${issued.reset_url}`;
+      const subject = encodeURIComponent('SM2 electronics technician password reset');
+      const body = encodeURIComponent(
+        `Hello ${payload.name},\n\nThis is your technician account password reset message from SM2 electronics.\n\nReset your password here:\n${resetLink}\n\nThis link expires in 24 hours. If you did not request this, please contact support.\n`
+      );
+      window.location.href = `mailto:${payload.email}?subject=${subject}&body=${body}`;
+      await runSync();
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : 'Unable to issue password reset link.');
+    } finally {
+      setIsSendingResetLinkFor(null);
+    }
   };
 
   const handleResolvePasswordResetRequest = async (request: TechnicianPasswordResetRequestSummary) => {
@@ -596,15 +616,16 @@ export default function TechnicianAccountsPage() {
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() => handleSendResetLink({
+                              onClick={() => { void handleSendResetLink({
+                                technicianId: request.technicianId,
                                 email: request.technicianEmail,
                                 name: request.technicianName ?? 'Technician',
-                              })}
-                              disabled={isRefreshing}
+                              }); }}
+                              disabled={isRefreshing || isSendingResetLinkFor === request.technicianId}
                               className="border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
                             >
                               <Send className="w-4 h-4 mr-1" />
-                              Send Reset Link
+                              {isSendingResetLinkFor === request.technicianId ? 'Sending...' : 'Send Reset Link'}
                             </Button>
                             <Button
                               size="sm"
@@ -687,9 +708,15 @@ export default function TechnicianAccountsPage() {
                             <Pencil className="w-4 h-4 mr-1" />
                             Edit
                           </Button>
-                          <Button variant="outline" size="sm" onClick={() => handleSendResetLink({ email: account.email, name: account.name })} className="border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => { void handleSendResetLink({ technicianId: account.id, email: account.email, name: account.name }); }}
+                            disabled={isSendingResetLinkFor === account.id}
+                            className="border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
+                          >
                             <Send className="w-4 h-4 mr-1" />
-                            Reset Link
+                            {isSendingResetLinkFor === account.id ? 'Sending...' : 'Reset Link'}
                           </Button>
                           <Button
                             size="sm"

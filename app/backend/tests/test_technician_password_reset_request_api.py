@@ -134,6 +134,47 @@ class TechnicianPasswordResetRequestApiTests(unittest.TestCase):
         self.assertEqual(pending_after_response.status_code, 200, pending_after_response.text)
         self.assertEqual(pending_after_response.json(), [])
 
+    def test_admin_can_issue_reset_link_and_technician_can_complete_reset(self):
+        tech = self._seed_technician(name="Alex", email="alex@sm2dispatch.com", password="old-pass-123")
+
+        issue_response = self.client.post(
+            "/admin/technician-password-reset-requests/issue",
+            headers=self.admin_auth_header,
+            json={"technician_id": str(tech.id)},
+        )
+        self.assertEqual(issue_response.status_code, 200, issue_response.text)
+        issued = issue_response.json()
+        self.assertEqual(issued["request"]["technician_email"], tech.email)
+        self.assertTrue(issued["reset_url"].endswith(issued["request"]["id"]))
+
+        validate_response = self.client.get(
+            f"/auth/technician-password-reset-request/{issued['request']['id']}",
+        )
+        self.assertEqual(validate_response.status_code, 200, validate_response.text)
+        self.assertEqual(validate_response.json()["technician_email"], tech.email)
+
+        complete_response = self.client.post(
+            f"/auth/technician-password-reset-request/{issued['request']['id']}/complete",
+            json={"new_password": "new-pass-789"},
+        )
+        self.assertEqual(complete_response.status_code, 200, complete_response.text)
+        self.assertEqual(
+            complete_response.json()["message"],
+            "Your password has been reset. You can sign in with the new password now.",
+        )
+
+        login_response = self.client.post(
+            "/auth/technician-token",
+            json={"email": tech.email, "password": "new-pass-789"},
+        )
+        self.assertEqual(login_response.status_code, 200, login_response.text)
+
+        with SessionLocal() as db:
+            row = db.query(TechnicianPasswordResetRequest).first()
+            self.assertIsNotNone(row)
+            self.assertEqual(row.status, "RESOLVED")
+            self.assertEqual(row.remarks, "Resolved via technician reset link.")
+
     def test_admin_password_update_auto_resolves_pending_request(self):
         tech = self._seed_technician(name="Jolianne", email="jolianne@sm2dispatch.com")
         create_response = self.client.post(

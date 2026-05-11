@@ -37,6 +37,32 @@ class TechnicianPasswordResetRequestNotificationResponse(BaseModel):
     message: str
 
 
+class TechnicianPasswordResetRequestIssueRequest(BaseModel):
+    technician_id: UUID
+
+
+class TechnicianPasswordResetLinkValidationResponse(BaseModel):
+    request_id: UUID
+    technician_name: Optional[str] = None
+    technician_email: str
+    expires_at: datetime
+
+
+class TechnicianPasswordResetCompleteRequest(BaseModel):
+    new_password: str = Field(..., min_length=6, max_length=255)
+
+    @validator("new_password")
+    def validate_new_password(cls, value: str):
+        normalized = value.strip()
+        if len(normalized) < 6:
+            raise ValueError("new_password must be at least 6 characters")
+        return normalized
+
+
+class TechnicianPasswordResetCompleteResponse(BaseModel):
+    message: str
+
+
 class TechnicianPasswordResetRequestResponse(BaseModel):
     id: UUID
     technician_id: UUID
@@ -52,3 +78,8 @@ class TechnicianPasswordResetRequestResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class TechnicianPasswordResetLinkIssueResponse(BaseModel):
+    request: TechnicianPasswordResetRequestResponse
+    reset_url: str
