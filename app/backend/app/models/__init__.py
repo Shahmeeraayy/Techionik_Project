@@ -1,3 +1,4 @@
+from .admin_user import AdminUser
 from .admin_credential_settings import AdminCredentialSettings
 from .audit_log import AuditLog
 from .booking_portal_settings import BookingPortalSettings

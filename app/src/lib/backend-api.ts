@@ -21,6 +21,11 @@ type AdminTokenResponse = {
   token_type: string;
   expires_at: string;
   role: 'admin';
+  tenant_id: string;
+  user_id: string;
+  user_name: string;
+  user_email: string;
+  tenant_role: 'owner' | 'admin' | 'dispatcher' | 'viewer';
 };
 
 type DevTechnicianTokenResponse = {
@@ -28,6 +33,11 @@ type DevTechnicianTokenResponse = {
   token_type: string;
   expires_at: string;
   role: 'technician';
+  tenant_id: string;
+  user_id: string;
+  user_name: string;
+  user_email: string;
+  tenant_role: 'technician';
 };
 
 export type BackendTechnicianListItem = {
@@ -397,8 +407,24 @@ export type BackendAdminPasswordChangeResponse = {
 };
 
 export type BackendAdminCredentialSettings = {
+  id: string;
+  full_name: string;
   admin_email: string;
+  tenant_role: 'owner' | 'admin' | 'dispatcher' | 'viewer';
+  status: 'active' | 'deactivated';
   password_changed_at: string;
+  updated_at: string;
+};
+
+export type BackendAdminUser = {
+  id: string;
+  full_name: string;
+  email: string;
+  tenant_role: 'owner' | 'admin' | 'dispatcher' | 'viewer';
+  status: 'active' | 'deactivated';
+  last_login_at?: string | null;
+  password_changed_at: string;
+  created_at: string;
   updated_at: string;
 };
 
@@ -1525,6 +1551,7 @@ export async function fetchAdminCredentialSettings(
 export async function updateAdminCredentialSettings(
   token: string,
   payload: {
+    full_name?: string;
     admin_email: string;
     current_password: string;
     new_password?: string;
@@ -1626,6 +1653,48 @@ export async function createInvoice(
 ): Promise<BackendInvoice> {
   return requestJson<BackendInvoice>('/invoices', {
     method: 'POST',
+    token,
+    body: payload,
+  });
+}
+
+export async function fetchAdminUsers(
+  token: string,
+): Promise<BackendAdminUser[]> {
+  return requestJson<BackendAdminUser[]>('/admin/settings/admin-users', {
+    token,
+  });
+}
+
+export async function createAdminUser(
+  token: string,
+  payload: {
+    full_name: string;
+    email: string;
+    password: string;
+    tenant_role: 'owner' | 'admin' | 'dispatcher' | 'viewer';
+  },
+): Promise<BackendAdminUser> {
+  return requestJson<BackendAdminUser>('/admin/settings/admin-users', {
+    method: 'POST',
+    token,
+    body: payload,
+  });
+}
+
+export async function updateAdminUser(
+  token: string,
+  adminUserId: string,
+  payload: {
+    full_name?: string;
+    email?: string;
+    password?: string;
+    tenant_role?: 'owner' | 'admin' | 'dispatcher' | 'viewer';
+    status?: 'active' | 'deactivated';
+  },
+): Promise<BackendAdminUser> {
+  return requestJson<BackendAdminUser>(`/admin/settings/admin-users/${adminUserId}`, {
+    method: 'PATCH',
     token,
     body: payload,
   });

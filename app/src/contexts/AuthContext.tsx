@@ -684,7 +684,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       setUser({
         ...currentUser,
-        email: normalizedEmail,
+        id: tokenResponse.user_id,
+        name: tokenResponse.user_name,
+        email: tokenResponse.user_email,
         updatedAt: new Date().toISOString(),
       });
       return;

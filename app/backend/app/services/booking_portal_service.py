@@ -6,12 +6,13 @@ from typing import Optional
 from uuid import UUID
 
 from fastapi import HTTPException, status
-from sqlalchemy import inspect, text
+from sqlalchemy import case, inspect, text
 from sqlalchemy.orm import Session
 
 from ..core.config import COMPANY_EMAIL, COMPANY_LOGO_URL, COMPANY_NAME, COMPANY_PHONE
 from ..core.security import AuthenticatedUser
 from ..models.admin_credential_settings import AdminCredentialSettings
+from ..models.admin_user import AdminUser
 from ..models.booking_portal_settings import BookingPortalSettings
 from ..models.booking_request import BookingRequest
 from ..models.email_outbox import EmailOutbox
@@ -60,9 +61,20 @@ class BookingPortalService:
             .filter(InvoiceBrandingSettings.key == "default")
             .first()
         )
+        primary_admin_user = (
+            self.db.query(AdminUser)
+            .filter(AdminUser.status == "active")
+            .order_by(
+                case((AdminUser.tenant_role == "owner", 0), else_=1),
+                AdminUser.created_at.asc(),
+            )
+            .first()
+        )
         admin_settings = self.db.query(AdminCredentialSettings).first()
         company_name = branding.name if branding is not None else COMPANY_NAME
         admin_email = (
+            (primary_admin_user.email if primary_admin_user is not None else None)
+            or
             (admin_settings.admin_email if admin_settings is not None else None)
             or (branding.email if branding is not None else None)
             or COMPANY_EMAIL

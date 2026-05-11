@@ -21,6 +21,10 @@ class DevTokenResponse(BaseModel):
     expires_at: datetime
     role: UserRole
     tenant_id: UUID
+    user_id: UUID
+    user_name: str
+    user_email: str
+    tenant_role: str
 
 
 class DevTechnicianTokenRequest(BaseModel):
@@ -39,23 +43,28 @@ class AdminTokenRequest(BaseModel):
 
 
 def _issue_admin_token(*, email: str, password: str, db: Session) -> DevTokenResponse:
-    if not AdminCredentialSettingsService(db).verify_admin_credentials(email, password):
+    admin_user = AdminCredentialSettingsService(db).verify_admin_credentials(email, password)
+    if admin_user is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid admin credentials")
 
-    tenant_id = UUID(DEFAULT_TENANT_ID)
+    tenant_id = admin_user.tenant_id or UUID(DEFAULT_TENANT_ID)
     expires_at = datetime.now(timezone.utc) + timedelta(hours=8)
     token = create_access_token(
-        user_id=uuid4(),
+        user_id=admin_user.id,
         role=UserRole.ADMIN,
         expires_at=expires_at,
         tenant_id=tenant_id,
-        tenant_role=UserRole.ADMIN.value,
+        tenant_role=admin_user.tenant_role,
     )
     return DevTokenResponse(
         access_token=token,
         expires_at=expires_at,
         role=UserRole.ADMIN,
         tenant_id=tenant_id,
+        user_id=admin_user.id,
+        user_name=admin_user.full_name,
+        user_email=admin_user.email,
+        tenant_role=admin_user.tenant_role,
     )
 
 
@@ -124,6 +133,10 @@ def create_dev_technician_token(
         expires_at=expires_at,
         role=UserRole.TECHNICIAN,
         tenant_id=technician.tenant_id or UUID(DEFAULT_TENANT_ID),
+        user_id=technician.id,
+        user_name=technician.full_name or technician.name,
+        user_email=technician.email,
+        tenant_role=UserRole.TECHNICIAN.value,
     )
 
 
@@ -164,4 +177,8 @@ def create_technician_token(
         expires_at=expires_at,
         role=UserRole.TECHNICIAN,
         tenant_id=technician.tenant_id or UUID(DEFAULT_TENANT_ID),
+        user_id=technician.id,
+        user_name=technician.full_name or technician.name,
+        user_email=technician.email,
+        tenant_role=UserRole.TECHNICIAN.value,
     )

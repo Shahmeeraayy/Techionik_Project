@@ -4,6 +4,7 @@ import {
     Pencil,
     RefreshCw,
     KeyRound,
+    UserCog,
     Moon,
     Sun,
     Monitor,
@@ -70,18 +71,22 @@ import {
     createAdminPriorityRule,
     deleteAdminPriorityRule,
     fetchAdminCredentialSettings,
+    fetchAdminUsers,
     fetchAdminDealerships,
     fetchAdminTechnicians,
     fetchAdminPriorityRules,
     fetchAdminServices,
     fetchAdminInvoiceBrandingSettings,
     getStoredAdminToken,
+    createAdminUser,
     updateAdminCredentialSettings,
+    updateAdminUser,
     updateAdminBookingPortalSettings,
     updateAdminPriorityRule,
     updateAdminInvoiceBrandingSettings,
     type BackendBookingPortalSettings,
     type BackendAdminCredentialSettings,
+    type BackendAdminUser,
     type BackendDealership,
     type BackendPriorityRule,
     type BackendServiceCatalogItem,
@@ -133,6 +138,18 @@ type BookingPortalSettingsState = {
     statusLookupEnabled: boolean;
     industryType: 'automotive' | 'property' | 'general';
     detailsFieldLabel: string;
+};
+
+type AdminUserState = {
+    id: string;
+    fullName: string;
+    email: string;
+    tenantRole: 'owner' | 'admin' | 'dispatcher' | 'viewer';
+    status: 'active' | 'deactivated';
+    lastLoginAt?: string | null;
+    passwordChangedAt: string;
+    createdAt: string;
+    updatedAt: string;
 };
 
 // --- Components ---
@@ -229,6 +246,18 @@ const mapBackendBookingPortalSettings = (row: BackendBookingPortalSettings): Boo
     detailsFieldLabel: row.details_field_label ?? '',
 });
 
+const mapBackendAdminUser = (row: BackendAdminUser): AdminUserState => ({
+    id: row.id,
+    fullName: row.full_name,
+    email: row.email,
+    tenantRole: row.tenant_role,
+    status: row.status,
+    lastLoginAt: row.last_login_at ?? null,
+    passwordChangedAt: row.password_changed_at,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+});
+
 const loadStoredObject = <T,>(key: string, fallback: T): T => {
     if (typeof window === 'undefined') return fallback;
     try {
@@ -246,6 +275,7 @@ const saveStoredObject = <T,>(key: string, value: T): void => {
 };
 
 const getDefaultAdminCredentialValues = () => ({
+    fullName: 'Primary Admin',
     adminEmail: DEFAULT_ADMIN_EMAIL,
 });
 
@@ -287,6 +317,16 @@ export default function SettingsPage() {
         newPassword: '',
         confirmPassword: '',
     });
+    const [adminUsers, setAdminUsers] = useState<AdminUserState[]>([]);
+    const [newAdminUserForm, setNewAdminUserForm] = useState({
+        fullName: '',
+        email: '',
+        password: '',
+        tenantRole: 'admin' as 'owner' | 'admin' | 'dispatcher' | 'viewer',
+    });
+    const [newAdminUserError, setNewAdminUserError] = useState<string | null>(null);
+    const [isSavingNewAdminUser, setIsSavingNewAdminUser] = useState(false);
+    const [editingAdminUserId, setEditingAdminUserId] = useState<string | null>(null);
     const [adminCredentialError, setAdminCredentialError] = useState<string | null>(null);
     const [isSavingAdminCredentials, setIsSavingAdminCredentials] = useState(false);
     const [isSavingBookingPortalSettings, setIsSavingBookingPortalSettings] = useState(false);
@@ -328,6 +368,7 @@ export default function SettingsPage() {
             setTechnicianCount(0);
             setServiceOptions([]);
             setPriorityRules([]);
+            setAdminUsers([]);
             setBookingPortalSettings(DEFAULT_BOOKING_PORTAL_SETTINGS);
             setSavedBookingPortalSettings(DEFAULT_BOOKING_PORTAL_SETTINGS);
             return;
@@ -338,6 +379,7 @@ export default function SettingsPage() {
             const [
                 brandingResult,
                 credentialsResult,
+                adminUsersResult,
                 dealershipsResult,
                 techniciansResult,
                 servicesResult,
@@ -346,6 +388,7 @@ export default function SettingsPage() {
             ] = await Promise.allSettled([
                 fetchAdminInvoiceBrandingSettings(adminToken),
                 fetchAdminCredentialSettings(adminToken),
+                fetchAdminUsers(adminToken),
                 fetchAdminDealerships(adminToken),
                 fetchAdminTechnicians(adminToken),
                 fetchAdminServices(adminToken, true),
@@ -372,6 +415,7 @@ export default function SettingsPage() {
 
             if (credentialsResult.status === 'fulfilled') {
                 const nextValues = {
+                    fullName: credentialsResult.value.full_name,
                     adminEmail: credentialsResult.value.admin_email,
                 };
                 setSavedAdminCredentials(nextValues);
@@ -396,6 +440,12 @@ export default function SettingsPage() {
                 );
             } else {
                 setDealershipOptions([]);
+            }
+
+            if (adminUsersResult.status === 'fulfilled') {
+                setAdminUsers(adminUsersResult.value.map(mapBackendAdminUser));
+            } else {
+                setAdminUsers([]);
             }
 
             if (techniciansResult.status === 'fulfilled') {
@@ -593,13 +643,14 @@ export default function SettingsPage() {
         }
 
         setAdminCredentialError(null);
+        const fullName = adminCredentialForm.fullName.trim();
         const adminEmail = adminCredentialForm.adminEmail.trim().toLowerCase();
         const currentPassword = adminCredentialForm.currentPassword.trim();
         const newPassword = adminCredentialForm.newPassword.trim();
         const confirmPassword = adminCredentialForm.confirmPassword.trim();
 
-        if (!adminEmail || !currentPassword) {
-            setAdminCredentialError('Admin email and current password are required.');
+        if (!fullName || !adminEmail || !currentPassword) {
+            setAdminCredentialError('Admin name, email, and current password are required.');
             return;
         }
         if ((newPassword && !confirmPassword) || (!newPassword && confirmPassword)) {
@@ -618,11 +669,13 @@ export default function SettingsPage() {
         setIsSavingAdminCredentials(true);
         try {
             const updated = await updateAdminCredentialSettings(adminToken, {
+                full_name: fullName,
                 admin_email: adminEmail,
                 current_password: currentPassword,
                 new_password: newPassword || undefined,
             });
             const nextValues = {
+                fullName: updated.full_name,
                 adminEmail: updated.admin_email,
             };
             setSavedAdminCredentials(nextValues);
@@ -637,6 +690,81 @@ export default function SettingsPage() {
             setAdminCredentialError(error instanceof Error ? error.message : 'Unable to update admin access settings.');
         } finally {
             setIsSavingAdminCredentials(false);
+        }
+    };
+
+    const handleCreateAdminUser = async () => {
+        const adminToken = getStoredAdminToken();
+        if (!hasBackendAdminToken || !adminToken) {
+            setNewAdminUserError('Admin session is required to create admin users.');
+            return;
+        }
+
+        const fullName = newAdminUserForm.fullName.trim();
+        const email = newAdminUserForm.email.trim().toLowerCase();
+        const password = newAdminUserForm.password.trim();
+        if (!fullName || !email || !password) {
+            setNewAdminUserError('Name, email, and password are required.');
+            return;
+        }
+
+        setNewAdminUserError(null);
+        setIsSavingNewAdminUser(true);
+        try {
+            const created = await createAdminUser(adminToken, {
+                full_name: fullName,
+                email,
+                password,
+                tenant_role: newAdminUserForm.tenantRole,
+            });
+            setAdminUsers((prev) => [...prev, mapBackendAdminUser(created)]);
+            setNewAdminUserForm({
+                fullName: '',
+                email: '',
+                password: '',
+                tenantRole: 'admin',
+            });
+            alert('Admin user created successfully.');
+        } catch (error) {
+            setNewAdminUserError(error instanceof Error ? error.message : 'Unable to create admin user.');
+        } finally {
+            setIsSavingNewAdminUser(false);
+        }
+    };
+
+    const handleToggleAdminUserStatus = async (adminUser: AdminUserState) => {
+        const adminToken = getStoredAdminToken();
+        if (!hasBackendAdminToken || !adminToken) {
+            alert('Admin session is required to update admin users.');
+            return;
+        }
+
+        try {
+            const updated = await updateAdminUser(adminToken, adminUser.id, {
+                status: adminUser.status === 'active' ? 'deactivated' : 'active',
+            });
+            setAdminUsers((prev) => prev.map((row) => row.id === adminUser.id ? mapBackendAdminUser(updated) : row));
+            if (adminUser.id === editingAdminUserId) {
+                setEditingAdminUserId(null);
+            }
+        } catch (error) {
+            alert(error instanceof Error ? error.message : 'Unable to update admin user.');
+        }
+    };
+
+    const handlePromoteAdminUser = async (adminUser: AdminUserState, nextRole: AdminUserState['tenantRole']) => {
+        const adminToken = getStoredAdminToken();
+        if (!hasBackendAdminToken || !adminToken) {
+            alert('Admin session is required to update admin roles.');
+            return;
+        }
+        try {
+            const updated = await updateAdminUser(adminToken, adminUser.id, {
+                tenant_role: nextRole,
+            });
+            setAdminUsers((prev) => prev.map((row) => row.id === adminUser.id ? mapBackendAdminUser(updated) : row));
+        } catch (error) {
+            alert(error instanceof Error ? error.message : 'Unable to update admin role.');
         }
     };
 
@@ -1563,11 +1691,167 @@ export default function SettingsPage() {
                             Admin Access
                         </CardTitle>
                         <CardDescription className="text-slate-600 dark:text-slate-300">
-                            Update the admin sign-in email and password from one place.
+                            Manage multiple tenant admins and update your own sign-in credentials.
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="pt-0">
-                        <div className="grid sm:grid-cols-2 gap-6">
+                        <div className="rounded-[22px] border border-white/10 bg-[rgba(255,255,255,0.03)] p-4">
+                            <div className="flex flex-wrap items-center justify-between gap-3">
+                                <div>
+                                    <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">Admin Team</p>
+                                    <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Invite more admins, dispatchers, or viewers under this tenant.</p>
+                                </div>
+                                <Badge variant="outline" className="border-cyan-300/20 bg-cyan-300/10 text-cyan-100">
+                                    {adminUsers.length} active records
+                                </Badge>
+                            </div>
+
+                            <div className="mt-4 overflow-hidden rounded-[20px] border border-white/8 bg-black/10">
+                                <Table>
+                                    <TableHeader className="bg-[rgba(255,255,255,0.04)]">
+                                        <TableRow>
+                                            <TableHead className="text-slate-500 dark:text-slate-400">Name</TableHead>
+                                            <TableHead className="text-slate-500 dark:text-slate-400">Email</TableHead>
+                                            <TableHead className="text-slate-500 dark:text-slate-400">Role</TableHead>
+                                            <TableHead className="text-slate-500 dark:text-slate-400">Status</TableHead>
+                                            <TableHead className="text-right text-slate-500 dark:text-slate-400">Actions</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {adminUsers.map((adminUser) => (
+                                            <TableRow key={adminUser.id} className="border-white/6">
+                                                <TableCell>
+                                                    <div className="flex flex-col">
+                                                        <span className="font-semibold text-slate-950 dark:text-white">{adminUser.fullName}</span>
+                                                        <span className="text-xs text-slate-500 dark:text-slate-400">
+                                                            {adminUser.lastLoginAt ? `Last login ${new Date(adminUser.lastLoginAt).toLocaleString()}` : 'No login recorded'}
+                                                        </span>
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell className="text-slate-700 dark:text-slate-200">{adminUser.email}</TableCell>
+                                                <TableCell>
+                                                    <Select
+                                                        value={adminUser.tenantRole}
+                                                        onValueChange={(value) => handlePromoteAdminUser(adminUser, value as AdminUserState['tenantRole'])}
+                                                    >
+                                                        <SelectTrigger className="h-9 border-white/10 bg-[#0b1424] text-white">
+                                                            <SelectValue />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            <SelectItem value="owner">Owner</SelectItem>
+                                                            <SelectItem value="admin">Admin</SelectItem>
+                                                            <SelectItem value="dispatcher">Dispatcher</SelectItem>
+                                                            <SelectItem value="viewer">Viewer</SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Badge
+                                                        variant="outline"
+                                                        className={cn(
+                                                            adminUser.status === 'active'
+                                                                ? 'border-emerald-300/20 bg-emerald-400/10 text-emerald-100'
+                                                                : 'border-rose-300/20 bg-rose-400/10 text-rose-100',
+                                                        )}
+                                                    >
+                                                        {adminUser.status}
+                                                    </Badge>
+                                                </TableCell>
+                                                <TableCell className="text-right">
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline"
+                                                        className="border-white/10 bg-[#0b1424] text-slate-100 hover:bg-[#122039] hover:text-white"
+                                                        onClick={() => handleToggleAdminUserStatus(adminUser)}
+                                                    >
+                                                        {adminUser.status === 'active' ? 'Deactivate' : 'Activate'}
+                                                    </Button>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </div>
+
+                            <div className="mt-5 grid gap-4 md:grid-cols-4">
+                                <div className="space-y-2 md:col-span-1">
+                                    <Label className="text-slate-700 dark:text-slate-200">Full Name</Label>
+                                    <Input
+                                        style={settingsDarkInputStyle}
+                                        className="border-white/10 text-white placeholder:text-slate-500"
+                                        value={newAdminUserForm.fullName}
+                                        onChange={(e) => setNewAdminUserForm((prev) => ({ ...prev, fullName: e.target.value }))}
+                                        placeholder="Dispatch lead"
+                                    />
+                                </div>
+                                <div className="space-y-2 md:col-span-1">
+                                    <Label className="text-slate-700 dark:text-slate-200">Email</Label>
+                                    <Input
+                                        type="email"
+                                        style={settingsDarkInputStyle}
+                                        className="border-white/10 text-white placeholder:text-slate-500"
+                                        value={newAdminUserForm.email}
+                                        onChange={(e) => setNewAdminUserForm((prev) => ({ ...prev, email: e.target.value }))}
+                                        placeholder="admin@tenant.com"
+                                    />
+                                </div>
+                                <div className="space-y-2 md:col-span-1">
+                                    <Label className="text-slate-700 dark:text-slate-200">Temporary Password</Label>
+                                    <Input
+                                        type="password"
+                                        style={settingsDarkInputStyle}
+                                        className="border-white/10 text-white placeholder:text-slate-500"
+                                        value={newAdminUserForm.password}
+                                        onChange={(e) => setNewAdminUserForm((prev) => ({ ...prev, password: e.target.value }))}
+                                        placeholder="Minimum 6 characters"
+                                    />
+                                </div>
+                                <div className="space-y-2 md:col-span-1">
+                                    <Label className="text-slate-700 dark:text-slate-200">Role</Label>
+                                    <Select
+                                        value={newAdminUserForm.tenantRole}
+                                        onValueChange={(value) => setNewAdminUserForm((prev) => ({ ...prev, tenantRole: value as AdminUserState['tenantRole'] }))}
+                                    >
+                                        <SelectTrigger className="border-white/10 bg-[#0b1424] text-white">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="owner">Owner</SelectItem>
+                                            <SelectItem value="admin">Admin</SelectItem>
+                                            <SelectItem value="dispatcher">Dispatcher</SelectItem>
+                                            <SelectItem value="viewer">Viewer</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
+                            {newAdminUserError && (
+                                <p className="mt-3 rounded-2xl border border-rose-400/20 bg-rose-400/10 px-4 py-3 text-sm text-rose-200">{newAdminUserError}</p>
+                            )}
+                            <div className="mt-4 flex justify-end">
+                                <Button
+                                    size="sm"
+                                    className="bg-[#2F8E92] text-white shadow-[0_12px_30px_rgba(47,142,146,0.24)] hover:bg-[#267276]"
+                                    onClick={handleCreateAdminUser}
+                                    disabled={isSavingNewAdminUser}
+                                >
+                                    {isSavingNewAdminUser && <RefreshCw className="mr-2 h-3 w-3 animate-spin" />}
+                                    {isSavingNewAdminUser ? 'Creating...' : 'Add Admin User'}
+                                </Button>
+                            </div>
+                        </div>
+
+                        <div className="mt-6 grid sm:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                                <Label htmlFor="admin_full_name" className="text-slate-700 dark:text-slate-200">Your Name</Label>
+                                <Input
+                                    id="admin_full_name"
+                                    style={settingsDarkInputStyle}
+                                    className="border-white/10 text-white placeholder:text-slate-500"
+                                    value={adminCredentialForm.fullName}
+                                    onChange={(e) => setAdminCredentialForm((prev) => ({ ...prev, fullName: e.target.value }))}
+                                    autoComplete="name"
+                                />
+                            </div>
                             <div className="space-y-2">
                                 <Label htmlFor="admin_account_email" className="text-slate-700 dark:text-slate-200">Admin Email</Label>
                                 <Input

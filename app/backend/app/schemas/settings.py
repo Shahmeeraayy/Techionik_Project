@@ -60,15 +60,28 @@ class AdminPasswordChangeResponse(BaseModel):
 
 
 class AdminCredentialSettingsResponse(BaseModel):
+    id: str
+    full_name: str
     admin_email: str
+    tenant_role: Literal["owner", "admin", "dispatcher", "viewer"]
+    status: Literal["active", "deactivated"]
     password_changed_at: datetime
     updated_at: datetime
 
 
 class AdminCredentialSettingsUpdatePayload(BaseModel):
+    full_name: Optional[str] = Field(default=None, min_length=1, max_length=255)
     admin_email: str = Field(..., min_length=3, max_length=255)
     current_password: str = Field(..., min_length=1, max_length=255)
     new_password: Optional[str] = Field(default=None, min_length=6, max_length=255)
+
+    @field_validator("full_name")
+    @classmethod
+    def _normalize_optional_full_name(cls, value: Optional[str]) -> Optional[str]:
+        if value is None:
+            return None
+        normalized = value.strip()
+        return normalized or None
 
     @field_validator("admin_email")
     @classmethod
@@ -160,3 +173,69 @@ class PriorityRuleResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class AdminUserResponse(BaseModel):
+    id: str
+    full_name: str
+    email: str
+    tenant_role: Literal["owner", "admin", "dispatcher", "viewer"]
+    status: Literal["active", "deactivated"]
+    last_login_at: Optional[datetime] = None
+    password_changed_at: datetime
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class AdminUserCreatePayload(BaseModel):
+    full_name: str = Field(..., min_length=1, max_length=255)
+    email: str = Field(..., min_length=3, max_length=255)
+    password: str = Field(..., min_length=6, max_length=255)
+    tenant_role: Literal["owner", "admin", "dispatcher", "viewer"] = "admin"
+
+    @field_validator("full_name", "password")
+    @classmethod
+    def _normalize_required_text(cls, value: str) -> str:
+        normalized = value.strip()
+        if not normalized:
+            raise ValueError("value cannot be blank")
+        return normalized
+
+    @field_validator("email")
+    @classmethod
+    def _normalize_email(cls, value: str) -> str:
+        normalized = value.strip().lower()
+        if not normalized:
+            raise ValueError("value cannot be blank")
+        return str(_EMAIL_ADAPTER.validate_python(normalized)).lower()
+
+
+class AdminUserUpdatePayload(BaseModel):
+    full_name: Optional[str] = Field(default=None, min_length=1, max_length=255)
+    email: Optional[str] = Field(default=None, min_length=3, max_length=255)
+    password: Optional[str] = Field(default=None, min_length=6, max_length=255)
+    tenant_role: Optional[Literal["owner", "admin", "dispatcher", "viewer"]] = None
+    status: Optional[Literal["active", "deactivated"]] = None
+
+    @field_validator("full_name", "password")
+    @classmethod
+    def _normalize_optional_required_text(cls, value: Optional[str]) -> Optional[str]:
+        if value is None:
+            return None
+        normalized = value.strip()
+        if not normalized:
+            raise ValueError("value cannot be blank")
+        return normalized
+
+    @field_validator("email")
+    @classmethod
+    def _normalize_optional_email(cls, value: Optional[str]) -> Optional[str]:
+        if value is None:
+            return None
+        normalized = value.strip().lower()
+        if not normalized:
+            raise ValueError("value cannot be blank")
+        return str(_EMAIL_ADAPTER.validate_python(normalized)).lower()

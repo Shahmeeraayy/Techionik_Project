@@ -39,6 +39,7 @@ MIGRATIONS: list[Migration] = [
     Migration("009_technician_profile_email_change_requests.sql"),
     Migration("010_job_services.sql"),
     Migration("011_supabase_multitenancy.sql"),
+    Migration("012_admin_users.sql"),
 ]
 
 
@@ -181,6 +182,7 @@ def ensure_sqlite_technician_password_column(conn) -> None:
 def ensure_multi_tenant_columns(conn) -> None:
     tenant_tables = [
         "admin_credential_settings",
+        "admin_users",
         "audit_logs",
         "booking_portal_settings",
         "booking_requests",
@@ -206,6 +208,7 @@ def ensure_multi_tenant_columns(conn) -> None:
         "technician_working_hours",
         "technician_zones",
         "technicians",
+        "tenant_memberships",
         "zones",
     ]
 

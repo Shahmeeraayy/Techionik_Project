@@ -11,6 +11,9 @@ from ...schemas.settings import (
     AdminCredentialSettingsUpdatePayload,
     AdminPasswordChangePayload,
     AdminPasswordChangeResponse,
+    AdminUserCreatePayload,
+    AdminUserResponse,
+    AdminUserUpdatePayload,
     InvoiceBrandingSettingsPayload,
     InvoiceBrandingSettingsResponse,
     PriorityRuleCreatePayload,
@@ -29,8 +32,7 @@ def get_admin_credentials_settings(
     db: Session = Depends(deps.get_db),
     current_user: AuthenticatedUser = Depends(deps.require_roles(UserRole.ADMIN)),
 ):
-    _ = current_user
-    return AdminCredentialSettingsService(db).get_settings()
+    return AdminCredentialSettingsService(db).get_settings(current_user)
 
 
 @router.get("/invoice-branding", response_model=InvoiceBrandingSettingsResponse)
@@ -58,8 +60,8 @@ def change_admin_password(
     db: Session = Depends(deps.get_db),
     current_user: AuthenticatedUser = Depends(deps.require_roles(UserRole.ADMIN)),
 ):
-    _ = current_user
     return AdminCredentialSettingsService(db).change_password(
+        current_user=current_user,
         current_password=payload.current_password,
         new_password=payload.new_password,
     )
@@ -71,11 +73,54 @@ def update_admin_credentials_settings(
     db: Session = Depends(deps.get_db),
     current_user: AuthenticatedUser = Depends(deps.require_roles(UserRole.ADMIN)),
 ):
-    _ = current_user
     return AdminCredentialSettingsService(db).update_credentials(
+        current_user=current_user,
         current_password=payload.current_password,
         admin_email=payload.admin_email,
         new_password=payload.new_password,
+        full_name=payload.full_name,
+    )
+
+
+@router.get("/admin-users", response_model=List[AdminUserResponse])
+def list_admin_users(
+    db: Session = Depends(deps.get_db),
+    current_user: AuthenticatedUser = Depends(deps.require_roles(UserRole.ADMIN)),
+):
+    _ = current_user
+    return AdminCredentialSettingsService(db).list_admin_users()
+
+
+@router.post("/admin-users", response_model=AdminUserResponse, status_code=201)
+def create_admin_user(
+    payload: AdminUserCreatePayload,
+    db: Session = Depends(deps.get_db),
+    current_user: AuthenticatedUser = Depends(deps.require_roles(UserRole.ADMIN)),
+):
+    return AdminCredentialSettingsService(db).create_admin_user(
+        current_user=current_user,
+        full_name=payload.full_name,
+        email=payload.email,
+        password=payload.password,
+        tenant_role=payload.tenant_role,
+    )
+
+
+@router.patch("/admin-users/{admin_user_id}", response_model=AdminUserResponse)
+def update_admin_user(
+    admin_user_id: UUID,
+    payload: AdminUserUpdatePayload,
+    db: Session = Depends(deps.get_db),
+    current_user: AuthenticatedUser = Depends(deps.require_roles(UserRole.ADMIN)),
+):
+    return AdminCredentialSettingsService(db).update_admin_user(
+        current_user=current_user,
+        admin_user_id=admin_user_id,
+        full_name=payload.full_name,
+        email=payload.email,
+        password=payload.password,
+        tenant_role=payload.tenant_role,
+        status_value=payload.status,
     )
 
 
@@ -114,4 +159,3 @@ def delete_priority_rule(
 ):
     _ = current_user
     return PriorityRulesService(db, current_user).delete_rule(rule_id)
-
