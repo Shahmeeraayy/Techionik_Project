@@ -1064,15 +1064,43 @@ export default function SettingsPage() {
 
                 <Card className={sectionCardClass}>
                     <CardHeader className={sectionHeaderClass}>
-                        <CardTitle className="flex items-center gap-2 text-base font-semibold text-slate-950 dark:text-white">
-                            <span className="rounded-xl border border-cyan-300/20 bg-cyan-300/10 p-2 text-cyan-100">
-                                <ExternalLink className="h-4 w-4" />
-                            </span>
-                            Customer Booking Portal
-                        </CardTitle>
-                        <CardDescription className="text-slate-600 dark:text-slate-300">
-                            Control the public booking experience, visible services, customer confirmation copy, and status lookup behavior.
-                        </CardDescription>
+                        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                            <div>
+                                <CardTitle className="flex items-center gap-2 text-base font-semibold text-slate-950 dark:text-white">
+                                    <span className="rounded-xl border border-cyan-300/20 bg-cyan-300/10 p-2 text-cyan-100">
+                                        <ExternalLink className="h-4 w-4" />
+                                    </span>
+                                    Customer Booking Portal
+                                </CardTitle>
+                                <CardDescription className="text-slate-600 dark:text-slate-300">
+                                    Control the public booking experience, visible services, customer confirmation copy, and status lookup behavior.
+                                </CardDescription>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                                <Button
+                                    asChild
+                                    size="sm"
+                                    variant="outline"
+                                    className="border-white/10 bg-[#0b1424] text-slate-100 hover:bg-[#122039] hover:text-white"
+                                >
+                                    <Link to="/book" target="_blank" rel="noreferrer">
+                                        Open Booking Form
+                                        <ExternalLink className="ml-2 h-3.5 w-3.5" />
+                                    </Link>
+                                </Button>
+                                <Button
+                                    asChild
+                                    size="sm"
+                                    variant="outline"
+                                    className="border-white/10 bg-[#0b1424] text-slate-100 hover:bg-[#122039] hover:text-white"
+                                >
+                                    <Link to="/book/status" target="_blank" rel="noreferrer">
+                                        Open Status Lookup
+                                        <ExternalLink className="ml-2 h-3.5 w-3.5" />
+                                    </Link>
+                                </Button>
+                            </div>
+                        </div>
                     </CardHeader>
                     <CardContent className="grid gap-5 pt-0 xl:grid-cols-[1fr_1fr]">
                         <div className="space-y-5">
