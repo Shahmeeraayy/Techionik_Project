@@ -466,7 +466,7 @@ export default function ProfilePage() {
                                     variant="outline"
                                     size="sm"
                                     onClick={() => void handleRefresh()}
-                                    className={cn('h-11 gap-2 rounded-2xl px-4', TECH_OUTLINE_BUTTON_CLASS)}
+                                    className="tech-refresh-button h-11 gap-2 rounded-2xl px-4"
                                     disabled={loading}
                                 >
                                     <RefreshCw className={cn('w-4 h-4', loading && 'animate-spin')} />
