@@ -7,6 +7,7 @@ import {
   Image as ImageIcon,
   MessageSquareText,
   Paperclip,
+  RefreshCw,
   Search,
   Send,
   Shield,
@@ -266,8 +267,10 @@ export default function TechnicianChatPage() {
                   variant="outline"
                   size="sm"
                   onClick={() => void fetchThread()}
-                  className="h-11 gap-2 rounded-2xl border-white/10 bg-white/[0.03] px-4 text-slate-100 hover:bg-white/[0.08]"
+                  className="tech-refresh-button h-11 gap-2 rounded-2xl px-4"
+                  disabled={loading}
                 >
+                  <RefreshCw className={cn('h-4 w-4', loading && 'animate-spin')} />
                   Refresh
                 </Button>
               </div>

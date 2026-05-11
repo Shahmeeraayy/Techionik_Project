@@ -526,14 +526,7 @@ export default function AvailableJobsPage() {
                                     variant="outline"
                                     size="sm"
                                     onClick={handleRefresh}
-                                    style={loading ? {
-                                        background: '#182234',
-                                        backgroundImage: 'none',
-                                        color: '#8ea3c5',
-                                        borderColor: 'rgba(148, 163, 184, 0.12)',
-                                        opacity: 1,
-                                    } : undefined}
-                                    className="h-11 gap-2 rounded-2xl border-white/10 bg-white/[0.03] px-4 text-slate-100 hover:bg-white/[0.08] disabled:bg-[#182234] disabled:text-slate-400"
+                                    className="tech-refresh-button h-11 gap-2 rounded-2xl px-4"
                                     disabled={loading}
                                 >
                                     <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />

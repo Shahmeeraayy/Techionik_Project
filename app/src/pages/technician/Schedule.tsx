@@ -546,7 +546,7 @@ export default function SchedulePage() {
                             variant="outline"
                             size="icon"
                             onClick={fetchSchedule}
-                            className="h-10 shrink-0 rounded-2xl border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
+                            className="tech-refresh-button h-10 shrink-0 rounded-2xl"
                             aria-label="Refresh schedule"
                         >
                             <RefreshCw className={cn('w-4 h-4', loading && 'animate-spin')} />
