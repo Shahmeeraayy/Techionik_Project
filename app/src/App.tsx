@@ -6,7 +6,6 @@ import { AdminLayout } from '@/layouts/AdminLayout';
 import { SiteMotion } from '@/components/motion/SiteMotion';
 import { HomeRoute, PublicOnly, RequireRole } from '@/components/auth/RouteGuards';
 import AdminLoginPage from '@/pages/auth/AdminLogin';
-import AdminSignupPage from '@/pages/auth/AdminSignup';
 import TechnicianLoginPage from '@/pages/auth/TechnicianLogin';
 import TechnicianPasswordResetPage from '@/pages/auth/TechnicianPasswordReset';
 import TechnicianSignupPage from '@/pages/auth/TechnicianSignup';
@@ -55,7 +54,6 @@ function App() {
           {/* Login Portals */}
           <Route path="/login" element={<PublicOnly><AdminLoginPage /></PublicOnly>} />
           <Route path="/admin/login" element={<PublicOnly><AdminLoginPage /></PublicOnly>} />
-          <Route path="/admin/signup" element={<PublicOnly><AdminSignupPage /></PublicOnly>} />
           <Route path="/tech/login" element={<PublicOnly><TechnicianLoginPage /></PublicOnly>} />
           <Route path="/tech/signup" element={<PublicOnly><TechnicianSignupPage /></PublicOnly>} />
           <Route path="/tech/reset-password/:requestId" element={<TechnicianPasswordResetPage />} />

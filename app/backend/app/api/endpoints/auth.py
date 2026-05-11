@@ -42,14 +42,6 @@ class AdminTokenRequest(BaseModel):
     password: str = Field(..., min_length=1, max_length=255)
 
 
-class AdminSignupRequest(BaseModel):
-    company_name: str = Field(..., min_length=1, max_length=255)
-    workspace_slug: str = Field(..., min_length=3, max_length=96)
-    full_name: str = Field(..., min_length=1, max_length=255)
-    email: str = Field(..., min_length=3, max_length=255)
-    password: str = Field(..., min_length=6, max_length=255)
-
-
 def _issue_admin_token(*, email: str, password: str, db: Session) -> DevTokenResponse:
     admin_user = AdminCredentialSettingsService(db).verify_admin_credentials(email, password)
     if admin_user is None:
@@ -82,40 +74,6 @@ def create_admin_token(
     db: Session = Depends(deps.get_db),
 ):
     return _issue_admin_token(email=payload.email, password=payload.password, db=db)
-
-
-@router.post("/admin-signup", response_model=DevTokenResponse, status_code=status.HTTP_201_CREATED)
-def create_admin_signup(
-    payload: AdminSignupRequest,
-    db: Session = Depends(deps.get_db),
-):
-    service = AdminCredentialSettingsService(db)
-    admin_user = service.signup_owner_account(
-        company_name=payload.company_name,
-        workspace_slug=payload.workspace_slug,
-        full_name=payload.full_name,
-        email=payload.email,
-        password=payload.password,
-    )
-
-    expires_at = datetime.now(timezone.utc) + timedelta(hours=8)
-    token = create_access_token(
-        user_id=admin_user.id,
-        role=UserRole.ADMIN,
-        expires_at=expires_at,
-        tenant_id=admin_user.tenant_id or UUID(DEFAULT_TENANT_ID),
-        tenant_role=admin_user.tenant_role,
-    )
-    return DevTokenResponse(
-        access_token=token,
-        expires_at=expires_at,
-        role=UserRole.ADMIN,
-        tenant_id=admin_user.tenant_id or UUID(DEFAULT_TENANT_ID),
-        user_id=admin_user.id,
-        user_name=admin_user.full_name,
-        user_email=admin_user.email,
-        tenant_role=admin_user.tenant_role,
-    )
 
 
 @router.post("/dev/admin-token", response_model=DevTokenResponse)
