@@ -290,6 +290,7 @@ export default function SettingsPage() {
     const [adminCredentialError, setAdminCredentialError] = useState<string | null>(null);
     const [isSavingAdminCredentials, setIsSavingAdminCredentials] = useState(false);
     const [isSavingBookingPortalSettings, setIsSavingBookingPortalSettings] = useState(false);
+    const [bookingServiceSearch, setBookingServiceSearch] = useState('');
     const MOCK_DEALERSHIPS = dealershipOptions.length > 0 ? dealershipOptions : FALLBACK_DEALERSHIPS;
     const activeRules = priorityRules.filter((rule) => rule.isActive);
     const previewJobs = [
@@ -300,6 +301,9 @@ export default function SettingsPage() {
         ...job,
         score: job.base + activeRules.reduce((sum, rule) => sum + (rule.targetUrgency === job.urgency ? rule.rankingScore : 0), 0),
     })).sort((a, b) => b.score - a.score);
+    const filteredBookingServiceOptions = serviceOptions.filter((service) =>
+        service.name.toLowerCase().includes(bookingServiceSearch.trim().toLowerCase())
+    );
 
     const { theme, setTheme } = useTheme();
     const refreshSettingsData = useCallback(async () => {
@@ -1141,9 +1145,45 @@ export default function SettingsPage() {
                                 </p>
                             </div>
                             <div className="space-y-3">
-                                <Label className="text-slate-700 dark:text-slate-200">Visible service types</Label>
-                                <div className="grid gap-3 sm:grid-cols-2">
-                                    {serviceOptions.map((service) => {
+                                <div className="flex flex-wrap items-center justify-between gap-3">
+                                    <Label className="text-slate-700 dark:text-slate-200">Visible service types</Label>
+                                    <Badge variant="outline" className="border-cyan-300/20 bg-cyan-300/10 text-cyan-100">
+                                        {bookingPortalSettings.visibleServiceIds.length} selected
+                                    </Badge>
+                                </div>
+                                <Input
+                                    style={settingsDarkInputStyle}
+                                    className="border-white/10 text-white placeholder:text-slate-500"
+                                    placeholder="Search services..."
+                                    value={bookingServiceSearch}
+                                    onChange={(e) => setBookingServiceSearch(e.target.value)}
+                                />
+                                <div className="flex flex-wrap gap-2">
+                                    <Button
+                                        type="button"
+                                        size="sm"
+                                        variant="outline"
+                                        className="border-white/10 bg-[#0b1424] text-slate-100 hover:bg-[#122039] hover:text-white"
+                                        onClick={() => setBookingPortalSettings((prev) => ({
+                                            ...prev,
+                                            visibleServiceIds: serviceOptions.map((service) => service.id),
+                                        }))}
+                                    >
+                                        Select all
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        size="sm"
+                                        variant="outline"
+                                        className="border-white/10 bg-[#0b1424] text-slate-100 hover:bg-[#122039] hover:text-white"
+                                        onClick={() => setBookingPortalSettings((prev) => ({ ...prev, visibleServiceIds: [] }))}
+                                    >
+                                        Clear
+                                    </Button>
+                                </div>
+                                <div className="max-h-[360px] overflow-y-auto rounded-[22px] border border-white/10 bg-[rgba(255,255,255,0.03)] p-3">
+                                    <div className="grid gap-3 sm:grid-cols-2">
+                                    {filteredBookingServiceOptions.map((service) => {
                                         const checked = bookingPortalSettings.visibleServiceIds.includes(service.id);
                                         return (
                                             <label key={service.id} className="flex items-center justify-between rounded-[18px] border border-white/10 bg-[rgba(255,255,255,0.03)] px-4 py-3 text-sm text-slate-200">
@@ -1161,6 +1201,10 @@ export default function SettingsPage() {
                                             </label>
                                         );
                                     })}
+                                    </div>
+                                    {filteredBookingServiceOptions.length === 0 ? (
+                                        <div className="px-2 py-6 text-sm text-slate-400">No services match this search.</div>
+                                    ) : null}
                                 </div>
                             </div>
                         </div>
