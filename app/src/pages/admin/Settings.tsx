@@ -66,6 +66,7 @@ import {
     saveInvoiceCompanyProfile,
 } from '@/lib/invoice-company';
 import {
+    fetchAdminBookingPortalSettings,
     createAdminPriorityRule,
     deleteAdminPriorityRule,
     fetchAdminCredentialSettings,
@@ -76,8 +77,10 @@ import {
     fetchAdminInvoiceBrandingSettings,
     getStoredAdminToken,
     updateAdminCredentialSettings,
+    updateAdminBookingPortalSettings,
     updateAdminPriorityRule,
     updateAdminInvoiceBrandingSettings,
+    type BackendBookingPortalSettings,
     type BackendAdminCredentialSettings,
     type BackendDealership,
     type BackendPriorityRule,
@@ -120,6 +123,16 @@ type BillingSubscriptionSettings = {
     renewalDate: string;
     technicianLimit: number;
     locationLimit: number;
+};
+
+type BookingPortalSettingsState = {
+    isEnabled: boolean;
+    estimatedResponseTimeMessage: string;
+    confirmationEmailBody: string;
+    visibleServiceIds: string[];
+    statusLookupEnabled: boolean;
+    industryType: 'automotive' | 'property' | 'general';
+    detailsFieldLabel: string;
 };
 
 // --- Components ---
@@ -195,6 +208,27 @@ const DEFAULT_BILLING_SUBSCRIPTION: BillingSubscriptionSettings = {
     locationLimit: 50,
 };
 
+const DEFAULT_BOOKING_PORTAL_SETTINGS: BookingPortalSettingsState = {
+    isEnabled: false,
+    estimatedResponseTimeMessage: 'We will contact you within 2 business hours.',
+    confirmationEmailBody:
+        'Hello ${customer_name},\n\nThanks for contacting ${company_name}. We received your service request ${reference_number}.\n\n${estimated_response_time_message}\n\nIf you need help, reply to ${admin_contact_email}.',
+    visibleServiceIds: [],
+    statusLookupEnabled: false,
+    industryType: 'automotive',
+    detailsFieldLabel: '',
+};
+
+const mapBackendBookingPortalSettings = (row: BackendBookingPortalSettings): BookingPortalSettingsState => ({
+    isEnabled: row.is_enabled,
+    estimatedResponseTimeMessage: row.estimated_response_time_message,
+    confirmationEmailBody: row.confirmation_email_body,
+    visibleServiceIds: row.visible_service_ids,
+    statusLookupEnabled: row.status_lookup_enabled,
+    industryType: row.industry_type,
+    detailsFieldLabel: row.details_field_label ?? '',
+});
+
 const loadStoredObject = <T,>(key: string, fallback: T): T => {
     if (typeof window === 'undefined') return fallback;
     try {
@@ -236,6 +270,8 @@ export default function SettingsPage() {
     const [savedCompanyProfileSettings, setSavedCompanyProfileSettings] = useState<CompanyProfileSettings>(() => loadStoredObject(COMPANY_PROFILE_SETTINGS_STORAGE_KEY, DEFAULT_COMPANY_PROFILE_SETTINGS));
     const [notificationPreferences, setNotificationPreferences] = useState<NotificationPreferences>(() => loadStoredObject(NOTIFICATION_PREFERENCES_STORAGE_KEY, DEFAULT_NOTIFICATION_PREFERENCES));
     const [billingSubscription, setBillingSubscription] = useState<BillingSubscriptionSettings>(() => loadStoredObject(BILLING_SUBSCRIPTION_STORAGE_KEY, DEFAULT_BILLING_SUBSCRIPTION));
+    const [bookingPortalSettings, setBookingPortalSettings] = useState<BookingPortalSettingsState>(DEFAULT_BOOKING_PORTAL_SETTINGS);
+    const [savedBookingPortalSettings, setSavedBookingPortalSettings] = useState<BookingPortalSettingsState>(DEFAULT_BOOKING_PORTAL_SETTINGS);
     const [priorityRules, setPriorityRules] = useState<PriorityRule[]>([]);
     const [dealershipOptions, setDealershipOptions] = useState<DealershipOption[]>([]);
     const [technicianCount, setTechnicianCount] = useState(0);
@@ -253,6 +289,7 @@ export default function SettingsPage() {
     });
     const [adminCredentialError, setAdminCredentialError] = useState<string | null>(null);
     const [isSavingAdminCredentials, setIsSavingAdminCredentials] = useState(false);
+    const [isSavingBookingPortalSettings, setIsSavingBookingPortalSettings] = useState(false);
     const MOCK_DEALERSHIPS = dealershipOptions.length > 0 ? dealershipOptions : FALLBACK_DEALERSHIPS;
     const activeRules = priorityRules.filter((rule) => rule.isActive);
     const previewJobs = [
@@ -287,6 +324,8 @@ export default function SettingsPage() {
             setTechnicianCount(0);
             setServiceOptions([]);
             setPriorityRules([]);
+            setBookingPortalSettings(DEFAULT_BOOKING_PORTAL_SETTINGS);
+            setSavedBookingPortalSettings(DEFAULT_BOOKING_PORTAL_SETTINGS);
             return;
         }
 
@@ -299,6 +338,7 @@ export default function SettingsPage() {
                 techniciansResult,
                 servicesResult,
                 rulesResult,
+                bookingPortalResult,
             ] = await Promise.allSettled([
                 fetchAdminInvoiceBrandingSettings(adminToken),
                 fetchAdminCredentialSettings(adminToken),
@@ -306,6 +346,7 @@ export default function SettingsPage() {
                 fetchAdminTechnicians(adminToken),
                 fetchAdminServices(adminToken, true),
                 fetchAdminPriorityRules(adminToken),
+                fetchAdminBookingPortalSettings(adminToken),
             ]);
 
             if (brandingResult.status === 'fulfilled') {
@@ -375,6 +416,15 @@ export default function SettingsPage() {
                 setPriorityRules(rulesResult.value.map(mapBackendPriorityRule));
             } else {
                 setPriorityRules([]);
+            }
+
+            if (bookingPortalResult.status === 'fulfilled') {
+                const nextBookingPortalSettings = mapBackendBookingPortalSettings(bookingPortalResult.value);
+                setBookingPortalSettings(nextBookingPortalSettings);
+                setSavedBookingPortalSettings(nextBookingPortalSettings);
+            } else {
+                setBookingPortalSettings(DEFAULT_BOOKING_PORTAL_SETTINGS);
+                setSavedBookingPortalSettings(DEFAULT_BOOKING_PORTAL_SETTINGS);
             }
         } finally {
             setRefreshing(false);
@@ -486,6 +536,44 @@ export default function SettingsPage() {
     const handleSaveBillingSubscription = () => {
         saveStoredObject(BILLING_SUBSCRIPTION_STORAGE_KEY, billingSubscription);
         alert('Billing subscription settings saved locally.');
+    };
+
+    const handleSaveBookingPortalSettings = async () => {
+        const adminToken = getStoredAdminToken();
+        if (!hasBackendAdminToken || !adminToken) {
+            alert('Admin session is required to save booking portal settings.');
+            return;
+        }
+
+        if (!bookingPortalSettings.estimatedResponseTimeMessage.trim()) {
+            alert('Estimated response time message is required.');
+            return;
+        }
+        if (!bookingPortalSettings.confirmationEmailBody.trim()) {
+            alert('Confirmation email body is required.');
+            return;
+        }
+
+        setIsSavingBookingPortalSettings(true);
+        try {
+            const saved = await updateAdminBookingPortalSettings(adminToken, {
+                is_enabled: bookingPortalSettings.isEnabled,
+                estimated_response_time_message: bookingPortalSettings.estimatedResponseTimeMessage.trim(),
+                confirmation_email_body: bookingPortalSettings.confirmationEmailBody.trim(),
+                visible_service_ids: bookingPortalSettings.visibleServiceIds,
+                status_lookup_enabled: bookingPortalSettings.statusLookupEnabled,
+                industry_type: bookingPortalSettings.industryType,
+                details_field_label: bookingPortalSettings.detailsFieldLabel.trim() || null,
+            });
+            const next = mapBackendBookingPortalSettings(saved);
+            setBookingPortalSettings(next);
+            setSavedBookingPortalSettings(next);
+            alert('Booking portal settings saved successfully.');
+        } catch (error) {
+            alert(error instanceof Error ? error.message : 'Unable to save booking portal settings.');
+        } finally {
+            setIsSavingBookingPortalSettings(false);
+        }
     };
 
     const handleResetPriorityRules = () => {
@@ -967,6 +1055,136 @@ export default function SettingsPage() {
                         <Button size="sm" className="ml-auto bg-slate-950 text-white hover:bg-slate-800 dark:bg-[#2F8E92] dark:hover:bg-[#267276]" onClick={handleSaveNotificationPreferences}>
                             Save Notifications
                         </Button>
+                    </CardFooter>
+                </Card>
+
+                <Card className={sectionCardClass}>
+                    <CardHeader className={sectionHeaderClass}>
+                        <CardTitle className="flex items-center gap-2 text-base font-semibold text-slate-950 dark:text-white">
+                            <span className="rounded-xl border border-cyan-300/20 bg-cyan-300/10 p-2 text-cyan-100">
+                                <ExternalLink className="h-4 w-4" />
+                            </span>
+                            Customer Booking Portal
+                        </CardTitle>
+                        <CardDescription className="text-slate-600 dark:text-slate-300">
+                            Control the public booking experience, visible services, customer confirmation copy, and status lookup behavior.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="grid gap-5 pt-0 xl:grid-cols-[1fr_1fr]">
+                        <div className="space-y-5">
+                            <div className="flex items-center justify-between rounded-[22px] border border-white/10 bg-[rgba(255,255,255,0.03)] p-4">
+                                <div>
+                                    <p className="font-semibold text-slate-950 dark:text-white">Booking portal enabled</p>
+                                    <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">Allow public customers to submit service requests from the branded booking page.</p>
+                                </div>
+                                <Switch
+                                    checked={bookingPortalSettings.isEnabled}
+                                    onCheckedChange={(checked) => setBookingPortalSettings((prev) => ({ ...prev, isEnabled: checked }))}
+                                    className="border border-white/10 data-[state=checked]:bg-[#2F8E92] data-[state=unchecked]:bg-[#101b2c]"
+                                />
+                            </div>
+                            <div className="flex items-center justify-between rounded-[22px] border border-white/10 bg-[rgba(255,255,255,0.03)] p-4">
+                                <div>
+                                    <p className="font-semibold text-slate-950 dark:text-white">Status lookup page</p>
+                                    <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">Let customers check status with reference number and email.</p>
+                                </div>
+                                <Switch
+                                    checked={bookingPortalSettings.statusLookupEnabled}
+                                    onCheckedChange={(checked) => setBookingPortalSettings((prev) => ({ ...prev, statusLookupEnabled: checked }))}
+                                    className="border border-white/10 data-[state=checked]:bg-[#2F8E92] data-[state=unchecked]:bg-[#101b2c]"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="text-slate-700 dark:text-slate-200">Industry type</Label>
+                                <Select value={bookingPortalSettings.industryType} onValueChange={(value) => setBookingPortalSettings((prev) => ({ ...prev, industryType: value as BookingPortalSettingsState['industryType'] }))}>
+                                    <SelectTrigger className="border-white/10 bg-white/[0.04] text-white">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="automotive">Automotive</SelectItem>
+                                        <SelectItem value="property">Property</SelectItem>
+                                        <SelectItem value="general">General field service</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="text-slate-700 dark:text-slate-200">Details field label override</Label>
+                                <Input
+                                    style={settingsDarkInputStyle}
+                                    className="border-white/10 text-white placeholder:text-slate-500"
+                                    placeholder="Leave blank to use the industry default"
+                                    value={bookingPortalSettings.detailsFieldLabel}
+                                    onChange={(e) => setBookingPortalSettings((prev) => ({ ...prev, detailsFieldLabel: e.target.value }))}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="text-slate-700 dark:text-slate-200">Estimated response time message</Label>
+                                <Input
+                                    style={settingsDarkInputStyle}
+                                    className="border-white/10 text-white placeholder:text-slate-500"
+                                    value={bookingPortalSettings.estimatedResponseTimeMessage}
+                                    onChange={(e) => setBookingPortalSettings((prev) => ({ ...prev, estimatedResponseTimeMessage: e.target.value }))}
+                                />
+                            </div>
+                        </div>
+                        <div className="space-y-5">
+                            <div className="space-y-2">
+                                <Label className="text-slate-700 dark:text-slate-200">Confirmation email body</Label>
+                                <Textarea
+                                    style={settingsDarkInputStyle}
+                                    className="min-h-[180px] border-white/10 text-white placeholder:text-slate-500"
+                                    value={bookingPortalSettings.confirmationEmailBody}
+                                    onChange={(e) => setBookingPortalSettings((prev) => ({ ...prev, confirmationEmailBody: e.target.value }))}
+                                />
+                                <p className="text-xs leading-5 text-slate-500 dark:text-slate-400">
+                                    Supported placeholders: <code>${'{customer_name}'}</code>, <code>${'{company_name}'}</code>, <code>${'{reference_number}'}</code>, <code>${'{estimated_response_time_message}'}</code>, <code>${'{admin_contact_email}'}</code>
+                                </p>
+                            </div>
+                            <div className="space-y-3">
+                                <Label className="text-slate-700 dark:text-slate-200">Visible service types</Label>
+                                <div className="grid gap-3 sm:grid-cols-2">
+                                    {serviceOptions.map((service) => {
+                                        const checked = bookingPortalSettings.visibleServiceIds.includes(service.id);
+                                        return (
+                                            <label key={service.id} className="flex items-center justify-between rounded-[18px] border border-white/10 bg-[rgba(255,255,255,0.03)] px-4 py-3 text-sm text-slate-200">
+                                                <span>{service.name}</span>
+                                                <Switch
+                                                    checked={checked}
+                                                    onCheckedChange={(nextChecked) => setBookingPortalSettings((prev) => ({
+                                                        ...prev,
+                                                        visibleServiceIds: nextChecked
+                                                            ? [...prev.visibleServiceIds, service.id]
+                                                            : prev.visibleServiceIds.filter((item) => item !== service.id),
+                                                    }))}
+                                                    className="border border-white/10 data-[state=checked]:bg-[#2F8E92] data-[state=unchecked]:bg-[#101b2c]"
+                                                />
+                                            </label>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        </div>
+                    </CardContent>
+                    <CardFooter className={sectionFooterClass}>
+                        <div className="ml-auto flex items-center gap-2">
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                className="border-white/10 bg-[#0b1424] text-slate-100 hover:bg-[#122039] hover:text-white"
+                                onClick={() => setBookingPortalSettings(savedBookingPortalSettings)}
+                                disabled={isSavingBookingPortalSettings}
+                            >
+                                Reset
+                            </Button>
+                            <Button
+                                size="sm"
+                                className="bg-[#2F8E92] text-white hover:bg-[#267276]"
+                                onClick={handleSaveBookingPortalSettings}
+                                disabled={isSavingBookingPortalSettings}
+                            >
+                                {isSavingBookingPortalSettings ? 'Saving...' : 'Save Booking Portal'}
+                            </Button>
+                        </div>
                     </CardFooter>
                 </Card>
 

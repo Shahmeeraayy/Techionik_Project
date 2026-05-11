@@ -165,6 +165,69 @@ export type BackendTechnicianPasswordResetCompleteResponse = {
   message: string;
 };
 
+export type BackendBookingPortalSettings = {
+  is_enabled: boolean;
+  estimated_response_time_message: string;
+  confirmation_email_body: string;
+  visible_service_ids: string[];
+  status_lookup_enabled: boolean;
+  industry_type: 'automotive' | 'property' | 'general';
+  details_field_label?: string | null;
+  company_name: string;
+  company_logo_url?: string | null;
+  admin_contact_email: string;
+  admin_contact_phone: string;
+};
+
+export type BackendBookingPortalPublicConfig = {
+  is_enabled: boolean;
+  company_name: string;
+  company_logo_url?: string | null;
+  admin_contact_email: string;
+  admin_contact_phone: string;
+  estimated_response_time_message: string;
+  status_lookup_enabled: boolean;
+  industry_type: 'automotive' | 'property' | 'general';
+  details_field_label: string;
+  services: Array<{
+    id: string;
+    name: string;
+    category: string;
+  }>;
+};
+
+export type BackendBookingPortalSubmissionResponse = {
+  reference_number: string;
+  estimated_response_time_message: string;
+};
+
+export type BackendBookingPortalStatusLookupResponse = {
+  reference_number: string;
+  status: 'Received' | 'Under Review' | 'Job Scheduled' | 'In Progress' | 'Completed';
+  assigned_technician_first_name?: string | null;
+  estimated_completion_date?: string | null;
+};
+
+export type BackendBookingRequest = {
+  id: string;
+  reference_number: string;
+  customer_full_name: string;
+  phone_number: string;
+  email_address: string;
+  service_catalog_id?: string | null;
+  service_name: string;
+  asset_details: string;
+  preferred_date?: string | null;
+  preferred_time_of_day: 'morning' | 'afternoon' | 'evening' | 'no_preference';
+  additional_notes?: string | null;
+  status: 'RECEIVED' | 'UNDER_REVIEW' | 'JOB_SCHEDULED' | 'IN_PROGRESS' | 'COMPLETED';
+  assigned_technician_first_name?: string | null;
+  estimated_completion_date?: string | null;
+  source: string;
+  created_at: string;
+  updated_at: string;
+};
+
 export type BackendChatAttachment = {
   id: string;
   name: string;
@@ -1222,6 +1285,79 @@ export async function completeTechnicianPasswordReset(
 ): Promise<BackendTechnicianPasswordResetCompleteResponse> {
   return requestJson<BackendTechnicianPasswordResetCompleteResponse>(`/auth/technician-password-reset-request/${requestId}/complete`, {
     method: 'POST',
+    body: payload,
+  });
+}
+
+export async function fetchBookingPortalPublicConfig(): Promise<BackendBookingPortalPublicConfig> {
+  return requestJson<BackendBookingPortalPublicConfig>('/booking-portal/config');
+}
+
+export async function submitBookingPortalRequest(payload: {
+  customer_full_name: string;
+  phone_number: string;
+  email_address: string;
+  service_catalog_id: string;
+  asset_details: string;
+  preferred_date?: string | null;
+  preferred_time_of_day: 'morning' | 'afternoon' | 'evening' | 'no_preference';
+  additional_notes?: string;
+}): Promise<BackendBookingPortalSubmissionResponse> {
+  return requestJson<BackendBookingPortalSubmissionResponse>('/booking-portal/submit', {
+    method: 'POST',
+    body: payload,
+  });
+}
+
+export async function lookupBookingPortalStatus(payload: {
+  reference_number: string;
+  email_address: string;
+}): Promise<BackendBookingPortalStatusLookupResponse> {
+  return requestJson<BackendBookingPortalStatusLookupResponse>('/booking-portal/status-lookup', {
+    method: 'POST',
+    body: payload,
+  });
+}
+
+export async function fetchAdminBookingPortalSettings(token: string): Promise<BackendBookingPortalSettings> {
+  return requestJson<BackendBookingPortalSettings>('/admin/booking-portal/settings', { token });
+}
+
+export async function updateAdminBookingPortalSettings(
+  token: string,
+  payload: {
+    is_enabled: boolean;
+    estimated_response_time_message: string;
+    confirmation_email_body: string;
+    visible_service_ids: string[];
+    status_lookup_enabled: boolean;
+    industry_type: 'automotive' | 'property' | 'general';
+    details_field_label?: string | null;
+  },
+): Promise<BackendBookingPortalSettings> {
+  return requestJson<BackendBookingPortalSettings>('/admin/booking-portal/settings', {
+    method: 'PUT',
+    token,
+    body: payload,
+  });
+}
+
+export async function fetchAdminBookingRequests(token: string): Promise<BackendBookingRequest[]> {
+  return requestJson<BackendBookingRequest[]>('/admin/booking-portal/requests', { token });
+}
+
+export async function updateAdminBookingRequest(
+  token: string,
+  bookingId: string,
+  payload: {
+    status?: 'RECEIVED' | 'UNDER_REVIEW' | 'JOB_SCHEDULED' | 'IN_PROGRESS' | 'COMPLETED';
+    assigned_technician_first_name?: string | null;
+    estimated_completion_date?: string | null;
+  },
+): Promise<BackendBookingRequest> {
+  return requestJson<BackendBookingRequest>(`/admin/booking-portal/requests/${bookingId}`, {
+    method: 'PATCH',
+    token,
     body: payload,
   });
 }

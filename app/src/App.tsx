@@ -10,6 +10,7 @@ import TechnicianLoginPage from '@/pages/auth/TechnicianLogin';
 import TechnicianPasswordResetPage from '@/pages/auth/TechnicianPasswordReset';
 import TechnicianSignupPage from '@/pages/auth/TechnicianSignup';
 import MarketingHome from '@/pages/marketing/Home';
+import BookingPortalPage from '@/pages/public/BookingPortal';
 
 // Admin Pages
 import AdminDashboard from '@/pages/admin/Dashboard';
@@ -47,6 +48,8 @@ function App() {
         <SiteMotion>
         <Routes>
           <Route path="/" element={<MarketingHome />} />
+          <Route path="/book" element={<BookingPortalPage />} />
+          <Route path="/book/status" element={<BookingPortalPage />} />
 
           {/* Login Portals */}
           <Route path="/login" element={<PublicOnly><AdminLoginPage /></PublicOnly>} />

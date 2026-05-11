@@ -1,7 +1,10 @@
 from .admin_credential_settings import AdminCredentialSettings
 from .audit_log import AuditLog
+from .booking_portal_settings import BookingPortalSettings
+from .booking_request import BookingRequest
 from .chat_message import ChatMessage
 from .dealership import Dealership
+from .email_outbox import EmailOutbox
 from .invoice import Invoice, InvoiceLineItem
 from .invoice_approval_draft import InvoiceApprovalDraft
 from .invoice_branding_settings import InvoiceBrandingSettings

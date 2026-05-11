@@ -16,6 +16,7 @@ from .api.endpoints import (
     admin_settings,
     admin_technicians,
     auth,
+    booking_portal,
     integrations_make_jobs,
     invoices,
     signup_requests,
@@ -79,6 +80,8 @@ app.add_middleware(
 app.include_router(admin_technicians.router)
 app.include_router(admin_chat.router)
 app.include_router(admin_jobs.router)
+app.include_router(booking_portal.public_router)
+app.include_router(booking_portal.admin_router)
 app.include_router(admin_dealerships.router)
 app.include_router(admin_email_change_requests.router)
 app.include_router(admin_reports.router)

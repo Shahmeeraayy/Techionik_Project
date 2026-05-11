@@ -1,0 +1,372 @@
+from __future__ import annotations
+
+from datetime import datetime, timezone
+from string import Template
+from typing import Optional
+from uuid import UUID
+
+from fastapi import HTTPException, status
+from sqlalchemy import inspect, text
+from sqlalchemy.orm import Session
+
+from ..core.config import COMPANY_EMAIL, COMPANY_LOGO_URL, COMPANY_NAME, COMPANY_PHONE
+from ..core.security import AuthenticatedUser
+from ..models.admin_credential_settings import AdminCredentialSettings
+from ..models.booking_portal_settings import BookingPortalSettings
+from ..models.booking_request import BookingRequest
+from ..models.email_outbox import EmailOutbox
+from ..models.invoice_branding_settings import InvoiceBrandingSettings
+from ..models.service_catalog import ServiceCatalog
+from ..schemas.booking_portal import (
+    BookingPortalPublicConfigResponse,
+    BookingPortalServiceOption,
+    BookingPortalSettingsPayload,
+    BookingPortalSettingsResponse,
+    BookingPortalStatusLookupRequest,
+    BookingPortalStatusLookupResponse,
+    BookingPortalSubmissionRequest,
+    BookingPortalSubmissionResponse,
+    BookingRequestAdminResponse,
+    BookingRequestAdminUpdatePayload,
+)
+
+
+BOOKING_PORTAL_SETTINGS_KEY = "default"
+
+
+class BookingPortalService:
+    STATUS_PUBLIC_LABELS = {
+        "RECEIVED": "Received",
+        "UNDER_REVIEW": "Under Review",
+        "JOB_SCHEDULED": "Job Scheduled",
+        "IN_PROGRESS": "In Progress",
+        "COMPLETED": "Completed",
+    }
+
+    def __init__(self, db: Session, current_user: AuthenticatedUser | None = None):
+        self.db = db
+        self.current_user = current_user
+
+    def _get_settings_row(self) -> BookingPortalSettings | None:
+        return (
+            self.db.query(BookingPortalSettings)
+            .filter(BookingPortalSettings.key == BOOKING_PORTAL_SETTINGS_KEY)
+            .first()
+        )
+
+    def _get_admin_contact(self) -> tuple[str, str, str, Optional[str]]:
+        branding = (
+            self.db.query(InvoiceBrandingSettings)
+            .filter(InvoiceBrandingSettings.key == "default")
+            .first()
+        )
+        admin_settings = self.db.query(AdminCredentialSettings).first()
+        company_name = branding.name if branding is not None else COMPANY_NAME
+        admin_email = (
+            (admin_settings.admin_email if admin_settings is not None else None)
+            or (branding.email if branding is not None else None)
+            or COMPANY_EMAIL
+        )
+        admin_phone = (branding.phone if branding is not None else None) or COMPANY_PHONE
+        logo_url = branding.logo_url if branding is not None else (COMPANY_LOGO_URL or None)
+        return company_name, admin_email, admin_phone, logo_url
+
+    def _get_default_settings_payload(self) -> BookingPortalSettingsPayload:
+        return BookingPortalSettingsPayload(
+            is_enabled=False,
+            estimated_response_time_message="We will contact you within 2 business hours.",
+            confirmation_email_body=(
+                "Hello ${customer_name},\n\n"
+                "Thanks for contacting ${company_name}. We received your service request ${reference_number}.\n\n"
+                "${estimated_response_time_message}\n\n"
+                "If you need help, reply to ${admin_contact_email}."
+            ),
+            visible_service_ids=[],
+            status_lookup_enabled=False,
+            industry_type="automotive",
+            details_field_label=None,
+        )
+
+    def _resolve_details_field_label(self, industry_type: str, explicit_label: Optional[str]) -> str:
+        if explicit_label:
+            return explicit_label
+        if industry_type == "property":
+            return "Property details"
+        if industry_type == "general":
+            return "Service details"
+        return "Vehicle details"
+
+    def _load_settings_payload(self) -> BookingPortalSettingsPayload:
+        row = self._get_settings_row()
+        if row is None:
+            return self._get_default_settings_payload()
+        return BookingPortalSettingsPayload(
+            is_enabled=bool(row.is_enabled),
+            estimated_response_time_message=row.estimated_response_time_message,
+            confirmation_email_body=row.confirmation_email_body,
+            visible_service_ids=[
+                UUID(str(item)) for item in (row.visible_service_ids or []) if str(item).strip()
+            ],
+            status_lookup_enabled=bool(row.status_lookup_enabled),
+            industry_type=row.industry_type if row.industry_type in {"automotive", "property", "general"} else "automotive",
+            details_field_label=row.details_field_label,
+        )
+
+    def _list_visible_service_rows(self, payload: BookingPortalSettingsPayload) -> list[ServiceCatalog]:
+        query = (
+            self.db.query(ServiceCatalog)
+            .filter(ServiceCatalog.status == "active")
+            .order_by(ServiceCatalog.name.asc())
+        )
+        rows = query.all()
+        if not payload.visible_service_ids:
+            return rows
+        visible_ids = {str(item) for item in payload.visible_service_ids}
+        filtered = [row for row in rows if str(row.id) in visible_ids]
+        return filtered
+
+    def get_admin_settings(self) -> BookingPortalSettingsResponse:
+        payload = self._load_settings_payload()
+        company_name, admin_email, admin_phone, logo_url = self._get_admin_contact()
+        return BookingPortalSettingsResponse(
+            **payload.model_dump(),
+            company_name=company_name,
+            company_logo_url=logo_url,
+            admin_contact_email=admin_email,
+            admin_contact_phone=admin_phone,
+        )
+
+    def update_admin_settings(self, payload: BookingPortalSettingsPayload) -> BookingPortalSettingsResponse:
+        row = self._get_settings_row()
+        service_ids = [str(item) for item in payload.visible_service_ids]
+        if row is None:
+            row = BookingPortalSettings(
+                key=BOOKING_PORTAL_SETTINGS_KEY,
+                is_enabled=payload.is_enabled,
+                estimated_response_time_message=payload.estimated_response_time_message,
+                confirmation_email_body=payload.confirmation_email_body,
+                visible_service_ids=service_ids,
+                status_lookup_enabled=payload.status_lookup_enabled,
+                industry_type=payload.industry_type,
+                details_field_label=payload.details_field_label,
+            )
+            self.db.add(row)
+        else:
+            row.is_enabled = payload.is_enabled
+            row.estimated_response_time_message = payload.estimated_response_time_message
+            row.confirmation_email_body = payload.confirmation_email_body
+            row.visible_service_ids = service_ids
+            row.status_lookup_enabled = payload.status_lookup_enabled
+            row.industry_type = payload.industry_type
+            row.details_field_label = payload.details_field_label
+
+        self.db.commit()
+        self.db.refresh(row)
+        return self.get_admin_settings()
+
+    def get_public_config(self) -> BookingPortalPublicConfigResponse:
+        payload = self._load_settings_payload()
+        company_name, admin_email, admin_phone, logo_url = self._get_admin_contact()
+        service_rows = self._list_visible_service_rows(payload)
+        return BookingPortalPublicConfigResponse(
+            is_enabled=payload.is_enabled,
+            company_name=company_name,
+            company_logo_url=logo_url,
+            admin_contact_email=admin_email,
+            admin_contact_phone=admin_phone,
+            estimated_response_time_message=payload.estimated_response_time_message,
+            status_lookup_enabled=payload.status_lookup_enabled,
+            industry_type=payload.industry_type,
+            details_field_label=self._resolve_details_field_label(payload.industry_type, payload.details_field_label),
+            services=[
+                BookingPortalServiceOption(id=row.id, name=row.name, category=row.category)
+                for row in service_rows
+            ],
+        )
+
+    def _render_confirmation_email(
+        self,
+        *,
+        template_body: str,
+        customer_name: str,
+        company_name: str,
+        reference_number: str,
+        estimated_response_time_message: str,
+        admin_contact_email: str,
+    ) -> str:
+        return Template(template_body).safe_substitute(
+            customer_name=customer_name,
+            company_name=company_name,
+            reference_number=reference_number,
+            estimated_response_time_message=estimated_response_time_message,
+            admin_contact_email=admin_contact_email,
+        )
+
+    def _next_reference_number(self) -> str:
+        prefix = datetime.now(timezone.utc).strftime("BK%y%m%d")
+        latest = (
+            self.db.query(BookingRequest)
+            .filter(BookingRequest.reference_number.like(f"{prefix}%"))
+            .order_by(BookingRequest.reference_number.desc())
+            .first()
+        )
+        if latest is None:
+            return f"{prefix}001"
+        try:
+            sequence = int(latest.reference_number[-3:]) + 1
+        except Exception:
+            sequence = 1
+        return f"{prefix}{sequence:03d}"
+
+    def _notifications_table_exists(self) -> bool:
+        bind = self.db.get_bind()
+        return bool(bind is not None and inspect(bind).has_table("notifications"))
+
+    def _create_admin_notification(self, message: str, metadata_json: str) -> None:
+        if not self._notifications_table_exists():
+            return
+        self.db.execute(
+            text(
+                """
+                INSERT INTO notifications (recipient_role, message, metadata, created_at)
+                VALUES (:recipient_role, :message, :metadata, CURRENT_TIMESTAMP)
+                """
+            ),
+            {
+                "recipient_role": "admin",
+                "message": message,
+                "metadata": metadata_json,
+            },
+        )
+
+    def submit_booking(self, payload: BookingPortalSubmissionRequest) -> BookingPortalSubmissionResponse:
+        settings = self._load_settings_payload()
+        if not settings.is_enabled:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Booking portal is currently disabled")
+
+        visible_service_rows = self._list_visible_service_rows(settings)
+        service_by_id = {str(row.id): row for row in visible_service_rows}
+        service_row = service_by_id.get(str(payload.service_catalog_id))
+        if service_row is None:
+            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Selected service is not available")
+
+        company_name, admin_email, admin_phone, _ = self._get_admin_contact()
+        reference_number = self._next_reference_number()
+        row = BookingRequest(
+            reference_number=reference_number,
+            customer_full_name=payload.customer_full_name,
+            phone_number=payload.phone_number,
+            email_address=payload.email_address,
+            service_catalog_id=service_row.id,
+            service_name=service_row.name,
+            asset_details=payload.asset_details,
+            preferred_date=payload.preferred_date,
+            preferred_time_of_day=payload.preferred_time_of_day,
+            additional_notes=payload.additional_notes,
+            status="RECEIVED",
+            source="Booking Portal",
+        )
+        self.db.add(row)
+        self.db.flush()
+        self.db.refresh(row)
+
+        confirmation_body = self._render_confirmation_email(
+            template_body=settings.confirmation_email_body,
+            customer_name=row.customer_full_name,
+            company_name=company_name,
+            reference_number=row.reference_number,
+            estimated_response_time_message=settings.estimated_response_time_message,
+            admin_contact_email=admin_email,
+        )
+
+        self.db.add(
+            EmailOutbox(
+                recipient_email=row.email_address,
+                subject=f"{company_name} booking confirmation {row.reference_number}",
+                body=confirmation_body,
+                message_type="booking_confirmation_customer",
+                related_entity_type="booking_request",
+                related_entity_id=str(row.id),
+            )
+        )
+        self.db.add(
+            EmailOutbox(
+                recipient_email=admin_email,
+                subject=f"New booking request {row.reference_number}",
+                body=(
+                    f"New booking request received.\n\n"
+                    f"Reference: {row.reference_number}\n"
+                    f"Customer: {row.customer_full_name}\n"
+                    f"Phone: {row.phone_number}\n"
+                    f"Email: {row.email_address}\n"
+                    f"Service: {row.service_name}\n"
+                    f"Preferred date: {row.preferred_date or 'Not set'}\n"
+                    f"Preferred time: {row.preferred_time_of_day}\n"
+                    f"Details: {row.asset_details}\n"
+                    f"Notes: {row.additional_notes or 'None'}\n"
+                    f"Admin contact phone: {admin_phone}\n"
+                ),
+                message_type="booking_notification_admin",
+                related_entity_type="booking_request",
+                related_entity_id=str(row.id),
+            )
+        )
+
+        self._create_admin_notification(
+            f"New booking request {row.reference_number} from {row.customer_full_name}",
+            (
+                "{"
+                f"\"booking_request_id\":\"{row.id}\","
+                f"\"reference_number\":\"{row.reference_number}\","
+                f"\"source\":\"Booking Portal\""
+                "}"
+            ),
+        )
+
+        self.db.commit()
+        return BookingPortalSubmissionResponse(
+            reference_number=row.reference_number,
+            estimated_response_time_message=settings.estimated_response_time_message,
+        )
+
+    def lookup_status(self, payload: BookingPortalStatusLookupRequest) -> BookingPortalStatusLookupResponse:
+        settings = self._load_settings_payload()
+        if not settings.status_lookup_enabled:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Booking status lookup is disabled")
+
+        row = (
+            self.db.query(BookingRequest)
+            .filter(BookingRequest.reference_number == payload.reference_number)
+            .filter(BookingRequest.email_address == payload.email_address)
+            .first()
+        )
+        if row is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Booking reference not found")
+
+        return BookingPortalStatusLookupResponse(
+            reference_number=row.reference_number,
+            status=self.STATUS_PUBLIC_LABELS[row.status],
+            assigned_technician_first_name=row.assigned_technician_first_name,
+            estimated_completion_date=row.estimated_completion_date,
+        )
+
+    def list_admin_bookings(self) -> list[BookingRequestAdminResponse]:
+        rows = (
+            self.db.query(BookingRequest)
+            .order_by(BookingRequest.created_at.desc())
+            .all()
+        )
+        return [BookingRequestAdminResponse.model_validate(row, from_attributes=True) for row in rows]
+
+    def update_admin_booking(self, booking_id: UUID, payload: BookingRequestAdminUpdatePayload) -> BookingRequestAdminResponse:
+        row = self.db.query(BookingRequest).filter(BookingRequest.id == booking_id).first()
+        if row is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Booking request not found")
+
+        updates = payload.model_dump(exclude_unset=True)
+        for key, value in updates.items():
+            setattr(row, key, value)
+
+        self.db.commit()
+        self.db.refresh(row)
+        return BookingRequestAdminResponse.model_validate(row, from_attributes=True)
