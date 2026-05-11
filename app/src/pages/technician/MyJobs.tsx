@@ -1226,10 +1226,10 @@ export default function MyJobsPage({
                             </div>
                             <div className="flex items-center gap-3 self-start lg:self-end">
                                 <Button
-                                    variant="outline"
+                                    variant="ghost"
                                     size="sm"
                                     onClick={() => void fetchJobs()}
-                                    className="tech-refresh-button h-11 gap-2 rounded-2xl px-4"
+                                    className="h-11 gap-2 rounded-2xl border border-white/12 bg-[linear-gradient(180deg,rgba(15,23,42,0.98),rgba(8,12,20,0.98))] px-4 text-slate-100 shadow-[0_14px_34px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.055)] hover:bg-[linear-gradient(180deg,rgba(24,38,64,0.98),rgba(12,20,34,0.98))] hover:text-white disabled:border-white/10 disabled:bg-[linear-gradient(180deg,rgba(24,34,52,0.88),rgba(12,20,34,0.88))] disabled:text-slate-400 disabled:opacity-100"
                                     disabled={loading}
                                 >
                                     <RefreshCw className={cn('w-4 h-4', loading && 'animate-spin')} />
