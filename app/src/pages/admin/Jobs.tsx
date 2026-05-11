@@ -26,11 +26,9 @@ import {
     Car,
     MapPin,
     History,
-    ArrowRight,
     Building2,
     Users,
     ClipboardList,
-    LayoutDashboard,
     TrendingUp,
     ShieldCheck,
     Sparkles,
@@ -1706,63 +1704,6 @@ export default function JobsPage() {
         refreshJobs({ showErrorToast: true, background: false });
     };
 
-    const handlePushToQueue = (job: Job) => {
-        if (job.job_status === 'completed' || job.job_status === 'cancelled') {
-            toast.warning('Completed or cancelled jobs cannot be pushed to queue.');
-            return;
-        }
-
-        const nextJobs = loadPersistedJobs().map((item) => {
-            if (item.job_id !== job.job_id) return item;
-            return {
-                ...item,
-                pending_push_to_available: true,
-                updated_at: new Date().toISOString(),
-            };
-        });
-        persistJobs(nextJobs);
-
-        appendAuditLog(
-            'job.pushed_to_queue',
-            `Job ${job.job_code} marked for queue push`,
-            { job_id: job.job_id, job_code: job.job_code },
-        );
-        toast.success(`${job.job_code} pushed to queue`);
-        refreshJobs({ showErrorToast: true, background: true });
-    };
-
-    const handleBulkPushToQueue = () => {
-        if (selectedRows.size === 0) {
-            toast.info('Select at least one job to push to queue.');
-            return;
-        }
-
-        const currentJobs = loadPersistedJobs();
-        const jobsToUpdate = currentJobs.filter((job) => selectedRows.has(job.job_id) && job.job_status !== 'completed' && job.job_status !== 'cancelled');
-
-        if (jobsToUpdate.length === 0) {
-            toast.warning('No selected jobs are eligible for queue push.');
-            return;
-        }
-
-        const nextJobs = currentJobs.map((job) => {
-            if (!selectedRows.has(job.job_id)) return job;
-            return {
-                ...job,
-                pending_push_to_available: true,
-                updated_at: new Date().toISOString(),
-            };
-        });
-        persistJobs(nextJobs);
-
-        appendAuditLog('job.bulk_pushed_to_queue', `Bulk queued ${jobsToUpdate.length} jobs`, {
-            job_ids: jobsToUpdate.map((job) => job.job_id),
-            job_codes: jobsToUpdate.map((job) => job.job_code),
-        });
-        toast.success(`Queued ${jobsToUpdate.length} selected job${jobsToUpdate.length === 1 ? '' : 's'}`);
-        refreshJobs({ showErrorToast: true, background: true });
-    };
-
     const handleAssignTechnician = (job: Job) => {
         if (!isAssignableJob(job)) {
             toast.warning('Completed or cancelled jobs cannot be assigned.');
@@ -2115,64 +2056,6 @@ export default function JobsPage() {
             : jobSortMode === 'created_oldest'
                 ? ArrowUp
                 : ArrowUpDown;
-    const summaryCards = [
-        {
-            key: 'visible',
-            label: 'Visible Results',
-            value: pagination.total,
-            description: 'Jobs currently matching the live filters.',
-            icon: LayoutDashboard,
-            tone: 'cyan' as const,
-        },
-        {
-            key: 'review',
-            label: 'Pending Review',
-            value: quickFilterCounts.pendingReview,
-            description: 'Admin preview and confirmation queue.',
-            icon: ClipboardList,
-            tone: 'violet' as const,
-        },
-        {
-            key: 'awaiting',
-            label: 'Awaiting Tech',
-            value: quickFilterCounts.awaitingTechAcceptance,
-            description: 'Ready to move once a technician accepts.',
-            icon: Truck,
-            tone: 'blue' as const,
-        },
-        {
-            key: 'reassignment',
-            label: 'Needs Reassignment',
-            value: quickFilterCounts.needsReassignment,
-            description: 'Technician refusals waiting for a new owner.',
-            icon: AlertCircle,
-            tone: 'amber' as const,
-        },
-    ] as const;
-    const queueQuickFilters = [
-        {
-            key: 'pending_review' as const,
-            label: 'Pending Review',
-            count: quickFilterCounts.pendingReview,
-            icon: ClipboardList,
-            activeClassName: 'border-violet-300/25 bg-violet-300/12 text-violet-100',
-        },
-        {
-            key: 'awaiting_tech_acceptance' as const,
-            label: 'Awaiting Tech',
-            count: quickFilterCounts.awaitingTechAcceptance,
-            icon: Truck,
-            activeClassName: 'border-blue-300/25 bg-blue-300/12 text-blue-100',
-        },
-        {
-            key: 'needs_reassignment' as const,
-            label: 'Needs Reassignment',
-            count: quickFilterCounts.needsReassignment,
-            icon: AlertCircle,
-            activeClassName: 'border-amber-300/25 bg-amber-300/12 text-amber-100',
-        },
-    ] as const;
-
     const statusFilterOptions = [
         { key: 'all' as const, label: 'All' },
         { key: 'unassigned' as const, label: 'Unassigned' },
@@ -2510,38 +2393,6 @@ export default function JobsPage() {
                 onConfirm={handleExport}
             />
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                {summaryCards.map((card) => {
-                    const Icon = card.icon;
-                    return (
-                        <div
-                            key={card.key}
-                            className={jobsMetricCardClasses(card.tone)}
-                        >
-                            <div className={cn('pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent to-transparent', jobsMetricTopLineClasses(card.tone))} />
-                            <div className="flex items-start justify-between gap-3">
-                                <div className="min-w-0">
-                                    <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
-                                        {card.label}
-                                    </div>
-                                    <div className="mt-3 text-[2.4rem] font-semibold leading-none tracking-[-0.05em] text-slate-900 dark:text-white" style={displayFontStyle}>
-                                        {card.value}
-                                    </div>
-                                    <p className="mt-3 text-sm leading-6 text-slate-500 dark:text-slate-400">{card.description}</p>
-                                </div>
-                                <div className={cn('flex h-10 w-10 items-center justify-center rounded-2xl', jobsMetricIconClasses(card.tone))}>
-                                    <Icon className="h-4.5 w-4.5" />
-                                </div>
-                            </div>
-                            <div className="mt-5 flex items-center justify-between border-t border-black/6 pt-4 dark:border-white/6">
-                                <span className="text-sm font-medium text-slate-600 dark:text-slate-300">Operational view</span>
-                                <ArrowRight className="h-4 w-4 text-slate-400 transition-transform duration-200 group-hover:translate-x-1 group-hover:text-slate-900 dark:text-white/40 dark:group-hover:text-white" />
-                            </div>
-                        </div>
-                    );
-                })}
-            </div>
-
             {/* 2. Filter Bar (Enterprise Grade) */}
             <div className="admin-jobs-filters relative overflow-hidden rounded-[24px] border border-black/8 bg-[linear-gradient(180deg,#ffffff,#fbfbfb)] shadow-[0_20px_60px_rgba(15,23,42,0.08)] dark:border-white/8 dark:bg-[linear-gradient(180deg,rgba(9,22,38,0.985),rgba(7,18,30,0.985))] dark:shadow-[0_20px_60px_rgba(0,0,0,0.24)]">
                 <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-slate-900/20 to-transparent dark:via-cyan-200/60" />
@@ -2600,91 +2451,52 @@ export default function JobsPage() {
                         )}
                     </div>
                 </div>
-                    <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                    <div className="flex flex-col gap-2">
                         <div className="flex flex-wrap items-center gap-2">
-                            <div className="inline-flex items-center gap-2 rounded-full border border-black/8 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-600 shadow-none dark:border-white/8 dark:bg-white/[0.03] dark:text-slate-400">
-                                <SlidersHorizontal className="h-3.5 w-3.5" />
-                                Queue Filters
-                            </div>
-                            {queueQuickFilters.map((filter) => {
-                                const Icon = filter.icon;
-                                const isActive = activeQuickFilter === filter.key;
-                                return (
-                                    <Button
-                                        key={filter.key}
-                                        type="button"
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => handleQuickFilterChipClick(filter.key)}
-                                        className={cn(
-                                            'h-9 rounded-2xl border-black/8 bg-white px-3 text-slate-700 hover:bg-slate-50 shadow-none dark:border-white/8 dark:bg-white/[0.03] dark:text-slate-200 dark:hover:bg-white/[0.08]',
-                                            isActive && filter.activeClassName,
-                                        )}
-                                    >
-                                        <Icon className="mr-2 h-3.5 w-3.5" />
-                                        {filter.label}
-                                        <span
-                                            className={cn(
-                                                'ml-2 inline-flex min-w-5 items-center justify-center rounded-full border px-1.5 text-[10px] font-semibold leading-4',
-                                                isActive
-                                                    ? 'border-current/20 bg-white/15'
-                                                    : 'border-white/10 bg-white/[0.05] text-slate-400',
-                                            )}
-                                        >
-                                            {filter.count}
-                                        </span>
-                                    </Button>
-                                );
-                            })}
+                            {statusFilterOptions.map((option) => (
+                                <Button
+                                    key={option.key}
+                                    type="button"
+                                    variant={statusFilter === option.key ? 'secondary' : 'outline'}
+                                    size="sm"
+                                    onClick={() => {
+                                        setStatusFilter(option.key);
+                                        setPagination((prev) => ({ ...prev, page: 1 }));
+                                    }}
+                                    className={cn(
+                                        'h-9 rounded-2xl px-3 text-slate-200 shadow-none',
+                                        statusFilter === option.key ? 'bg-slate-900 border-slate-900 text-white dark:bg-cyan-500/[0.12] dark:border-cyan-300/25 dark:text-cyan-100' : 'border-black/8 bg-white text-slate-700 hover:bg-slate-50 dark:border-white/8 dark:bg-white/[0.03] dark:text-slate-200 dark:hover:bg-white/[0.08]',
+                                    )}
+                                >
+                                    {option.label}
+                                </Button>
+                            ))}
                         </div>
-
-                        <div className="flex flex-col gap-2">
-                            <div className="flex flex-wrap items-center gap-2">
-                                {statusFilterOptions.map((option) => (
-                                    <Button
-                                        key={option.key}
-                                        type="button"
-                                        variant={statusFilter === option.key ? 'secondary' : 'outline'}
-                                        size="sm"
-                                        onClick={() => {
-                                            setStatusFilter(option.key);
-                                            setPagination((prev) => ({ ...prev, page: 1 }));
-                                        }}
-                                        className={cn(
-                                            'h-9 rounded-2xl px-3 text-slate-200 shadow-none',
-                                            statusFilter === option.key ? 'bg-slate-900 border-slate-900 text-white dark:bg-cyan-500/[0.12] dark:border-cyan-300/25 dark:text-cyan-100' : 'border-black/8 bg-white text-slate-700 hover:bg-slate-50 dark:border-white/8 dark:bg-white/[0.03] dark:text-slate-200 dark:hover:bg-white/[0.08]',
-                                        )}
-                                    >
-                                        {option.label}
-                                    </Button>
-                                ))}
-                            </div>
-                            <div className="flex flex-wrap items-center gap-2 text-xs">
-                                <Select value={jobSortMode} onValueChange={(value) => handleSortModeChange(value as JobSortMode)}>
-                                    <SelectTrigger className="h-9 w-[180px] rounded-2xl border-black/8 bg-white text-slate-800 shadow-none dark:border-white/8 dark:bg-white/[0.035] dark:text-white">
-                                        <div className="flex items-center gap-2 text-sm">
-                                            <TrendingUp className="w-3.5 h-3.5 text-slate-400" />
-                                            <SelectValue placeholder="Sort by" />
-                                        </div>
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="rank">Rank</SelectItem>
-                                        <SelectItem value="created_newest">Created Date: Newest</SelectItem>
-                                        <SelectItem value="created_oldest">Created Date: Oldest</SelectItem>
-                                        <SelectItem value="urgency">Urgency</SelectItem>
-                                        <SelectItem value="status">Status</SelectItem>
-                                        <SelectItem value="job_id">Job ID</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                                <Badge variant="outline" className="h-8 rounded-full border-white/10 bg-[#0b1424] px-3 text-slate-300 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-                                    {jobSortBadgeLabel}
+                        <div className="flex flex-wrap items-center gap-2 text-xs">
+                            <Select value={jobSortMode} onValueChange={(value) => handleSortModeChange(value as JobSortMode)}>
+                                <SelectTrigger className="h-9 w-[180px] rounded-2xl border-black/8 bg-white text-slate-800 shadow-none dark:border-white/8 dark:bg-white/[0.035] dark:text-white">
+                                    <div className="flex items-center gap-2 text-sm">
+                                        <TrendingUp className="w-3.5 h-3.5 text-slate-400" />
+                                        <SelectValue placeholder="Sort by" />
+                                    </div>
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="rank">Rank</SelectItem>
+                                    <SelectItem value="created_newest">Created Date: Newest</SelectItem>
+                                    <SelectItem value="created_oldest">Created Date: Oldest</SelectItem>
+                                    <SelectItem value="urgency">Urgency</SelectItem>
+                                    <SelectItem value="status">Status</SelectItem>
+                                    <SelectItem value="job_id">Job ID</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <Badge variant="outline" className="h-8 rounded-full border-white/10 bg-[#0b1424] px-3 text-slate-300 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                                {jobSortBadgeLabel}
+                            </Badge>
+                            {activeFilterCount > 0 ? (
+                                <Badge variant="outline" className="h-8 rounded-full border-cyan-300/20 bg-cyan-300/10 px-3 text-cyan-100">
+                                    {activeFilterCount} active filter{activeFilterCount === 1 ? '' : 's'}
                                 </Badge>
-                                {activeFilterCount > 0 ? (
-                                    <Badge variant="outline" className="h-8 rounded-full border-cyan-300/20 bg-cyan-300/10 px-3 text-cyan-100">
-                                        {activeFilterCount} active filter{activeFilterCount === 1 ? '' : 's'}
-                                    </Badge>
-                                ) : null}
-                            </div>
+                            ) : null}
                         </div>
                     </div>
                 </div>
@@ -2714,10 +2526,6 @@ export default function JobsPage() {
                         <Badge variant="outline" className="h-9 rounded-full border-cyan-300/18 bg-cyan-300/10 px-3 text-cyan-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
                             <ClipboardList className="mr-1.5 h-3.5 w-3.5 text-cyan-200" />
                             {pagination.total} total jobs
-                        </Badge>
-                        <Badge variant="outline" className="h-9 rounded-full border-emerald-300/18 bg-emerald-300/10 px-3 text-emerald-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-                            <ShieldCheck className="mr-1.5 h-3.5 w-3.5 text-emerald-200" />
-                            Queue synced
                         </Badge>
                         {selectedRows.size > 0 ? (
                             <Badge variant="outline" className="h-9 rounded-full border-cyan-200 bg-cyan-50 px-3 text-cyan-700 dark:border-cyan-300/16 dark:bg-cyan-300/[0.08] dark:text-cyan-100">
@@ -2967,17 +2775,6 @@ export default function JobsPage() {
                                                             Confirm
                                                         </Button>
                                                     ) : null}
-                                                    {job.job_status !== 'completed' && job.job_status !== 'cancelled' ? (
-                                                        <Button
-                                                            size="sm"
-                                                            variant="outline"
-                                                            className="h-8 w-full justify-start rounded-2xl border-cyan-300/20 bg-[linear-gradient(135deg,rgba(34,211,238,0.16),rgba(8,145,178,0.10))] px-2.5 text-[11px] text-cyan-50 hover:bg-cyan-300/15 hover:text-white"
-                                                            onClick={() => handlePushToQueue(job)}
-                                                        >
-                                                            <ArrowRight className="mr-1.5 h-3.5 w-3.5" />
-                                                            Push
-                                                        </Button>
-                                                    ) : null}
                                                     {isAssignableJob(job) ? (
                                                         <Button
                                                             size="sm"
@@ -3083,14 +2880,6 @@ export default function JobsPage() {
                         >
                             <User className="mr-2 h-4 w-4" />
                             Assign selected
-                        </Button>
-                        <Button
-                            size="sm"
-                            variant="outline"
-                            className="h-10 rounded-2xl border-cyan-300/20 bg-cyan-300/10 px-4 text-cyan-100 hover:bg-cyan-300/15 hover:text-white"
-                            onClick={handleBulkPushToQueue}
-                        >
-                            Push selected
                         </Button>
                         <Button
                             size="sm"
