@@ -1,5 +1,5 @@
-import { useState, type FormEvent } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useMemo, useState, type FormEvent } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ArrowRight, Eye, EyeOff, ShieldCheck, UserPlus } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -18,6 +18,7 @@ const accessTags = ['Approval', 'Readiness', 'Onboarding'] as const;
 export default function TechnicianSignupPage() {
   const { requestTechnicianSignup } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -28,6 +29,13 @@ export default function TechnicianSignupPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const tenantParams = useMemo(() => {
+    const params = new URLSearchParams(location.search);
+    return {
+      tenantId: params.get('tenant_id')?.trim() || undefined,
+      tenantSlug: params.get('tenant')?.trim().toLowerCase() || undefined,
+    };
+  }, [location.search]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -41,7 +49,14 @@ export default function TechnicianSignupPage() {
 
     setIsSubmitting(true);
     try {
-      await requestTechnicianSignup({ name, email, phone, password });
+      await requestTechnicianSignup({
+        name,
+        email,
+        phone,
+        password,
+        tenantId: tenantParams.tenantId,
+        tenantSlug: tenantParams.tenantSlug,
+      });
       setSuccessMessage('Signup request submitted. Wait for admin approval before signing in.');
       setName('');
       setEmail('');

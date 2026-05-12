@@ -23,6 +23,7 @@ import {
   fetchAdminTechnicianSignupRequests,
   fetchAdminTechnicians,
   getStoredAdminToken,
+  getStoredTenantContext,
   getStoredTechnicianToken,
   rejectAdminTechnicianSignupRequest,
   resolveAdminTechnicianPasswordResetRequest,
@@ -111,6 +112,8 @@ export type TechnicianSignupInput = {
   email: string;
   phone?: string;
   password: string;
+  tenantId?: string;
+  tenantSlug?: string;
 };
 
 export type TechnicianAccountUpdateInput = {
@@ -850,6 +853,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       email,
       phone,
       password,
+      tenant_id: input.tenantId ?? getStoredTenantContext().tenantId,
+      tenant_slug: input.tenantSlug ?? getStoredTenantContext().tenantSlug,
     });
 
     const token = getStoredAdminToken();

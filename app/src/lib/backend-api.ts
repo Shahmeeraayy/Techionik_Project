@@ -10,10 +10,18 @@ type RequestOptions = {
   method?: RequestMethod;
   token?: string | null;
   body?: unknown;
+  headers?: Record<string, string>;
 };
 
 type ErrorPayload = {
   detail?: unknown;
+};
+
+type DecodedTokenClaims = {
+  tenant_id?: string | null;
+  app_metadata?: {
+    tenant_id?: string | null;
+  };
 };
 
 type AdminTokenResponse = {
@@ -763,6 +771,46 @@ export function clearStoredTechnicianToken(): void {
   safeRemoveItemFromScopes(TECHNICIAN_TOKEN_STORAGE_KEY);
 }
 
+function decodeJwtClaims(token: string): DecodedTokenClaims | null {
+  const parts = token.split('.');
+  if (parts.length < 2) {
+    return null;
+  }
+
+  try {
+    const normalized = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+    const padded = normalized + '='.repeat((4 - (normalized.length % 4)) % 4);
+    const decoded = typeof window !== 'undefined' && typeof window.atob === 'function'
+      ? window.atob(padded)
+      : atob(padded);
+    return JSON.parse(decoded) as DecodedTokenClaims;
+  } catch {
+    return null;
+  }
+}
+
+export function getStoredTenantContext(): { tenantId?: string; tenantSlug?: string } {
+  const adminToken = getStoredAdminToken();
+  if (adminToken) {
+    const claims = decodeJwtClaims(adminToken);
+    const tenantId = claims?.tenant_id || claims?.app_metadata?.tenant_id || undefined;
+    if (tenantId) {
+      return { tenantId };
+    }
+  }
+
+  const technicianToken = getStoredTechnicianToken();
+  if (technicianToken) {
+    const claims = decodeJwtClaims(technicianToken);
+    const tenantId = claims?.tenant_id || claims?.app_metadata?.tenant_id || undefined;
+    if (tenantId) {
+      return { tenantId };
+    }
+  }
+
+  return {};
+}
+
 async function tryRefreshAdminToken(expiredToken: string): Promise<string | null> {
   const currentAdminToken = getStoredAdminToken();
   if (currentAdminToken && currentAdminToken === expiredToken) {
@@ -792,6 +840,7 @@ async function requestJson<T>(path: string, options: RequestOptions = {}): Promi
   const apiBaseUrl = getApiBaseUrl();
   const headers: Record<string, string> = {
     Accept: 'application/json',
+    ...(options.headers ?? {}),
   };
 
   if (options.body !== undefined) {
@@ -1243,10 +1292,26 @@ export async function createTechnicianSignupRequest(payload: {
   email: string;
   phone?: string;
   password: string;
+  tenant_id?: string;
+  tenant_slug?: string;
 }): Promise<BackendSignupRequest> {
+  const headers: Record<string, string> = {};
+  if (payload.tenant_id) {
+    headers['x-tenant-id'] = payload.tenant_id;
+  }
+  if (payload.tenant_slug) {
+    headers['x-tenant-slug'] = payload.tenant_slug;
+  }
+
   return requestJson<BackendSignupRequest>('/auth/technician-signup-request', {
     method: 'POST',
-    body: payload,
+    headers,
+    body: {
+      name: payload.name,
+      email: payload.email,
+      phone: payload.phone,
+      password: payload.password,
+    },
   });
 }
 
