@@ -160,6 +160,9 @@ class ServiceCatalogService:
         existing_count = self.db.query(ServiceCatalog.id).count()
         if existing_count > 0:
             return
+        tenant_id = self.db.info.get("tenant_id")
+        if tenant_id is None:
+            return
 
         if not self._SEED_PATH.exists():
             return
@@ -200,13 +203,14 @@ class ServiceCatalogService:
                     status=status_norm,
                     notes=notes_text,
                     updated_by="system-seed",
+                    tenant_id=tenant_id,
                 )
             )
 
         if not rows:
             return
         try:
-            self.db.bulk_save_objects(rows)
+            self.db.add_all(rows)
             self.db.commit()
         except IntegrityError:
             # Parallel seed attempts can race on unique(code). Treat as already seeded.
@@ -236,6 +240,9 @@ class ServiceCatalogService:
         ]
 
         changed = False
+        tenant_id = self.db.info.get("tenant_id")
+        if tenant_id is None:
+            return
         for alias in aliases:
             existing = (
                 self.db.query(ServiceCatalog.id)
@@ -255,6 +262,7 @@ class ServiceCatalogService:
                     status="active",
                     notes="Compatibility alias for free-text job.service_type mapping",
                     updated_by="system-compat",
+                    tenant_id=tenant_id,
                 )
             )
             changed = True

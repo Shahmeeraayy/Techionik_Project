@@ -98,6 +98,9 @@ class PriorityRulesService:
         existing_count = self.db.query(PriorityRule.id).count()
         if existing_count > 0:
             return
+        tenant_id = self.db.info.get("tenant_id")
+        if tenant_id is None:
+            return
 
         defaults = [
             PriorityRule(
@@ -108,6 +111,7 @@ class PriorityRulesService:
                 is_active=True,
                 created_by="system-seed",
                 updated_by="system-seed",
+                tenant_id=tenant_id,
             ),
             PriorityRule(
                 description="Diagnostic jobs for D-001 are critical",
@@ -118,6 +122,7 @@ class PriorityRulesService:
                 is_active=True,
                 created_by="system-seed",
                 updated_by="system-seed",
+                tenant_id=tenant_id,
             ),
             PriorityRule(
                 description="Mazda vehicles at Donnacona receive high priority",
@@ -127,7 +132,8 @@ class PriorityRulesService:
                 is_active=True,
                 created_by="system-seed",
                 updated_by="system-seed",
+                tenant_id=tenant_id,
             ),
         ]
-        self.db.bulk_save_objects(defaults)
+        self.db.add_all(defaults)
         self.db.commit()
