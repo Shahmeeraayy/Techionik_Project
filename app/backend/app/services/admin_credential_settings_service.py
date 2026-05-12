@@ -171,10 +171,33 @@ class AdminCredentialSettingsService:
         if not verify_password(normalized_password, user.password_hash):
             return None
 
-        user.last_login_at = datetime.now(timezone.utc)
-        self._sync_settings_row_from_admin(user)
-        self.db.commit()
-        self.db.refresh(user)
+        last_login_at = datetime.now(timezone.utc)
+        tenant_db = Session(bind=self.db.get_bind())
+        tenant_db.info["tenant_id"] = user.tenant_id
+        try:
+            if not DATABASE_URL.startswith("sqlite"):
+                tenant_db.execute(
+                    text("SELECT set_config('app.current_tenant_id', :tenant_id, true)"),
+                    {"tenant_id": str(user.tenant_id)},
+                )
+            tenant_user = (
+                tenant_db.query(AdminUser)
+                .execution_options(skip_tenant_scope=True)
+                .filter(AdminUser.id == user.id)
+                .first()
+            )
+            if tenant_user is None:
+                return None
+            tenant_user.last_login_at = last_login_at
+            self._sync_settings_row_from_admin(tenant_user)
+            tenant_db.commit()
+        except Exception:
+            tenant_db.rollback()
+            raise
+        finally:
+            tenant_db.close()
+
+        user.last_login_at = last_login_at
         return user
 
     def signup_owner_account(
