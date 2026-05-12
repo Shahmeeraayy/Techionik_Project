@@ -1289,6 +1289,7 @@ export async function updateAdminTechnician(
 
 export async function createTechnicianSignupRequest(payload: {
   name: string;
+  admin_email: string;
   email: string;
   phone?: string;
   password: string;
@@ -1308,6 +1309,7 @@ export async function createTechnicianSignupRequest(payload: {
     headers,
     body: {
       name: payload.name,
+      admin_email: payload.admin_email,
       email: payload.email,
       phone: payload.phone,
       password: payload.password,

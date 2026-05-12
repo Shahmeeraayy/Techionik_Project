@@ -67,13 +67,12 @@ class SignupRequestRoutingApiTests(unittest.TestCase):
     def test_signup_request_routes_to_tenant_owner_and_not_default_admin(self):
         owner_signup = self._signup_owner()
         owner_token = owner_signup["access_token"]
-        tenant_id = owner_signup["tenant_id"]
 
         create_response = self.client.post(
             "/auth/technician-signup-request",
-            headers={"x-tenant-id": tenant_id},
             json={
                 "name": "Field Tech One",
+                "admin_email": "ehtix@gmail.com",
                 "email": "tech1@example.com",
                 "phone": "+15550001111",
                 "password": "secret123",
@@ -113,13 +112,12 @@ class SignupRequestRoutingApiTests(unittest.TestCase):
     def test_viewer_cannot_review_signup_requests(self):
         owner_signup = self._signup_owner()
         owner_token = owner_signup["access_token"]
-        tenant_id = owner_signup["tenant_id"]
 
         create_response = self.client.post(
             "/auth/technician-signup-request",
-            headers={"x-tenant-id": tenant_id},
             json={
                 "name": "Field Tech Two",
+                "admin_email": "ehtix@gmail.com",
                 "email": "tech2@example.com",
                 "phone": "+15550002222",
                 "password": "secret123",

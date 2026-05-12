@@ -20,6 +20,7 @@ export default function TechnicianSignupPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const [name, setName] = useState('');
+  const [adminEmail, setAdminEmail] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
@@ -51,6 +52,7 @@ export default function TechnicianSignupPage() {
     try {
       await requestTechnicianSignup({
         name,
+        adminEmail,
         email,
         phone,
         password,
@@ -59,6 +61,7 @@ export default function TechnicianSignupPage() {
       });
       setSuccessMessage('Signup request submitted. Wait for admin approval before signing in.');
       setName('');
+      setAdminEmail('');
       setEmail('');
       setPhone('');
       setPassword('');
@@ -169,6 +172,25 @@ export default function TechnicianSignupPage() {
                         placeholder="John Smith"
                         className="h-[54px] rounded-2xl border-white/14 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.025))] px-4 text-base text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] placeholder:text-slate-500 focus-visible:border-emerald-300/45 focus-visible:ring-emerald-300/15"
                       />
+                    </div>
+
+                    <div className="space-y-2 sm:col-span-2">
+                      <Label htmlFor="signup-admin-email" className="block text-sm font-semibold text-slate-200">
+                        Admin Email
+                      </Label>
+                      <Input
+                        id="signup-admin-email"
+                        type="email"
+                        value={adminEmail}
+                        onChange={(event) => setAdminEmail(event.target.value)}
+                        autoComplete="email"
+                        required
+                        placeholder="owner@yourdispatch.com"
+                        className="h-[54px] rounded-2xl border-white/14 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.025))] px-4 text-base text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] placeholder:text-slate-500 focus-visible:border-emerald-300/45 focus-visible:ring-emerald-300/15"
+                      />
+                      <p className="text-xs leading-5 text-slate-400">
+                        Enter the admin or account owner email for the dispatch workspace you want to join.
+                      </p>
                     </div>
 
                     <div className="space-y-2">

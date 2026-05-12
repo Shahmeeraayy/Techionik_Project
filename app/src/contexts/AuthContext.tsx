@@ -109,6 +109,7 @@ export type TechnicianPasswordResetRequestSummary = {
 
 export type TechnicianSignupInput = {
   name: string;
+  adminEmail: string;
   email: string;
   phone?: string;
   password: string;
@@ -836,12 +837,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const requestTechnicianSignup = useCallback(async (input: TechnicianSignupInput) => {
     const name = input.name.trim();
+    const adminEmail = normalizeEmail(input.adminEmail);
     const email = normalizeEmail(input.email);
     const phone = input.phone?.trim();
     const password = input.password.trim();
 
-    if (!name || !email || !password) {
-      throw new Error('Name, email, and password are required.');
+    if (!name || !adminEmail || !email || !password) {
+      throw new Error('Admin email, name, email, and password are required.');
     }
 
     if (email === ADMIN_EMAIL) {
@@ -850,6 +852,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     await createTechnicianSignupRequest({
       name,
+      admin_email: adminEmail,
       email,
       phone,
       password,

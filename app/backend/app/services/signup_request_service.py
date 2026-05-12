@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 from ..core.enums import AuditEntityType, TechnicianStatus, UserRole
 from ..core.security import AuthenticatedUser
 from ..models.admin_credential_settings import AdminCredentialSettings
+from ..models.admin_user import AdminUser
 from ..repositories.signup_request_repository import SignupRequestRepository
 from ..repositories.technician_repository import TechnicianRepository
 from ..schemas.signup_request import (
@@ -113,7 +114,30 @@ class SignupRequestService:
                 detail="Only tenant owners, admins, or dispatchers can review technician signup requests",
             )
 
+    def _route_request_to_admin_tenant(self, admin_email: str) -> None:
+        normalized_admin_email = admin_email.strip().lower()
+        admin_user = (
+            self.db.query(AdminUser)
+            .execution_options(skip_tenant_scope=True)
+            .filter(AdminUser.email == normalized_admin_email)
+            .first()
+        )
+        if admin_user is None or admin_user.status != "active":
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Admin account not found for this signup request",
+            )
+
+        self.db.info["tenant_id"] = admin_user.tenant_id
+        bind = self.db.get_bind()
+        if bind is not None and bind.dialect.name != "sqlite":
+            self.db.execute(
+                text("SELECT set_config('app.current_tenant_id', :tenant_id, true)"),
+                {"tenant_id": str(admin_user.tenant_id)},
+            )
+
     def create_request(self, payload: TechnicianSignupRequestCreate) -> TechnicianSignupRequestResponse:
+        self._route_request_to_admin_tenant(payload.admin_email)
         existing = self.repo.get_by_email(payload.email)
         now = datetime.now(timezone.utc)
 

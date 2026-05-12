@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field, validator
 
 class TechnicianSignupRequestCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=255)
+    admin_email: str = Field(..., min_length=3, max_length=255)
     email: str = Field(..., min_length=3, max_length=255)
     phone: Optional[str] = Field(default=None, max_length=50)
     password: str = Field(..., min_length=1, max_length=255)
@@ -16,6 +17,13 @@ class TechnicianSignupRequestCreate(BaseModel):
         normalized = value.strip()
         if not normalized:
             raise ValueError("name must not be empty")
+        return normalized
+
+    @validator("admin_email")
+    def validate_admin_email(cls, value: str):
+        normalized = value.strip().lower()
+        if "@" not in normalized or normalized.startswith("@") or normalized.endswith("@"):
+            raise ValueError("admin_email must be valid")
         return normalized
 
     @validator("email")
@@ -48,4 +56,3 @@ class TechnicianSignupRequestResponse(BaseModel):
 
 class TechnicianSignupDecisionRequest(BaseModel):
     reason: Optional[str] = Field(default=None, max_length=500)
-
