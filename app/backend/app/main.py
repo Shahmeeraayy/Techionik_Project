@@ -17,7 +17,6 @@ from .api.endpoints import (
     admin_technicians,
     auth,
     booking_portal,
-    integrations_make_jobs,
     invoices,
     signup_requests,
     technician_password_reset_requests,
@@ -137,7 +136,6 @@ app.include_router(technician_chat.router)
 app.include_router(technician_time_off.router)
 app.include_router(auth.router)
 app.include_router(invoices.router)
-app.include_router(integrations_make_jobs.router)
 app.include_router(signup_requests.public_router)
 app.include_router(signup_requests.admin_router)
 app.include_router(technician_password_reset_requests.public_router)
