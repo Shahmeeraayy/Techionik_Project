@@ -284,6 +284,7 @@ const sectionHeaderClass = 'border-b border-white/8 bg-[linear-gradient(180deg,r
 const sectionFooterClass = 'border-t border-white/8 bg-[rgba(255,255,255,0.03)] py-4';
 const settingsPrimaryButtonClass = 'bg-[linear-gradient(135deg,#2F8E92,#38a7ae)] text-white shadow-[0_14px_34px_rgba(47,142,146,0.28)] hover:bg-[linear-gradient(135deg,#38a7ae,#4bc0c7)] hover:shadow-[0_18px_40px_rgba(56,167,174,0.34)]';
 const settingsSecondaryButtonClass = 'border-cyan-300/18 bg-[linear-gradient(180deg,rgba(18,37,58,0.96),rgba(12,26,43,0.96))] text-slate-50 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_10px_24px_rgba(2,8,23,0.28)] hover:bg-[linear-gradient(180deg,rgba(27,49,74,0.98),rgba(17,34,56,0.98))] hover:text-white';
+const settingsSwitchClass = 'border border-cyan-300/18 data-[state=checked]:bg-[#2F8E92] data-[state=checked]:border-[#57c7c7]/60 data-[state=unchecked]:bg-[#162235] data-[state=unchecked]:border-white/16 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]';
 const settingsDarkInputStyle: CSSProperties = {
     background: '#0b1424',
     backgroundImage: 'none',
@@ -1180,7 +1181,7 @@ export default function SettingsPage() {
                                 <Switch
                                     checked={notificationPreferences[key as keyof NotificationPreferences]}
                                     onCheckedChange={(checked) => setNotificationPreferences((prev) => ({ ...prev, [key]: checked }))}
-                                    className="border border-white/10 data-[state=checked]:bg-[#2F8E92] data-[state=unchecked]:bg-[#101b2c]"
+                                    className={settingsSwitchClass}
                                 />
                             </div>
                         ))}
@@ -1242,7 +1243,7 @@ export default function SettingsPage() {
                                 <Switch
                                     checked={bookingPortalSettings.isEnabled}
                                     onCheckedChange={(checked) => setBookingPortalSettings((prev) => ({ ...prev, isEnabled: checked }))}
-                                    className="border border-white/10 data-[state=checked]:bg-[#2F8E92] data-[state=unchecked]:bg-[#101b2c]"
+                                    className={settingsSwitchClass}
                                 />
                             </div>
                             <div className="flex items-center justify-between rounded-[22px] border border-white/10 bg-[rgba(255,255,255,0.03)] p-4">
@@ -1253,7 +1254,7 @@ export default function SettingsPage() {
                                 <Switch
                                     checked={bookingPortalSettings.statusLookupEnabled}
                                     onCheckedChange={(checked) => setBookingPortalSettings((prev) => ({ ...prev, statusLookupEnabled: checked }))}
-                                    className="border border-white/10 data-[state=checked]:bg-[#2F8E92] data-[state=unchecked]:bg-[#101b2c]"
+                                    className={settingsSwitchClass}
                                 />
                             </div>
                             <div className="space-y-2">
@@ -1354,7 +1355,7 @@ export default function SettingsPage() {
                                                             ? [...prev.visibleServiceIds, service.id]
                                                             : prev.visibleServiceIds.filter((item) => item !== service.id),
                                                     }))}
-                                                    className="border border-white/10 data-[state=checked]:bg-[#2F8E92] data-[state=unchecked]:bg-[#101b2c]"
+                                                    className={settingsSwitchClass}
                                                 />
                                             </label>
                                         );
