@@ -44,32 +44,25 @@ export default function AdminLoginPage() {
     <AuthSplitShell
       accent="admin"
       badge="DispatchIQ Admin"
-      eyebrow="Welcome"
-      title={<>Sign in</>}
-      description=""
+      title={<>Welcome Back!</>}
+      description="Please log in to your account."
       chips={[]}
       footer={
         <div className="grid gap-3 sm:grid-cols-2">
-          <div className="flex h-full flex-col rounded-[22px] border border-white/10 bg-white/[0.03] px-4 py-4 text-white">
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-white/70">New company</p>
-            <p className="mt-2 flex-1 text-sm leading-6 text-white/84">
-              Need a fresh dispatch workspace before signing in?
-            </p>
-            <Link to="/admin/signup" className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-white hover:text-white/80">
-              Create admin account
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-          </div>
-          <div className="flex h-full flex-col rounded-[22px] border border-white/10 bg-white/[0.03] px-4 py-4 text-white">
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-white/70">Field access</p>
-            <p className="mt-2 flex-1 text-sm leading-6 text-white/84">
-              Need technician access instead of dispatch controls?
-            </p>
-            <Link to="/tech/login" className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-white hover:text-white/80">
-              Go to technician login
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-          </div>
+          <Link
+            to="/admin/signup"
+            className="inline-flex min-h-14 items-center justify-center gap-2 rounded-[18px] border border-white/10 bg-white/[0.03] px-5 py-3 text-base font-medium text-white hover:bg-white/[0.06]"
+          >
+            Create admin account
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+          <Link
+            to="/tech/login"
+            className="inline-flex min-h-14 items-center justify-center gap-2 rounded-[18px] border border-white/10 bg-white/[0.03] px-5 py-3 text-base font-medium text-white hover:bg-white/[0.06]"
+          >
+            Technician login
+            <ArrowRight className="h-4 w-4" />
+          </Link>
         </div>
       }
     >

@@ -67,14 +67,13 @@ export function AuthSplitShell({
 
       <main className="relative flex min-h-[100svh] items-center justify-center px-4 py-5 sm:px-6 sm:py-6 lg:px-8">
         <section className="w-full max-w-[560px] rounded-[32px] border border-white/10 bg-[#080808]/96 p-5 shadow-[0_30px_120px_rgba(0,0,0,0.55)] backdrop-blur-xl sm:p-6">
-          <div className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.28em] ${theme.badge}`}>
-            <Sparkles className="h-3.5 w-3.5" />
-            {badge}
-          </div>
-
-          <div className="mt-5">
+          <div className="flex flex-col items-center text-center">
+            <div className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.28em] ${theme.badge}`}>
+              <Sparkles className="h-3.5 w-3.5" />
+              {badge}
+            </div>
             {eyebrow ? (
-              <p className="text-sm font-medium uppercase tracking-[0.22em] text-white/72">
+              <p className="mt-5 text-sm font-medium uppercase tracking-[0.22em] text-white/72">
                 {eyebrow}
               </p>
             ) : null}
@@ -82,14 +81,14 @@ export function AuthSplitShell({
               {title}
             </h1>
             {description ? (
-              <p className="mt-3 text-sm leading-7 text-white/82 sm:text-[15px]">
+              <p className="mt-3 max-w-md text-sm leading-7 text-white/82 sm:text-[15px]">
                 {description}
               </p>
             ) : null}
           </div>
 
           {chips.length > 0 ? (
-            <div className="mt-4 flex flex-wrap gap-2">
+            <div className="mt-4 flex flex-wrap justify-center gap-2">
               {chips.map((chip) => (
                 <span
                   key={chip}
