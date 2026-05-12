@@ -2,9 +2,11 @@ from datetime import datetime
 from typing import List, Optional
 from uuid import UUID
 
-from sqlalchemy import func
+from sqlalchemy import case, func
 from sqlalchemy.orm import Session
 
+from ..models.admin_user import AdminUser
+from ..models.email_outbox import EmailOutbox
 from ..models.signup_request import SignupRequest
 
 
@@ -28,6 +30,21 @@ class SignupRequestRepository:
             query = query.filter(SignupRequest.status == status)
         return query.order_by(SignupRequest.requested_at.desc()).all()
 
+    def list_active_signup_reviewers(self) -> List[AdminUser]:
+        return (
+            self.db.query(AdminUser)
+            .filter(
+                AdminUser.status == "active",
+                AdminUser.tenant_role.in_(("owner", "admin", "dispatcher")),
+            )
+            .order_by(
+                case((AdminUser.tenant_role == "owner", 0), (AdminUser.tenant_role == "admin", 1), else_=2),
+                AdminUser.created_at.asc(),
+                AdminUser.email.asc(),
+            )
+            .all()
+        )
+
     def create_request(self, *, name: str, email: str, phone: Optional[str], password: str) -> SignupRequest:
         row = SignupRequest(
             name=name,
@@ -35,6 +52,27 @@ class SignupRequestRepository:
             phone=phone,
             password=password,
             status="pending",
+        )
+        self.db.add(row)
+        self.db.flush()
+        self.db.refresh(row)
+        return row
+
+    def queue_approval_email(
+        self,
+        *,
+        recipient_email: str,
+        subject: str,
+        body: str,
+        request_id: UUID,
+    ) -> EmailOutbox:
+        row = EmailOutbox(
+            recipient_email=recipient_email.lower(),
+            subject=subject,
+            body=body,
+            message_type="technician_signup_request_admin",
+            related_entity_type="technician_signup_request",
+            related_entity_id=str(request_id),
         )
         self.db.add(row)
         self.db.flush()
@@ -80,4 +118,3 @@ class SignupRequestRepository:
         self.db.flush()
         self.db.refresh(row)
         return row
-

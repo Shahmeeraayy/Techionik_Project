@@ -30,12 +30,12 @@ def create_technician_signup_request(
 def list_technician_signup_requests(
     status: Optional[str] = Query(default=None),
     db: Session = Depends(deps.get_db),
-    _: AuthenticatedUser = Depends(deps.require_roles(UserRole.ADMIN)),
+    current_user: AuthenticatedUser = Depends(deps.require_roles(UserRole.ADMIN)),
 ):
     normalized_status = status.strip().lower() if status else None
     if normalized_status not in {None, "pending", "approved", "rejected"}:
         normalized_status = None
-    return SignupRequestService(db).list_requests(normalized_status)
+    return SignupRequestService(db).list_requests(normalized_status, current_user=current_user)
 
 
 @admin_router.post("/{request_id}/approve", response_model=TechnicianSignupRequestResponse)
@@ -59,4 +59,3 @@ def reject_technician_signup_request(
         current_user=current_user,
         reason=payload.reason,
     )
-
