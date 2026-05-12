@@ -15,6 +15,7 @@ import {
   clearStoredAdminToken,
   createTechnicianSignupRequest,
   fetchAdminToken,
+  fetchAdminCredentialSettings,
   fetchAdminTechnicianPasswordResetRequests,
   fetchDevTechnicianToken,
   fetchTechnicianToken,
@@ -503,10 +504,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         let nextUser = restoredUser.user;
         let nextTechnicians = parsedTechnicians;
+        let nextHasBackendAdminToken = Boolean(adminToken && adminToken.trim());
         let nextHasBackendTechnicianToken = Boolean(technicianToken && technicianToken.trim());
+        const shouldRestoreAdminFromToken =
+          Boolean(adminToken)
+          && (!restoredUser.user || restoredUser.user.role === 'admin');
         const shouldRestoreTechnicianFromToken =
           Boolean(technicianToken)
           && (!restoredUser.user || restoredUser.user.role === 'technician');
+
+        if (shouldRestoreAdminFromToken && adminToken) {
+          try {
+            const adminProfile = await fetchAdminCredentialSettings(adminToken);
+            nextUser = {
+              ...currentUser,
+              id: restoredUser.user?.id ?? currentUser.id,
+              name: adminProfile.full_name,
+              email: adminProfile.admin_email,
+              role: 'admin',
+              createdAt: restoredUser.user?.createdAt ?? currentUser.createdAt,
+              updatedAt: new Date().toISOString(),
+            };
+          } catch (error) {
+            console.error('Failed to restore admin session from backend token.', error);
+            clearStoredAdminToken();
+            if (!restoredUser.user || restoredUser.user.role === 'admin') {
+              nextUser = null;
+            }
+            nextHasBackendAdminToken = false;
+          }
+        }
 
         if (shouldRestoreTechnicianFromToken && technicianToken) {
           try {
@@ -545,7 +572,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setPendingTechnicianRequests(parsedPendingRequests);
         setRejectedTechnicianRequests(parsedRejectedRequests);
         setPendingTechnicianPasswordResetRequests([]);
-        setHasBackendAdminToken(Boolean(adminToken && adminToken.trim()));
+        setHasBackendAdminToken(nextHasBackendAdminToken);
         setHasBackendTechnicianToken(nextHasBackendTechnicianToken);
       } catch (error) {
         console.error('Failed to restore auth session from storage.', error);
@@ -789,11 +816,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     setStoredAdminToken(tokenResponse.access_token, persistSession);
-    setHasBackendAdminToken(true);
-    clearStoredTechnicianToken();
-    setHasBackendTechnicianToken(false);
-    setAuthStorageScope(nextStorageScope);
-    await refreshBackendAdminData();
+      setHasBackendAdminToken(true);
+      clearStoredTechnicianToken();
+      setHasBackendTechnicianToken(false);
+      setAuthStorageScope(nextStorageScope);
+      await refreshBackendAdminData();
 
     setUser({
       ...currentUser,

@@ -78,9 +78,13 @@ class ServiceCatalogService:
             updated_by=self._updated_by_value(),
         )
         self.db.add(row)
-        self.db.commit()
-        self.db.refresh(row)
-        return self._to_response(row)
+        try:
+            self.db.commit()
+            self.db.refresh(row)
+            return self._to_response(row)
+        except IntegrityError:
+            self.db.rollback()
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Service code already exists")
 
     def update_service(self, service_id: UUID, payload: AdminServiceUpdateRequest) -> AdminServiceResponse:
         self._ensure_compatibility_aliases()
@@ -113,9 +117,13 @@ class ServiceCatalogService:
             row.notes = updates["notes"]
 
         row.updated_by = self._updated_by_value()
-        self.db.commit()
-        self.db.refresh(row)
-        return self._to_response(row)
+        try:
+            self.db.commit()
+            self.db.refresh(row)
+            return self._to_response(row)
+        except IntegrityError:
+            self.db.rollback()
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Service code already exists")
 
     def update_status(self, service_id: UUID, payload: AdminServiceStatusUpdateRequest) -> AdminServiceResponse:
         self._ensure_compatibility_aliases()

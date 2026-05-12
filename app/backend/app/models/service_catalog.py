@@ -1,6 +1,6 @@
 from uuid import uuid4
 
-from sqlalchemy import Boolean, CheckConstraint, Column, DateTime, Numeric, String, Text, Uuid, text
+from sqlalchemy import Boolean, CheckConstraint, Column, DateTime, Numeric, String, Text, UniqueConstraint, Uuid, text
 from sqlalchemy.sql import func
 
 from .base import Base, TenantScopedMixin
@@ -10,7 +10,7 @@ class ServiceCatalog(TenantScopedMixin, Base):
     __tablename__ = "service_catalog"
 
     id = Column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
-    code = Column(String(128), nullable=False, unique=True)
+    code = Column(String(128), nullable=False)
     name = Column(String(255), nullable=False)
     sku = Column(String(128), nullable=True)
     description = Column(Text, nullable=True)
@@ -24,5 +24,6 @@ class ServiceCatalog(TenantScopedMixin, Base):
     updated_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now())
 
     __table_args__ = (
+        UniqueConstraint("tenant_id", "code", name="service_catalog_tenant_code_uq"),
         CheckConstraint("status IN ('active', 'archived')", name="service_catalog_status_chk"),
     )

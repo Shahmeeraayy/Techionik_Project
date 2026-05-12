@@ -40,6 +40,7 @@ MIGRATIONS: list[Migration] = [
     Migration("010_job_services.sql"),
     Migration("011_supabase_multitenancy.sql"),
     Migration("012_admin_users.sql"),
+    Migration("013_service_catalog_tenant_uniqueness.sql"),
 ]
 
 

@@ -801,21 +801,31 @@ async function requestJson<T>(path: string, options: RequestOptions = {}): Promi
     headers.Authorization = `Bearer ${options.token}`;
   }
 
-  const response = await fetch(`${apiBaseUrl}${path}`, {
-    method: options.method ?? 'GET',
-    headers,
-    body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${apiBaseUrl}${path}`, {
+      method: options.method ?? 'GET',
+      headers,
+      body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
+    });
+  } catch {
+    throw new Error(`Unable to reach backend at ${apiBaseUrl}. Check that the API server is running and CORS is configured.`);
+  }
 
   if (response.status === 401 && options.token) {
     const refreshedToken = await tryRefreshAdminToken(options.token);
     if (refreshedToken) {
       const retryHeaders: Record<string, string> = { ...headers, Authorization: `Bearer ${refreshedToken}` };
-      const retryResponse = await fetch(`${apiBaseUrl}${path}`, {
-        method: options.method ?? 'GET',
-        headers: retryHeaders,
-        body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
-      });
+      let retryResponse: Response;
+      try {
+        retryResponse = await fetch(`${apiBaseUrl}${path}`, {
+          method: options.method ?? 'GET',
+          headers: retryHeaders,
+          body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
+        });
+      } catch {
+        throw new Error(`Unable to reach backend at ${apiBaseUrl}. Check that the API server is running and CORS is configured.`);
+      }
       if (retryResponse.ok) {
         return retryResponse.json() as Promise<T>;
       }
