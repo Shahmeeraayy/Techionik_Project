@@ -8,10 +8,10 @@ import bcrypt
 
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
-from sqlalchemy import case
+from sqlalchemy import case, text
 from uuid import UUID
 
-from ..core.config import ADMIN_DEFAULT_PASSWORD, ADMIN_EMAIL, DEFAULT_TENANT_ID
+from ..core.config import ADMIN_DEFAULT_PASSWORD, ADMIN_EMAIL, DATABASE_URL, DEFAULT_TENANT_ID
 from ..core.security import AuthenticatedUser
 from ..models.admin_credential_settings import AdminCredentialSettings
 from ..models.admin_user import AdminUser
@@ -235,6 +235,11 @@ class AdminCredentialSettingsService:
         previous_tenant_id = self.db.info.get("tenant_id")
         self.db.info["tenant_id"] = tenant.id
         try:
+            if not DATABASE_URL.startswith("sqlite"):
+                self.db.execute(
+                    text("SELECT set_config('app.current_tenant_id', :tenant_id, true)"),
+                    {"tenant_id": str(tenant.id)},
+                )
             owner = AdminUser(
                 full_name=normalized_full_name,
                 email=normalized_email,
@@ -261,6 +266,11 @@ class AdminCredentialSettingsService:
             raise
         finally:
             self.db.info["tenant_id"] = previous_tenant_id
+            if not DATABASE_URL.startswith("sqlite"):
+                self.db.execute(
+                    text("SELECT set_config('app.current_tenant_id', :tenant_id, true)"),
+                    {"tenant_id": str(previous_tenant_id or UUID(DEFAULT_TENANT_ID))},
+                )
 
     def _serialize_admin(self, admin_user: AdminUser) -> dict[str, object]:
         return {
