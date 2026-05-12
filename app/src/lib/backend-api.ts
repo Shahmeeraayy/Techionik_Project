@@ -859,6 +859,19 @@ export async function fetchAdminToken(payload: {
   });
 }
 
+export async function signupAdminOwner(payload: {
+  company_name: string;
+  workspace_slug: string;
+  full_name: string;
+  email: string;
+  password: string;
+}): Promise<AdminTokenResponse> {
+  return requestJson<AdminTokenResponse>('/auth/admin-signup', {
+    method: 'POST',
+    body: payload,
+  });
+}
+
 export async function fetchDevTechnicianToken(payload: {
   email: string;
   password: string;

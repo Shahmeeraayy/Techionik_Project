@@ -218,22 +218,37 @@ export default function AdminLoginPage() {
                 </form>
               </div>
 
-              <div className="mt-5 flex flex-col gap-3 rounded-[24px] border border-white/10 bg-slate-950/75 px-5 py-4 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] sm:flex-row sm:items-center sm:justify-between">
+              <div className="mt-5 grid gap-3 rounded-[24px] border border-white/10 bg-slate-950/75 px-5 py-4 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] sm:grid-cols-2">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-100/60">
-                    Alternate Access
+                    New company
+                  </p>
+                  <p className="mt-2 text-sm text-slate-300/80">
+                    Need a new admin workspace before logging in?
+                  </p>
+                  <Link
+                    to="/admin/signup"
+                    className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-cyan-200 transition-colors hover:text-white"
+                  >
+                    Create admin account
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </div>
+                <div className="sm:border-l sm:border-white/8 sm:pl-5">
+                  <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-100/60">
+                    Alternate access
                   </p>
                   <p className="mt-2 text-sm text-slate-300/80">
                     Need field access instead of admin control?
                   </p>
+                  <Link
+                    to="/tech/login"
+                    className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-cyan-200 transition-colors hover:text-white"
+                  >
+                    Go to technician login
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
                 </div>
-                <Link
-                  to="/tech/login"
-                  className="inline-flex items-center gap-2 text-sm font-semibold text-cyan-200 transition-colors hover:text-white"
-                >
-                  Go to technician login
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
               </div>
             </div>
           </section>

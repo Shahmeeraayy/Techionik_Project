@@ -15,6 +15,7 @@ from app.main import app
 from app.models.admin_credential_settings import AdminCredentialSettings
 from app.models.admin_user import AdminUser
 from app.models.base import Base
+from app.models.tenant import Tenant, TenantMembership
 
 
 class AdminSettingsApiTests(unittest.TestCase):
@@ -31,8 +32,10 @@ class AdminSettingsApiTests(unittest.TestCase):
 
     def setUp(self):
         with engine.begin() as conn:
+            conn.execute(TenantMembership.__table__.delete())
             conn.execute(AdminUser.__table__.delete())
             conn.execute(AdminCredentialSettings.__table__.delete())
+            conn.execute(Tenant.__table__.delete())
 
     def _admin_token(self, email: str = "admin@sm2dispatch.com", password: str = "admin123") -> str:
         response = self.client.post(
@@ -127,6 +130,67 @@ class AdminSettingsApiTests(unittest.TestCase):
             json={"email": "admin@sm2dispatch.com", "password": "admin123"},
         )
         self.assertNotEqual(response.status_code, 404, response.text)
+
+    def test_public_admin_signup_creates_owner_tenant_and_can_login(self):
+        signup_response = self.client.post(
+            "/auth/admin-signup",
+            json={
+                "company_name": "Northstar Dispatch",
+                "workspace_slug": "northstar-dispatch",
+                "full_name": "Avery Stone",
+                "email": "avery@northstar.com",
+                "password": "owner123",
+            },
+        )
+
+        self.assertEqual(signup_response.status_code, 201, signup_response.text)
+        payload = signup_response.json()
+        self.assertEqual(payload["role"], "admin")
+        self.assertEqual(payload["tenant_role"], "owner")
+        self.assertEqual(payload["user_email"], "avery@northstar.com")
+
+        login_response = self.client.post(
+            "/auth/admin-token",
+            json={"email": "avery@northstar.com", "password": "owner123"},
+        )
+        self.assertEqual(login_response.status_code, 200, login_response.text)
+
+    def test_public_admin_signup_rejects_duplicate_email_and_workspace_slug(self):
+        first_signup = self.client.post(
+            "/auth/admin-signup",
+            json={
+                "company_name": "Northstar Dispatch",
+                "workspace_slug": "northstar-dispatch",
+                "full_name": "Avery Stone",
+                "email": "avery@northstar.com",
+                "password": "owner123",
+            },
+        )
+        self.assertEqual(first_signup.status_code, 201, first_signup.text)
+
+        duplicate_email = self.client.post(
+            "/auth/admin-signup",
+            json={
+                "company_name": "Other Dispatch",
+                "workspace_slug": "other-dispatch",
+                "full_name": "Avery Stone",
+                "email": "avery@northstar.com",
+                "password": "owner123",
+            },
+        )
+        self.assertEqual(duplicate_email.status_code, 409, duplicate_email.text)
+
+        duplicate_slug = self.client.post(
+            "/auth/admin-signup",
+            json={
+                "company_name": "Other Dispatch",
+                "workspace_slug": "northstar-dispatch",
+                "full_name": "Casey Harper",
+                "email": "casey@other.com",
+                "password": "owner123",
+            },
+        )
+        self.assertEqual(duplicate_slug.status_code, 409, duplicate_slug.text)
 
 
 if __name__ == "__main__":

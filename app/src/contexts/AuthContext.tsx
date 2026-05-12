@@ -27,6 +27,7 @@ import {
   resolveAdminTechnicianPasswordResetRequest,
   setStoredAdminToken,
   setStoredTechnicianToken,
+  signupAdminOwner,
   updateAdminTechnician,
 } from '@/lib/backend-api';
 
@@ -118,6 +119,15 @@ export type TechnicianAccountUpdateInput = {
   password?: string;
 };
 
+export type AdminSignupInput = {
+  companyName: string;
+  workspaceSlug: string;
+  fullName: string;
+  email: string;
+  password: string;
+  remember?: boolean;
+};
+
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
@@ -132,6 +142,7 @@ interface AuthContextType {
   pendingTechnicianPasswordResetRequests: TechnicianPasswordResetRequestSummary[];
   syncAdminData: () => Promise<void>;
   login: (email: string, password: string, role?: UserRole, options?: { remember?: boolean }) => Promise<void>;
+  signupAdmin: (input: AdminSignupInput) => Promise<void>;
   requestTechnicianSignup: (input: TechnicianSignupInput) => Promise<void>;
   approveTechnicianSignupRequest: (requestId: string) => Promise<void>;
   rejectTechnicianSignupRequest: (requestId: string, reason?: string) => Promise<void>;
@@ -756,6 +767,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [refreshBackendAdminData]);
 
+  const signupAdmin = useCallback(async (input: AdminSignupInput) => {
+    const companyName = input.companyName.trim();
+    const workspaceSlug = input.workspaceSlug.trim().toLowerCase();
+    const fullName = input.fullName.trim();
+    const email = normalizeEmail(input.email);
+    const password = input.password.trim();
+    const persistSession = input.remember === true;
+    const nextStorageScope: StorageScope = persistSession ? 'local' : 'session';
+
+    if (!companyName || !workspaceSlug || !fullName || !email || !password) {
+      throw new Error('Company, workspace URL, full name, email, and password are required.');
+    }
+
+    const tokenResponse = await signupAdminOwner({
+      company_name: companyName,
+      workspace_slug: workspaceSlug,
+      full_name: fullName,
+      email,
+      password,
+    });
+
+    setStoredAdminToken(tokenResponse.access_token, persistSession);
+    setHasBackendAdminToken(true);
+    clearStoredTechnicianToken();
+    setHasBackendTechnicianToken(false);
+    setAuthStorageScope(nextStorageScope);
+    await refreshBackendAdminData();
+
+    setUser({
+      ...currentUser,
+      id: tokenResponse.user_id,
+      name: tokenResponse.user_name,
+      email: tokenResponse.user_email,
+      updatedAt: new Date().toISOString(),
+    });
+  }, [refreshBackendAdminData]);
+
   const requestTechnicianSignup = useCallback(async (input: TechnicianSignupInput) => {
     const name = input.name.trim();
     const email = normalizeEmail(input.email);
@@ -1034,6 +1082,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     pendingTechnicianPasswordResetRequests: pendingTechnicianPasswordResetRequests.map(toPasswordResetRequestSummary),
     syncAdminData,
     login,
+    signupAdmin,
     requestTechnicianSignup,
     approveTechnicianSignupRequest,
     rejectTechnicianSignupRequest,
