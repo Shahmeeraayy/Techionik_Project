@@ -282,6 +282,8 @@ const getDefaultAdminCredentialValues = () => ({
 const sectionCardClass = 'overflow-hidden rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(9,24,39,0.96),rgba(6,17,29,0.96))] shadow-[0_24px_80px_rgba(0,0,0,0.28)]';
 const sectionHeaderClass = 'border-b border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0))] pb-5';
 const sectionFooterClass = 'border-t border-white/8 bg-[rgba(255,255,255,0.03)] py-4';
+const settingsPrimaryButtonClass = 'bg-[linear-gradient(135deg,#2F8E92,#38a7ae)] text-white shadow-[0_14px_34px_rgba(47,142,146,0.28)] hover:bg-[linear-gradient(135deg,#38a7ae,#4bc0c7)] hover:shadow-[0_18px_40px_rgba(56,167,174,0.34)]';
+const settingsSecondaryButtonClass = 'border-cyan-300/18 bg-[linear-gradient(180deg,rgba(18,37,58,0.96),rgba(12,26,43,0.96))] text-slate-50 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_10px_24px_rgba(2,8,23,0.28)] hover:bg-[linear-gradient(180deg,rgba(27,49,74,0.98),rgba(17,34,56,0.98))] hover:text-white';
 const settingsDarkInputStyle: CSSProperties = {
     background: '#0b1424',
     backgroundImage: 'none',
@@ -910,7 +912,7 @@ export default function SettingsPage() {
                             <Button
                                 variant="outline"
                                 size="sm"
-                                className="h-10 gap-2 rounded-full border-slate-200 bg-white px-4 text-slate-700 shadow-none hover:bg-slate-50 dark:border-white/12 dark:bg-white/[0.04] dark:text-slate-100 dark:hover:bg-white/[0.08] dark:hover:text-white"
+                                className={cn('h-10 gap-2 rounded-full px-4', settingsSecondaryButtonClass)}
                                 onClick={() => void refreshSettingsData()}
                                 disabled={refreshing}
                             >
@@ -1005,7 +1007,7 @@ export default function SettingsPage() {
                                             <Upload className="h-7 w-7 text-slate-400" />
                                         )}
                                     </div>
-                                    <Label htmlFor="company_logo_upload" className="mt-3 flex h-9 cursor-pointer items-center justify-center rounded-full border border-white/10 bg-[#0b1424] text-xs font-semibold text-slate-100 transition-colors hover:bg-[#122039] hover:text-white">
+                                    <Label htmlFor="company_logo_upload" className={cn('mt-3 flex h-9 cursor-pointer items-center justify-center rounded-full border text-xs font-semibold transition-colors', settingsSecondaryButtonClass)}>
                                         Upload logo
                                     </Label>
                                     <Input id="company_logo_upload" type="file" accept="image/*" className="hidden" onChange={(event) => handleLogoUpload(event.target.files?.[0])} />
@@ -1067,7 +1069,7 @@ export default function SettingsPage() {
                             </div>
                         </CardContent>
                         <CardFooter className={sectionFooterClass}>
-                            <Button size="sm" className="ml-auto bg-slate-950 text-white hover:bg-slate-800 dark:bg-[#2F8E92] dark:hover:bg-[#267276]" onClick={handleSaveCompanyProfile} disabled={loading}>
+                            <Button size="sm" className={cn('ml-auto', settingsPrimaryButtonClass)} onClick={handleSaveCompanyProfile} disabled={loading}>
                                 {loading && <RefreshCw className="mr-2 h-3 w-3 animate-spin" />}
                                 Save Company Profile
                             </Button>
@@ -1209,7 +1211,7 @@ export default function SettingsPage() {
                                     asChild
                                     size="sm"
                                     variant="outline"
-                                    className="border-white/10 bg-[#0b1424] text-slate-100 hover:bg-[#122039] hover:text-white"
+                                    className={settingsSecondaryButtonClass}
                                 >
                                     <Link to="/book" target="_blank" rel="noreferrer">
                                         Open Booking Form
@@ -1220,7 +1222,7 @@ export default function SettingsPage() {
                                     asChild
                                     size="sm"
                                     variant="outline"
-                                    className="border-white/10 bg-[#0b1424] text-slate-100 hover:bg-[#122039] hover:text-white"
+                                    className={settingsSecondaryButtonClass}
                                 >
                                     <Link to="/book/status" target="_blank" rel="noreferrer">
                                         Open Status Lookup
@@ -1319,7 +1321,7 @@ export default function SettingsPage() {
                                         type="button"
                                         size="sm"
                                         variant="outline"
-                                        className="border-white/10 bg-[#0b1424] text-slate-100 hover:bg-[#122039] hover:text-white"
+                                        className={settingsSecondaryButtonClass}
                                         onClick={() => setBookingPortalSettings((prev) => ({
                                             ...prev,
                                             visibleServiceIds: serviceOptions.map((service) => service.id),
@@ -1331,7 +1333,7 @@ export default function SettingsPage() {
                                         type="button"
                                         size="sm"
                                         variant="outline"
-                                        className="border-white/10 bg-[#0b1424] text-slate-100 hover:bg-[#122039] hover:text-white"
+                                        className={settingsSecondaryButtonClass}
                                         onClick={() => setBookingPortalSettings((prev) => ({ ...prev, visibleServiceIds: [] }))}
                                     >
                                         Clear
@@ -1370,7 +1372,7 @@ export default function SettingsPage() {
                             <Button
                                 size="sm"
                                 variant="outline"
-                                className="border-white/10 bg-[#0b1424] text-slate-100 hover:bg-[#122039] hover:text-white"
+                                className={settingsSecondaryButtonClass}
                                 onClick={() => setBookingPortalSettings(savedBookingPortalSettings)}
                                 disabled={isSavingBookingPortalSettings}
                             >
@@ -1378,7 +1380,7 @@ export default function SettingsPage() {
                             </Button>
                             <Button
                                 size="sm"
-                                className="bg-[#2F8E92] text-white hover:bg-[#267276]"
+                                className={settingsPrimaryButtonClass}
                                 onClick={handleSaveBookingPortalSettings}
                                 disabled={isSavingBookingPortalSettings}
                             >
@@ -1588,7 +1590,7 @@ export default function SettingsPage() {
                                         <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">Live Preview</p>
                                         <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Sample jobs re-ranked by current active urgency weights.</p>
                                     </div>
-                                    <Button size="sm" variant="outline" className="rounded-full border-white/10 bg-[#0b1424] text-slate-100 hover:bg-[#122039] hover:text-white" onClick={handleResetPriorityRules}>
+                                    <Button size="sm" variant="outline" className={cn('rounded-full', settingsSecondaryButtonClass)} onClick={handleResetPriorityRules}>
                                         <RotateCcw className="mr-2 h-3.5 w-3.5" />
                                         Reset to defaults
                                     </Button>
@@ -1761,7 +1763,7 @@ export default function SettingsPage() {
                                                     <Button
                                                         size="sm"
                                                         variant="outline"
-                                                        className="border-white/10 bg-[#0b1424] text-slate-100 hover:bg-[#122039] hover:text-white"
+                                                        className={settingsSecondaryButtonClass}
                                                         onClick={() => handleToggleAdminUserStatus(adminUser)}
                                                     >
                                                         {adminUser.status === 'active' ? 'Deactivate' : 'Activate'}
@@ -1830,7 +1832,7 @@ export default function SettingsPage() {
                             <div className="mt-4 flex justify-end">
                                 <Button
                                     size="sm"
-                                    className="bg-[#2F8E92] text-white shadow-[0_12px_30px_rgba(47,142,146,0.24)] hover:bg-[#267276]"
+                                    className={settingsPrimaryButtonClass}
                                     onClick={handleCreateAdminUser}
                                     disabled={isSavingNewAdminUser}
                                 >
@@ -1910,7 +1912,7 @@ export default function SettingsPage() {
                             <Button
                                 size="sm"
                                 variant="outline"
-                                className="border-white/10 bg-[#0b1424] text-slate-100 hover:bg-[#122039] hover:text-white"
+                                className={settingsSecondaryButtonClass}
                                 onClick={() => {
                                     setAdminCredentialForm({
                                         ...savedAdminCredentials,
@@ -1924,7 +1926,7 @@ export default function SettingsPage() {
                             >
                                 Cancel
                             </Button>
-                            <Button size="sm" className="bg-[#2F8E92] text-white shadow-[0_12px_30px_rgba(47,142,146,0.24)] hover:bg-[#267276]" onClick={handleSaveAdminCredentials} disabled={isSavingAdminCredentials}>
+                            <Button size="sm" className={settingsPrimaryButtonClass} onClick={handleSaveAdminCredentials} disabled={isSavingAdminCredentials}>
                                 {isSavingAdminCredentials && <RefreshCw className="w-3 h-3 mr-2 animate-spin" />}
                                 {isSavingAdminCredentials ? 'Saving...' : 'Update Admin Access'}
                             </Button>
