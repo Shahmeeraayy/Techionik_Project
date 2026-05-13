@@ -3,10 +3,8 @@ import {
     AlertCircle,
     Pencil,
     RefreshCw,
-    KeyRound,
     UserCog,
     Moon,
-    Sun,
     Monitor,
     ListFilter,
     PlusCircle,
@@ -70,23 +68,16 @@ import {
     fetchAdminBookingPortalSettings,
     createAdminPriorityRule,
     deleteAdminPriorityRule,
-    fetchAdminCredentialSettings,
-    fetchAdminUsers,
     fetchAdminDealerships,
     fetchAdminTechnicians,
     fetchAdminPriorityRules,
     fetchAdminServices,
     fetchAdminInvoiceBrandingSettings,
     getStoredAdminToken,
-    createAdminUser,
-    updateAdminCredentialSettings,
-    updateAdminUser,
     updateAdminBookingPortalSettings,
     updateAdminPriorityRule,
     updateAdminInvoiceBrandingSettings,
     type BackendBookingPortalSettings,
-    type BackendAdminCredentialSettings,
-    type BackendAdminUser,
     type BackendDealership,
     type BackendPriorityRule,
     type BackendServiceCatalogItem,
@@ -94,8 +85,6 @@ import {
 } from '@/lib/backend-api';
 import { useAuth } from '@/contexts/AuthContext';
 // --- Mock Data & Types ---
-
-type ThemeMode = 'light' | 'dark' | 'system';
 
 type DealershipOption = {
   id: string;
@@ -140,18 +129,6 @@ type BookingPortalSettingsState = {
     detailsFieldLabel: string;
 };
 
-type AdminUserState = {
-    id: string;
-    fullName: string;
-    email: string;
-    tenantRole: 'owner' | 'admin' | 'dispatcher' | 'viewer';
-    status: 'active' | 'deactivated';
-    lastLoginAt?: string | null;
-    passwordChangedAt: string;
-    createdAt: string;
-    updatedAt: string;
-};
-
 // --- Components ---
 
 const normalizeInvoiceCompanyProfile = (profile: InvoiceCompanyProfile): InvoiceCompanyProfile => ({
@@ -194,7 +171,6 @@ const getDefaultNewRule = (): Partial<PriorityRule> => ({
 });
 
 const ADMIN_REFRESH_EVENT = 'sm-dispatch:admin-refresh';
-const DEFAULT_ADMIN_EMAIL = 'admin@nexusops.com';
 const COMPANY_PROFILE_SETTINGS_STORAGE_KEY = 'sm_dispatch_company_profile_settings';
 const NOTIFICATION_PREFERENCES_STORAGE_KEY = 'sm_dispatch_notification_preferences';
 const BILLING_SUBSCRIPTION_STORAGE_KEY = 'sm_dispatch_billing_subscription_settings';
@@ -246,18 +222,6 @@ const mapBackendBookingPortalSettings = (row: BackendBookingPortalSettings): Boo
     detailsFieldLabel: row.details_field_label ?? '',
 });
 
-const mapBackendAdminUser = (row: BackendAdminUser): AdminUserState => ({
-    id: row.id,
-    fullName: row.full_name,
-    email: row.email,
-    tenantRole: row.tenant_role,
-    status: row.status,
-    lastLoginAt: row.last_login_at ?? null,
-    passwordChangedAt: row.password_changed_at,
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
-});
-
 const loadStoredObject = <T,>(key: string, fallback: T): T => {
     if (typeof window === 'undefined') return fallback;
     try {
@@ -273,11 +237,6 @@ const saveStoredObject = <T,>(key: string, value: T): void => {
     if (typeof window === 'undefined') return;
     window.localStorage.setItem(key, JSON.stringify(value));
 };
-
-const getDefaultAdminCredentialValues = () => ({
-    fullName: 'Primary Admin',
-    adminEmail: DEFAULT_ADMIN_EMAIL,
-});
 
 const sectionCardClass = 'overflow-hidden rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(9,24,39,0.96),rgba(6,17,29,0.96))] shadow-[0_24px_80px_rgba(0,0,0,0.28)]';
 const sectionHeaderClass = 'border-b border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0))] pb-5';
@@ -313,25 +272,6 @@ export default function SettingsPage() {
     const [newRule, setNewRule] = useState<Partial<PriorityRule>>(getDefaultNewRule());
     const [isEditingRule, setIsEditingRule] = useState(false);
     const [editRule, setEditRule] = useState<Partial<PriorityRule> & { id?: string }>(getDefaultNewRule());
-    const [savedAdminCredentials, setSavedAdminCredentials] = useState(getDefaultAdminCredentialValues());
-    const [adminCredentialForm, setAdminCredentialForm] = useState({
-        ...getDefaultAdminCredentialValues(),
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: '',
-    });
-    const [adminUsers, setAdminUsers] = useState<AdminUserState[]>([]);
-    const [newAdminUserForm, setNewAdminUserForm] = useState({
-        fullName: '',
-        email: '',
-        password: '',
-        tenantRole: 'admin' as 'owner' | 'admin' | 'dispatcher' | 'viewer',
-    });
-    const [newAdminUserError, setNewAdminUserError] = useState<string | null>(null);
-    const [isSavingNewAdminUser, setIsSavingNewAdminUser] = useState(false);
-    const [editingAdminUserId, setEditingAdminUserId] = useState<string | null>(null);
-    const [adminCredentialError, setAdminCredentialError] = useState<string | null>(null);
-    const [isSavingAdminCredentials, setIsSavingAdminCredentials] = useState(false);
     const [isSavingBookingPortalSettings, setIsSavingBookingPortalSettings] = useState(false);
     const [bookingServiceSearch, setBookingServiceSearch] = useState('');
     const MOCK_DEALERSHIPS = dealershipOptions.length > 0 ? dealershipOptions : FALLBACK_DEALERSHIPS;
@@ -349,6 +289,12 @@ export default function SettingsPage() {
     );
 
     const { theme, setTheme } = useTheme();
+    useEffect(() => {
+        if (theme !== 'dark') {
+            setTheme('dark');
+        }
+    }, [theme, setTheme]);
+
     const refreshSettingsData = useCallback(async () => {
         const localProfile = loadInvoiceCompanyProfile();
         setSavedInvoiceCompany(localProfile);
@@ -361,17 +307,10 @@ export default function SettingsPage() {
 
         const adminToken = getStoredAdminToken();
         if (!hasBackendAdminToken || !adminToken) {
-            const fallbackValues = getDefaultAdminCredentialValues();
-            setSavedAdminCredentials(fallbackValues);
-            setAdminCredentialForm((prev) => ({
-                ...prev,
-                ...fallbackValues,
-            }));
             setDealershipOptions([]);
             setTechnicianCount(0);
             setServiceOptions([]);
             setPriorityRules([]);
-            setAdminUsers([]);
             setBookingPortalSettings(DEFAULT_BOOKING_PORTAL_SETTINGS);
             setSavedBookingPortalSettings(DEFAULT_BOOKING_PORTAL_SETTINGS);
             return;
@@ -381,8 +320,6 @@ export default function SettingsPage() {
         try {
             const [
                 brandingResult,
-                credentialsResult,
-                adminUsersResult,
                 dealershipsResult,
                 techniciansResult,
                 servicesResult,
@@ -390,8 +327,6 @@ export default function SettingsPage() {
                 bookingPortalResult,
             ] = await Promise.allSettled([
                 fetchAdminInvoiceBrandingSettings(adminToken),
-                fetchAdminCredentialSettings(adminToken),
-                fetchAdminUsers(adminToken),
                 fetchAdminDealerships(adminToken),
                 fetchAdminTechnicians(adminToken),
                 fetchAdminServices(adminToken, true),
@@ -416,25 +351,6 @@ export default function SettingsPage() {
                 saveInvoiceCompanyProfile(backendProfile);
             }
 
-            if (credentialsResult.status === 'fulfilled') {
-                const nextValues = {
-                    fullName: credentialsResult.value.full_name,
-                    adminEmail: credentialsResult.value.admin_email,
-                };
-                setSavedAdminCredentials(nextValues);
-                setAdminCredentialForm((prev) => ({
-                    ...prev,
-                    ...nextValues,
-                }));
-            } else {
-                const fallbackValues = getDefaultAdminCredentialValues();
-                setSavedAdminCredentials(fallbackValues);
-                setAdminCredentialForm((prev) => ({
-                    ...prev,
-                    ...fallbackValues,
-                }));
-            }
-
             if (dealershipsResult.status === 'fulfilled') {
                 setDealershipOptions(
                     dealershipsResult.value
@@ -443,12 +359,6 @@ export default function SettingsPage() {
                 );
             } else {
                 setDealershipOptions([]);
-            }
-
-            if (adminUsersResult.status === 'fulfilled') {
-                setAdminUsers(adminUsersResult.value.map(mapBackendAdminUser));
-            } else {
-                setAdminUsers([]);
             }
 
             if (techniciansResult.status === 'fulfilled') {
@@ -636,145 +546,6 @@ export default function SettingsPage() {
     const handleResetPriorityRules = () => {
         setNewRule(getDefaultNewRule());
         alert('Default rule template restored. Existing saved rules were not removed.');
-    };
-
-    const handleSaveAdminCredentials = async () => {
-        const adminToken = getStoredAdminToken();
-        if (!hasBackendAdminToken || !adminToken) {
-            setAdminCredentialError('Admin session is required to update access settings.');
-            return;
-        }
-
-        setAdminCredentialError(null);
-        const fullName = adminCredentialForm.fullName.trim();
-        const adminEmail = adminCredentialForm.adminEmail.trim().toLowerCase();
-        const currentPassword = adminCredentialForm.currentPassword.trim();
-        const newPassword = adminCredentialForm.newPassword.trim();
-        const confirmPassword = adminCredentialForm.confirmPassword.trim();
-
-        if (!fullName || !adminEmail || !currentPassword) {
-            setAdminCredentialError('Admin name, email, and current password are required.');
-            return;
-        }
-        if ((newPassword && !confirmPassword) || (!newPassword && confirmPassword)) {
-            setAdminCredentialError('Enter and confirm the new password, or leave both fields empty.');
-            return;
-        }
-        if (newPassword && newPassword.length < 6) {
-            setAdminCredentialError('New password must be at least 6 characters.');
-            return;
-        }
-        if (newPassword && newPassword !== confirmPassword) {
-            setAdminCredentialError('New password and confirmation do not match.');
-            return;
-        }
-
-        setIsSavingAdminCredentials(true);
-        try {
-            const updated = await updateAdminCredentialSettings(adminToken, {
-                full_name: fullName,
-                admin_email: adminEmail,
-                current_password: currentPassword,
-                new_password: newPassword || undefined,
-            });
-            const nextValues = {
-                fullName: updated.full_name,
-                adminEmail: updated.admin_email,
-            };
-            setSavedAdminCredentials(nextValues);
-            setAdminCredentialForm({
-                ...nextValues,
-                currentPassword: '',
-                newPassword: '',
-                confirmPassword: '',
-            });
-            alert(newPassword ? 'Admin access settings updated successfully.' : 'Admin email updated successfully.');
-        } catch (error) {
-            setAdminCredentialError(error instanceof Error ? error.message : 'Unable to update admin access settings.');
-        } finally {
-            setIsSavingAdminCredentials(false);
-        }
-    };
-
-    const handleCreateAdminUser = async () => {
-        const adminToken = getStoredAdminToken();
-        if (!hasBackendAdminToken || !adminToken) {
-            setNewAdminUserError('Admin session is required to create admin users.');
-            return;
-        }
-
-        const fullName = newAdminUserForm.fullName.trim();
-        const email = newAdminUserForm.email.trim().toLowerCase();
-        const password = newAdminUserForm.password.trim();
-        if (!fullName || !email || !password) {
-            setNewAdminUserError('Name, email, and password are required.');
-            return;
-        }
-
-        setNewAdminUserError(null);
-        setIsSavingNewAdminUser(true);
-        try {
-            const created = await createAdminUser(adminToken, {
-                full_name: fullName,
-                email,
-                password,
-                tenant_role: newAdminUserForm.tenantRole,
-            });
-            setAdminUsers((prev) => [...prev, mapBackendAdminUser(created)]);
-            setNewAdminUserForm({
-                fullName: '',
-                email: '',
-                password: '',
-                tenantRole: 'admin',
-            });
-            alert('Admin user created successfully.');
-        } catch (error) {
-            setNewAdminUserError(error instanceof Error ? error.message : 'Unable to create admin user.');
-        } finally {
-            setIsSavingNewAdminUser(false);
-        }
-    };
-
-    const handleToggleAdminUserStatus = async (adminUser: AdminUserState) => {
-        const adminToken = getStoredAdminToken();
-        if (!hasBackendAdminToken || !adminToken) {
-            alert('Admin session is required to update admin users.');
-            return;
-        }
-
-        try {
-            const updated = await updateAdminUser(adminToken, adminUser.id, {
-                status: adminUser.status === 'active' ? 'deactivated' : 'active',
-            });
-            setAdminUsers((prev) => prev.map((row) => row.id === adminUser.id ? mapBackendAdminUser(updated) : row));
-            if (adminUser.id === editingAdminUserId) {
-                setEditingAdminUserId(null);
-            }
-        } catch (error) {
-            alert(error instanceof Error ? error.message : 'Unable to update admin user.');
-        }
-    };
-
-    const handlePromoteAdminUser = async (adminUser: AdminUserState, nextRole: AdminUserState['tenantRole']) => {
-        const adminToken = getStoredAdminToken();
-        if (!hasBackendAdminToken || !adminToken) {
-            alert('Admin session is required to update admin roles.');
-            return;
-        }
-        try {
-            const updated = await updateAdminUser(adminToken, adminUser.id, {
-                tenant_role: nextRole,
-            });
-            setAdminUsers((prev) => prev.map((row) => row.id === adminUser.id ? mapBackendAdminUser(updated) : row));
-        } catch (error) {
-            alert(error instanceof Error ? error.message : 'Unable to update admin role.');
-        }
-    };
-
-    const handleThemeChange = (newTheme: ThemeMode) => {
-        setTheme(newTheme);
-        // In real app: update context, persist to backend, update document class
-        // useTheme hook handles document class update
     };
 
     const handleDeleteRule = async (id: string) => {
@@ -1689,314 +1460,25 @@ export default function SettingsPage() {
                     <CardHeader className={sectionHeaderClass}>
                         <CardTitle className="text-base font-semibold flex items-center gap-2 text-slate-950 dark:text-white">
                             <span className="rounded-xl border border-cyan-300/20 bg-cyan-300/10 p-2 text-cyan-100">
-                                <KeyRound className="w-4 h-4" />
-                            </span>
-                            Admin Access
-                        </CardTitle>
-                        <CardDescription className="text-slate-600 dark:text-slate-300">
-                            Manage multiple tenant admins and update your own sign-in credentials.
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent className="pt-0">
-                        <div className="rounded-[22px] border border-white/10 bg-[rgba(255,255,255,0.03)] p-4">
-                            <div className="flex flex-wrap items-center justify-between gap-3">
-                                <div>
-                                    <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">Admin Team</p>
-                                    <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Invite more admins, dispatchers, or viewers under this tenant.</p>
-                                </div>
-                                <Badge variant="outline" className="border-cyan-300/20 bg-cyan-300/10 text-cyan-100">
-                                    {adminUsers.length} active records
-                                </Badge>
-                            </div>
-
-                            <div className="mt-4 overflow-hidden rounded-[20px] border border-white/8 bg-black/10">
-                                <Table>
-                                    <TableHeader className="bg-[rgba(255,255,255,0.04)]">
-                                        <TableRow>
-                                            <TableHead className="text-slate-500 dark:text-slate-400">Name</TableHead>
-                                            <TableHead className="text-slate-500 dark:text-slate-400">Email</TableHead>
-                                            <TableHead className="text-slate-500 dark:text-slate-400">Role</TableHead>
-                                            <TableHead className="text-slate-500 dark:text-slate-400">Status</TableHead>
-                                            <TableHead className="text-right text-slate-500 dark:text-slate-400">Actions</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {adminUsers.map((adminUser) => (
-                                            <TableRow key={adminUser.id} className="border-white/6">
-                                                <TableCell>
-                                                    <div className="flex flex-col">
-                                                        <span className="font-semibold text-slate-950 dark:text-white">{adminUser.fullName}</span>
-                                                        <span className="text-xs text-slate-500 dark:text-slate-400">
-                                                            {adminUser.lastLoginAt ? `Last login ${new Date(adminUser.lastLoginAt).toLocaleString()}` : 'No login recorded'}
-                                                        </span>
-                                                    </div>
-                                                </TableCell>
-                                                <TableCell className="text-slate-700 dark:text-slate-200">{adminUser.email}</TableCell>
-                                                <TableCell>
-                                                    <Select
-                                                        value={adminUser.tenantRole}
-                                                        onValueChange={(value) => handlePromoteAdminUser(adminUser, value as AdminUserState['tenantRole'])}
-                                                    >
-                                                        <SelectTrigger className="h-9 border-white/10 bg-[#0b1424] text-white">
-                                                            <SelectValue />
-                                                        </SelectTrigger>
-                                                        <SelectContent>
-                                                            <SelectItem value="owner">Owner</SelectItem>
-                                                            <SelectItem value="admin">Admin</SelectItem>
-                                                            <SelectItem value="dispatcher">Dispatcher</SelectItem>
-                                                            <SelectItem value="viewer">Viewer</SelectItem>
-                                                        </SelectContent>
-                                                    </Select>
-                                                </TableCell>
-                                                <TableCell>
-                                                    <Badge
-                                                        variant="outline"
-                                                        className={cn(
-                                                            adminUser.status === 'active'
-                                                                ? 'border-emerald-300/20 bg-emerald-400/10 text-emerald-100'
-                                                                : 'border-rose-300/20 bg-rose-400/10 text-rose-100',
-                                                        )}
-                                                    >
-                                                        {adminUser.status}
-                                                    </Badge>
-                                                </TableCell>
-                                                <TableCell className="text-right">
-                                                    <Button
-                                                        size="sm"
-                                                        variant="outline"
-                                                        className={settingsSecondaryButtonClass}
-                                                        onClick={() => handleToggleAdminUserStatus(adminUser)}
-                                                    >
-                                                        {adminUser.status === 'active' ? 'Deactivate' : 'Activate'}
-                                                    </Button>
-                                                </TableCell>
-                                            </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
-                            </div>
-
-                            <div className="mt-5 grid gap-4 md:grid-cols-4">
-                                <div className="space-y-2 md:col-span-1">
-                                    <Label className="text-slate-700 dark:text-slate-200">Full Name</Label>
-                                    <Input
-                                        style={settingsDarkInputStyle}
-                                        className="border-white/10 text-white placeholder:text-slate-500"
-                                        value={newAdminUserForm.fullName}
-                                        onChange={(e) => setNewAdminUserForm((prev) => ({ ...prev, fullName: e.target.value }))}
-                                        placeholder="Dispatch lead"
-                                    />
-                                </div>
-                                <div className="space-y-2 md:col-span-1">
-                                    <Label className="text-slate-700 dark:text-slate-200">Email</Label>
-                                    <Input
-                                        type="email"
-                                        style={settingsDarkInputStyle}
-                                        className="border-white/10 text-white placeholder:text-slate-500"
-                                        value={newAdminUserForm.email}
-                                        onChange={(e) => setNewAdminUserForm((prev) => ({ ...prev, email: e.target.value }))}
-                                        placeholder="admin@tenant.com"
-                                    />
-                                </div>
-                                <div className="space-y-2 md:col-span-1">
-                                    <Label className="text-slate-700 dark:text-slate-200">Temporary Password</Label>
-                                    <Input
-                                        type="password"
-                                        style={settingsDarkInputStyle}
-                                        className="border-white/10 text-white placeholder:text-slate-500"
-                                        value={newAdminUserForm.password}
-                                        onChange={(e) => setNewAdminUserForm((prev) => ({ ...prev, password: e.target.value }))}
-                                        placeholder="Minimum 6 characters"
-                                    />
-                                </div>
-                                <div className="space-y-2 md:col-span-1">
-                                    <Label className="text-slate-700 dark:text-slate-200">Role</Label>
-                                    <Select
-                                        value={newAdminUserForm.tenantRole}
-                                        onValueChange={(value) => setNewAdminUserForm((prev) => ({ ...prev, tenantRole: value as AdminUserState['tenantRole'] }))}
-                                    >
-                                        <SelectTrigger className="border-white/10 bg-[#0b1424] text-white">
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="owner">Owner</SelectItem>
-                                            <SelectItem value="admin">Admin</SelectItem>
-                                            <SelectItem value="dispatcher">Dispatcher</SelectItem>
-                                            <SelectItem value="viewer">Viewer</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                            </div>
-                            {newAdminUserError && (
-                                <p className="mt-3 rounded-2xl border border-rose-400/20 bg-rose-400/10 px-4 py-3 text-sm text-rose-200">{newAdminUserError}</p>
-                            )}
-                            <div className="mt-4 flex justify-end">
-                                <Button
-                                    size="sm"
-                                    className={settingsPrimaryButtonClass}
-                                    onClick={handleCreateAdminUser}
-                                    disabled={isSavingNewAdminUser}
-                                >
-                                    {isSavingNewAdminUser && <RefreshCw className="mr-2 h-3 w-3 animate-spin" />}
-                                    {isSavingNewAdminUser ? 'Creating...' : 'Add Admin User'}
-                                </Button>
-                            </div>
-                        </div>
-
-                        <div className="mt-6 grid sm:grid-cols-2 gap-6">
-                            <div className="space-y-2">
-                                <Label htmlFor="admin_full_name" className="text-slate-700 dark:text-slate-200">Your Name</Label>
-                                <Input
-                                    id="admin_full_name"
-                                    style={settingsDarkInputStyle}
-                                    className="border-white/10 text-white placeholder:text-slate-500"
-                                    value={adminCredentialForm.fullName}
-                                    onChange={(e) => setAdminCredentialForm((prev) => ({ ...prev, fullName: e.target.value }))}
-                                    autoComplete="name"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="admin_account_email" className="text-slate-700 dark:text-slate-200">Admin Email</Label>
-                                <Input
-                                    id="admin_account_email"
-                                    type="email"
-                                    style={settingsDarkInputStyle}
-                                    className="border-white/10 text-white placeholder:text-slate-500"
-                                    value={adminCredentialForm.adminEmail}
-                                    onChange={(e) => setAdminCredentialForm((prev) => ({ ...prev, adminEmail: e.target.value }))}
-                                    autoComplete="email"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="admin_current_password" className="text-slate-700 dark:text-slate-200">Current Password</Label>
-                                <Input
-                                    id="admin_current_password"
-                                    type="password"
-                                    style={settingsDarkInputStyle}
-                                    className="border-white/10 text-white placeholder:text-slate-500"
-                                    value={adminCredentialForm.currentPassword}
-                                    onChange={(e) => setAdminCredentialForm((prev) => ({ ...prev, currentPassword: e.target.value }))}
-                                    autoComplete="current-password"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="admin_new_password" className="text-slate-700 dark:text-slate-200">New Password (Optional)</Label>
-                                <Input
-                                    id="admin_new_password"
-                                    type="password"
-                                    style={settingsDarkInputStyle}
-                                    className="border-white/10 text-white placeholder:text-slate-500"
-                                    value={adminCredentialForm.newPassword}
-                                    onChange={(e) => setAdminCredentialForm((prev) => ({ ...prev, newPassword: e.target.value }))}
-                                    autoComplete="new-password"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="admin_confirm_password" className="text-slate-700 dark:text-slate-200">Confirm New Password</Label>
-                                <Input
-                                    id="admin_confirm_password"
-                                    type="password"
-                                    style={settingsDarkInputStyle}
-                                    className="border-white/10 text-white placeholder:text-slate-500"
-                                    value={adminCredentialForm.confirmPassword}
-                                    onChange={(e) => setAdminCredentialForm((prev) => ({ ...prev, confirmPassword: e.target.value }))}
-                                    autoComplete="new-password"
-                                />
-                            </div>
-                        </div>
-                        {adminCredentialError && (
-                            <p className="mt-3 rounded-2xl border border-rose-400/20 bg-rose-400/10 px-4 py-3 text-sm text-rose-200">{adminCredentialError}</p>
-                        )}
-                    </CardContent>
-                    <CardFooter className={sectionFooterClass}>
-                        <div className="ml-auto flex items-center gap-2">
-                            <Button
-                                size="sm"
-                                variant="outline"
-                                className={settingsSecondaryButtonClass}
-                                onClick={() => {
-                                    setAdminCredentialForm({
-                                        ...savedAdminCredentials,
-                                        currentPassword: '',
-                                        newPassword: '',
-                                        confirmPassword: '',
-                                    });
-                                    setAdminCredentialError(null);
-                                }}
-                                disabled={isSavingAdminCredentials}
-                            >
-                                Cancel
-                            </Button>
-                            <Button size="sm" className={settingsPrimaryButtonClass} onClick={handleSaveAdminCredentials} disabled={isSavingAdminCredentials}>
-                                {isSavingAdminCredentials && <RefreshCw className="w-3 h-3 mr-2 animate-spin" />}
-                                {isSavingAdminCredentials ? 'Saving...' : 'Update Admin Access'}
-                            </Button>
-                        </div>
-                    </CardFooter>
-                </Card>
-
-                <Card className={sectionCardClass}>
-                    <CardHeader className={sectionHeaderClass}>
-                        <CardTitle className="text-base font-semibold flex items-center gap-2 text-slate-950 dark:text-white">
-                            <span className="rounded-xl border border-cyan-300/20 bg-cyan-300/10 p-2 text-cyan-100">
-                                <Monitor className="w-4 h-4" />
+                                <Moon className="w-4 h-4" />
                             </span>
                             Appearance
                         </CardTitle>
-                        <CardDescription className="text-slate-600 dark:text-slate-300">Customize your interface theme.</CardDescription>
+                        <CardDescription className="text-slate-600 dark:text-slate-300">NexusOps now runs in dark mode only.</CardDescription>
                     </CardHeader>
                     <CardContent className="pt-0">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            {/* Light Mode */}
-                            <button
-                                onClick={() => handleThemeChange('light')}
-                                className={cn(
-                                    "flex flex-col items-start rounded-[22px] border p-4 text-left transition-all",
-                                    theme === 'light'
-                                        ? "border-blue-300 bg-blue-50 ring-1 ring-blue-200 dark:border-cyan-300/40 dark:bg-cyan-300/10 dark:ring-cyan-300/40"
-                                        : "border-slate-200 bg-white hover:bg-slate-50 dark:border-white/10 dark:bg-white/[0.03] dark:hover:bg-white/[0.06]"
-                                )}
-                            >
-                                <div className="mb-3 rounded-xl border border-slate-200 bg-slate-50 p-2 text-slate-700 dark:border-white/10 dark:bg-white/[0.05] dark:text-slate-300">
-                                    <Sun className="w-5 h-5" />
+                        <div className="rounded-[22px] border border-cyan-300/20 bg-cyan-300/10 p-5">
+                            <div className="flex items-start gap-4">
+                                <div className="rounded-2xl border border-cyan-300/25 bg-[#0b1424] p-3 text-cyan-100">
+                                    <Moon className="h-5 w-5" />
                                 </div>
-                                <span className="font-semibold text-sm text-slate-950 dark:text-white">Light Mode</span>
-                                <span className="mt-1 text-xs text-slate-500 dark:text-slate-400">Standard professional light theme</span>
-                            </button>
-
-                            {/* Dark Mode */}
-                            <button
-                                onClick={() => handleThemeChange('dark')}
-                                className={cn(
-                                    "flex flex-col items-start rounded-[22px] border p-4 text-left transition-all",
-                                    theme === 'dark'
-                                        ? "border-blue-300 bg-blue-50 ring-1 ring-blue-200 dark:border-cyan-300/40 dark:bg-cyan-300/10 dark:ring-cyan-300/40"
-                                        : "border-slate-200 bg-white hover:bg-slate-50 dark:border-white/10 dark:bg-white/[0.03] dark:hover:bg-white/[0.06]"
-                                )}
-                            >
-                                <div className="mb-3 rounded-xl border border-slate-200 bg-slate-50 p-2 text-slate-700 dark:border-white/10 dark:bg-white/[0.05] dark:text-slate-300">
-                                    <Moon className="w-5 h-5" />
+                                <div className="space-y-2">
+                                    <p className="text-sm font-semibold text-white">Dark mode is active</p>
+                                    <p className="text-sm text-slate-300">
+                                        We removed light and system theme switching so the whole product stays consistent, clean, and operationally focused.
+                                    </p>
                                 </div>
-                                <span className="font-semibold text-sm text-slate-950 dark:text-white">Dark Mode</span>
-                                <span className="mt-1 text-xs text-slate-500 dark:text-slate-400">Reduced eye strain for low-light</span>
-                            </button>
-
-                            {/* System Mode */}
-                            <button
-                                onClick={() => handleThemeChange('system')}
-                                className={cn(
-                                    "flex flex-col items-start rounded-[22px] border p-4 text-left transition-all",
-                                    theme === 'system'
-                                        ? "border-blue-300 bg-blue-50 ring-1 ring-blue-200 dark:border-cyan-300/40 dark:bg-cyan-300/10 dark:ring-cyan-300/40"
-                                        : "border-slate-200 bg-white hover:bg-slate-50 dark:border-white/10 dark:bg-white/[0.03] dark:hover:bg-white/[0.06]"
-                                )}
-                            >
-                                <div className="mb-3 rounded-xl border border-slate-200 bg-slate-50 p-2 text-slate-700 dark:border-white/10 dark:bg-white/[0.05] dark:text-slate-300">
-                                    <Monitor className="w-5 h-5" />
-                                </div>
-                                <span className="font-semibold text-sm text-slate-950 dark:text-white">System Default</span>
-                                <span className="mt-1 text-xs text-slate-500 dark:text-slate-400">Sync with device preference</span>
-                            </button>
+                            </div>
                         </div>
                     </CardContent>
                 </Card>
