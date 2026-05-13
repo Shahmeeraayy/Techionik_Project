@@ -2628,12 +2628,12 @@ export default function JobsPage() {
                                         </Button>
                                     </TableHead>
                                     <TableHead className="w-[14%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Service Type</TableHead>
-                                    <TableHead className="w-[15%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Dealership / Location</TableHead>
+                                    <TableHead className="w-[16%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Dealership / Location</TableHead>
                                     <TableHead className="w-[12%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Vehicle</TableHead>
                                     <TableHead className="w-[12%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Assigned Tech</TableHead>
                                     <TableHead className="w-[6%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Urgency</TableHead>
                                     <TableHead className="w-[7%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Rank</TableHead>
-                                    <TableHead className="w-[7%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Status</TableHead>
+                                    <TableHead className="w-[9%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Status</TableHead>
                                     <TableHead className="w-[9%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Dates</TableHead>
                                     <TableHead className="w-[10%] pr-4 text-right text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Actions</TableHead>
                                 </TableRow>
@@ -2691,13 +2691,13 @@ export default function JobsPage() {
                                                 </div>
                                             </TableCell>
                                             <TableCell className="py-4 align-middle">
-                                                <div className="flex min-w-0 items-center gap-3">
+                                                <div className="flex min-w-0 items-start gap-3">
                                                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl border border-cyan-300/12 bg-cyan-300/[0.08] text-cyan-100 shadow-[0_14px_24px_rgba(8,145,178,0.12)]">
                                                         <Building2Icon className="h-4 w-4" />
                                                     </div>
-                                                    <div className="min-w-0">
+                                                    <div className="min-w-0 space-y-1">
                                                         <OverflowText text={job.dealership_name} className="max-w-full text-sm font-semibold text-white" />
-                                                        <div className="mt-1 inline-flex items-center gap-1 text-xs text-slate-500">
+                                                        <div className="flex items-center gap-1 text-xs text-slate-500">
                                                             <MapPin className="h-3 w-3" />
                                                             {locationLabel}
                                                         </div>
