@@ -835,6 +835,7 @@ function SearchableSelect({
     searchPlaceholder,
     emptyLabel,
     disabled = false,
+    variant = 'default',
 }: {
     value: string;
     onChange: (value: string) => void;
@@ -843,9 +844,11 @@ function SearchableSelect({
     searchPlaceholder: string;
     emptyLabel: string;
     disabled?: boolean;
+    variant?: 'default' | 'admin-dark';
 }) {
     const [open, setOpen] = useState(false);
     const selectedOption = options.find((option) => option.value === value) ?? null;
+    const isAdminDark = variant === 'admin-dark';
 
     return (
         <Popover open={open} onOpenChange={setOpen}>
@@ -856,7 +859,10 @@ function SearchableSelect({
                     role="combobox"
                     aria-expanded={open}
                     disabled={disabled}
-                    className="w-full min-w-0 justify-between overflow-hidden font-normal"
+                    className={cn(
+                        'w-full min-w-0 justify-between overflow-hidden font-normal',
+                        isAdminDark && 'h-14 rounded-[20px] border-white/10 bg-[linear-gradient(180deg,rgba(10,18,32,0.96),rgba(8,14,26,0.96))] px-4 text-left text-white shadow-none hover:bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] hover:text-white'
+                    )}
                 >
                     <span className="min-w-0 flex-1 truncate pr-2 text-left" title={selectedOption?.label || placeholder}>
                         {selectedOption?.label || placeholder}
@@ -864,17 +870,29 @@ function SearchableSelect({
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-[--radix-popover-trigger-width] max-w-[min(32rem,calc(100vw-2rem))] p-0" align="start">
-                <Command>
-                    <CommandInput placeholder={searchPlaceholder} />
-                    <CommandList>
+            <PopoverContent
+                className={cn(
+                    'w-[--radix-popover-trigger-width] max-w-[min(32rem,calc(100vw-2rem))] p-0',
+                    isAdminDark && 'border-white/10 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] text-slate-100 shadow-[0_24px_60px_rgba(0,0,0,0.34)]'
+                )}
+                align="start"
+            >
+                <Command className={cn(isAdminDark && 'bg-transparent text-slate-100')}>
+                    <CommandInput
+                        placeholder={searchPlaceholder}
+                        className={cn(isAdminDark && 'text-slate-100 placeholder:text-slate-500')}
+                    />
+                    <CommandList className={cn(isAdminDark && 'admin-dark-scrollbar')}>
                         <CommandEmpty>{emptyLabel}</CommandEmpty>
                         <CommandGroup>
                             {options.map((option) => (
                                 <CommandItem
                                     key={option.value}
                                     value={`${option.label} ${option.value}`}
-                                    className="gap-2"
+                                    className={cn(
+                                        'gap-2',
+                                        isAdminDark && 'rounded-xl text-slate-200 data-[selected=true]:bg-white/[0.08] data-[selected=true]:text-white'
+                                    )}
                                     onSelect={() => {
                                         onChange(option.value);
                                         setOpen(false);
@@ -2152,29 +2170,43 @@ export default function JobsPage() {
             </section>
 
             <Dialog open={createJobOpen} onOpenChange={setCreateJobOpen}>
-                <DialogContent className="sm:max-w-xl">
+                <DialogContent className="border-white/10 bg-[linear-gradient(180deg,rgba(11,20,36,0.99),rgba(8,12,20,1))] text-white shadow-[0_40px_120px_rgba(0,0,0,0.45)] sm:max-w-xl">
                     <DialogHeader>
-                        <DialogTitle>Create New Job</DialogTitle>
-                        <DialogDescription>
+                        <DialogTitle className="text-white">Create New Job</DialogTitle>
+                        <DialogDescription className="text-slate-300">
                             New jobs are created in Admin Preview. Admin confirmation is required before any technician assignment or dispatch queue push.
                         </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-2">
                         <div className="space-y-4">
                             <div className="space-y-2">
-                                <Label>Dealership</Label>
-                                <SearchableSelect
-                                    value={newJobForm.dealership_name}
-                                    onChange={(value) => setNewJobForm((prev) => ({ ...prev, dealership_name: value }))}
-                                    options={dealershipSelectOptions}
-                                    placeholder="Select dealership"
-                                    searchPlaceholder="Search dealership..."
-                                    emptyLabel="No dealership found."
-                                    disabled={dealershipSelectOptions.length === 0}
-                                />
+                                <Label className="text-white">Dealership</Label>
+                                {dealershipSelectOptions.length > 0 ? (
+                                    <SearchableSelect
+                                        value={newJobForm.dealership_name}
+                                        onChange={(value) => setNewJobForm((prev) => ({ ...prev, dealership_name: value }))}
+                                        options={dealershipSelectOptions}
+                                        placeholder="Select dealership"
+                                        searchPlaceholder="Search dealership..."
+                                        emptyLabel="No dealership found."
+                                        variant="admin-dark"
+                                    />
+                                ) : (
+                                    <>
+                                        <Input
+                                            value={newJobForm.dealership_name}
+                                            onChange={(event) => setNewJobForm((prev) => ({ ...prev, dealership_name: event.target.value }))}
+                                            placeholder="Type dealership name"
+                                            className="h-14 rounded-[20px] border-white/10 bg-[linear-gradient(180deg,rgba(10,18,32,0.96),rgba(8,14,26,0.96))] text-white placeholder:text-slate-500"
+                                        />
+                                        <p className="text-xs text-muted-foreground">
+                                            No dealership records are available yet, so you can type one manually for this preview job.
+                                        </p>
+                                    </>
+                                )}
                             </div>
                             <div className="space-y-2">
-                                <Label>Service</Label>
+                                <Label className="text-white">Service</Label>
                                 <SearchableSelect
                                     value={newJobForm.service_name}
                                     onChange={(value) => setNewJobForm((prev) => ({ ...prev, service_name: value }))}
@@ -2183,6 +2215,7 @@ export default function JobsPage() {
                                     searchPlaceholder="Search service..."
                                     emptyLabel="No service found."
                                     disabled={serviceSelectOptions.length === 0}
+                                    variant="admin-dark"
                                 />
                                 <p className="text-xs text-muted-foreground">
                                     Select a service from the backend service catalog.
@@ -2190,33 +2223,34 @@ export default function JobsPage() {
                             </div>
                         </div>
                         <div className="space-y-2">
-                            <Label>Vehicle Summary</Label>
+                            <Label className="text-white">Vehicle Summary</Label>
                             <Input
                                 value={newJobForm.vehicle_summary}
                                 onChange={(event) => setNewJobForm((prev) => ({ ...prev, vehicle_summary: event.target.value }))}
                                 placeholder="e.g. 2024 Audi A4"
+                                className="h-14 rounded-[20px] border-white/10 bg-[linear-gradient(180deg,rgba(10,18,32,0.96),rgba(8,14,26,0.96))] text-white placeholder:text-slate-500"
                             />
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <Label>Urgency</Label>
+                                <Label className="text-white">Urgency</Label>
                                 <Select
                                     value={newJobForm.urgency}
                                     onValueChange={(value) => setNewJobForm((prev) => ({ ...prev, urgency: value as Urgency }))}
                                 >
-                                    <SelectTrigger>
+                                    <SelectTrigger className="h-14 rounded-[20px] border-white/10 bg-[linear-gradient(180deg,rgba(10,18,32,0.96),rgba(8,14,26,0.96))] text-white focus:border-[#7db0ff]/45 focus:ring-[#7db0ff]/20">
                                         <SelectValue />
                                     </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="low">Low</SelectItem>
-                                        <SelectItem value="normal">Normal</SelectItem>
-                                        <SelectItem value="high">High</SelectItem>
-                                        <SelectItem value="critical">Critical</SelectItem>
+                                    <SelectContent className="admin-dark-scrollbar rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] text-slate-100 shadow-[0_24px_60px_rgba(0,0,0,0.34)]">
+                                        <SelectItem className="rounded-xl text-slate-200 focus:bg-white/[0.08] focus:text-white" value="low">Low</SelectItem>
+                                        <SelectItem className="rounded-xl text-slate-200 focus:bg-white/[0.08] focus:text-white" value="normal">Normal</SelectItem>
+                                        <SelectItem className="rounded-xl text-slate-200 focus:bg-white/[0.08] focus:text-white" value="high">High</SelectItem>
+                                        <SelectItem className="rounded-xl text-slate-200 focus:bg-white/[0.08] focus:text-white" value="critical">Critical</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
                             <div className="space-y-2">
-                                <Label>Assigned Technician</Label>
+                                <Label className="text-white">Assigned Technician</Label>
                                 <SearchableSelect
                                     value={newJobForm.assigned_technician_name}
                                     onChange={(value) => setNewJobForm((prev) => ({ ...prev, assigned_technician_name: value }))}
@@ -2224,6 +2258,7 @@ export default function JobsPage() {
                                     placeholder="Select technician"
                                     searchPlaceholder="Search technician..."
                                     emptyLabel="No technician found."
+                                    variant="admin-dark"
                                 />
                             </div>
                         </div>
@@ -2235,10 +2270,11 @@ export default function JobsPage() {
                                 setCreateJobOpen(false);
                                 setNewJobForm(initialNewJobForm);
                             }}
+                            className="h-11 rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] px-5 text-slate-100 shadow-[0_14px_34px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.055)] hover:bg-[linear-gradient(180deg,rgba(24,38,64,0.98),rgba(12,20,34,0.98))] hover:text-white"
                         >
                             Cancel
                         </Button>
-                        <Button className="bg-[#2F8E92] hover:bg-[#267276]" onClick={handleCreateJob}>
+                        <Button className="h-11 rounded-2xl border border-[#7db0ff]/40 bg-[linear-gradient(135deg,#4f7cff,#22d3ee)] px-5 text-white shadow-[0_16px_34px_rgba(79,124,255,0.22)] hover:brightness-105" onClick={handleCreateJob}>
                             Create in Preview
                         </Button>
                     </DialogFooter>

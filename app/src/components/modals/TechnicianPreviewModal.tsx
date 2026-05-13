@@ -133,13 +133,13 @@ export function TechnicianPreviewModal({ open, onOpenChange }: TechnicianPreview
                                 </Badge>
                             </div>
                         </div>
-                        <div className="rounded-[24px] border border-white/10 bg-white/[0.04] px-4 py-4 text-right shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
-                            <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">Access Layer</div>
-                            <div className="mt-3 flex items-center justify-end gap-3 text-sm font-medium text-white">
-                                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04]">
+                        <div className="rounded-[24px] border border-white/10 bg-white/[0.04] px-5 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
+                            <div className="text-right text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">Access Layer</div>
+                            <div className="mt-3 grid grid-cols-[40px_minmax(0,1fr)] items-center gap-3 text-sm font-medium text-white">
+                                <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04]">
                                     <Shield className="h-4 w-4 text-white" />
                                 </div>
-                                <div className="max-w-[120px] text-right leading-6">
+                                <div className="text-right leading-6">
                                     Admin protected preview
                                 </div>
                             </div>
