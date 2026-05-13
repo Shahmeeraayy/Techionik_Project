@@ -818,7 +818,7 @@ export default function TechnicianAccountsPage() {
                 id="tech-account-name"
                 value={form.name}
                 onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))}
-                className="border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500"
+                className="h-12 rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(10,18,32,0.96),rgba(8,14,26,0.96))] text-white placeholder:text-slate-500"
               />
             </div>
 
@@ -829,7 +829,7 @@ export default function TechnicianAccountsPage() {
                 type="email"
                 value={form.email}
                 onChange={(event) => setForm((prev) => ({ ...prev, email: event.target.value }))}
-                className="border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500"
+                className="h-12 rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(10,18,32,0.96),rgba(8,14,26,0.96))] text-white placeholder:text-slate-500"
               />
             </div>
 
@@ -839,7 +839,7 @@ export default function TechnicianAccountsPage() {
                 id="tech-account-phone"
                 value={form.phone}
                 onChange={(event) => setForm((prev) => ({ ...prev, phone: formatUsPhoneInput(event.target.value) }))}
-                className="border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500"
+                className="h-12 rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(10,18,32,0.96),rgba(8,14,26,0.96))] text-white placeholder:text-slate-500"
               />
             </div>
             {formError && (
@@ -848,8 +848,8 @@ export default function TechnicianAccountsPage() {
           </div>
 
           <DialogFooter>
-            <Button variant="outline" className="border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]" onClick={() => setEditDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleSaveEdit} disabled={isSaving} className="bg-[#2F8E92] hover:bg-[#27797d]">
+            <Button variant="outline" className="h-11 rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] px-5 text-slate-100 shadow-[0_14px_34px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.055)] hover:bg-[linear-gradient(180deg,rgba(24,38,64,0.98),rgba(12,20,34,0.98))] hover:text-white" onClick={() => setEditDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleSaveEdit} disabled={isSaving} className="h-11 rounded-2xl border border-[#7db0ff]/40 bg-[linear-gradient(135deg,#4f7cff,#22d3ee)] px-5 text-white shadow-[0_16px_34px_rgba(79,124,255,0.22)] hover:brightness-105">
               <Power className="w-4 h-4 mr-1" />
               {isSaving ? 'Saving...' : 'Save Changes'}
             </Button>

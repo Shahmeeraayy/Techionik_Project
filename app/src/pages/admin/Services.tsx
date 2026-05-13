@@ -968,7 +968,7 @@ export default function ServicesPage() {
                                     placeholder="e.g. SRV-001"
                                     value={formData.code}
                                     onChange={e => setFormData({ ...formData, code: e.target.value })}
-                                    className="border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500"
+                                    className="h-12 rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(10,18,32,0.96),rgba(8,14,26,0.96))] text-white placeholder:text-slate-500"
                                     disabled={modalMode === 'edit'} // Lock code on edit usually desirable
                                 />
                             </div>
@@ -983,26 +983,26 @@ export default function ServicesPage() {
                                         placeholder="0.00"
                                         value={formData.default_price}
                                         onChange={e => setFormData({ ...formData, default_price: e.target.value })}
-                                        className="border-white/10 bg-white/[0.04] pl-9 text-white placeholder:text-slate-500"
+                                        className="h-12 rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(10,18,32,0.96),rgba(8,14,26,0.96))] pl-9 text-white placeholder:text-slate-500"
                                     />
                                 </div>
                             </div>
                         </div>
                         <div className="space-y-2">
                             <Label className="text-slate-200">Service Name <span className="text-rose-300">*</span></Label>
-                            <Input className="border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500" placeholder="e.g. Standard Inspection" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
+                            <Input className="h-12 rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(10,18,32,0.96),rgba(8,14,26,0.96))] text-white placeholder:text-slate-500" placeholder="e.g. Standard Inspection" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
                         </div>
                         <div className="space-y-2">
                             <Label className="text-slate-200">Category <span className="text-rose-300">*</span></Label>
                             <Input
-                                className="border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500"
+                                className="h-12 rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(10,18,32,0.96),rgba(8,14,26,0.96))] text-white placeholder:text-slate-500"
                                 placeholder="e.g. PPF"
                                 value={formData.category}
                                 onChange={e => setFormData({ ...formData, category: e.target.value })}
                             />
                         </div>
 
-                        <div className="flex items-center justify-between rounded-[20px] border border-white/10 bg-white/[0.04] p-3">
+                        <div className="flex items-center justify-between rounded-[20px] border border-white/10 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] p-3">
                             <div className="space-y-0.5">
                                 <Label className="text-base text-white">Approval Required</Label>
                                 <p className="text-xs text-slate-400">Flag invoices containing this service for review.</p>
@@ -1016,7 +1016,7 @@ export default function ServicesPage() {
                         <div className="space-y-2">
                             <Label className="text-slate-200">Description / Notes</Label>
                             <Textarea
-                                className="border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500"
+                                className="rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(10,18,32,0.96),rgba(8,14,26,0.96))] text-white placeholder:text-slate-500"
                                 placeholder="Add service description, pricing context, or restrictions..."
                                 value={formData.notes}
                                 onChange={e => setFormData({ ...formData, notes: e.target.value })}
@@ -1024,8 +1024,8 @@ export default function ServicesPage() {
                         </div>
                     </div>
                     <DialogFooter>
-                        <Button variant="outline" className="border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]" onClick={() => setModalOpen(false)}>Cancel</Button>
-                        <Button onClick={handleSaveService} className="bg-[#2F8E92] hover:bg-[#267276]">{modalMode === 'add' ? 'Create Service' : 'Save Changes'}</Button>
+                        <Button variant="outline" className="h-11 rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] px-5 text-slate-100 shadow-[0_14px_34px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.055)] hover:bg-[linear-gradient(180deg,rgba(24,38,64,0.98),rgba(12,20,34,0.98))] hover:text-white" onClick={() => setModalOpen(false)}>Cancel</Button>
+                        <Button onClick={handleSaveService} className="h-11 rounded-2xl border border-[#7db0ff]/40 bg-[linear-gradient(135deg,#4f7cff,#22d3ee)] px-5 text-white shadow-[0_16px_34px_rgba(79,124,255,0.22)] hover:brightness-105">{modalMode === 'add' ? 'Create Service' : 'Save Changes'}</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

@@ -960,12 +960,12 @@ export default function DealershipsPage() {
                             <div className="space-y-4 py-2">
                                 <div className="space-y-2">
                                     <Label className="text-slate-200">Location Name <span className="text-rose-300">*</span></Label>
-                                    <Input className="border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500" placeholder="e.g. Metro Ford" value={addForm.name} onChange={e => setAddForm({ ...addForm, name: e.target.value })} />
+                                    <Input className="h-12 rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(10,18,32,0.96),rgba(8,14,26,0.96))] text-white placeholder:text-slate-500" placeholder="e.g. Metro Ford" value={addForm.name} onChange={e => setAddForm({ ...addForm, name: e.target.value })} />
                                 </div>
                                 <div className="space-y-2">
                                     <Label className="text-slate-200">Phone <span className="text-rose-300">*</span></Label>
                                     <Input
-                                        className="border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500"
+                                        className="h-12 rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(10,18,32,0.96),rgba(8,14,26,0.96))] text-white placeholder:text-slate-500"
                                         placeholder={phoneExampleFormat}
                                         value={addForm.phone}
                                         onChange={e => setAddForm({ ...addForm, phone: formatUsPhoneInput(e.target.value) })}
@@ -973,30 +973,30 @@ export default function DealershipsPage() {
                                 </div>
                                 <div className="space-y-2">
                                     <Label className="text-slate-200">Email <span className="text-rose-300">*</span></Label>
-                                    <Input className="border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500" placeholder="e.g. info@location.com" value={addForm.email} onChange={e => setAddForm({ ...addForm, email: e.target.value })} />
+                                    <Input className="h-12 rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(10,18,32,0.96),rgba(8,14,26,0.96))] text-white placeholder:text-slate-500" placeholder="e.g. info@location.com" value={addForm.email} onChange={e => setAddForm({ ...addForm, email: e.target.value })} />
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-2">
                                         <Label className="text-slate-200">City</Label>
-                                        <Input className="border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500" placeholder="e.g. Quebec" value={addForm.city} onChange={e => setAddForm({ ...addForm, city: e.target.value })} />
+                                        <Input className="h-12 rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(10,18,32,0.96),rgba(8,14,26,0.96))] text-white placeholder:text-slate-500" placeholder="e.g. Quebec" value={addForm.city} onChange={e => setAddForm({ ...addForm, city: e.target.value })} />
                                     </div>
                                     <div className="space-y-2">
                                         <Label className="text-slate-200">Postal Code</Label>
-                                        <Input className="border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500" placeholder="e.g. G1X 3X4" value={addForm.postal_code} onChange={e => setAddForm({ ...addForm, postal_code: e.target.value })} />
+                                        <Input className="h-12 rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(10,18,32,0.96),rgba(8,14,26,0.96))] text-white placeholder:text-slate-500" placeholder="e.g. G1X 3X4" value={addForm.postal_code} onChange={e => setAddForm({ ...addForm, postal_code: e.target.value })} />
                                     </div>
                                 </div>
                                 <div className="space-y-2">
                                     <Label className="text-slate-200">Address</Label>
-                                    <Input className="border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500" placeholder="e.g. 123 Main St" value={addForm.address} onChange={e => setAddForm({ ...addForm, address: e.target.value })} />
+                                    <Input className="h-12 rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(10,18,32,0.96),rgba(8,14,26,0.96))] text-white placeholder:text-slate-500" placeholder="e.g. 123 Main St" value={addForm.address} onChange={e => setAddForm({ ...addForm, address: e.target.value })} />
                                 </div>
                                 <div className="space-y-2">
                                     <Label className="text-slate-200">Notes</Label>
-                                    <Textarea className="border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500" placeholder="Access codes, preferred hours, etc." value={addForm.notes} onChange={e => setAddForm({ ...addForm, notes: e.target.value })} />
+                                    <Textarea className="rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(10,18,32,0.96),rgba(8,14,26,0.96))] text-white placeholder:text-slate-500" placeholder="Access codes, preferred hours, etc." value={addForm.notes} onChange={e => setAddForm({ ...addForm, notes: e.target.value })} />
                                 </div>
                             </div>
                             <DialogFooter>
-                                <Button variant="outline" className="border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]" onClick={() => setAddModalOpen(false)}>Cancel</Button>
-                                <Button onClick={handleAddDealership} className="bg-[#2F8E92] hover:bg-[#267276]">Add Location</Button>
+                                <Button variant="outline" className="h-11 rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] px-5 text-slate-100 shadow-[0_14px_34px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.055)] hover:bg-[linear-gradient(180deg,rgba(24,38,64,0.98),rgba(12,20,34,0.98))] hover:text-white" onClick={() => setAddModalOpen(false)}>Cancel</Button>
+                                <Button onClick={handleAddDealership} className="h-11 rounded-2xl border border-[#7db0ff]/40 bg-[linear-gradient(135deg,#4f7cff,#22d3ee)] px-5 text-white shadow-[0_16px_34px_rgba(79,124,255,0.22)] hover:brightness-105">Add Location</Button>
                             </DialogFooter>
                         </DialogContent>
                     </Dialog>
@@ -1258,7 +1258,7 @@ export default function DealershipsPage() {
                                         <Button
                                             variant={selectedDealership.status === 'active' ? "outline" : "default"}
                                             size="sm"
-                                            className="min-w-[112px] border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
+                                            className="min-w-[112px] h-10 rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] px-4 text-slate-100 shadow-[0_14px_34px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.055)] hover:bg-[linear-gradient(180deg,rgba(24,38,64,0.98),rgba(12,20,34,0.98))] hover:text-white"
                                             onClick={handleToggleStatus}
                                         >
                                             {selectedDealership.status === 'active' ? 'Deactivate' : 'Activate'}
@@ -1277,10 +1277,10 @@ export default function DealershipsPage() {
                                                 <Building2 className="w-4 h-4" /> Contact Information
                                             </h3>
                                             <div className="flex items-center justify-end gap-2">
-                                                <Button variant="ghost" size="sm" className="h-8 px-3 text-xs text-slate-400 hover:text-slate-200" onClick={handleCancelEdit}>
+                                                <Button variant="outline" size="sm" className="h-9 rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] px-4 text-xs text-slate-100 shadow-[0_14px_34px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.055)] hover:bg-[linear-gradient(180deg,rgba(24,38,64,0.98),rgba(12,20,34,0.98))] hover:text-white" onClick={handleCancelEdit}>
                                                     Cancel
                                                 </Button>
-                                                <Button variant="ghost" size="sm" className="h-8 px-3 text-xs text-cyan-200 hover:text-cyan-100" onClick={handleSaveEdit}>
+                                                <Button size="sm" className="h-9 rounded-2xl border border-[#7db0ff]/40 bg-[linear-gradient(135deg,#4f7cff,#22d3ee)] px-4 text-xs text-white shadow-[0_16px_34px_rgba(79,124,255,0.22)] hover:brightness-105" onClick={handleSaveEdit}>
                                                     Save Changes
                                                 </Button>
                                             </div>
@@ -1288,7 +1288,7 @@ export default function DealershipsPage() {
                                         <div className="grid grid-cols-1 gap-4 px-5 py-5 md:grid-cols-2">
                                             <div className="space-y-2">
                                                 <Label className="text-xs text-slate-400">Location Name</Label>
-                                                <Input value={editForm.name} onChange={e => setEditForm({ ...editForm, name: e.target.value })} className="h-9 border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500" />
+                                                <Input value={editForm.name} onChange={e => setEditForm({ ...editForm, name: e.target.value })} className="h-12 rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(10,18,32,0.96),rgba(8,14,26,0.96))] text-white placeholder:text-slate-500" />
                                             </div>
                                             <div className="space-y-2">
                                                 <Label className="text-xs text-slate-400">Phone</Label>
@@ -1296,24 +1296,24 @@ export default function DealershipsPage() {
                                                     placeholder={phoneExampleFormat}
                                                     value={editForm.phone}
                                                     onChange={e => setEditForm({ ...editForm, phone: formatUsPhoneInput(e.target.value) })}
-                                                    className="h-9 border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500"
+                                                    className="h-12 rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(10,18,32,0.96),rgba(8,14,26,0.96))] text-white placeholder:text-slate-500"
                                                 />
                                             </div>
                                             <div className="space-y-2 md:col-span-2">
                                                 <Label className="text-xs text-slate-400">Email</Label>
-                                                <Input value={editForm.email} onChange={e => setEditForm({ ...editForm, email: e.target.value })} className="h-9 border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500" />
+                                                <Input value={editForm.email} onChange={e => setEditForm({ ...editForm, email: e.target.value })} className="h-12 rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(10,18,32,0.96),rgba(8,14,26,0.96))] text-white placeholder:text-slate-500" />
                                             </div>
                                             <div className="space-y-2">
                                                 <Label className="text-xs text-slate-400">City</Label>
-                                                <Input value={editForm.city} onChange={e => setEditForm({ ...editForm, city: e.target.value })} className="h-9 border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500" />
+                                                <Input value={editForm.city} onChange={e => setEditForm({ ...editForm, city: e.target.value })} className="h-12 rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(10,18,32,0.96),rgba(8,14,26,0.96))] text-white placeholder:text-slate-500" />
                                             </div>
                                             <div className="space-y-2">
                                                 <Label className="text-xs text-slate-400">Postal Code</Label>
-                                                <Input value={editForm.postal_code} onChange={e => setEditForm({ ...editForm, postal_code: e.target.value })} className="h-9 border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500" />
+                                                <Input value={editForm.postal_code} onChange={e => setEditForm({ ...editForm, postal_code: e.target.value })} className="h-12 rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(10,18,32,0.96),rgba(8,14,26,0.96))] text-white placeholder:text-slate-500" />
                                             </div>
                                             <div className="space-y-2 md:col-span-2">
                                                 <Label className="text-xs text-slate-400">Address</Label>
-                                                <Input value={editForm.address} onChange={e => setEditForm({ ...editForm, address: e.target.value })} className="h-9 border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500" />
+                                                <Input value={editForm.address} onChange={e => setEditForm({ ...editForm, address: e.target.value })} className="h-12 rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(10,18,32,0.96),rgba(8,14,26,0.96))] text-white placeholder:text-slate-500" />
                                             </div>
                                         </div>
                                     </Card>
@@ -1329,7 +1329,7 @@ export default function DealershipsPage() {
                                             <Textarea
                                                 value={editForm.notes || ''}
                                                 onChange={e => setEditForm({ ...editForm, notes: e.target.value })}
-                                                className="min-h-[120px] border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500"
+                                                className="min-h-[120px] rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(10,18,32,0.96),rgba(8,14,26,0.96))] text-white placeholder:text-slate-500"
                                                 placeholder="Gate codes, special instructions, preferred technicians..."
                                             />
                                         </div>
