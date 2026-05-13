@@ -75,7 +75,11 @@ class BookingPortalApiTests(unittest.TestCase):
             json={
                 "is_enabled": True,
                 "estimated_response_time_message": "We will contact you within 2 business hours.",
-                "confirmation_email_body": "Hello ${customer_name}, your ref is ${reference_number}.",
+                "confirmation_email_body": (
+                    "Hello ${customer_name}, your ref is ${reference_number}.\n"
+                    "Booking form: ${booking_portal_url}\n"
+                    "Track: ${booking_status_url}"
+                ),
                 "visible_service_ids": [service_id],
                 "status_lookup_enabled": True,
                 "industry_type": "automotive",
@@ -122,6 +126,10 @@ class BookingPortalApiTests(unittest.TestCase):
             self.assertEqual(len(booking_rows), 1)
             email_rows = db.query(EmailOutbox).all()
             self.assertEqual(len(email_rows), 2)
+            customer_email = next(row for row in email_rows if row.recipient_email == "alex@example.com")
+            self.assertIn("/book", customer_email.body)
+            self.assertIn("/book/status?reference=", customer_email.body)
+            self.assertIn("email=alex%40example.com", customer_email.body)
 
     def test_admin_can_update_booking_status(self):
         service_id = self._service_id()
@@ -131,7 +139,11 @@ class BookingPortalApiTests(unittest.TestCase):
             json={
                 "is_enabled": True,
                 "estimated_response_time_message": "We will contact you within 2 business hours.",
-                "confirmation_email_body": "Hello ${customer_name}, your ref is ${reference_number}.",
+                "confirmation_email_body": (
+                    "Hello ${customer_name}, your ref is ${reference_number}.\n"
+                    "Booking form: ${booking_portal_url}\n"
+                    "Track: ${booking_status_url}"
+                ),
                 "visible_service_ids": [service_id],
                 "status_lookup_enabled": True,
                 "industry_type": "automotive",

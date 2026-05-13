@@ -9,7 +9,9 @@ from fastapi import HTTPException, status
 from sqlalchemy import case, inspect, text
 from sqlalchemy.orm import Session
 
-from ..core.config import COMPANY_EMAIL, COMPANY_LOGO_URL, COMPANY_NAME, COMPANY_PHONE
+from urllib.parse import quote
+
+from ..core.config import COMPANY_EMAIL, COMPANY_LOGO_URL, COMPANY_NAME, COMPANY_PHONE, CUSTOMER_PORTAL_BASE_URL
 from ..core.security import AuthenticatedUser
 from ..models.admin_credential_settings import AdminCredentialSettings
 from ..models.admin_user import AdminUser
@@ -91,6 +93,8 @@ class BookingPortalService:
                 "Hello ${customer_name},\n\n"
                 "Thanks for contacting ${company_name}. We received your service request ${reference_number}.\n\n"
                 "${estimated_response_time_message}\n\n"
+                "Booking form: ${booking_portal_url}\n"
+                "Track your request: ${booking_status_url}\n\n"
                 "If you need help, reply to ${admin_contact_email}."
             ),
             visible_service_ids=[],
@@ -205,6 +209,8 @@ class BookingPortalService:
         reference_number: str,
         estimated_response_time_message: str,
         admin_contact_email: str,
+        booking_portal_url: str,
+        booking_status_url: str,
     ) -> str:
         return Template(template_body).safe_substitute(
             customer_name=customer_name,
@@ -212,6 +218,24 @@ class BookingPortalService:
             reference_number=reference_number,
             estimated_response_time_message=estimated_response_time_message,
             admin_contact_email=admin_contact_email,
+            booking_portal_url=booking_portal_url,
+            booking_status_url=booking_status_url,
+        )
+
+    def _normalize_customer_portal_base_url(self) -> str:
+        base_url = (CUSTOMER_PORTAL_BASE_URL or COMPANY_WEBSITE or "").strip().rstrip("/")
+        if not base_url:
+            return "http://127.0.0.1:5173"
+        return base_url
+
+    def _booking_portal_url(self) -> str:
+        return f"{self._normalize_customer_portal_base_url()}/book"
+
+    def _booking_status_url(self, reference_number: str, email_address: str) -> str:
+        base_url = self._normalize_customer_portal_base_url()
+        return (
+            f"{base_url}/book/status"
+            f"?reference={quote(reference_number)}&email={quote(email_address.lower())}"
         )
 
     def _next_reference_number(self) -> str:
@@ -289,6 +313,8 @@ class BookingPortalService:
             reference_number=row.reference_number,
             estimated_response_time_message=settings.estimated_response_time_message,
             admin_contact_email=admin_email,
+            booking_portal_url=self._booking_portal_url(),
+            booking_status_url=self._booking_status_url(row.reference_number, row.email_address),
         )
 
         self.db.add(

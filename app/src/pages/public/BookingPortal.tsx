@@ -56,6 +56,18 @@ export default function BookingPortalPage() {
   const [isLookingUp, setIsLookingUp] = useState(false);
 
   useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const reference = params.get('reference') ?? '';
+    const email = params.get('email') ?? '';
+    if (reference) {
+      setLookupReference(reference.toUpperCase());
+    }
+    if (email) {
+      setLookupEmail(email.toLowerCase());
+    }
+  }, [location.search]);
+
+  useEffect(() => {
     let isMounted = true;
     void (async () => {
       setIsLoading(true);

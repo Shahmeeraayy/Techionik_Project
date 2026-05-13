@@ -229,7 +229,7 @@ const DEFAULT_BOOKING_PORTAL_SETTINGS: BookingPortalSettingsState = {
     isEnabled: false,
     estimatedResponseTimeMessage: 'We will contact you within 2 business hours.',
     confirmationEmailBody:
-        'Hello ${customer_name},\n\nThanks for contacting ${company_name}. We received your service request ${reference_number}.\n\n${estimated_response_time_message}\n\nIf you need help, reply to ${admin_contact_email}.',
+        'Hello ${customer_name},\n\nThanks for contacting ${company_name}. We received your service request ${reference_number}.\n\n${estimated_response_time_message}\n\nBooking form: ${booking_portal_url}\nTrack your request: ${booking_status_url}\n\nIf you need help, reply to ${admin_contact_email}.',
     visibleServiceIds: [],
     statusLookupEnabled: false,
     industryType: 'automotive',
@@ -1300,7 +1300,7 @@ export default function SettingsPage() {
                                     onChange={(e) => setBookingPortalSettings((prev) => ({ ...prev, confirmationEmailBody: e.target.value }))}
                                 />
                                 <p className="text-xs leading-5 text-slate-500 dark:text-slate-400">
-                                    Supported placeholders: <code>${'{customer_name}'}</code>, <code>${'{company_name}'}</code>, <code>${'{reference_number}'}</code>, <code>${'{estimated_response_time_message}'}</code>, <code>${'{admin_contact_email}'}</code>
+                                    Supported placeholders: <code>${'{customer_name}'}</code>, <code>${'{company_name}'}</code>, <code>${'{reference_number}'}</code>, <code>${'{estimated_response_time_message}'}</code>, <code>${'{admin_contact_email}'}</code>, <code>${'{booking_portal_url}'}</code>, <code>${'{booking_status_url}'}</code>
                                 </p>
                             </div>
                             <div className="space-y-3">
