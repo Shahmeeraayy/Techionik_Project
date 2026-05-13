@@ -237,7 +237,7 @@ export default function TechnicianChatPage() {
             <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] bg-[size:120px_120px] opacity-20" />
             <div className="relative flex flex-col gap-5 p-5 lg:flex-row lg:items-end lg:justify-between lg:p-7">
               <div className="max-w-3xl">
-                <div className="inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.28em] text-cyan-100">
+                <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.28em] text-white">
                   <MessageSquareText className="h-3.5 w-3.5" />
                   Technician Chat
                 </div>
@@ -250,7 +250,7 @@ export default function TechnicianChatPage() {
                   Real persisted messages between field technicians and the admin team, with delivery and read states built into the platform.
                 </p>
                 {isPreviewMode ? (
-                  <p className="mt-3 text-xs font-medium text-amber-300">Preview mode is read-only for technician chat.</p>
+                  <p className="mt-3 text-xs font-medium text-white/80">Preview mode is read-only for technician chat.</p>
                 ) : null}
               </div>
               <div className="flex items-center gap-3 self-start lg:self-end">
@@ -282,7 +282,7 @@ export default function TechnicianChatPage() {
               <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <Shield className="h-5 w-5 text-cyan-200" />
+                    <Shield className="h-5 w-5 text-white" />
                     <h2 className="text-xl font-semibold tracking-[-0.04em] text-white">Admin Dispatch</h2>
                   </div>
                   <p className="text-sm text-slate-400">Use this channel for updates, clarifications, and job support without leaving the technician portal.</p>
@@ -332,9 +332,9 @@ export default function TechnicianChatPage() {
                           className={cn(
                             'rounded-[24px] border px-4 py-3 shadow-[0_10px_25px_rgba(0,0,0,0.14)]',
                             message.sender_role === 'technician'
-                              ? 'border-cyan-300/18 bg-[linear-gradient(180deg,rgba(18,52,74,0.96),rgba(10,32,48,0.96))] text-cyan-50'
+                              ? 'border-white/10 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] text-white'
                               : message.is_broadcast
-                                ? 'border-cyan-300/20 bg-cyan-300/12 text-cyan-50'
+                                ? 'border-white/10 bg-white/[0.04] text-white'
                                 : 'border-white/10 bg-[#070f11] text-white',
                           )}
                         >

@@ -485,11 +485,11 @@ export default function AvailableJobsPage() {
                 <div className="relative mx-auto w-full max-w-[1500px] space-y-6 px-4 pt-4 sm:px-6 lg:px-8">
                     <section className="relative overflow-hidden rounded-[30px] border border-white/10 bg-[linear-gradient(135deg,rgba(7,25,42,0.98),rgba(6,18,32,0.98))] shadow-[0_34px_120px_rgba(0,0,0,0.34)]">
                         <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] bg-[size:120px_120px] opacity-20" />
-                        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-200/70 to-transparent" />
-                        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(47,142,146,0.14),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(245,158,11,0.12),transparent_26%)]" />
+                        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/70 to-transparent" />
+                        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(79,124,255,0.12),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(148,163,184,0.1),transparent_26%)]" />
                         <div className="relative flex flex-col gap-5 p-5 lg:flex-row lg:items-end lg:justify-between lg:p-7">
                             <div className="max-w-3xl">
-                                <div className="inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.28em] text-cyan-100">
+                                <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.28em] text-white">
                                     <Sparkles className="h-3.5 w-3.5" />
                                     Technician Queue
                                 </div>
@@ -502,17 +502,17 @@ export default function AvailableJobsPage() {
                                     Review incoming assignments, open your current job, and keep field work moving from one focused technician workspace.
                                 </p>
                                 <div className="mt-5 flex flex-wrap items-center gap-2">
-                                    <Badge variant="outline" className="rounded-full border-cyan-300/20 bg-cyan-300/10 px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-cyan-100">
+                                    <Badge variant="outline" className="rounded-full border-white/10 bg-white/[0.04] px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-white">
                                         {jobsByStatus.total} jobs
                                     </Badge>
-                                    <Badge variant="outline" className="rounded-full border-amber-300/20 bg-amber-300/10 px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-amber-100">
+                                    <Badge variant="outline" className="rounded-full border-white/10 bg-white/[0.04] px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-white">
                                         {jobsByStatus.pending} pending
                                     </Badge>
                                     <Badge variant="outline" className="rounded-full border-white/10 bg-white/[0.04] px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-slate-300">
                                         {jobsByStatus.zones} zones
                                     </Badge>
                                 </div>
-                                <p className="mt-3 text-xs font-medium text-cyan-300">
+                                <p className="mt-3 text-xs font-medium text-white/80">
                                     Viewing as {currentTech.name} ({currentTechCode})
                                 </p>
                                 {lastUpdated ? (
@@ -537,38 +537,38 @@ export default function AvailableJobsPage() {
                     </section>
 
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                        <div className="overflow-hidden rounded-[24px] border border-cyan-400/15 bg-[linear-gradient(180deg,rgba(12,36,55,0.96),rgba(8,24,39,0.96))] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                        <div className="overflow-hidden rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
                             <div className="flex items-start justify-between p-5">
                                 <div>
                                     <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Jobs Sent</p>
                                     <p className="mt-2 text-3xl font-semibold tracking-[-0.05em] text-white">{jobsByStatus.total}</p>
                                     <p className="mt-2 text-sm text-slate-300">Admin-confirmed assignments visible to you.</p>
                                 </div>
-                                <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-cyan-300/20 bg-cyan-300/10 text-cyan-100">
+                                <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] text-white">
                                     <Send className="h-5 w-5" />
                                 </div>
                             </div>
                         </div>
-                        <div className="overflow-hidden rounded-[24px] border border-amber-400/15 bg-[linear-gradient(180deg,rgba(41,28,15,0.94),rgba(27,18,10,0.96))] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                        <div className="overflow-hidden rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
                             <div className="flex items-start justify-between p-5">
                                 <div>
                                     <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Pending Review</p>
                                     <p className="mt-2 text-3xl font-semibold tracking-[-0.05em] text-white">{jobsByStatus.pending}</p>
                                     <p className="mt-2 text-sm text-slate-300">Jobs waiting for your next action.</p>
                                 </div>
-                                <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-amber-300/20 bg-amber-300/10 text-amber-100">
+                                <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] text-white">
                                     <RadioTower className="h-5 w-5" />
                                 </div>
                             </div>
                         </div>
-                        <div className="overflow-hidden rounded-[24px] border border-emerald-400/15 bg-[linear-gradient(180deg,rgba(10,37,45,0.96),rgba(7,25,31,0.96))] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                        <div className="overflow-hidden rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
                             <div className="flex items-start justify-between p-5">
                                 <div>
                                     <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Active Pipeline</p>
                                     <p className="mt-2 text-3xl font-semibold tracking-[-0.05em] text-white">{jobsByStatus.active}</p>
                                     <p className="mt-2 text-sm text-slate-300">Scheduled or live field work in progress.</p>
                                 </div>
-                                <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-emerald-300/20 bg-emerald-300/10 text-emerald-100">
+                                <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] text-white">
                                     <Briefcase className="h-5 w-5" />
                                 </div>
                             </div>

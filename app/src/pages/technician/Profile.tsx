@@ -399,24 +399,24 @@ export default function ProfilePage() {
             label: 'Account',
             value: isPreviewMode ? 'Preview' : 'Live',
             description: isPreviewMode ? 'Read-only technician preview mode.' : 'Signed-in technician portal account.',
-            tone: 'border-cyan-400/15 bg-[linear-gradient(180deg,rgba(12,36,55,0.96),rgba(8,24,39,0.96))]',
-            iconTone: 'border-cyan-300/20 bg-cyan-300/10 text-cyan-100',
+            tone: 'border-white/10 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))]',
+            iconTone: 'border-white/10 bg-white/[0.04] text-white',
             icon: User,
         },
         {
             label: 'Availability',
             value: afterHoursEnabled ? 'Open' : 'Standard',
             description: afterHoursEnabled ? 'After-hours assignments currently enabled.' : 'Working normal shift settings only.',
-            tone: 'border-amber-400/15 bg-[linear-gradient(180deg,rgba(41,28,15,0.94),rgba(27,18,10,0.96))]',
-            iconTone: 'border-amber-300/20 bg-amber-300/10 text-amber-100',
+            tone: 'border-white/10 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))]',
+            iconTone: 'border-white/10 bg-white/[0.04] text-white',
             icon: Clock,
         },
         {
             label: 'Work Days',
             value: String(workingDays.length),
             description: availabilityLabel,
-            tone: 'border-emerald-400/15 bg-[linear-gradient(180deg,rgba(10,37,45,0.96),rgba(7,25,31,0.96))]',
-            iconTone: 'border-emerald-300/20 bg-emerald-300/10 text-emerald-100',
+            tone: 'border-white/10 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))]',
+            iconTone: 'border-white/10 bg-white/[0.04] text-white',
             icon: Calendar,
         },
     ] as const;
@@ -428,11 +428,11 @@ export default function ProfilePage() {
                 <div className="relative mx-auto w-full max-w-[1500px] space-y-6 px-3 pt-5 sm:px-4 sm:pt-6 lg:px-6 lg:pt-8">
                     <section className="relative overflow-hidden rounded-[30px] border border-white/10 bg-[linear-gradient(135deg,rgba(7,25,42,0.98),rgba(6,18,32,0.98))] shadow-[0_34px_120px_rgba(0,0,0,0.34)]">
                         <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] bg-[size:120px_120px] opacity-20" />
-                        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-200/70 to-transparent" />
-                        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(47,142,146,0.14),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(245,158,11,0.12),transparent_26%)]" />
+                        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/70 to-transparent" />
+                        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(79,124,255,0.12),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(148,163,184,0.1),transparent_26%)]" />
                         <div className="relative flex flex-col gap-5 p-6 lg:flex-row lg:items-end lg:justify-between lg:p-8">
                             <div className="max-w-3xl">
-                                <div className="inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.28em] text-cyan-100">
+                                <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.28em] text-white">
                                     <Sparkles className="h-3.5 w-3.5" />
                                     {heroEyebrow}
                                 </div>
@@ -450,10 +450,10 @@ export default function ProfilePage() {
                                     {heroDescription}
                                 </p>
                                 <div className="mt-5 flex flex-wrap items-center gap-2">
-                                    <Badge variant="outline" className="rounded-full border-cyan-300/20 bg-cyan-300/10 px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-cyan-100">
+                                    <Badge variant="outline" className="rounded-full border-white/10 bg-white/[0.04] px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-white">
                                         {userName}
                                     </Badge>
-                                    <Badge variant="outline" className="rounded-full border-amber-300/20 bg-amber-300/10 px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-amber-100">
+                                    <Badge variant="outline" className="rounded-full border-white/10 bg-white/[0.04] px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-white">
                                         {isPreviewMode ? 'preview mode' : 'technician portal'}
                                     </Badge>
                                     <Badge variant="outline" className="rounded-full border-white/10 bg-white/[0.04] px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-slate-300">

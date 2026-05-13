@@ -35,14 +35,14 @@ export default function TechnicianBottomNav({
                                 className={cn(
                                     'group relative flex min-h-[60px] flex-1 flex-col items-center justify-center gap-1 overflow-hidden rounded-2xl px-2 py-2.5 transition-all duration-200',
                                     isActive
-                                        ? 'bg-[linear-gradient(135deg,rgba(79,124,255,0.26),rgba(34,211,238,0.16))] text-white shadow-[inset_0_0_0_1px_rgba(125,211,252,0.16),0_14px_34px_rgba(34,211,238,0.12)]'
-                                        : 'text-slate-500 hover:bg-white/[0.055] hover:text-slate-200',
+                                        ? 'border border-white/10 bg-[#252525] text-white shadow-[0_18px_34px_rgba(0,0,0,0.28),inset_0_0_0_1px_rgba(255,255,255,0.05)]'
+                                        : 'border border-transparent text-slate-500 hover:border-white/8 hover:bg-[#171717] hover:text-slate-200',
                                 )}
                             >
                                 {isActive ? (
-                                    <span className="absolute inset-x-4 top-0 h-px bg-gradient-to-r from-transparent via-cyan-200/80 to-transparent" />
+                                    <span className="absolute inset-x-4 top-0 h-px bg-gradient-to-r from-transparent via-white/70 to-transparent" />
                                 ) : null}
-                                <Icon className={cn('h-5 w-5 transition-transform duration-200 group-hover:-translate-y-0.5', isActive && 'scale-110 text-cyan-100')} />
+                                <Icon className={cn('h-5 w-5 transition-transform duration-200 group-hover:-translate-y-0.5', isActive && 'scale-110 text-white')} />
                                 <span className={cn('max-w-full truncate text-[10px] font-semibold sm:text-[11px]', isActive && 'font-bold')}>
                                     {tab.label}
                                 </span>

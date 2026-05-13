@@ -326,7 +326,7 @@ function ScheduleJobCard({
                             disabled={completing}
                             className={cn(
                                 'w-full h-11 text-sm font-semibold rounded-xl',
-                                'bg-emerald-600 hover:bg-emerald-700 text-white',
+                                'bg-[linear-gradient(135deg,#4f7cff,#22d3ee)] hover:brightness-105 text-white',
                             )}
                         >
                             {completing ? (
@@ -341,7 +341,7 @@ function ScheduleJobCard({
                             onClick={() => onOpen(job.job_id)}
                             className={cn(
                                 'w-full h-11 text-sm font-semibold rounded-xl',
-                                'bg-[#2F8E92] hover:bg-[#267276] text-white',
+                                'bg-[linear-gradient(135deg,#4f7cff,#22d3ee)] hover:brightness-105 text-white',
                             )}
                         >
                             Open Job
@@ -385,8 +385,8 @@ function BottomNav({
                                 className={cn(
                                     'flex flex-1 flex-col items-center justify-center gap-1 rounded-xl px-3 py-2.5 transition-all duration-200 min-h-[60px]',
                                     isActive
-                                        ? 'bg-[#2F8E92]/15 text-cyan-200'
-                                        : 'text-slate-500 hover:bg-white/[0.04] hover:text-slate-200',
+                                        ? 'border border-white/10 bg-[#252525] text-white shadow-[0_18px_34px_rgba(0,0,0,0.28),inset_0_0_0_1px_rgba(255,255,255,0.05)]'
+                                        : 'border border-transparent text-slate-500 hover:border-white/8 hover:bg-[#171717] hover:text-slate-200',
                                 )}
                             >
                                 <Icon className={cn('w-5 h-5', isActive && 'scale-110')} />
