@@ -50,7 +50,6 @@ const navItems = [
   { path: '/admin/locations', label: 'Locations', icon: Building2 },
   { path: '/admin/services', label: 'Services', icon: Wrench },
   { path: '/admin/reports', label: 'Reports', icon: BarChart3 },
-  { path: '/admin/settings', label: 'Settings', icon: Settings },
 ];
 
 function Sidebar({
@@ -71,6 +70,7 @@ function Sidebar({
   const location = useLocation();
   const { logout } = useAuth();
   const activeItem = location.pathname;
+  const settingsActive = activeItem === '/admin/settings' || activeItem.startsWith('/admin/settings');
 
   return (
     <>
@@ -120,7 +120,7 @@ function Sidebar({
         </div>
 
         {/* Navigation */}
-        <nav className={cn('admin-sidebar-nav flex-1 overflow-y-auto px-3 pb-3 space-y-1.5', isCollapsed && 'lg:flex-none lg:overflow-hidden lg:px-2 lg:pb-2 lg:space-y-1')}>
+        <nav className={cn('admin-sidebar-nav flex-1 overflow-y-auto px-3 pb-3 space-y-1.5', isCollapsed && 'lg:overflow-hidden lg:px-2 lg:pb-2 lg:space-y-1')}>
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeItem === item.path || (item.path !== '/admin' && activeItem.startsWith(item.path));
@@ -174,12 +174,28 @@ function Sidebar({
           })}
         </nav>
 
-        <div className={cn('border-t border-border p-4', isCollapsed ? 'lg:flex lg:justify-center lg:p-3' : '')}>
+        <div className={cn('mt-auto border-t border-border p-4 space-y-2', isCollapsed ? 'lg:p-3 lg:space-y-2' : '')}>
+          <Link
+            to="/admin/settings"
+            onClick={onClose}
+            title="Settings"
+            className={cn(
+              'flex items-center rounded-2xl text-sm font-semibold transition-all',
+              isCollapsed ? 'w-full gap-3 px-4 py-3 lg:h-10 lg:w-10 lg:justify-center lg:gap-0 lg:rounded-full lg:px-0' : 'w-full gap-3 px-4 py-3',
+              settingsActive
+                ? 'bg-[#111827] text-white shadow-[0_18px_34px_rgba(15,23,42,0.12)] dark:bg-[#252525] dark:text-white dark:shadow-[0_18px_34px_rgba(0,0,0,0.28),inset_0_0_0_1px_rgba(255,255,255,0.06)]'
+                : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900 dark:text-zinc-300 dark:hover:bg-[#171717] dark:hover:text-white',
+            )}
+          >
+            <Settings className="h-4.5 w-4.5" />
+            <span className={cn(isCollapsed && 'lg:hidden')}>Settings</span>
+          </Link>
+
           <button
             onClick={logout}
             className={cn(
               'flex items-center rounded-2xl text-sm font-semibold text-slate-500 transition-all hover:bg-rose-50 hover:text-rose-700 dark:text-zinc-300 dark:hover:bg-[#1d1d1d] dark:hover:text-white',
-              isCollapsed ? 'w-full gap-3 px-4 py-3 lg:h-10 lg:w-10 lg:justify-center lg:gap-0 lg:rounded-full lg:bg-white lg:px-0 lg:shadow-[0_16px_34px_rgba(15,23,42,0.08)] lg:dark:bg-[#111111] lg:dark:shadow-[0_14px_28px_rgba(0,0,0,0.38)]' : 'w-full gap-3 px-4 py-3',
+              isCollapsed ? 'w-full gap-3 px-4 py-3 lg:h-10 lg:w-10 lg:justify-center lg:gap-0 lg:rounded-full lg:px-0' : 'w-full gap-3 px-4 py-3',
             )}
             title="Log out"
           >
