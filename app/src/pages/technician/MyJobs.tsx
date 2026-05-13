@@ -226,6 +226,12 @@ const TECH_ACTION_BUTTON_WARNING =
     'border-orange-400/35 bg-[linear-gradient(180deg,rgba(51,31,11,0.96),rgba(27,17,9,0.98))] text-orange-100 shadow-[0_14px_34px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.05)] hover:bg-[linear-gradient(180deg,rgba(72,42,14,0.98),rgba(34,21,10,0.98))] hover:text-white';
 const TECH_ACTION_BUTTON_DANGER =
     'border-red-400/35 bg-[linear-gradient(180deg,rgba(52,17,24,0.96),rgba(30,11,16,0.98))] text-red-100 shadow-[0_14px_34px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.05)] hover:bg-[linear-gradient(180deg,rgba(70,20,30,0.98),rgba(37,11,18,0.98))] hover:text-white';
+const TECH_MODAL_INPUT_CLASS =
+    'border-white/10 bg-[linear-gradient(180deg,rgba(10,18,32,0.96),rgba(8,14,26,0.96))] text-slate-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] placeholder:text-slate-500 focus-visible:border-[#7db0ff]/45 focus-visible:bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(10,18,32,0.98))] focus-visible:ring-[#7db0ff]/20';
+const TECH_MODAL_SELECT_TRIGGER_CLASS =
+    'h-11 w-full rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(10,18,32,0.96),rgba(8,14,26,0.96))] text-slate-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] focus-visible:border-[#7db0ff]/45 focus-visible:ring-[#7db0ff]/20';
+const TECH_MODAL_SELECT_CONTENT_CLASS =
+    'rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] text-slate-100 shadow-[0_24px_60px_rgba(0,0,0,0.34)]';
 
 // --- Components ---
 
@@ -1389,6 +1395,7 @@ export default function MyJobsPage({
                                 value={addServiceName}
                                 onChange={(event) => handleAddServiceNameChange(event.target.value)}
                                 placeholder="Pick from catalog or type custom service"
+                                className={TECH_MODAL_INPUT_CLASS}
                             />
                             <datalist id="technician-service-options">
                                 {serviceOptions.map((service) => (
@@ -1407,6 +1414,7 @@ export default function MyJobsPage({
                                     step="0.01"
                                     value={addServiceQuantity}
                                     onChange={(event) => setAddServiceQuantity(event.target.value)}
+                                    className={TECH_MODAL_INPUT_CLASS}
                                 />
                             </div>
                             <div className="space-y-2">
@@ -1418,6 +1426,7 @@ export default function MyJobsPage({
                                     step="0.01"
                                     value={addServiceUnitPrice}
                                     onChange={(event) => setAddServiceUnitPrice(event.target.value)}
+                                    className={TECH_MODAL_INPUT_CLASS}
                                 />
                             </div>
                         </div>
@@ -1430,6 +1439,7 @@ export default function MyJobsPage({
                                 value={addServiceNotes}
                                 onChange={(e) => setAddServiceNotes(e.target.value)}
                                 rows={3}
+                                className={TECH_MODAL_INPUT_CLASS}
                             />
                         </div>
                     </div>
@@ -1466,10 +1476,10 @@ export default function MyJobsPage({
                         <div className="space-y-2">
                             <Label htmlFor="delay-minutes">Delay Duration</Label>
                             <Select value={delayMinutes} onValueChange={setDelayMinutes}>
-                                <SelectTrigger id="delay-minutes">
+                                <SelectTrigger id="delay-minutes" className={TECH_MODAL_SELECT_TRIGGER_CLASS}>
                                     <SelectValue placeholder="Select duration" />
                                 </SelectTrigger>
-                                <SelectContent>
+                                <SelectContent className={TECH_MODAL_SELECT_CONTENT_CLASS}>
                                     <SelectItem value="15">15 minutes</SelectItem>
                                     <SelectItem value="30">30 minutes</SelectItem>
                                     <SelectItem value="60">1 hour</SelectItem>
@@ -1489,6 +1499,7 @@ export default function MyJobsPage({
                                     value={delayCustomMinutes}
                                     onChange={(e) => setDelayCustomMinutes(e.target.value)}
                                     min="1"
+                                    className={TECH_MODAL_INPUT_CLASS}
                                 />
                             </div>
                         )}
@@ -1501,6 +1512,7 @@ export default function MyJobsPage({
                                 value={delayNote}
                                 onChange={(e) => setDelayNote(e.target.value)}
                                 rows={3}
+                                className={TECH_MODAL_INPUT_CLASS}
                             />
                         </div>
                     </div>
@@ -1544,10 +1556,10 @@ export default function MyJobsPage({
                         <div className="space-y-2">
                             <Label htmlFor="refuse-reason">Reason *</Label>
                             <Select value={refuseReason} onValueChange={setRefuseReason}>
-                                <SelectTrigger id="refuse-reason">
+                                <SelectTrigger id="refuse-reason" className={TECH_MODAL_SELECT_TRIGGER_CLASS}>
                                     <SelectValue placeholder="Select a reason" />
                                 </SelectTrigger>
-                                <SelectContent>
+                                <SelectContent className={TECH_MODAL_SELECT_CONTENT_CLASS}>
                                     <SelectItem value="too_far">Too far from location</SelectItem>
                                     <SelectItem value="no_equipment">Don't have required equipment</SelectItem>
                                     <SelectItem value="schedule_conflict">Schedule conflict</SelectItem>
@@ -1565,6 +1577,7 @@ export default function MyJobsPage({
                                 value={refuseComment}
                                 onChange={(e) => setRefuseComment(e.target.value)}
                                 rows={3}
+                                className={TECH_MODAL_INPUT_CLASS}
                             />
                         </div>
                     </div>
