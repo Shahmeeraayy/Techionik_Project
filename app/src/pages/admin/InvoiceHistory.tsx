@@ -1157,7 +1157,7 @@ export default function InvoiceHistoryPage() {
                             <div className="shrink-0 border-t border-white/10 bg-[linear-gradient(180deg,rgba(7,21,37,0.96),rgba(4,13,24,1))] p-4 shadow-[0_-18px_45px_rgba(0,0,0,0.32)]">
                                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                                     <Button
-                                        className="h-12 min-w-0 gap-2 rounded-2xl border-white/10 bg-white/[0.04] px-3 text-sm text-slate-100 hover:bg-white/[0.08] hover:text-white"
+                                        className="h-12 min-w-0 gap-2 rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] px-3 text-sm text-slate-100 shadow-[0_14px_34px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.055)] hover:bg-[linear-gradient(180deg,rgba(24,38,64,0.98),rgba(12,20,34,0.98))] hover:text-white"
                                         variant="outline"
                                         onClick={() => handleDownloadPdf(selectedInvoice)}
                                     >
@@ -1165,7 +1165,7 @@ export default function InvoiceHistoryPage() {
                                         <span className="truncate">Download PDF</span>
                                     </Button>
                                     <Button
-                                        className="h-12 min-w-0 gap-2 rounded-2xl border-white/10 bg-white/[0.04] px-3 text-sm text-slate-100 hover:bg-white/[0.08] hover:text-white"
+                                        className="h-12 min-w-0 gap-2 rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] px-3 text-sm text-slate-100 shadow-[0_14px_34px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.055)] hover:bg-[linear-gradient(180deg,rgba(24,38,64,0.98),rgba(12,20,34,0.98))] hover:text-white"
                                         variant="outline"
                                         onClick={() => void handleSendInvoiceEmail(selectedInvoice)}
                                         disabled={actionLoading === 'send'}
@@ -1174,7 +1174,7 @@ export default function InvoiceHistoryPage() {
                                         <span className="truncate">{actionLoading === 'send' ? 'Preparing Email' : 'Send Invoice Email'}</span>
                                     </Button>
                                     <Button
-                                        className="h-12 min-w-0 gap-2 rounded-2xl border-emerald-300/20 bg-emerald-300/10 px-3 text-sm text-emerald-50 hover:bg-emerald-300/15"
+                                        className="h-12 min-w-0 gap-2 rounded-2xl border border-[#7db0ff]/40 bg-[linear-gradient(135deg,#4f7cff,#22d3ee)] px-3 text-sm text-white shadow-[0_16px_34px_rgba(79,124,255,0.22)] hover:brightness-105"
                                         variant="outline"
                                         onClick={() => void handleMarkAsPaid(selectedInvoice)}
                                         disabled={actionLoading === 'paid' || displayStatus.value === 'paid' || displayStatus.value === 'void'}
@@ -1183,7 +1183,7 @@ export default function InvoiceHistoryPage() {
                                         <span className="truncate">{actionLoading === 'paid' ? 'Marking Paid' : 'Mark as Paid'}</span>
                                     </Button>
                                     <Button
-                                        className="h-12 min-w-0 gap-2 rounded-2xl border-rose-300/20 bg-rose-300/10 px-3 text-sm text-rose-50 hover:bg-rose-300/15"
+                                        className="h-12 min-w-0 gap-2 rounded-2xl border border-rose-400/30 bg-[linear-gradient(180deg,rgba(61,18,28,0.92),rgba(36,12,20,0.98))] px-3 text-sm text-rose-100 shadow-[0_16px_34px_rgba(127,29,29,0.22)] hover:bg-[linear-gradient(180deg,rgba(76,23,35,0.94),rgba(48,15,26,0.99))] hover:text-white"
                                         variant="outline"
                                         onClick={() => setVoidDialogOpen(true)}
                                         disabled={actionLoading === 'void' || displayStatus.value === 'void'}
@@ -1212,13 +1212,13 @@ export default function InvoiceHistoryPage() {
                         value={voidReason}
                         onChange={(e) => setVoidReason(e.target.value)}
                         placeholder="Reason for voiding this invoice..."
-                        className="min-h-[120px] border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500"
+                        className="min-h-[120px] rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(10,18,32,0.96),rgba(8,14,26,0.96))] text-white placeholder:text-slate-500"
                     />
                     <DialogFooter>
-                        <Button variant="outline" className="border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]" onClick={() => setVoidDialogOpen(false)}>
+                        <Button variant="outline" className="h-11 rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] px-5 text-slate-100 shadow-[0_14px_34px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.055)] hover:bg-[linear-gradient(180deg,rgba(24,38,64,0.98),rgba(12,20,34,0.98))] hover:text-white" onClick={() => setVoidDialogOpen(false)}>
                             Cancel
                         </Button>
-                        <Button className="bg-rose-500 hover:bg-rose-600" onClick={() => void handleVoidInvoice()} disabled={actionLoading === 'void'}>
+                        <Button className="h-11 rounded-2xl border border-rose-400/30 bg-[linear-gradient(180deg,rgba(61,18,28,0.92),rgba(36,12,20,0.98))] px-5 text-rose-100 shadow-[0_16px_34px_rgba(127,29,29,0.22)] hover:bg-[linear-gradient(180deg,rgba(76,23,35,0.94),rgba(48,15,26,0.99))] hover:text-white" onClick={() => void handleVoidInvoice()} disabled={actionLoading === 'void'}>
                             Confirm Void
                         </Button>
                     </DialogFooter>

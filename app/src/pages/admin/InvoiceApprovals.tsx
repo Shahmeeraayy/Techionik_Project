@@ -1221,7 +1221,7 @@ export default function InvoiceApprovalsPage() {
                                             </div>
                                         </section>
                                     )}
-                                    <section className="rounded-xl border border-cyan-500/15 bg-slate-900/80 p-4 shadow-[0_0_0_1px_rgba(34,211,238,0.04)]">
+                                    <section className="rounded-xl border border-white/10 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] p-4 shadow-[0_18px_45px_rgba(0,0,0,0.2)]">
                                         <div className="mb-4 flex items-start justify-between gap-3">
                                             <div>
                                                 <h3 className="text-sm font-bold text-slate-100">Bill-to details</h3>
@@ -1237,7 +1237,7 @@ export default function InvoiceApprovalsPage() {
                                             <div>
                                                 <Label className="mb-1.5 block text-[11px] uppercase tracking-wide text-slate-400">Bill-to name</Label>
                                                 <Input
-                                                    className="h-10 border-border/60 bg-slate-950/80 text-slate-100 placeholder:text-slate-500"
+                                                    className="h-12 rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(10,18,32,0.96),rgba(8,14,26,0.96))] text-white placeholder:text-slate-500"
                                                     value={billToDraft.name}
                                                     onChange={(event) => setBillToDraft((prev) => ({ ...prev, name: event.target.value }))}
                                                     placeholder="Customer or dealership name"
@@ -1246,7 +1246,7 @@ export default function InvoiceApprovalsPage() {
                                             <div>
                                                 <Label className="mb-1.5 block text-[11px] uppercase tracking-wide text-slate-400">Street address</Label>
                                                 <Input
-                                                    className="h-10 border-border/60 bg-slate-950/80 text-slate-100 placeholder:text-slate-500"
+                                                    className="h-12 rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(10,18,32,0.96),rgba(8,14,26,0.96))] text-white placeholder:text-slate-500"
                                                     value={billToDraft.street}
                                                     onChange={(event) => setBillToDraft((prev) => ({ ...prev, street: event.target.value }))}
                                                     placeholder="Bill-to street address"
@@ -1255,7 +1255,7 @@ export default function InvoiceApprovalsPage() {
                                             <div>
                                                 <Label className="mb-1.5 block text-[11px] uppercase tracking-wide text-slate-400">City</Label>
                                                 <Input
-                                                    className="h-10 border-border/60 bg-slate-950/80 text-slate-100 placeholder:text-slate-500"
+                                                    className="h-12 rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(10,18,32,0.96),rgba(8,14,26,0.96))] text-white placeholder:text-slate-500"
                                                     value={billToDraft.city}
                                                     onChange={(event) => setBillToDraft((prev) => ({ ...prev, city: event.target.value }))}
                                                     placeholder="City"
@@ -1265,7 +1265,7 @@ export default function InvoiceApprovalsPage() {
                                                 <div>
                                                     <Label className="mb-1.5 block text-[11px] uppercase tracking-wide text-slate-400">State</Label>
                                                     <Input
-                                                        className="h-10 border-border/60 bg-slate-950/80 text-slate-100 placeholder:text-slate-500"
+                                                        className="h-12 rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(10,18,32,0.96),rgba(8,14,26,0.96))] text-white placeholder:text-slate-500"
                                                         value={billToDraft.state}
                                                         onChange={(event) => setBillToDraft((prev) => ({ ...prev, state: event.target.value }))}
                                                         placeholder="State"
@@ -1274,7 +1274,7 @@ export default function InvoiceApprovalsPage() {
                                                 <div>
                                                     <Label className="mb-1.5 block text-[11px] uppercase tracking-wide text-slate-400">Zip</Label>
                                                     <Input
-                                                        className="h-10 border-border/60 bg-slate-950/80 text-slate-100 placeholder:text-slate-500"
+                                                        className="h-12 rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(10,18,32,0.96),rgba(8,14,26,0.96))] text-white placeholder:text-slate-500"
                                                         value={billToDraft.zip_code}
                                                         onChange={(event) => setBillToDraft((prev) => ({ ...prev, zip_code: event.target.value }))}
                                                         placeholder="Zip"
@@ -1283,7 +1283,7 @@ export default function InvoiceApprovalsPage() {
                                             </div>
                                         </div>
                                     </section>
-                                    <section className="grid grid-cols-2 gap-4 rounded-xl border border-cyan-500/15 bg-slate-900/80 p-4 shadow-[0_0_0_1px_rgba(34,211,238,0.04)]">
+                                    <section className="grid grid-cols-2 gap-4 rounded-xl border border-white/10 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] p-4 shadow-[0_18px_45px_rgba(0,0,0,0.2)]">
                                         <div>
                                             <h4 className="mb-1 text-xs font-semibold uppercase tracking-wider text-slate-400">Location</h4>
                                             <div className="font-medium text-slate-100">{getApprovalLocationLabel(selectedInvoice)}</div>
@@ -1550,13 +1550,13 @@ export default function InvoiceApprovalsPage() {
                                 </div>
                             </ScrollArea>
 
-                            <div className="sticky bottom-0 z-20 border-t border-border/60 bg-slate-950/95 p-6 backdrop-blur">
+                            <div className="sticky bottom-0 z-20 border-t border-white/10 bg-[linear-gradient(180deg,rgba(8,12,20,0.98),rgba(6,10,18,0.99))] p-6 backdrop-blur">
                                 <div className="flex gap-3">
-                                    <Button variant="outline" className="flex-1 border-border/70 bg-transparent text-slate-200 hover:bg-slate-900 hover:text-white" onClick={() => setDrawerOpen(false)}>Cancel</Button>
+                                    <Button variant="outline" className="flex-1 h-11 rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] text-slate-100 shadow-[0_14px_34px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.055)] hover:bg-[linear-gradient(180deg,rgba(24,38,64,0.98),rgba(12,20,34,0.98))] hover:text-white" onClick={() => setDrawerOpen(false)}>Cancel</Button>
                                         <Dialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
                                             <DialogTrigger asChild>
                                             <Button
-                                                className="flex-[2] bg-[#2F8E92] hover:bg-[#267276] text-white shadow-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60"
+                                                className="flex-[2] h-11 rounded-2xl border border-[#7db0ff]/40 bg-[linear-gradient(135deg,#4f7cff,#22d3ee)] text-white shadow-[0_16px_34px_rgba(79,124,255,0.22)] font-semibold hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60"
                                                 disabled={approvalDisabled}
                                             >
                                                 <CheckCircle2 className="w-4 h-4 mr-2" />
