@@ -19,6 +19,7 @@ from app.models.base import Base
 from app.models.email_outbox import EmailOutbox
 from app.models.signup_request import SignupRequest
 from app.models.tenant import Tenant, TenantMembership
+from app.models.technician import Technician
 
 
 class SignupRequestRoutingApiTests(unittest.TestCase):
@@ -38,6 +39,7 @@ class SignupRequestRoutingApiTests(unittest.TestCase):
             conn.execute(TenantMembership.__table__.delete())
             conn.execute(EmailOutbox.__table__.delete())
             conn.execute(SignupRequest.__table__.delete())
+            conn.execute(Technician.__table__.delete())
             conn.execute(AdminUser.__table__.delete())
             conn.execute(AdminCredentialSettings.__table__.delete())
             conn.execute(Tenant.__table__.delete())
@@ -156,6 +158,39 @@ class SignupRequestRoutingApiTests(unittest.TestCase):
             headers={"Authorization": f"Bearer {viewer_token}"},
         )
         self.assertEqual(approve_response.status_code, 403, approve_response.text)
+
+    def test_approved_technician_can_log_in_after_tenant_routed_signup(self):
+        owner_signup = self._signup_owner()
+        owner_token = owner_signup["access_token"]
+
+        create_response = self.client.post(
+            "/auth/technician-signup-request",
+            json={
+                "name": "Field Tech Login",
+                "admin_email": "ehtix@gmail.com",
+                "email": "tech-login@example.com",
+                "phone": "+15550003333",
+                "password": "secret123",
+            },
+        )
+        self.assertEqual(create_response.status_code, 201, create_response.text)
+        request_id = create_response.json()["id"]
+
+        approve_response = self.client.post(
+            f"/admin/technician-signup-requests/{request_id}/approve",
+            headers={"Authorization": f"Bearer {owner_token}"},
+        )
+        self.assertEqual(approve_response.status_code, 200, approve_response.text)
+
+        login_response = self.client.post(
+            "/auth/technician-token",
+            json={"email": "tech-login@example.com", "password": "secret123"},
+        )
+        self.assertEqual(login_response.status_code, 200, login_response.text)
+        payload = login_response.json()
+        self.assertEqual(payload["role"], "technician")
+        self.assertEqual(payload["user_email"], "tech-login@example.com")
+        self.assertEqual(payload["tenant_id"], owner_signup["tenant_id"])
 
 
 if __name__ == "__main__":

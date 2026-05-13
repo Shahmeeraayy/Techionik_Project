@@ -147,7 +147,7 @@ def create_dev_technician_token(
     normalized_email = payload.email.strip().lower()
     normalized_password = payload.password.strip()
     repo = TechnicianRepository(db)
-    technician = repo.get_technician_by_email(normalized_email)
+    technician = repo.get_technician_by_email_global(normalized_email)
     if technician is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid technician credentials")
     if technician.status != "active":
@@ -191,7 +191,7 @@ def create_technician_token(
     normalized_email = payload.email.strip().lower()
     normalized_password = payload.password.strip()
     repo = TechnicianRepository(db)
-    technician = repo.get_technician_by_email(normalized_email)
+    technician = repo.get_technician_by_email_global(normalized_email)
     if technician is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid technician credentials")
     if technician.status != "active":

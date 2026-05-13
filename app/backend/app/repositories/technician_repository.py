@@ -34,6 +34,14 @@ class TechnicianRepository:
     def get_technician_by_email(self, email: str) -> Optional[Technician]:
         return self.db.query(Technician).filter(func.lower(Technician.email) == email.lower()).first()
 
+    def get_technician_by_email_global(self, email: str) -> Optional[Technician]:
+        return (
+            self.db.query(Technician)
+            .execution_options(skip_tenant_scope=True)
+            .filter(func.lower(Technician.email) == email.lower())
+            .first()
+        )
+
     def email_exists(self, email: str) -> bool:
         return (
             self.db.query(Technician.id)
