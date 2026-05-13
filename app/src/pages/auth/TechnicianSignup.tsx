@@ -10,6 +10,7 @@ import {
   authInputClass,
   authLabelClass,
   authPanelClass,
+  authPrimaryButtonClass,
 } from './AuthSplitShell';
 
 export default function TechnicianSignupPage() {
@@ -87,7 +88,7 @@ export default function TechnicianSignupPage() {
       chips={[]}
       footer={
         <div className="grid gap-3 sm:grid-cols-2">
-          <div className="flex h-full flex-col rounded-[22px] border border-white/10 bg-white/[0.03] px-4 py-4 text-white">
+          <div className="flex h-full flex-col rounded-[22px] border border-[rgba(148,163,184,0.18)] bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] px-4 py-4 text-white shadow-[0_18px_54px_rgba(2,6,23,0.24),inset_0_1px_0_rgba(255,255,255,0.045)]">
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-white/70">Already approved</p>
             <p className="mt-2 flex-1 text-sm leading-6 text-white/84">
               Received approval and ready to start taking assignments?
@@ -97,7 +98,7 @@ export default function TechnicianSignupPage() {
               <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
-          <div className="flex h-full flex-col rounded-[22px] border border-white/10 bg-white/[0.03] px-4 py-4 text-white">
+          <div className="flex h-full flex-col rounded-[22px] border border-[rgba(148,163,184,0.18)] bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] px-4 py-4 text-white shadow-[0_18px_54px_rgba(2,6,23,0.24),inset_0_1px_0_rgba(255,255,255,0.045)]">
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-white/70">Dispatch access</p>
             <p className="mt-2 flex-1 text-sm leading-6 text-white/84">
               Need admin-side access instead of technician onboarding?
@@ -110,10 +111,10 @@ export default function TechnicianSignupPage() {
         </div>
       }
     >
-      <div className="mb-4 rounded-[22px] border border-white/10 bg-white/[0.03] px-4 py-4">
+      <div className="mb-4 rounded-[22px] border border-[rgba(148,163,184,0.18)] bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] px-4 py-4 shadow-[0_18px_54px_rgba(2,6,23,0.24),inset_0_1px_0_rgba(255,255,255,0.045)]">
         <div className="flex items-start gap-3">
           <div className="mt-0.5 rounded-full border border-white/10 bg-white/[0.05] p-2">
-            <ShieldCheck className="h-4 w-4 text-white" />
+            <ShieldCheck className="h-4 w-4 text-[#d9f8ff]" />
           </div>
           <div>
             <p className="text-sm font-semibold text-white">Approval required</p>
@@ -126,7 +127,7 @@ export default function TechnicianSignupPage() {
 
       {successMessage ? (
         <div className="space-y-4">
-          <div className="rounded-[22px] border border-white/12 bg-white/[0.03] px-4 py-4 text-white">
+          <div className="rounded-[22px] border border-[rgba(148,163,184,0.18)] bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] px-4 py-4 text-white shadow-[0_18px_54px_rgba(2,6,23,0.24),inset_0_1px_0_rgba(255,255,255,0.045)]">
             <p className="text-sm font-semibold">Request sent successfully</p>
             <p className="mt-2 text-sm leading-6 text-white/84">
               Your technician request has been routed to <span className="font-semibold">{submittedAdminEmail}</span>.
@@ -144,7 +145,7 @@ export default function TechnicianSignupPage() {
             <Button
               type="button"
               asChild
-              className="h-14 rounded-[20px] bg-white text-base font-semibold text-black transition-all hover:bg-white/90"
+              className="h-14 rounded-[20px] bg-[linear-gradient(135deg,#4f7cff,#22d3ee)] text-base font-semibold text-white shadow-[0_16px_34px_rgba(79,124,255,0.22)] transition-all hover:brightness-105"
             >
               <Link to="/tech/login">
                 Go to sign in
@@ -158,7 +159,7 @@ export default function TechnicianSignupPage() {
                 setSuccessMessage(null);
                 setErrorMessage(null);
               }}
-              className="h-14 rounded-[20px] border-white/10 bg-white/[0.03] text-slate-200 hover:bg-white/[0.06] hover:text-white"
+              className="h-14 rounded-[20px] border-[rgba(148,163,184,0.18)] bg-[rgba(12,20,34,0.9)] text-[#eaf1ff] hover:bg-[rgba(23,37,64,0.94)] hover:text-white"
             >
               Create another request
             </Button>
@@ -250,7 +251,7 @@ export default function TechnicianSignupPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword((current) => !current)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 transition-colors hover:text-slate-800"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-[#8ea3c5] transition-colors hover:text-white"
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -276,7 +277,7 @@ export default function TechnicianSignupPage() {
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword((current) => !current)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 transition-colors hover:text-slate-800"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-[#8ea3c5] transition-colors hover:text-white"
                   aria-label={showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'}
                 >
                   {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -293,7 +294,7 @@ export default function TechnicianSignupPage() {
 
           <Button
             type="submit"
-            className="h-14 w-full rounded-[20px] bg-white text-base font-semibold text-black transition-all hover:bg-white/90"
+            className={authPrimaryButtonClass}
             disabled={isSubmitting}
           >
             <span className="flex items-center justify-center">

@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { AuthSplitShell, authInputClass, authLabelClass, authPanelClass } from './AuthSplitShell';
+import { AuthSplitShell, authInputClass, authLabelClass, authPanelClass, authPrimaryButtonClass } from './AuthSplitShell';
 
 type NavigationState = {
   from?: string;
@@ -94,7 +94,7 @@ export default function TechnicianLoginPage() {
       chips={[]}
       footer={
         <div className="grid gap-3 sm:grid-cols-2">
-          <div className="flex h-full flex-col rounded-[22px] border border-white/10 bg-white/[0.03] px-4 py-4 text-white">
+          <div className="flex h-full flex-col rounded-[22px] border border-[rgba(148,163,184,0.18)] bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] px-4 py-4 text-white shadow-[0_18px_54px_rgba(2,6,23,0.24),inset_0_1px_0_rgba(255,255,255,0.045)]">
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-white/70">New technician</p>
             <p className="mt-2 flex-1 text-sm leading-6 text-white/84">
               Need an account before taking assignments?
@@ -104,7 +104,7 @@ export default function TechnicianLoginPage() {
               <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
-          <div className="flex h-full flex-col rounded-[22px] border border-white/10 bg-white/[0.03] px-4 py-4 text-white">
+          <div className="flex h-full flex-col rounded-[22px] border border-[rgba(148,163,184,0.18)] bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] px-4 py-4 text-white shadow-[0_18px_54px_rgba(2,6,23,0.24),inset_0_1px_0_rgba(255,255,255,0.045)]">
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-white/70">Dispatch access</p>
             <p className="mt-2 flex-1 text-sm leading-6 text-white/84">
               Need admin-side controls instead of field access?
@@ -153,7 +153,7 @@ export default function TechnicianLoginPage() {
                   Forgot password?
                 </button>
               </DialogTrigger>
-              <DialogContent className="rounded-[28px] border border-white/10 bg-[#0b1320] p-0 text-white shadow-[0_30px_80px_rgba(0,0,0,0.45)] sm:max-w-[520px]">
+              <DialogContent className="rounded-[28px] border border-[rgba(148,163,184,0.18)] bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] p-0 text-white shadow-[0_30px_80px_rgba(0,0,0,0.45)] sm:max-w-[520px]">
                 <div className="p-6 sm:p-7">
                   <DialogHeader>
                     <DialogTitle className="text-[1.7rem] font-semibold tracking-[-0.04em] text-white">
@@ -196,14 +196,14 @@ export default function TechnicianLoginPage() {
                   ) : null}
 
                   <DialogFooter className="mt-6 gap-3 sm:justify-between">
-                    <Button type="button" variant="outline" asChild className="rounded-[18px] border-white/10 bg-white/[0.03] text-slate-200 hover:bg-white/[0.06]">
+                    <Button type="button" variant="outline" asChild className="rounded-[18px] border-[rgba(148,163,184,0.18)] bg-[rgba(12,20,34,0.9)] text-[#eaf1ff] hover:bg-[rgba(23,37,64,0.94)]">
                       <Link to="/tech/signup">Create account</Link>
                     </Button>
                     <Button
                       type="button"
                       onClick={handleForgotPasswordRequest}
                       disabled={isForgotSubmitting}
-                      className="rounded-[18px] bg-white text-black hover:bg-white/90"
+                      className="rounded-[18px] bg-[linear-gradient(135deg,#4f7cff,#22d3ee)] text-white hover:brightness-105"
                     >
                       {isForgotSubmitting ? 'Sending...' : 'Notify admin'}
                     </Button>
@@ -226,7 +226,7 @@ export default function TechnicianLoginPage() {
             <button
               type="button"
               onClick={() => setShowPassword((current) => !current)}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 transition-colors hover:text-slate-200"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-[#8ea3c5] transition-colors hover:text-white"
               aria-label={showPassword ? 'Hide password' : 'Show password'}
             >
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -242,12 +242,12 @@ export default function TechnicianLoginPage() {
               type="checkbox"
               checked={rememberSession}
               onChange={(event) => setRememberSession(event.target.checked)}
-              className="h-4 w-4 cursor-pointer rounded border-white/20 bg-transparent text-black focus:ring-white/30"
+              className="h-4 w-4 cursor-pointer rounded border-white/20 bg-transparent text-[#4f7cff] focus:ring-[#67e8f9]/20"
             />
             <span className="ml-3 text-sm font-medium text-slate-200">Remember this browser</span>
           </label>
-          <div className="flex items-center gap-2 text-sm text-white/78">
-            <ShieldCheck className="h-4 w-4 text-white" />
+          <div className="flex items-center gap-2 text-sm text-[#9fb1cf]">
+            <ShieldCheck className="h-4 w-4 text-[#d9f8ff]" />
             Secure technician access
           </div>
         </div>
@@ -260,7 +260,7 @@ export default function TechnicianLoginPage() {
 
         <Button
           type="submit"
-          className="h-14 w-full rounded-[20px] bg-white text-base font-semibold text-black transition-all hover:bg-white/90"
+          className={authPrimaryButtonClass}
           disabled={isSubmitting}
         >
           <span className="flex items-center justify-center">

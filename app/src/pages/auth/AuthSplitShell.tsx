@@ -22,30 +22,33 @@ const accentConfig: Record<
   }
 > = {
   admin: {
-    badge: 'border-white/14 bg-white/[0.04] text-white',
-    buttonRing: 'shadow-[0_20px_48px_rgba(255,255,255,0.04)]',
+    badge: 'border-white/10 bg-[#0f172a] text-white',
+    buttonRing: 'shadow-[0_24px_54px_rgba(79,124,255,0.16)]',
   },
   tech: {
-    badge: 'border-white/14 bg-white/[0.04] text-white',
-    buttonRing: 'shadow-[0_20px_48px_rgba(255,255,255,0.04)]',
+    badge: 'border-white/10 bg-[#0f172a] text-white',
+    buttonRing: 'shadow-[0_24px_54px_rgba(79,124,255,0.16)]',
   },
   signup: {
-    badge: 'border-white/14 bg-white/[0.04] text-white',
-    buttonRing: 'shadow-[0_20px_48px_rgba(255,255,255,0.04)]',
+    badge: 'border-white/10 bg-[#0f172a] text-white',
+    buttonRing: 'shadow-[0_24px_54px_rgba(79,124,255,0.16)]',
   },
   'tech-signup': {
-    badge: 'border-white/14 bg-white/[0.04] text-white',
-    buttonRing: 'shadow-[0_20px_48px_rgba(255,255,255,0.04)]',
+    badge: 'border-white/10 bg-[#0f172a] text-white',
+    buttonRing: 'shadow-[0_24px_54px_rgba(79,124,255,0.16)]',
   },
 };
 
 export const authInputClass =
-  'h-12 rounded-2xl border border-white/14 bg-white px-4 text-[15px] text-black shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] placeholder:text-slate-500 focus-visible:border-white/40 focus-visible:ring-white/10';
+  'h-12 rounded-2xl border border-[rgba(148,163,184,0.22)] bg-[rgba(10,18,32,0.96)] px-4 text-[15px] text-[#f4f8ff] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] placeholder:text-[#8ea3c5] focus-visible:border-[#67e8f9]/50 focus-visible:ring-[#67e8f9]/15';
 
 export const authLabelClass = 'text-sm font-semibold text-white';
 
 export const authPanelClass =
-  'rounded-[22px] border border-white/10 bg-white/[0.03] px-4 py-4 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]';
+  'rounded-[22px] border border-[rgba(148,163,184,0.18)] bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] px-4 py-4 text-white shadow-[0_18px_54px_rgba(2,6,23,0.24),inset_0_1px_0_rgba(255,255,255,0.045)]';
+
+export const authPrimaryButtonClass =
+  'h-14 w-full rounded-[20px] bg-[linear-gradient(135deg,#4f7cff,#22d3ee)] text-base font-semibold text-white shadow-[0_16px_34px_rgba(79,124,255,0.22)] transition-all hover:brightness-105';
 
 export function AuthSplitShell({
   accent,
@@ -60,13 +63,13 @@ export function AuthSplitShell({
   const theme = accentConfig[accent];
 
   return (
-    <div className="relative min-h-[100svh] overflow-x-hidden bg-black text-white">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.06),transparent_20%),radial-gradient(circle_at_bottom,rgba(255,255,255,0.04),transparent_22%),linear-gradient(180deg,#050505_0%,#030303_48%,#000000_100%)]" />
-      <div className="pointer-events-none absolute inset-0 opacity-20 [background-image:linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] [background-size:52px_52px]" />
+    <div className="relative min-h-[100svh] overflow-x-hidden bg-[#080c14] text-white">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_0%,rgba(79,124,255,0.08),transparent_32%),linear-gradient(180deg,#0b1220_0%,#080c14_44%,#060913_100%)]" />
+      <div className="pointer-events-none absolute inset-0 opacity-20 [background-image:linear-gradient(rgba(255,255,255,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.035)_1px,transparent_1px)] [background-size:112px_112px]" />
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.02),transparent_22%,transparent_78%,rgba(255,255,255,0.02))]" />
 
       <main className="relative flex min-h-[100svh] items-center justify-center px-4 py-5 sm:px-6 sm:py-6 lg:px-8">
-        <section className="w-full max-w-[560px] rounded-[32px] border border-white/10 bg-[#080808]/96 p-5 shadow-[0_30px_120px_rgba(0,0,0,0.55)] backdrop-blur-xl sm:p-6">
+        <section className="w-full max-w-[560px] rounded-[32px] border border-[rgba(148,163,184,0.18)] bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] p-5 shadow-[0_28px_90px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.04)] backdrop-blur-xl sm:p-6">
           <div className="flex flex-col items-center text-center">
             <div className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.28em] ${theme.badge}`}>
               <Sparkles className="h-3.5 w-3.5" />
@@ -92,15 +95,15 @@ export function AuthSplitShell({
               {chips.map((chip) => (
                 <span
                   key={chip}
-                  className="rounded-full border border-white/12 bg-white/[0.04] px-3 py-1.5 text-[11px] font-medium text-white/92"
-                >
-                  {chip}
-                </span>
-              ))}
-            </div>
+                className="rounded-full border border-[rgba(148,163,184,0.18)] bg-[rgba(12,20,34,0.9)] px-3 py-1.5 text-[11px] font-medium text-[#eaf1ff]"
+              >
+                {chip}
+              </span>
+            ))}
+          </div>
           ) : null}
 
-          <div className={`mt-5 rounded-[28px] border border-white/10 bg-[#0a0a0a] p-4 ${theme.buttonRing} sm:p-5`}>
+          <div className={`mt-5 rounded-[28px] border border-[rgba(148,163,184,0.18)] bg-[linear-gradient(180deg,rgba(8,18,32,0.98),rgba(5,10,20,0.99))] p-4 ${theme.buttonRing} sm:p-5`}>
             {children}
           </div>
 

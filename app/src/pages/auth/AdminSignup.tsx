@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { AuthSplitShell, authInputClass, authLabelClass, authPanelClass } from './AuthSplitShell';
+import { AuthSplitShell, authInputClass, authLabelClass, authPanelClass, authPrimaryButtonClass } from './AuthSplitShell';
 
 function slugifyWorkspace(value: string) {
   return value
@@ -71,7 +71,7 @@ export default function AdminSignupPage() {
       description=""
       chips={[]}
       footer={
-        <div className="rounded-[22px] border border-white/10 bg-white/[0.03] px-4 py-4 text-white sm:flex sm:min-h-[112px] sm:items-center sm:justify-between">
+        <div className="rounded-[22px] border border-[rgba(148,163,184,0.18)] bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] px-4 py-4 text-white shadow-[0_18px_54px_rgba(2,6,23,0.24),inset_0_1px_0_rgba(255,255,255,0.045)] sm:flex sm:min-h-[112px] sm:items-center sm:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-white/70">Already have a workspace?</p>
             <p className="mt-2 text-sm leading-6 text-white/84">
@@ -154,9 +154,9 @@ export default function AdminSignupPage() {
               <Label htmlFor="owner-password" className={authLabelClass}>
                 Password
               </Label>
-              <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">
-                6+ characters
-              </span>
+            <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#9fb1cf]">
+              6+ characters
+            </span>
             </div>
             <div className="relative">
               <Input
@@ -172,7 +172,7 @@ export default function AdminSignupPage() {
               <button
                 type="button"
                 onClick={() => setShowPassword((current) => !current)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 transition-colors hover:text-slate-200"
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-[#8ea3c5] transition-colors hover:text-white"
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
               >
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -187,12 +187,12 @@ export default function AdminSignupPage() {
               type="checkbox"
               checked={rememberSession}
               onChange={(event) => setRememberSession(event.target.checked)}
-              className="h-4 w-4 cursor-pointer rounded border-white/20 bg-transparent text-black focus:ring-white/30"
+              className="h-4 w-4 cursor-pointer rounded border-white/20 bg-transparent text-[#4f7cff] focus:ring-[#67e8f9]/20"
             />
             <span className="ml-3 text-sm font-medium text-slate-200">Keep me signed in</span>
           </label>
-          <div className="flex items-center gap-2 text-sm text-white/78">
-            <ShieldCheck className="h-4 w-4 text-white" />
+          <div className="flex items-center gap-2 text-sm text-[#9fb1cf]">
+            <ShieldCheck className="h-4 w-4 text-[#d9f8ff]" />
             Secure owner access
           </div>
         </div>
@@ -205,7 +205,7 @@ export default function AdminSignupPage() {
 
         <Button
           type="submit"
-          className="h-14 w-full rounded-[20px] bg-white text-base font-semibold text-black transition-all hover:bg-white/90"
+          className={authPrimaryButtonClass}
           disabled={isSubmitting}
         >
           <span className="flex items-center justify-center">

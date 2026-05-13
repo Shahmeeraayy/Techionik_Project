@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { AuthSplitShell, authInputClass, authLabelClass, authPanelClass } from './AuthSplitShell';
+import { AuthSplitShell, authInputClass, authLabelClass, authPanelClass, authPrimaryButtonClass } from './AuthSplitShell';
 
 type NavigationState = {
   from?: string;
@@ -122,12 +122,12 @@ export default function AdminLoginPage() {
               type="checkbox"
               checked={rememberSession}
               onChange={(event) => setRememberSession(event.target.checked)}
-              className="h-4 w-4 cursor-pointer rounded border-white/20 bg-transparent text-black focus:ring-white/30"
+              className="h-4 w-4 cursor-pointer rounded border-white/20 bg-transparent text-[#4f7cff] focus:ring-[#67e8f9]/20"
             />
             <span className="ml-3 text-sm font-medium text-slate-200">Remember this browser</span>
           </label>
-          <div className="flex items-center gap-2 text-sm text-slate-400">
-            <ShieldCheck className="h-4 w-4 text-white" />
+          <div className="flex items-center gap-2 text-sm text-[#9fb1cf]">
+            <ShieldCheck className="h-4 w-4 text-[#d9f8ff]" />
             Secure admin access
           </div>
         </div>
@@ -140,7 +140,7 @@ export default function AdminLoginPage() {
 
         <Button
           type="submit"
-          className="h-14 w-full rounded-[20px] bg-white text-base font-semibold text-black transition-all hover:bg-white/90"
+          className={authPrimaryButtonClass}
           disabled={isSubmitting}
         >
           <span className="flex items-center justify-center">
