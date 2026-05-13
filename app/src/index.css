@@ -1949,6 +1949,31 @@
   border-radius: 999px;
 }
 
+.admin-dark-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(71, 85, 105, 0.72) rgba(8, 12, 20, 0.96);
+}
+
+.admin-dark-scrollbar::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.admin-dark-scrollbar::-webkit-scrollbar-track {
+  background: rgba(8, 12, 20, 0.96);
+  border-radius: 999px;
+}
+
+.admin-dark-scrollbar::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(79, 124, 255, 0.6), rgba(71, 85, 105, 0.82));
+  border: 2px solid rgba(8, 12, 20, 0.96);
+  border-radius: 999px;
+}
+
+.admin-dark-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(125, 176, 255, 0.78), rgba(79, 124, 255, 0.82));
+}
+
 .dark .admin-shell .admin-jobs-table + div,
 .dark .admin-shell .admin-jobs-table ~ div[class*="border-t"] {
   background: linear-gradient(180deg, rgba(8, 16, 30, 0.98), rgba(6, 12, 23, 0.99)) !important;
