@@ -34,7 +34,7 @@ class InvoiceApiTests(unittest.TestCase):
         cls.client = TestClient(app)
         token_response = cls.client.post(
             "/auth/dev/admin-token",
-            json={"email": "admin@sm2dispatch.com", "password": "admin123"},
+            json={"email": "admin@nexusops.com", "password": "admin123"},
         )
         assert token_response.status_code == 200
         cls.auth_header = {"Authorization": f"Bearer {token_response.json()['access_token']}"}
@@ -121,7 +121,7 @@ class InvoiceApiTests(unittest.TestCase):
             row = Technician(
                 id=uuid4(),
                 name="Jolianne",
-                email="jolianne@sm2dispatch.com",
+                email="jolianne@nexusops.com",
                 phone="+1-418-555-0101",
                 status="active",
             )
@@ -152,7 +152,7 @@ class InvoiceApiTests(unittest.TestCase):
             "terms": "NET_15",
             "shipping": "10.00",
             "status": "sent",
-            "customer_message": "Thank you for choosing SM2 electronics.",
+            "customer_message": "Thank you for choosing NexusOps.",
         }
         create_res = self.client.post("/invoices", json=create_payload, headers=self.auth_header)
         self.assertEqual(create_res.status_code, 201, create_res.text)
@@ -251,14 +251,14 @@ class InvoiceApiTests(unittest.TestCase):
             "terms": "CUSTOM",
             "custom_term_days": 10,
             "company_info": {
-                "name": "SM2 electronics",
+                "name": "NexusOps",
                 "street_address": "123 Dispatch Ave",
                 "city": "Quebec",
                 "state": "QC",
                 "zip_code": "G1A 1A1",
                 "phone": "+1-418-555-0100",
-                "email": "billing@sm2dispatch.com",
-                "website": "https://www.sm2dispatch.com",
+                "email": "billing@nexusops.com",
+                "website": "https://www.nexusops.com",
             },
             "bill_to": {
                 "name": "Audi de Quebec",
@@ -664,18 +664,18 @@ class InvoiceApiTests(unittest.TestCase):
         )
         self.assertEqual(get_default_res.status_code, 200, get_default_res.text)
         default_payload = get_default_res.json()
-        self.assertEqual(default_payload["name"], "SM2 electronics")
+        self.assertEqual(default_payload["name"], "NexusOps")
 
         update_payload = {
             "logo_url": "https://example.com/logo.png",
-            "name": "SM2 electronics QA",
+            "name": "NexusOps QA",
             "street_address": "500 Test Blvd",
             "city": "Quebec",
             "state": "QC",
             "zip_code": "G2A 1A1",
             "phone": "+1-418-555-9900",
-            "email": "billing.qa@sm2dispatch.com",
-            "website": "https://qa.sm2dispatch.com",
+            "email": "billing.qa@nexusops.com",
+            "website": "https://qa.nexusops.com",
         }
         put_res = self.client.put(
             "/admin/settings/invoice-branding",
@@ -767,3 +767,4 @@ class InvoiceApiTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+

@@ -21,7 +21,7 @@ function AppLoadingScreen() {
         <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-cyan-300/20 bg-cyan-300/10">
           <span className="h-2.5 w-2.5 rounded-full bg-cyan-200 shadow-[0_0_22px_rgba(125,211,252,0.85)]" />
         </div>
-        <p className="mt-5 text-sm font-semibold uppercase tracking-[0.24em] text-cyan-100/70">SM2 Dispatch</p>
+        <p className="mt-5 text-sm font-semibold uppercase tracking-[0.24em] text-cyan-100/70">NexusOps</p>
         <h1 className="mt-2 text-2xl font-semibold tracking-[-0.04em] text-white">Preparing workspace</h1>
         <div className="mt-6 h-1 overflow-hidden rounded-full bg-white/10">
           <div className="h-full w-1/2 rounded-full bg-gradient-to-r from-[#4f7cff] to-[#22d3ee] admin-login-scan" />
@@ -123,3 +123,4 @@ export function HomeRoute() {
 
   return <Navigate to={defaultPathByRole[user.role]} replace />;
 }
+

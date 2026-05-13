@@ -311,9 +311,9 @@ export default function TechnicianAccountsPage() {
     try {
       const issued = await issueAdminTechnicianPasswordResetLink(adminToken, payload.technicianId);
       const resetLink = `${window.location.origin}${issued.reset_url}`;
-      const subject = encodeURIComponent('SM2 electronics technician password reset');
+      const subject = encodeURIComponent('NexusOps technician password reset');
       const body = encodeURIComponent(
-        `Hello ${payload.name},\n\nThis is your technician account password reset message from SM2 electronics.\n\nReset your password here:\n${resetLink}\n\nThis link expires in 24 hours. If you did not request this, please contact support.\n`
+        `Hello ${payload.name},\n\nThis is your technician account password reset message from NexusOps.\n\nReset your password here:\n${resetLink}\n\nThis link expires in 24 hours. If you did not request this, please contact support.\n`
       );
       window.location.href = `mailto:${payload.email}?subject=${subject}&body=${body}`;
       await runSync();
@@ -887,3 +887,4 @@ export default function TechnicianAccountsPage() {
     </div>
   );
 }
+

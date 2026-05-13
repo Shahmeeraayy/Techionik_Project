@@ -61,7 +61,7 @@ export default function MarketingHome() {
               <ShieldCheck className="h-5 w-5 text-cyan-100" />
             </span>
             <span>
-              <span className="block text-sm font-semibold tracking-[-0.02em] text-white">SM2 electronics</span>
+              <span className="block text-sm font-semibold tracking-[-0.02em] text-white">NexusOps</span>
               <span className="block text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-500">Dispatch OS</span>
             </span>
           </Link>
@@ -233,7 +233,7 @@ export default function MarketingHome() {
       <footer className="border-t border-white/10 bg-[#080c14] px-5 py-10 sm:px-6 lg:px-8">
         <div className="mx-auto flex max-w-7xl flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-sm font-semibold text-white">SM2 electronics</p>
+            <p className="text-sm font-semibold text-white">NexusOps</p>
             <p className="mt-1 text-sm text-slate-500">Premium dispatch operations for modern field service teams.</p>
           </div>
           <div className="flex flex-wrap gap-3">
@@ -252,3 +252,4 @@ export default function MarketingHome() {
     </main>
   );
 }
+

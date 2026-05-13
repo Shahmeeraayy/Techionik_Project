@@ -43,7 +43,7 @@ function DesktopSidebar() {
           <Wrench className="w-5 h-5 text-white" />
         </div>
         <div>
-          <h1 className="font-semibold leading-tight text-white">SM2 electronics</h1>
+          <h1 className="font-semibold leading-tight text-white">NexusOps</h1>
           <p className="text-xs uppercase tracking-[0.22em] text-slate-400">Technician Portal</p>
         </div>
       </div>
@@ -112,7 +112,7 @@ function MobileHeader({ onMenuClick }: { onMenuClick: () => void }) {
           <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[linear-gradient(135deg,#111827,#0f172a)] shadow-[0_14px_30px_rgba(0,0,0,0.4),inset_0_0_0_1px_rgba(255,255,255,0.1)]">
             <Wrench className="w-4 h-4 text-white" />
           </div>
-          <span className="font-semibold text-white">SM2 electronics</span>
+          <span className="font-semibold text-white">NexusOps</span>
         </div>
         <div className="flex items-center gap-2">
           <Avatar className="w-8 h-8">
@@ -257,3 +257,4 @@ export function TechnicianLayout({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
+

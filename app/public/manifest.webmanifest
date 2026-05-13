@@ -1,6 +1,6 @@
 {
-  "name": "SM2 Technician Portal",
-  "short_name": "SM2 Tech",
+  "name": "NexusOps Technician Portal",
+  "short_name": "NexusOps Tech",
   "description": "Field technician workspace for assigned jobs, current job updates, history, chat, and profile.",
   "start_url": "/tech/jobs",
   "scope": "/",
@@ -32,3 +32,4 @@
     }
   ]
 }
+

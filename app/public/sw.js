@@ -89,7 +89,7 @@ self.addEventListener('push', (event) => {
 });
 
 self.addEventListener('message', (event) => {
-  if (event.data?.type !== 'SM2_SHOW_JOB_NOTIFICATION') return;
+  if (event.data?.type !== 'NEXUSOPS_SHOW_JOB_NOTIFICATION') return;
   const title = event.data.title || 'New assigned job';
   const options = {
     body: event.data.body || 'A new job has been assigned to your technician queue.',
@@ -114,3 +114,4 @@ self.addEventListener('notificationclick', (event) => {
     })
   );
 });
+

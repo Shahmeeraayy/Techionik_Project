@@ -47,7 +47,7 @@ class SignupRequestRoutingApiTests(unittest.TestCase):
     def _default_admin_token(self) -> str:
         response = self.client.post(
             "/auth/admin-token",
-            json={"email": "admin@sm2dispatch.com", "password": "admin123"},
+            json={"email": "admin@nexusops.com", "password": "admin123"},
         )
         self.assertEqual(response.status_code, 200, response.text)
         return response.json()["access_token"]
@@ -109,7 +109,7 @@ class SignupRequestRoutingApiTests(unittest.TestCase):
 
         self.assertEqual(len(queued_emails), 1)
         self.assertEqual(queued_emails[0].recipient_email, "ehtix@gmail.com")
-        self.assertNotEqual(queued_emails[0].recipient_email, "admin@sm2dispatch.com")
+        self.assertNotEqual(queued_emails[0].recipient_email, "admin@nexusops.com")
 
     def test_viewer_cannot_review_signup_requests(self):
         owner_signup = self._signup_owner()
@@ -195,3 +195,4 @@ class SignupRequestRoutingApiTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+

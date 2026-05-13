@@ -194,7 +194,7 @@ const getDefaultNewRule = (): Partial<PriorityRule> => ({
 });
 
 const ADMIN_REFRESH_EVENT = 'sm-dispatch:admin-refresh';
-const DEFAULT_ADMIN_EMAIL = 'admin@sm2dispatch.com';
+const DEFAULT_ADMIN_EMAIL = 'admin@nexusops.com';
 const COMPANY_PROFILE_SETTINGS_STORAGE_KEY = 'sm_dispatch_company_profile_settings';
 const NOTIFICATION_PREFERENCES_STORAGE_KEY = 'sm_dispatch_notification_preferences';
 const BILLING_SUBSCRIPTION_STORAGE_KEY = 'sm_dispatch_billing_subscription_settings';
@@ -203,7 +203,7 @@ const DEFAULT_COMPANY_PROFILE_SETTINGS: CompanyProfileSettings = {
     industryType: 'Automotive',
     timezone: 'America/Toronto',
     primaryColor: '#4f7cff',
-    customFooterText: 'Thank you for choosing SM2 electronics.',
+    customFooterText: 'Thank you for choosing NexusOps.',
 };
 
 const DEFAULT_NOTIFICATION_PREFERENCES: NotificationPreferences = {
@@ -2007,3 +2007,4 @@ export default function SettingsPage() {
         </div>
     );
 }
+

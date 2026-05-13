@@ -89,15 +89,15 @@ CORS_ALLOW_ORIGINS = get_env_csv(
 )
 
 COMPANY_LOGO_URL = get_env("COMPANY_LOGO_URL", "")
-COMPANY_NAME = get_env("COMPANY_NAME", "SM2 electronics")
+COMPANY_NAME = get_env("COMPANY_NAME", "NexusOps")
 COMPANY_STREET_ADDRESS = get_env("COMPANY_STREET_ADDRESS", "123 Dispatch Ave")
 COMPANY_CITY = get_env("COMPANY_CITY", "Quebec")
 COMPANY_STATE = get_env("COMPANY_STATE", "QC")
 COMPANY_ZIP_CODE = get_env("COMPANY_ZIP_CODE", "G1A 1A1")
 COMPANY_PHONE = get_env("COMPANY_PHONE", "+1-418-555-0100")
-COMPANY_EMAIL = get_env("COMPANY_EMAIL", "billing@sm2dispatch.com")
-COMPANY_WEBSITE = get_env("COMPANY_WEBSITE", "https://www.sm2dispatch.com")
-ADMIN_EMAIL = get_env("ADMIN_EMAIL", "admin@sm2dispatch.com").strip().lower()
+COMPANY_EMAIL = get_env("COMPANY_EMAIL", "billing@nexusops.com")
+COMPANY_WEBSITE = get_env("COMPANY_WEBSITE", "https://www.nexusops.com")
+ADMIN_EMAIL = get_env("ADMIN_EMAIL", "admin@nexusops.com").strip().lower()
 ADMIN_DEFAULT_PASSWORD = get_env("ADMIN_DEFAULT_PASSWORD", "admin123")
 DEFAULT_TENANT_ID = get_env("DEFAULT_TENANT_ID", "00000000-0000-0000-0000-000000000001")
 DEFAULT_TENANT_SLUG = get_env("DEFAULT_TENANT_SLUG", "default")
@@ -107,3 +107,4 @@ TENANT_CACHE_PREFIX = get_env("TENANT_CACHE_PREFIX", "dispatchiq")
 
 if APP_ENV != "development" and JWT_SECRET_KEY.startswith("change-me"):
     raise RuntimeError("JWT_SECRET_KEY must be set to a secure value outside development")
+

@@ -96,7 +96,7 @@ export default function AdminSignupPage() {
               value={companyName}
               onChange={(event) => handleCompanyNameChange(event.target.value)}
               required
-              placeholder="SM2 electronics"
+              placeholder="NexusOps"
               className={authInputClass}
               style={authInputStyle}
             />
@@ -222,3 +222,4 @@ export default function AdminSignupPage() {
     </AuthSplitShell>
   );
 }
+

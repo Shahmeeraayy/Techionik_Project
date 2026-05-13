@@ -326,39 +326,39 @@ def seed_development_data(engine) -> None:
         ]
 
         technicians = [
-            {"name": "Jolianne", "email": "jolianne@sm2dispatch.com", "phone": "418-896-1296"},
-            {"name": "Victor", "email": "victor@sm2dispatch.com", "phone": None},
-            {"name": "Maxime", "email": "maxime@sm2dispatch.com", "phone": None},
-            {"name": "Dany", "email": "dany@sm2dispatch.com", "phone": "418-806-3649"},
+            {"name": "Jolianne", "email": "jolianne@nexusops.com", "phone": "418-896-1296"},
+            {"name": "Victor", "email": "victor@nexusops.com", "phone": None},
+            {"name": "Maxime", "email": "maxime@nexusops.com", "phone": None},
+            {"name": "Dany", "email": "dany@nexusops.com", "phone": "418-806-3649"},
         ]
 
         zone_assignments = [
-            ("jolianne@sm2dispatch.com", "Quebec"),
-            ("jolianne@sm2dispatch.com", "Levis"),
-            ("jolianne@sm2dispatch.com", "Donnacona"),
-            ("jolianne@sm2dispatch.com", "St-Raymond"),
-            ("victor@sm2dispatch.com", "Donnacona"),
-            ("victor@sm2dispatch.com", "St-Raymond"),
-            ("victor@sm2dispatch.com", "Quebec"),
-            ("victor@sm2dispatch.com", "Levis"),
-            ("maxime@sm2dispatch.com", "Donnacona"),
-            ("maxime@sm2dispatch.com", "St-Raymond"),
-            ("maxime@sm2dispatch.com", "Quebec"),
-            ("maxime@sm2dispatch.com", "Levis"),
-            ("dany@sm2dispatch.com", "Quebec"),
+            ("jolianne@nexusops.com", "Quebec"),
+            ("jolianne@nexusops.com", "Levis"),
+            ("jolianne@nexusops.com", "Donnacona"),
+            ("jolianne@nexusops.com", "St-Raymond"),
+            ("victor@nexusops.com", "Donnacona"),
+            ("victor@nexusops.com", "St-Raymond"),
+            ("victor@nexusops.com", "Quebec"),
+            ("victor@nexusops.com", "Levis"),
+            ("maxime@nexusops.com", "Donnacona"),
+            ("maxime@nexusops.com", "St-Raymond"),
+            ("maxime@nexusops.com", "Quebec"),
+            ("maxime@nexusops.com", "Levis"),
+            ("dany@nexusops.com", "Quebec"),
         ]
 
         skill_assignments = [
-            ("jolianne@sm2dispatch.com", "PPF"),
-            ("victor@sm2dispatch.com", "PPF"),
-            ("victor@sm2dispatch.com", "Window Tint"),
-            ("maxime@sm2dispatch.com", "PPF"),
-            ("maxime@sm2dispatch.com", "Window Tint"),
-            ("dany@sm2dispatch.com", "Windshield replacement"),
-            ("dany@sm2dispatch.com", "Windshield repair"),
-            ("dany@sm2dispatch.com", "Remote starters"),
-            ("dany@sm2dispatch.com", "Vehicle tracking systems"),
-            ("dany@sm2dispatch.com", "Engine immobilizers"),
+            ("jolianne@nexusops.com", "PPF"),
+            ("victor@nexusops.com", "PPF"),
+            ("victor@nexusops.com", "Window Tint"),
+            ("maxime@nexusops.com", "PPF"),
+            ("maxime@nexusops.com", "Window Tint"),
+            ("dany@nexusops.com", "Windshield replacement"),
+            ("dany@nexusops.com", "Windshield repair"),
+            ("dany@nexusops.com", "Remote starters"),
+            ("dany@nexusops.com", "Vehicle tracking systems"),
+            ("dany@nexusops.com", "Engine immobilizers"),
         ]
 
         schedule = [
@@ -521,3 +521,4 @@ def run() -> None:
 
 if __name__ == "__main__":
     run()
+

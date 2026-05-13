@@ -40,7 +40,7 @@ from .services.job_services_service import JobServicesService
 logger = logging.getLogger(__name__)
 
 app = FastAPI(
-    title="SM2 electronics Technician API",
+    title="NexusOps Technician API",
     description="Backend APIs for admin technician profile, scheduling, and availability.",
     version="2.0.0",
 )
@@ -152,4 +152,5 @@ def handle_database_operational_error(_: Request, __: OperationalError):
 
 @app.get("/")
 def root():
-    return {"message": "SM2 electronics technician profile APIs are active."}
+    return {"message": "NexusOps technician profile APIs are active."}
+

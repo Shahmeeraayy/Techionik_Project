@@ -28,7 +28,7 @@ class BookingPortalApiTests(unittest.TestCase):
         cls.client = TestClient(app)
         admin_token_response = cls.client.post(
             "/auth/dev/admin-token",
-            json={"email": "admin@sm2dispatch.com", "password": "admin123"},
+            json={"email": "admin@nexusops.com", "password": "admin123"},
         )
         assert admin_token_response.status_code == 200
         cls.admin_auth_header = {"Authorization": f"Bearer {admin_token_response.json()['access_token']}"}
@@ -182,3 +182,4 @@ class BookingPortalApiTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+

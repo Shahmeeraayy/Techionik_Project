@@ -25,7 +25,7 @@ class TechnicianPasswordResetRequestApiTests(unittest.TestCase):
         cls.client = TestClient(app)
         admin_token_response = cls.client.post(
             "/auth/dev/admin-token",
-            json={"email": "admin@sm2dispatch.com", "password": "admin123"},
+            json={"email": "admin@nexusops.com", "password": "admin123"},
         )
         assert admin_token_response.status_code == 200
         cls.admin_auth_header = {"Authorization": f"Bearer {admin_token_response.json()['access_token']}"}
@@ -60,7 +60,7 @@ class TechnicianPasswordResetRequestApiTests(unittest.TestCase):
             return row
 
     def test_public_request_creates_pending_admin_item(self):
-        tech = self._seed_technician(name="Dany", email="dany@sm2dispatch.com")
+        tech = self._seed_technician(name="Dany", email="dany@nexusops.com")
 
         response = self.client.post(
             "/auth/technician-password-reset-request",
@@ -81,7 +81,7 @@ class TechnicianPasswordResetRequestApiTests(unittest.TestCase):
             self.assertEqual(rows[0].status, "PENDING")
 
     def test_repeated_request_refreshes_existing_pending_row(self):
-        tech = self._seed_technician(name="Maxime", email="maxime@sm2dispatch.com")
+        tech = self._seed_technician(name="Maxime", email="maxime@nexusops.com")
 
         first_response = self.client.post(
             "/auth/technician-password-reset-request",
@@ -101,7 +101,7 @@ class TechnicianPasswordResetRequestApiTests(unittest.TestCase):
             self.assertEqual(rows[0].requested_email, tech.email)
 
     def test_admin_can_list_and_resolve_request(self):
-        tech = self._seed_technician(name="Victor", email="victor@sm2dispatch.com")
+        tech = self._seed_technician(name="Victor", email="victor@nexusops.com")
         create_response = self.client.post(
             "/auth/technician-password-reset-request",
             json={"email": tech.email},
@@ -135,7 +135,7 @@ class TechnicianPasswordResetRequestApiTests(unittest.TestCase):
         self.assertEqual(pending_after_response.json(), [])
 
     def test_admin_can_issue_reset_link_and_technician_can_complete_reset(self):
-        tech = self._seed_technician(name="Alex", email="alex@sm2dispatch.com", password="old-pass-123")
+        tech = self._seed_technician(name="Alex", email="alex@nexusops.com", password="old-pass-123")
 
         issue_response = self.client.post(
             "/admin/technician-password-reset-requests/issue",
@@ -176,7 +176,7 @@ class TechnicianPasswordResetRequestApiTests(unittest.TestCase):
             self.assertEqual(row.remarks, "Resolved via technician reset link.")
 
     def test_admin_password_update_auto_resolves_pending_request(self):
-        tech = self._seed_technician(name="Jolianne", email="jolianne@sm2dispatch.com")
+        tech = self._seed_technician(name="Jolianne", email="jolianne@nexusops.com")
         create_response = self.client.post(
             "/auth/technician-password-reset-request",
             json={"email": tech.email},
@@ -216,3 +216,4 @@ class TechnicianPasswordResetRequestApiTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+

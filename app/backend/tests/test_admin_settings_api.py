@@ -37,7 +37,7 @@ class AdminSettingsApiTests(unittest.TestCase):
             conn.execute(AdminCredentialSettings.__table__.delete())
             conn.execute(Tenant.__table__.delete())
 
-    def _admin_token(self, email: str = "admin@sm2dispatch.com", password: str = "admin123") -> str:
+    def _admin_token(self, email: str = "admin@nexusops.com", password: str = "admin123") -> str:
         response = self.client.post(
             "/auth/admin-token",
             json={"email": email, "password": password},
@@ -55,7 +55,7 @@ class AdminSettingsApiTests(unittest.TestCase):
 
         self.assertEqual(response.status_code, 200, response.text)
         payload = response.json()
-        self.assertEqual(payload["admin_email"], "admin@sm2dispatch.com")
+        self.assertEqual(payload["admin_email"], "admin@nexusops.com")
         self.assertEqual(payload["tenant_role"], "owner")
         self.assertIn("password_changed_at", payload)
         self.assertIn("updated_at", payload)
@@ -64,7 +64,7 @@ class AdminSettingsApiTests(unittest.TestCase):
             "/admin/settings/admin-credentials",
             headers={"Authorization": f"Bearer {token}"},
             json={
-                "admin_email": "owner@sm2dispatch.com",
+                "admin_email": "owner@nexusops.com",
                 "current_password": "admin123",
                 "new_password": "newpass123",
             },
@@ -72,7 +72,7 @@ class AdminSettingsApiTests(unittest.TestCase):
 
         self.assertEqual(update_response.status_code, 200, update_response.text)
         updated_payload = update_response.json()
-        self.assertEqual(updated_payload["admin_email"], "owner@sm2dispatch.com")
+        self.assertEqual(updated_payload["admin_email"], "owner@nexusops.com")
         self.assertIn("password_changed_at", updated_payload)
         self.assertIn("updated_at", updated_payload)
 
@@ -82,13 +82,13 @@ class AdminSettingsApiTests(unittest.TestCase):
         )
         self.assertEqual(refreshed_response.status_code, 200, refreshed_response.text)
         refreshed_payload = refreshed_response.json()
-        self.assertEqual(refreshed_payload["admin_email"], "owner@sm2dispatch.com")
+        self.assertEqual(refreshed_payload["admin_email"], "owner@nexusops.com")
         self.assertIn("password_changed_at", refreshed_payload)
         self.assertIn("updated_at", refreshed_payload)
 
         new_login_response = self.client.post(
             "/auth/admin-token",
-            json={"email": "owner@sm2dispatch.com", "password": "newpass123"},
+            json={"email": "owner@nexusops.com", "password": "newpass123"},
         )
         self.assertEqual(new_login_response.status_code, 200, new_login_response.text)
 
@@ -100,14 +100,14 @@ class AdminSettingsApiTests(unittest.TestCase):
             headers={"Authorization": f"Bearer {token}"},
             json={
                 "full_name": "Dispatch Manager",
-                "email": "manager@sm2dispatch.com",
+                "email": "manager@nexusops.com",
                 "password": "manager123",
                 "tenant_role": "admin",
             },
         )
         self.assertEqual(create_response.status_code, 201, create_response.text)
         created_payload = create_response.json()
-        self.assertEqual(created_payload["email"], "manager@sm2dispatch.com")
+        self.assertEqual(created_payload["email"], "manager@nexusops.com")
         self.assertEqual(created_payload["tenant_role"], "admin")
 
         list_response = self.client.get(
@@ -120,14 +120,14 @@ class AdminSettingsApiTests(unittest.TestCase):
 
         login_response = self.client.post(
             "/auth/admin-token",
-            json={"email": "manager@sm2dispatch.com", "password": "manager123"},
+            json={"email": "manager@nexusops.com", "password": "manager123"},
         )
         self.assertEqual(login_response.status_code, 200, login_response.text)
 
     def test_dev_admin_token_stays_development_only(self):
         response = self.client.post(
             "/auth/dev/admin-token",
-            json={"email": "admin@sm2dispatch.com", "password": "admin123"},
+            json={"email": "admin@nexusops.com", "password": "admin123"},
         )
         self.assertNotEqual(response.status_code, 404, response.text)
 
@@ -195,3 +195,4 @@ class AdminSettingsApiTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+

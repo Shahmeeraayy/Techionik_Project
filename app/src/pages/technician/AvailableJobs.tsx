@@ -333,7 +333,7 @@ export default function AvailableJobsPage() {
 
         if (registration?.active) {
             registration.active.postMessage({
-                type: 'SM2_SHOW_JOB_NOTIFICATION',
+                type: 'NEXUSOPS_SHOW_JOB_NOTIFICATION',
                 title: 'New assigned job',
                 body,
                 url,

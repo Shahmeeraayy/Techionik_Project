@@ -1,4 +1,4 @@
-﻿# SM2 Dispatch - Technician Module (FastAPI)
+# NexusOps - Technician Module (FastAPI)
 
 ## Stack
 - **Framework**: FastAPI
@@ -67,4 +67,5 @@ See `MULTI_TENANCY.md` for the new tenant isolation and RLS foundation.
 - `001_technician_module.sql` and `002_admin_technician_profile.sql` are core schema migrations.
 - `003_technician.sql` is a development seed migration (legacy frontend technicians, zones, skills).
 - `scripts/migrate.py` tracks applied versions in `schema_migrations` and skips already-applied files.
+
 

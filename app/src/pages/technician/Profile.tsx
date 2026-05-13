@@ -375,7 +375,7 @@ export default function ProfilePage() {
         : (profile?.full_name || profile?.name || user?.name || 'Technician');
     const userEmail = isPreviewMode
         ? (previewEmail || previewTech?.email || 'Not set')
-        : (profile?.email || user?.email || 'technician@sm2dispatch.com');
+        : (profile?.email || user?.email || 'technician@nexusops.com');
     const initials = userName
         .split(' ')
         .filter(Boolean)

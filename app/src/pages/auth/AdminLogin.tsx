@@ -15,7 +15,7 @@ export default function AdminLoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [email, setEmail] = useState('admin@sm2dispatch.com');
+  const [email, setEmail] = useState('admin@nexusops.com');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberSession, setRememberSession] = useState(true);
@@ -154,3 +154,4 @@ export default function AdminLoginPage() {
     </AuthSplitShell>
   );
 }
+

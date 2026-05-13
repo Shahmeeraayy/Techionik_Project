@@ -1,4 +1,4 @@
-// SM2 electronics - Type Definitions
+// NexusOps - Type Definitions
 
 // User Roles
 export type UserRole = 'admin' | 'technician';
@@ -321,3 +321,4 @@ export interface DelayReason {
 export interface RefuseReason {
   reason: string;
 }
+

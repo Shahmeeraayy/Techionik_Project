@@ -6,7 +6,7 @@
 
 @layer base {
   :root {
-    /* SM2 electronics Design System */
+    /* NexusOps Design System */
     --background: 0 0% 100%;
     --background-secondary: 210 20% 98%;
     --foreground: 222 18% 9%;
@@ -2194,3 +2194,4 @@
     display: none !important;
   }
 }
+

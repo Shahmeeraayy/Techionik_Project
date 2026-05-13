@@ -13,14 +13,14 @@ export interface InvoiceCompanyProfile {
 export const INVOICE_COMPANY_PROFILE_STORAGE_KEY = 'sm_dispatch_invoice_company_profile';
 
 export const DEFAULT_INVOICE_COMPANY_PROFILE: InvoiceCompanyProfile = {
-  name: 'SM2 electronics',
+  name: 'NexusOps',
   street_address: '123 Dispatch Ave',
   city: 'Quebec',
   state: 'QC',
   zip_code: 'G1A 1A1',
   phone: '+1-418-555-0100',
-  email: 'billing@sm2dispatch.com',
-  website: 'https://www.sm2dispatch.com',
+  email: 'billing@nexusops.com',
+  website: 'https://www.nexusops.com',
 };
 
 const readString = (value: unknown): string | undefined => {
@@ -57,3 +57,4 @@ export const saveInvoiceCompanyProfile = (profile: InvoiceCompanyProfile): void 
   if (typeof window === 'undefined') return;
   window.localStorage.setItem(INVOICE_COMPANY_PROFILE_STORAGE_KEY, JSON.stringify(profile));
 };
+
