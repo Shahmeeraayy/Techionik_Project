@@ -216,6 +216,17 @@ const writeOfflineCurrentJobs = (technicianId: string, jobs: MyJob[]) => {
     }
 };
 
+const TECH_ACTION_BUTTON_BASE =
+    'flex-1 h-11 rounded-xl border text-sm font-semibold disabled:opacity-50 disabled:shadow-none';
+const TECH_ACTION_BUTTON_SECONDARY =
+    'border-white/10 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] text-slate-100 shadow-[0_14px_34px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.055)] hover:bg-[linear-gradient(180deg,rgba(24,38,64,0.98),rgba(12,20,34,0.98))] hover:text-white';
+const TECH_ACTION_BUTTON_PRIMARY =
+    'border-[#7db0ff]/40 bg-[linear-gradient(135deg,#4f7cff,#22d3ee)] text-white shadow-[0_16px_34px_rgba(79,124,255,0.22)] hover:brightness-105';
+const TECH_ACTION_BUTTON_WARNING =
+    'border-orange-400/35 bg-[linear-gradient(180deg,rgba(51,31,11,0.96),rgba(27,17,9,0.98))] text-orange-100 shadow-[0_14px_34px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.05)] hover:bg-[linear-gradient(180deg,rgba(72,42,14,0.98),rgba(34,21,10,0.98))] hover:text-white';
+const TECH_ACTION_BUTTON_DANGER =
+    'border-red-400/35 bg-[linear-gradient(180deg,rgba(52,17,24,0.96),rgba(30,11,16,0.98))] text-red-100 shadow-[0_14px_34px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.05)] hover:bg-[linear-gradient(180deg,rgba(70,20,30,0.98),rgba(37,11,18,0.98))] hover:text-white';
+
 // --- Components ---
 
 function StatusBadge({ status }: { status: JobStatus }) {
@@ -491,9 +502,8 @@ function JobCard({
                     {canManageServices && (
                         <Button
                             type="button"
-                            variant="outline"
                             onClick={() => onOpenAddService(job.job_id)}
-                            className="mt-3 h-10 w-full justify-start rounded-xl border border-dashed border-[#2F8E92]/35 bg-[#2F8E92]/10 text-[#A7F3F5] hover:border-[#5EEAD4]/55 hover:bg-[#2F8E92]/18 hover:text-white dark:border-teal-400/30 dark:bg-teal-400/10 dark:text-teal-100 dark:hover:bg-teal-400/15"
+                            className="mt-3 h-10 w-full justify-start rounded-xl border border-dashed border-white/12 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] text-slate-100 shadow-[0_14px_34px_rgba(0,0,0,0.18),inset_0_1px_0_rgba(255,255,255,0.045)] hover:border-white/20 hover:bg-[linear-gradient(180deg,rgba(24,38,64,0.98),rgba(12,20,34,0.98))] hover:text-white"
                         >
                             <Plus className="mr-2 h-4 w-4" />
                             Add Service Line
@@ -509,9 +519,8 @@ function JobCard({
                                 onClick={() => handleAction('start', onStart)}
                                 disabled={!!actionLoading}
                                 className={cn(
-                                    "flex-1 h-11 text-sm font-semibold rounded-xl",
-                                    "bg-[#2F8E92] hover:bg-[#267276] text-white",
-                                    "disabled:opacity-50"
+                                    TECH_ACTION_BUTTON_BASE,
+                                    TECH_ACTION_BUTTON_PRIMARY
                                 )}
                             >
                                 {actionLoading === 'start' ? (
@@ -528,9 +537,8 @@ function JobCard({
                                 onClick={() => handleAction('accept', onAccept)}
                                 disabled={!!actionLoading}
                                 className={cn(
-                                    "flex-1 h-11 text-sm font-semibold rounded-xl",
-                                    "bg-[#2F8E92] hover:bg-[#267276] text-white",
-                                    "disabled:opacity-50"
+                                    TECH_ACTION_BUTTON_BASE,
+                                    TECH_ACTION_BUTTON_PRIMARY
                                 )}
                             >
                                 {actionLoading === 'accept' ? (
@@ -547,9 +555,8 @@ function JobCard({
                                 onClick={() => handleAction('done', onDone)}
                                 disabled={!!actionLoading}
                                 className={cn(
-                                    "flex-1 h-11 text-sm font-semibold rounded-xl",
-                                    "bg-emerald-600 hover:bg-emerald-700 text-white",
-                                    "disabled:opacity-50"
+                                    TECH_ACTION_BUTTON_BASE,
+                                    TECH_ACTION_BUTTON_PRIMARY
                                 )}
                             >
                                 {actionLoading === 'done' ? (
@@ -565,12 +572,9 @@ function JobCard({
                             <Button
                                 onClick={() => handleAction('delay', onDelay)}
                                 disabled={!!actionLoading}
-                                variant="outline"
                                 className={cn(
-                                    "flex-1 h-11 text-sm font-semibold rounded-xl",
-                                    "border-2 border-orange-500 text-orange-600 hover:bg-orange-50",
-                                    "dark:border-orange-600 dark:text-orange-500 dark:hover:bg-orange-900/20",
-                                    "disabled:opacity-50"
+                                    TECH_ACTION_BUTTON_BASE,
+                                    TECH_ACTION_BUTTON_WARNING
                                 )}
                             >
                                 {actionLoading === 'delay' ? (
@@ -586,12 +590,9 @@ function JobCard({
                             <Button
                                 onClick={() => handleAction('refuse', onRefuse)}
                                 disabled={!!actionLoading}
-                                variant="outline"
                                 className={cn(
-                                    "flex-1 h-11 text-sm font-semibold rounded-xl",
-                                    "border-2 border-red-500 text-red-600 hover:bg-red-50",
-                                    "dark:border-red-600 dark:text-red-500 dark:hover:bg-red-900/20",
-                                    "disabled:opacity-50"
+                                    TECH_ACTION_BUTTON_BASE,
+                                    TECH_ACTION_BUTTON_DANGER
                                 )}
                             >
                                 {actionLoading === 'refuse' ? (
@@ -1435,15 +1436,15 @@ export default function MyJobsPage({
 
                     <DialogFooter className="flex-col sm:flex-row gap-2">
                         <Button
-                            variant="outline"
                             onClick={closeAddServiceModal}
+                            className={cn(TECH_ACTION_BUTTON_BASE, TECH_ACTION_BUTTON_SECONDARY)}
                         >
                             Cancel
                         </Button>
                         <Button
                             onClick={handleConfirmAddService}
                             disabled={!addServiceName.trim()}
-                            className="bg-[#2F8E92] hover:bg-[#267276]"
+                            className={cn(TECH_ACTION_BUTTON_BASE, TECH_ACTION_BUTTON_PRIMARY)}
                         >
                             {editingServiceId ? 'Save Service' : 'Add Service'}
                         </Button>
@@ -1506,7 +1507,6 @@ export default function MyJobsPage({
 
                     <DialogFooter className="flex-col sm:flex-row gap-2">
                         <Button
-                            variant="outline"
                             onClick={() => {
                                 setDelayModalOpen(false);
                                 setDelayMinutes('15');
@@ -1514,13 +1514,14 @@ export default function MyJobsPage({
                                 setDelayNote('');
                             }}
                             disabled={confirmLoading}
+                            className={cn(TECH_ACTION_BUTTON_BASE, TECH_ACTION_BUTTON_SECONDARY)}
                         >
                             Cancel
                         </Button>
                         <Button
                             onClick={confirmDelay}
                             disabled={confirmLoading || (delayMinutes === 'custom' && !delayCustomMinutes)}
-                            className="bg-orange-600 hover:bg-orange-700"
+                            className={cn(TECH_ACTION_BUTTON_BASE, TECH_ACTION_BUTTON_WARNING)}
                         >
                             {confirmLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                             Confirm Delay
@@ -1570,20 +1571,20 @@ export default function MyJobsPage({
 
                     <DialogFooter className="flex-col sm:flex-row gap-2">
                         <Button
-                            variant="outline"
                             onClick={() => {
                                 setRefuseModalOpen(false);
                                 setRefuseReason('');
                                 setRefuseComment('');
                             }}
                             disabled={confirmLoading}
+                            className={cn(TECH_ACTION_BUTTON_BASE, TECH_ACTION_BUTTON_SECONDARY)}
                         >
                             Cancel
                         </Button>
                         <Button
                             onClick={confirmRefuse}
                             disabled={confirmLoading || !refuseReason}
-                            className="bg-red-600 hover:bg-red-700"
+                            className={cn(TECH_ACTION_BUTTON_BASE, TECH_ACTION_BUTTON_DANGER)}
                         >
                             {confirmLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                             Confirm Refuse
