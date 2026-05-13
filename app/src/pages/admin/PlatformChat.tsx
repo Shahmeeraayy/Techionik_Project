@@ -654,7 +654,7 @@ export default function PlatformChatPage() {
               value={broadcastDraft}
               onChange={(event) => setBroadcastDraft(event.target.value)}
               placeholder="Write your announcement"
-              className="min-h-[160px] border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500"
+              className="min-h-[160px] rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(10,18,32,0.96),rgba(8,14,26,0.96))] text-white placeholder:text-slate-500"
             />
             {broadcastAttachments.length > 0 ? (
               <div className="flex flex-wrap gap-2">
@@ -672,13 +672,13 @@ export default function PlatformChatPage() {
                 ))}
               </div>
             ) : null}
-            <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-slate-400">
+            <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] px-4 py-3 text-sm text-slate-400">
               <span>Attachments support images and PDFs up to 10MB each.</span>
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
-                className="border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
+                className="h-10 rounded-xl border-white/10 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] px-4 text-slate-100 shadow-[0_14px_34px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.055)] hover:bg-[linear-gradient(180deg,rgba(24,38,64,0.98),rgba(12,20,34,0.98))] hover:text-white"
                 onClick={() => broadcastInputRef.current?.click()}
               >
                 <Paperclip className="mr-2 h-4 w-4" />
@@ -695,10 +695,10 @@ export default function PlatformChatPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" className="border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]" onClick={() => setBroadcastOpen(false)}>
+            <Button variant="outline" className="h-11 rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] px-5 text-slate-100 shadow-[0_14px_34px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.055)] hover:bg-[linear-gradient(180deg,rgba(24,38,64,0.98),rgba(12,20,34,0.98))] hover:text-white" onClick={() => setBroadcastOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={() => void handleBroadcast()} className="bg-[#2F8E92] hover:bg-[#267276]">
+            <Button onClick={() => void handleBroadcast()} className="h-11 rounded-2xl border border-[#7db0ff]/40 bg-[linear-gradient(135deg,#4f7cff,#22d3ee)] px-5 text-white shadow-[0_16px_34px_rgba(79,124,255,0.22)] hover:brightness-105">
               Send Broadcast
             </Button>
           </DialogFooter>

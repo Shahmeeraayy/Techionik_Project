@@ -1666,16 +1666,16 @@ export default function TechniciansPage() {
                                                 variant="outline"
                                                 size="sm"
                                                 onClick={() => setTimeOffModalOpen(true)}
-                                                className="border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
+                                                className="h-9 rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] px-4 text-slate-100 shadow-[0_14px_34px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.055)] hover:bg-[linear-gradient(180deg,rgba(24,38,64,0.98),rgba(12,20,34,0.98))] hover:text-white"
                                             >
                                                 Mark Out of Office
                                             </Button>
                                             {selectedTech.current_assignments[0] ? (
                                                 <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    onClick={() => navigate(`/admin/jobs/${selectedTech.current_assignments[0].id}`)}
-                                                    className="border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => navigate(`/admin/jobs/${selectedTech.current_assignments[0].id}`)}
+                                                className="h-9 rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] px-4 text-slate-100 shadow-[0_14px_34px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.055)] hover:bg-[linear-gradient(180deg,rgba(24,38,64,0.98),rgba(12,20,34,0.98))] hover:text-white"
                                                 >
                                                     View Current Job
                                                 </Button>
@@ -1684,23 +1684,23 @@ export default function TechniciansPage() {
                                                 variant="outline"
                                                 size="sm"
                                                 onClick={() => navigate('/admin/accounts')}
-                                                className="border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
-                                            >
-                                                Technician Accounts
-                                            </Button>
+                                                className="h-9 rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] px-4 text-slate-100 shadow-[0_14px_34px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.055)] hover:bg-[linear-gradient(180deg,rgba(24,38,64,0.98),rgba(12,20,34,0.98))] hover:text-white"
+                                                >
+                                                    Technician Accounts
+                                                </Button>
                                             <Button
                                                 variant="outline"
                                                 size="sm"
                                                 disabled={!hasDrawerChanges}
                                                 onClick={handleCancelDrawerChanges}
-                                                className="border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
+                                                className="h-9 rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] px-4 text-slate-100 shadow-[0_14px_34px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.055)] hover:bg-[linear-gradient(180deg,rgba(24,38,64,0.98),rgba(12,20,34,0.98))] hover:text-white"
                                             >
                                                 Cancel
                                             </Button>
                                             <Button
                                                 size="sm"
                                                 disabled={!hasDrawerChanges}
-                                                className="bg-[#2F8E92] hover:bg-[#267276]"
+                                                className="h-9 rounded-2xl border border-[#7db0ff]/40 bg-[linear-gradient(135deg,#4f7cff,#22d3ee)] px-4 text-white shadow-[0_16px_34px_rgba(79,124,255,0.22)] hover:brightness-105"
                                                 onClick={handleSaveDrawerChanges}
                                             >
                                                 Save Changes
@@ -1815,9 +1815,9 @@ export default function TechniciansPage() {
                                                             }
                                                         }}
                                                         placeholder="Add zone (e.g. Quebec)"
-                                                        className="h-8 text-xs border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500"
+                                                        className="h-10 rounded-2xl text-xs border-white/10 bg-[linear-gradient(180deg,rgba(10,18,32,0.96),rgba(8,14,26,0.96))] text-white placeholder:text-slate-500"
                                                     />
-                                                    <Button variant="outline" size="sm" className="h-8 text-xs border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08] sm:w-auto" onClick={handleAddZone}>
+                                                    <Button variant="outline" size="sm" className="h-10 rounded-2xl text-xs border-white/10 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] px-4 text-slate-100 shadow-[0_14px_34px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.055)] hover:bg-[linear-gradient(180deg,rgba(24,38,64,0.98),rgba(12,20,34,0.98))] hover:text-white sm:w-auto" onClick={handleAddZone}>
                                                         + Add Zone
                                                     </Button>
                                                 </div>
@@ -1851,9 +1851,9 @@ export default function TechniciansPage() {
                                                             }
                                                         }}
                                                         placeholder="Add skill (e.g. Towing)"
-                                                        className="h-8 text-xs border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500"
+                                                        className="h-10 rounded-2xl text-xs border-white/10 bg-[linear-gradient(180deg,rgba(10,18,32,0.96),rgba(8,14,26,0.96))] text-white placeholder:text-slate-500"
                                                     />
-                                                    <Button variant="outline" size="sm" className="h-8 text-xs border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08] sm:w-auto" onClick={handleAddSkill}>
+                                                    <Button variant="outline" size="sm" className="h-10 rounded-2xl text-xs border-white/10 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] px-4 text-slate-100 shadow-[0_14px_34px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.055)] hover:bg-[linear-gradient(180deg,rgba(24,38,64,0.98),rgba(12,20,34,0.98))] hover:text-white sm:w-auto" onClick={handleAddSkill}>
                                                         + Add Skill
                                                     </Button>
                                                 </div>
@@ -1881,14 +1881,14 @@ export default function TechniciansPage() {
                                                                     type="time"
                                                                     value={wh.start}
                                                                     onChange={(e) => handleWorkingHoursTimeChange(idx, 'start', e.target.value)}
-                                                                    className="h-7 w-[96px] text-xs font-mono border-white/10 bg-white/[0.04] text-white"
+                                                                    className="h-9 w-[96px] rounded-2xl text-xs font-mono border-white/10 bg-[linear-gradient(180deg,rgba(10,18,32,0.96),rgba(8,14,26,0.96))] text-white [color-scheme:dark]"
                                                                 />
                                                                 <span className="text-slate-500">-</span>
                                                                 <Input
                                                                     type="time"
                                                                     value={wh.end}
                                                                     onChange={(e) => handleWorkingHoursTimeChange(idx, 'end', e.target.value)}
-                                                                    className="h-7 w-[96px] text-xs font-mono border-white/10 bg-white/[0.04] text-white"
+                                                                    className="h-9 w-[96px] rounded-2xl text-xs font-mono border-white/10 bg-[linear-gradient(180deg,rgba(10,18,32,0.96),rgba(8,14,26,0.96))] text-white [color-scheme:dark]"
                                                                 />
                                                             </>
                                                         ) : (
@@ -1909,7 +1909,7 @@ export default function TechniciansPage() {
                                             <h3 className="text-sm font-bold text-white flex items-center gap-2">
                                                 <Calendar className="w-4 h-4" /> Out of Office
                                             </h3>
-                                            <Button variant="outline" size="sm" className="h-7 border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]" onClick={() => setTimeOffModalOpen(true)}>+ Mark Out of Office</Button>
+                                            <Button variant="outline" size="sm" className="h-9 rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] px-4 text-slate-100 shadow-[0_14px_34px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.055)] hover:bg-[linear-gradient(180deg,rgba(24,38,64,0.98),rgba(12,20,34,0.98))] hover:text-white" onClick={() => setTimeOffModalOpen(true)}>+ Mark Out of Office</Button>
                                         </div>
                                         {techDraft.time_off.length === 0 ? (
                                             <div className="text-center py-6 text-slate-500 text-sm italic bg-white/[0.02] rounded-lg border border-dashed border-white/10">
