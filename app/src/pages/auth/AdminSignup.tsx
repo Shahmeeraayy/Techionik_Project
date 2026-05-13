@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { AuthSplitShell, authInputClass, authLabelClass, authPanelClass, authPrimaryButtonClass } from './AuthSplitShell';
+import { AuthSplitShell, authInputClass, authInputStyle, authLabelClass, authPanelClass, authPrimaryButtonClass } from './AuthSplitShell';
 
 function slugifyWorkspace(value: string) {
   return value
@@ -98,6 +98,7 @@ export default function AdminSignupPage() {
               required
               placeholder="SM2 electronics"
               className={authInputClass}
+              style={authInputStyle}
             />
           </div>
 
@@ -112,6 +113,7 @@ export default function AdminSignupPage() {
               required
               placeholder="sm2-electronics"
               className={authInputClass}
+              style={authInputStyle}
             />
             <div className={`${authPanelClass} flex items-center gap-2 py-3 text-xs text-white/88`}>
               <Building2 className="h-3.5 w-3.5 text-white" />
@@ -130,6 +132,7 @@ export default function AdminSignupPage() {
               required
               placeholder="Alex Morgan"
               className={authInputClass}
+              style={authInputStyle}
             />
           </div>
 
@@ -146,6 +149,7 @@ export default function AdminSignupPage() {
               required
               placeholder="owner@company.com"
               className={authInputClass}
+              style={authInputStyle}
             />
           </div>
 
@@ -168,6 +172,7 @@ export default function AdminSignupPage() {
                 required
                 placeholder="Create a secure password"
                 className={`${authInputClass} pr-12`}
+                style={authInputStyle}
               />
               <button
                 type="button"

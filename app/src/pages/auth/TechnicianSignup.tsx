@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import {
   AuthSplitShell,
   authInputClass,
+  authInputStyle,
   authLabelClass,
   authPanelClass,
   authPrimaryButtonClass,
@@ -181,6 +182,7 @@ export default function TechnicianSignupPage() {
                 required
                 placeholder="John Smith"
                 className={authInputClass}
+                style={authInputStyle}
               />
             </div>
 
@@ -197,6 +199,7 @@ export default function TechnicianSignupPage() {
                 required
                 placeholder="owner@yourdispatch.com"
                 className={authInputClass}
+                style={authInputStyle}
               />
             </div>
 
@@ -213,6 +216,7 @@ export default function TechnicianSignupPage() {
                 required
                 placeholder="tech@company.com"
                 className={authInputClass}
+                style={authInputStyle}
               />
             </div>
 
@@ -228,6 +232,7 @@ export default function TechnicianSignupPage() {
                 autoComplete="tel"
                 placeholder="Optional"
                 className={authInputClass}
+                style={authInputStyle}
               />
             </div>
 
@@ -247,6 +252,7 @@ export default function TechnicianSignupPage() {
                   required
                   placeholder="Create password"
                   className={`${authInputClass} pr-12`}
+                  style={authInputStyle}
                 />
                 <button
                   type="button"
@@ -273,6 +279,7 @@ export default function TechnicianSignupPage() {
                   required
                   placeholder="Repeat password"
                   className={`${authInputClass} pr-12`}
+                  style={authInputStyle}
                 />
                 <button
                   type="button"

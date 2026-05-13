@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { AuthSplitShell, authInputClass, authLabelClass, authPanelClass, authPrimaryButtonClass } from './AuthSplitShell';
+import { AuthSplitShell, authInputClass, authInputStyle, authLabelClass, authPanelClass, authPrimaryButtonClass } from './AuthSplitShell';
 
 type NavigationState = {
   from?: string;
@@ -131,6 +131,7 @@ export default function TechnicianLoginPage() {
             required
             placeholder="tech@company.com"
             className={authInputClass}
+            style={authInputStyle}
           />
         </div>
 
@@ -177,6 +178,7 @@ export default function TechnicianLoginPage() {
                         autoComplete="email"
                         placeholder="tech@company.com"
                         className={authInputClass}
+                        style={authInputStyle}
                       />
                     </div>
                     <p className="mt-3 text-sm leading-6 text-white/78">
@@ -222,6 +224,7 @@ export default function TechnicianLoginPage() {
               required
               placeholder="Enter password"
               className={`${authInputClass} pr-12`}
+              style={authInputStyle}
             />
             <button
               type="button"

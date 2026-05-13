@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { AuthSplitShell, authInputClass, authLabelClass, authPanelClass, authPrimaryButtonClass } from './AuthSplitShell';
+import { AuthSplitShell, authInputClass, authInputStyle, authLabelClass, authPanelClass, authPrimaryButtonClass } from './AuthSplitShell';
 
 type NavigationState = {
   from?: string;
@@ -80,6 +80,7 @@ export default function AdminLoginPage() {
             required
             placeholder="admin@company.com"
             className={authInputClass}
+            style={authInputStyle}
           />
         </div>
 
@@ -102,6 +103,7 @@ export default function AdminLoginPage() {
               required
               placeholder="Enter password"
               className={`${authInputClass} pr-12`}
+              style={authInputStyle}
             />
             <button
               type="button"

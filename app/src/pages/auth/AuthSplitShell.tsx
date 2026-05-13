@@ -40,7 +40,15 @@ const accentConfig: Record<
 };
 
 export const authInputClass =
-  'h-12 rounded-2xl border border-[rgba(148,163,184,0.22)] bg-[rgba(10,18,32,0.96)] px-4 text-[15px] text-[#f4f8ff] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] placeholder:text-[#8ea3c5] focus-visible:border-[#67e8f9]/50 focus-visible:ring-[#67e8f9]/15';
+  'h-12 rounded-2xl border border-[rgba(148,163,184,0.22)] !bg-[#0a1220] bg-none px-4 text-[15px] !text-[#f4f8ff] [-webkit-text-fill-color:#f4f8ff] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] placeholder:!text-[#8ea3c5] caret-[#f4f8ff] focus-visible:border-[#67e8f9]/50 focus-visible:ring-[#67e8f9]/15 [&:-webkit-autofill]:[-webkit-text-fill-color:#f4f8ff] [&:-webkit-autofill]:shadow-[0_0_0_1000px_#0a1220_inset] [&:-webkit-autofill]:[-webkit-box-shadow:0_0_0_1000px_#0a1220_inset] [&:-webkit-autofill]:[background-image:none] [&:-webkit-autofill:hover]:[-webkit-text-fill-color:#f4f8ff] [&:-webkit-autofill:focus]:[-webkit-text-fill-color:#f4f8ff]';
+
+export const authInputStyle = {
+  backgroundColor: '#0a1220',
+  backgroundImage: 'none',
+  color: '#f4f8ff',
+  WebkitTextFillColor: '#f4f8ff',
+  caretColor: '#f4f8ff',
+} as const;
 
 export const authLabelClass = 'text-sm font-semibold text-white';
 
