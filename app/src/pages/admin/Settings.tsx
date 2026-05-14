@@ -820,17 +820,11 @@ export default function SettingsPage() {
 
                 {/* ── Notification Preferences ── */}
                 <div className="rounded-2xl border border-white/8 bg-[#0d1829] p-6">
-                    <div className="mb-6 flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
-                        <div>
-                            <h2 className="text-2xl font-bold text-white">Notification Preferences</h2>
-                            <p className="mt-1 text-sm text-slate-400">Automated alerts and communication triggers</p>
-                        </div>
-                        <Button variant="ghost" className="flex h-9 shrink-0 items-center gap-2 self-start rounded-lg px-3 text-sm text-cyan-300 hover:bg-cyan-300/10 hover:text-cyan-200">
-                            <History className="h-4 w-4" />
-                            Review Audit Logs
-                        </Button>
+                    <div className="mb-6">
+                        <h2 className="text-2xl font-bold text-white">Notification Preferences</h2>
+                        <p className="mt-1 text-sm text-slate-400">Automated alerts and communication triggers</p>
                     </div>
-                    <div className="grid gap-4 md:grid-cols-3">
+                    <div className="grid gap-4 md:grid-cols-4">
                         {([
                             ['jobAssignedEmail',           'Job assigned email',    'Alert when technician is assigned'],
                             ['jobCompletedEmail',          'Job completed alert',   'Daily summary for managers'],
@@ -870,10 +864,7 @@ export default function SettingsPage() {
                         </div>
                         <div className="flex gap-2">
                             <Button asChild size="sm" variant="outline" className="h-8 rounded-lg border-white/15 bg-transparent px-3 text-xs font-semibold text-slate-200 hover:bg-white/[0.06]">
-                                <Link to="/book" target="_blank" rel="noreferrer">Preview Portal</Link>
-                            </Button>
-                            <Button asChild size="sm" variant="outline" className="h-8 rounded-lg border-white/15 bg-transparent px-3 text-xs font-semibold text-slate-200 hover:bg-white/[0.06]">
-                                <Link to="/book/status" target="_blank" rel="noreferrer">Get Embed Code</Link>
+                                <Link to="/book" target="_blank" rel="noreferrer">Open Booking Form</Link>
                             </Button>
                         </div>
                     </div>
