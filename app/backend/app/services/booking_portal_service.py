@@ -87,7 +87,7 @@ class BookingPortalService:
 
     def _get_default_settings_payload(self) -> BookingPortalSettingsPayload:
         return BookingPortalSettingsPayload(
-            is_enabled=False,
+            is_enabled=True,
             estimated_response_time_message="We will contact you within 2 business hours.",
             confirmation_email_body=(
                 "Hello ${customer_name},\n\n"

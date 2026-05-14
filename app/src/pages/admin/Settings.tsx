@@ -872,13 +872,15 @@ export default function SettingsPage() {
                     <div className="grid gap-6 p-6 xl:grid-cols-2">
                         {/* Left */}
                         <div className="space-y-5">
-                            <div className="flex items-center justify-between">
+                            <div className={cn('flex items-center justify-between rounded-xl border p-4 transition-colors', bookingPortalSettings.isEnabled ? 'border-emerald-400/20 bg-emerald-400/[0.05]' : 'border-red-400/20 bg-red-400/[0.05]')}>
                                 <div>
                                     <p className="font-semibold text-white">Enable Booking Portal</p>
-                                    <p className="mt-0.5 text-xs text-slate-500">Allow public customers to submit service requests</p>
+                                    <p className={cn('mt-0.5 text-xs', bookingPortalSettings.isEnabled ? 'text-emerald-400' : 'text-red-400')}>
+                                        {bookingPortalSettings.isEnabled ? 'Accepting submissions — customers can book online' : 'Disabled — customer form submissions will be rejected'}
+                                    </p>
                                 </div>
                                 <div className="flex items-center gap-2.5">
-                                    <span className={cn('text-xs font-bold uppercase tracking-wide', bookingPortalSettings.isEnabled ? 'text-emerald-400' : 'text-slate-500')}>
+                                    <span className={cn('text-xs font-bold uppercase tracking-wide', bookingPortalSettings.isEnabled ? 'text-emerald-400' : 'text-red-400')}>
                                         {bookingPortalSettings.isEnabled ? 'Online' : 'Offline'}
                                     </span>
                                     <Switch checked={bookingPortalSettings.isEnabled} onCheckedChange={(c) => setBookingPortalSettings((prev) => ({ ...prev, isEnabled: c }))} />
