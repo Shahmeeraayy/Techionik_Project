@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { ArrowRight, CalendarDays, CheckCircle2, CheckSquare, ChevronDown, Clock3, Mail, Phone, Search, Wrench } from 'lucide-react';
+import { ArrowRight, CalendarDays, CheckCircle2, ChevronDown, Clock3, Mail, Phone, Search, Wrench } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -113,6 +113,18 @@ export default function BookingPortalPage() {
     const serviceMap = new Map(config.services.map((service) => [service.id, service.name]));
     return form.serviceIds.map((id) => serviceMap.get(id)).filter((value): value is string => Boolean(value));
   }, [config, form.serviceIds]);
+  const selectedServiceSummary = useMemo(() => {
+    if (selectedServiceNames.length === 0) {
+      return 'Select one or more services';
+    }
+    if (selectedServiceNames.length === 1) {
+      return selectedServiceNames[0];
+    }
+    if (selectedServiceNames.length === 2) {
+      return `${selectedServiceNames[0]}, ${selectedServiceNames[1]}`;
+    }
+    return `${selectedServiceNames[0]}, ${selectedServiceNames[1]} +${selectedServiceNames.length - 2} more`;
+  }, [selectedServiceNames]);
   const statusLabel = lookupResult?.status ?? null;
   const estimatedCompletionLabel = useMemo(() => {
     if (!lookupResult?.estimated_completion_date) {
@@ -320,11 +332,7 @@ export default function BookingPortalPage() {
                             variant="outline"
                             className={`${portalInputClass} w-full justify-between px-4 font-normal text-left hover:bg-[linear-gradient(180deg,rgba(10,18,32,0.96),rgba(8,14,26,0.96))]`}
                           >
-                            <span className="truncate">
-                              {selectedServiceNames.length > 0
-                                ? selectedServiceNames.join(', ')
-                                : 'Select one or more services'}
-                            </span>
+                            <span className="truncate">{selectedServiceSummary}</span>
                             <ChevronDown className="h-4 w-4 text-slate-400" />
                           </Button>
                         </PopoverTrigger>
@@ -353,14 +361,9 @@ export default function BookingPortalPage() {
                         </PopoverContent>
                       </Popover>
                       {selectedServiceNames.length > 0 ? (
-                        <div className="flex flex-wrap gap-2 pt-1">
-                          {selectedServiceNames.map((serviceName) => (
-                            <Badge key={serviceName} variant="outline" className="border-cyan-300/20 bg-cyan-300/10 text-cyan-100">
-                              <CheckSquare className="mr-1 h-3 w-3" />
-                              {serviceName}
-                            </Badge>
-                          ))}
-                        </div>
+                        <p className="pt-1 text-xs text-slate-400">
+                          {selectedServiceNames.length} service{selectedServiceNames.length === 1 ? '' : 's'} selected
+                        </p>
                       ) : null}
                     </div>
                   </div>
