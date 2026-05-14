@@ -181,9 +181,10 @@ function activityBadgeClasses(tone: ActivityRow['tone']): string {
 }
 
 function activityDotClasses(tone: ActivityRow['tone']): string {
-  if (tone === 'success') return 'bg-emerald-300 shadow-[0_0_0_6px_rgba(52,211,153,0.12)]';
-  if (tone === 'warning') return 'bg-amber-300 shadow-[0_0_0_6px_rgba(251,191,36,0.12)]';
-  return 'bg-cyan-300 shadow-[0_0_0_6px_rgba(34,211,238,0.12)]';
+  if (tone === 'success') return 'bg-emerald-400 shadow-[0_0_8px_3px_rgba(52,211,153,0.45)]';
+  if (tone === 'warning') return 'bg-amber-400 shadow-[0_0_8px_3px_rgba(251,191,36,0.45)]';
+  if (tone === 'critical') return 'bg-red-400 shadow-[0_0_8px_3px_rgba(248,113,113,0.45)]';
+  return 'bg-cyan-400 shadow-[0_0_8px_3px_rgba(34,211,238,0.45)]';
 }
 
 function buildSnapshot(input: {
@@ -675,7 +676,7 @@ export default function Dashboard() {
                         className="rounded-[22px] border border-black/8 bg-white px-5 py-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.92)] dark:border-white/10 dark:bg-white/[0.03] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"
                       >
                         <div className="flex items-start gap-4">
-                          <div className={cn('mt-1 h-2.5 w-2.5 rounded-full', activityDotClasses(event.tone))} />
+                          <div className={cn('mt-1.5 h-3 w-3 shrink-0 rounded-full', activityDotClasses(event.tone))} />
                           <div className="min-w-0 flex-1">
                             <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                               <div className="min-w-0">
