@@ -971,28 +971,28 @@ export default function SettingsPage() {
                                     <PlusCircle className="h-4 w-4" /> New Rule
                                 </Button>
                             </DialogTrigger>
-                            <DialogContent className="max-w-md">
+                            <DialogContent className="max-w-md border-white/10 bg-[#0d1829] text-white">
                                 <DialogHeader>
-                                    <DialogTitle>Create New Ranking Rule</DialogTitle>
-                                    <DialogDescription>Define logic to automatically escalate job ranking.</DialogDescription>
+                                    <DialogTitle className="text-white">Create New Ranking Rule</DialogTitle>
+                                    <DialogDescription className="text-slate-400">Define logic to automatically escalate job ranking.</DialogDescription>
                                 </DialogHeader>
                                 <div className="space-y-4 py-4">
                                     <div className="space-y-2">
-                                        <Label>Rule Description</Label>
-                                        <Input placeholder="e.g., Prioritize Audi repairs" value={newRule.description} onChange={(e) => setNewRule({ ...newRule, description: e.target.value })} />
+                                        <Label className="text-slate-300">Rule Description</Label>
+                                        <Input style={settingsDarkInputStyle} className="border-white/10 text-white placeholder:text-slate-500" placeholder="e.g., Prioritize Audi repairs" value={newRule.description} onChange={(e) => setNewRule({ ...newRule, description: e.target.value })} />
                                     </div>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="space-y-2">
-                                            <Label>Dealership</Label>
+                                            <Label className="text-slate-300">Dealership</Label>
                                             <Select value={newRule.dealershipId} onValueChange={(v) => setNewRule({ ...newRule, dealershipId: v })}>
-                                                <SelectTrigger><SelectValue placeholder="Select dealer" /></SelectTrigger>
+                                                <SelectTrigger className="border-white/10 bg-[#0b1424] text-white"><SelectValue placeholder="Select dealer" /></SelectTrigger>
                                                 <SelectContent>{MOCK_DEALERSHIPS.map((d) => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}</SelectContent>
                                             </Select>
                                         </div>
                                         <div className="space-y-2">
-                                            <Label>Service Type</Label>
+                                            <Label className="text-slate-300">Service Type</Label>
                                             <Select value={newRule.serviceId} onValueChange={(v) => setNewRule({ ...newRule, serviceId: v })}>
-                                                <SelectTrigger><SelectValue placeholder="Any Service" /></SelectTrigger>
+                                                <SelectTrigger className="border-white/10 bg-[#0b1424] text-white"><SelectValue placeholder="Any Service" /></SelectTrigger>
                                                 <SelectContent>
                                                     <SelectItem value="any">Any Service</SelectItem>
                                                     {serviceOptions.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
@@ -1002,9 +1002,9 @@ export default function SettingsPage() {
                                     </div>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="space-y-2">
-                                            <Label>Target Urgency</Label>
+                                            <Label className="text-slate-300">Target Urgency</Label>
                                             <Select value={newRule.targetUrgency} onValueChange={(v) => setNewRule({ ...newRule, targetUrgency: v as UrgencyLevel })}>
-                                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                                <SelectTrigger className="border-white/10 bg-[#0b1424] text-white"><SelectValue /></SelectTrigger>
                                                 <SelectContent>
                                                     <SelectItem value="LOW">Low</SelectItem>
                                                     <SelectItem value="MEDIUM">Medium</SelectItem>
@@ -1014,40 +1014,40 @@ export default function SettingsPage() {
                                             </Select>
                                         </div>
                                         <div className="space-y-2">
-                                            <Label>Ranking Score</Label>
-                                            <Input type="number" value={newRule.rankingScore} onChange={(e) => setNewRule({ ...newRule, rankingScore: parseInt(e.target.value) })} />
+                                            <Label className="text-slate-300">Ranking Score</Label>
+                                            <Input type="number" style={settingsDarkInputStyle} className="border-white/10 text-white" value={newRule.rankingScore} onChange={(e) => setNewRule({ ...newRule, rankingScore: parseInt(e.target.value) })} />
                                         </div>
                                     </div>
                                 </div>
                                 <DialogFooter>
-                                    <Button variant="outline" onClick={() => setIsAddingRule(false)}>Cancel</Button>
+                                    <Button variant="outline" className="border-white/10 bg-transparent text-slate-200 hover:bg-white/[0.06] hover:text-white" onClick={() => setIsAddingRule(false)}>Cancel</Button>
                                     <Button className="bg-[#2F8E92] text-white hover:bg-[#267276]" onClick={handleAddRule}>Save Rule</Button>
                                 </DialogFooter>
                             </DialogContent>
                         </Dialog>
                         <Dialog open={isEditingRule} onOpenChange={setIsEditingRule}>
-                            <DialogContent className="max-w-md">
+                            <DialogContent className="max-w-md border-white/10 bg-[#0d1829] text-white">
                                 <DialogHeader>
-                                    <DialogTitle>Edit Ranking Rule</DialogTitle>
-                                    <DialogDescription>Update rule logic for dispatch ranking.</DialogDescription>
+                                    <DialogTitle className="text-white">Edit Ranking Rule</DialogTitle>
+                                    <DialogDescription className="text-slate-400">Update rule logic for dispatch ranking.</DialogDescription>
                                 </DialogHeader>
                                 <div className="space-y-4 py-4">
                                     <div className="space-y-2">
-                                        <Label>Rule Description</Label>
-                                        <Input placeholder="e.g., Prioritize Audi repairs" value={editRule.description || ''} onChange={(e) => setEditRule({ ...editRule, description: e.target.value })} />
+                                        <Label className="text-slate-300">Rule Description</Label>
+                                        <Input style={settingsDarkInputStyle} className="border-white/10 text-white placeholder:text-slate-500" placeholder="e.g., Prioritize Audi repairs" value={editRule.description || ''} onChange={(e) => setEditRule({ ...editRule, description: e.target.value })} />
                                     </div>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="space-y-2">
-                                            <Label>Dealership</Label>
+                                            <Label className="text-slate-300">Dealership</Label>
                                             <Select value={editRule.dealershipId} onValueChange={(v) => setEditRule({ ...editRule, dealershipId: v })}>
-                                                <SelectTrigger><SelectValue placeholder="Select dealer" /></SelectTrigger>
+                                                <SelectTrigger className="border-white/10 bg-[#0b1424] text-white"><SelectValue placeholder="Select dealer" /></SelectTrigger>
                                                 <SelectContent>{MOCK_DEALERSHIPS.map((d) => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}</SelectContent>
                                             </Select>
                                         </div>
                                         <div className="space-y-2">
-                                            <Label>Service Type</Label>
+                                            <Label className="text-slate-300">Service Type</Label>
                                             <Select value={editRule.serviceId} onValueChange={(v) => setEditRule({ ...editRule, serviceId: v })}>
-                                                <SelectTrigger><SelectValue placeholder="Any Service" /></SelectTrigger>
+                                                <SelectTrigger className="border-white/10 bg-[#0b1424] text-white"><SelectValue placeholder="Any Service" /></SelectTrigger>
                                                 <SelectContent>
                                                     <SelectItem value="any">Any Service</SelectItem>
                                                     {serviceOptions.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
@@ -1057,9 +1057,9 @@ export default function SettingsPage() {
                                     </div>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="space-y-2">
-                                            <Label>Target Urgency</Label>
+                                            <Label className="text-slate-300">Target Urgency</Label>
                                             <Select value={editRule.targetUrgency} onValueChange={(v) => setEditRule({ ...editRule, targetUrgency: v as UrgencyLevel })}>
-                                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                                <SelectTrigger className="border-white/10 bg-[#0b1424] text-white"><SelectValue /></SelectTrigger>
                                                 <SelectContent>
                                                     <SelectItem value="LOW">Low</SelectItem>
                                                     <SelectItem value="MEDIUM">Medium</SelectItem>
@@ -1069,13 +1069,13 @@ export default function SettingsPage() {
                                             </Select>
                                         </div>
                                         <div className="space-y-2">
-                                            <Label>Ranking Score</Label>
-                                            <Input type="number" value={editRule.rankingScore} onChange={(e) => setEditRule({ ...editRule, rankingScore: parseInt(e.target.value) })} />
+                                            <Label className="text-slate-300">Ranking Score</Label>
+                                            <Input type="number" style={settingsDarkInputStyle} className="border-white/10 text-white" value={editRule.rankingScore} onChange={(e) => setEditRule({ ...editRule, rankingScore: parseInt(e.target.value) })} />
                                         </div>
                                     </div>
                                 </div>
                                 <DialogFooter>
-                                    <Button variant="outline" onClick={() => setIsEditingRule(false)}>Cancel</Button>
+                                    <Button variant="outline" className="border-white/10 bg-transparent text-slate-200 hover:bg-white/[0.06] hover:text-white" onClick={() => setIsEditingRule(false)}>Cancel</Button>
                                     <Button className="bg-[#2F8E92] text-white hover:bg-[#267276]" onClick={handleEditRule}>Save Changes</Button>
                                 </DialogFooter>
                             </DialogContent>
