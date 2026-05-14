@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 
 from urllib.parse import quote
 
-from ..core.config import COMPANY_EMAIL, COMPANY_LOGO_URL, COMPANY_NAME, COMPANY_PHONE, CUSTOMER_PORTAL_BASE_URL
+from ..core.config import COMPANY_EMAIL, COMPANY_LOGO_URL, COMPANY_NAME, COMPANY_PHONE, COMPANY_WEBSITE, CUSTOMER_PORTAL_BASE_URL, DEFAULT_TENANT_ID
 from ..core.security import AuthenticatedUser
 from ..models.admin_credential_settings import AdminCredentialSettings
 from ..models.admin_user import AdminUser
@@ -51,20 +51,34 @@ class BookingPortalService:
         self.current_user = current_user
 
     def _get_settings_row(self) -> BookingPortalSettings | None:
+        # skip_tenant_scope: booking_portal_settings has a unique key per
+        # system, not per tenant. Without this, a public (unauthenticated)
+        # request scoped to DEFAULT_TENANT_ID would miss rows saved under the
+        # real admin tenant, causing a duplicate-key INSERT on next save.
         return (
             self.db.query(BookingPortalSettings)
+            .execution_options(skip_tenant_scope=True)
             .filter(BookingPortalSettings.key == BOOKING_PORTAL_SETTINGS_KEY)
             .first()
         )
 
+    def _get_owner_tenant_id(self) -> UUID:
+        """Return the tenant that owns the booking portal settings row."""
+        row = self._get_settings_row()
+        if row is not None and row.tenant_id is not None:
+            return row.tenant_id
+        return UUID(DEFAULT_TENANT_ID)
+
     def _get_admin_contact(self) -> tuple[str, str, str, Optional[str]]:
         branding = (
             self.db.query(InvoiceBrandingSettings)
+            .execution_options(skip_tenant_scope=True)
             .filter(InvoiceBrandingSettings.key == "default")
             .first()
         )
         primary_admin_user = (
             self.db.query(AdminUser)
+            .execution_options(skip_tenant_scope=True)
             .filter(AdminUser.status == "active")
             .order_by(
                 case((AdminUser.tenant_role == "owner", 0), else_=1),
@@ -72,7 +86,11 @@ class BookingPortalService:
             )
             .first()
         )
-        admin_settings = self.db.query(AdminCredentialSettings).first()
+        admin_settings = (
+            self.db.query(AdminCredentialSettings)
+            .execution_options(skip_tenant_scope=True)
+            .first()
+        )
         company_name = branding.name if branding is not None else COMPANY_NAME
         admin_email = (
             (primary_admin_user.email if primary_admin_user is not None else None)
@@ -128,12 +146,21 @@ class BookingPortalService:
             details_field_label=row.details_field_label,
         )
 
-    def _list_visible_service_rows(self, payload: BookingPortalSettingsPayload) -> list[ServiceCatalog]:
-        query = (
-            self.db.query(ServiceCatalog)
-            .filter(ServiceCatalog.status == "active")
-            .order_by(ServiceCatalog.name.asc())
-        )
+    def _list_visible_service_rows(
+        self,
+        payload: BookingPortalSettingsPayload,
+        owner_tenant_id: UUID | None = None,
+    ) -> list[ServiceCatalog]:
+        query = self.db.query(ServiceCatalog)
+        if owner_tenant_id is not None:
+            # Public context: skip tenant scope and explicitly filter by the
+            # owner tenant so we see the same services the admin configured.
+            query = (
+                query
+                .execution_options(skip_tenant_scope=True)
+                .filter(ServiceCatalog.tenant_id == owner_tenant_id)
+            )
+        query = query.filter(ServiceCatalog.status == "active").order_by(ServiceCatalog.name.asc())
         rows = query.all()
         if not payload.visible_service_ids:
             return rows
@@ -182,8 +209,9 @@ class BookingPortalService:
 
     def get_public_config(self) -> BookingPortalPublicConfigResponse:
         payload = self._load_settings_payload()
+        owner_tenant_id = self._get_owner_tenant_id()
         company_name, admin_email, admin_phone, logo_url = self._get_admin_contact()
-        service_rows = self._list_visible_service_rows(payload)
+        service_rows = self._list_visible_service_rows(payload, owner_tenant_id=owner_tenant_id)
         return BookingPortalPublicConfigResponse(
             is_enabled=payload.is_enabled,
             company_name=company_name,
@@ -280,7 +308,11 @@ class BookingPortalService:
         if not settings.is_enabled:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Booking portal is currently disabled")
 
-        visible_service_rows = self._list_visible_service_rows(settings)
+        # Resolve the tenant that owns this portal so the booking is saved
+        # under the same tenant as the admin (not the public DEFAULT_TENANT_ID).
+        owner_tenant_id = self._get_owner_tenant_id()
+
+        visible_service_rows = self._list_visible_service_rows(settings, owner_tenant_id=owner_tenant_id)
         service_by_id = {str(row.id): row for row in visible_service_rows}
         selected_service_rows = [service_by_id.get(str(service_id)) for service_id in payload.service_catalog_ids]
         if any(row is None for row in selected_service_rows):
@@ -292,6 +324,12 @@ class BookingPortalService:
 
         company_name, admin_email, admin_phone, _ = self._get_admin_contact()
         reference_number = self._next_reference_number()
+
+        # Temporarily set session tenant to the owner so BookingRequest and
+        # EmailOutbox are written under the correct tenant without a cross-tenant error.
+        original_tenant_id = self.db.info.get("tenant_id")
+        self.db.info["tenant_id"] = owner_tenant_id
+
         row = BookingRequest(
             reference_number=reference_number,
             customer_full_name=payload.customer_full_name,
@@ -368,6 +406,9 @@ class BookingPortalService:
         )
 
         self.db.commit()
+        # Restore the original tenant scope so subsequent queries in the same
+        # request are not inadvertently scoped to the owner tenant.
+        self.db.info["tenant_id"] = original_tenant_id
         return BookingPortalSubmissionResponse(
             reference_number=row.reference_number,
             estimated_response_time_message=settings.estimated_response_time_message,
@@ -380,6 +421,7 @@ class BookingPortalService:
 
         row = (
             self.db.query(BookingRequest)
+            .execution_options(skip_tenant_scope=True)
             .filter(BookingRequest.reference_number == payload.reference_number)
             .filter(BookingRequest.email_address == payload.email_address)
             .first()
