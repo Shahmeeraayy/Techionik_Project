@@ -881,15 +881,23 @@ async function requestJson<T>(path: string, options: RequestOptions = {}): Promi
     headers.Authorization = `Bearer ${options.token}`;
   }
 
+  const fetchOnce = () => fetch(`${apiBaseUrl}${path}`, {
+    method: options.method ?? 'GET',
+    headers,
+    body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
+  });
+
   let response: Response;
   try {
-    response = await fetch(`${apiBaseUrl}${path}`, {
-      method: options.method ?? 'GET',
-      headers,
-      body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
-    });
+    response = await fetchOnce();
   } catch {
-    throw new Error(`Unable to reach backend at ${apiBaseUrl}. Check that the API server is running and CORS is configured.`);
+    // Backend may be waking up (e.g. Render free tier spin-down). Wait 4 s and retry once.
+    await new Promise((resolve) => setTimeout(resolve, 4000));
+    try {
+      response = await fetchOnce();
+    } catch {
+      throw new Error(`Unable to reach backend at ${apiBaseUrl}. The server may still be starting up — please wait a moment and try again.`);
+    }
   }
 
   if (response.status === 401 && options.token) {
