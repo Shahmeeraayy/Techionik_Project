@@ -3,6 +3,7 @@ import { safeGetItemFromScopes, safeRemoveItemFromScopes, safeSetItem } from '@/
 const ADMIN_TOKEN_STORAGE_KEY = 'sm_dispatch_admin_access_token';
 const TECHNICIAN_TOKEN_STORAGE_KEY = 'sm_dispatch_technician_access_token';
 const API_URL_ENV_KEYS = ['VITE_API_URL', 'VITE_BACKEND_URL'] as const;
+const LOCAL_API_FALLBACK = 'http://127.0.0.1:8000';
 
 type RequestMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
@@ -728,6 +729,34 @@ function getApiBaseUrl(): string {
     .map((key) => import.meta.env[key])
     .find((value) => typeof value === 'string' && value.trim().length > 0);
   const normalized = typeof rawValue === 'string' ? rawValue.trim().replace(/\/$/, '') : '';
+
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname;
+    const isLocalHost =
+      hostname === 'localhost' ||
+      hostname === '127.0.0.1' ||
+      hostname === '::1';
+
+    if (isLocalHost) {
+      if (!normalized) {
+        return LOCAL_API_FALLBACK;
+      }
+
+      try {
+        const parsed = new URL(normalized);
+        const apiIsLocal =
+          parsed.hostname === 'localhost' ||
+          parsed.hostname === '127.0.0.1' ||
+          parsed.hostname === '::1';
+
+        if (!apiIsLocal) {
+          return LOCAL_API_FALLBACK;
+        }
+      } catch {
+        return LOCAL_API_FALLBACK;
+      }
+    }
+  }
 
   if (!normalized) {
     console.error(
