@@ -774,6 +774,39 @@ export function assertApiUrlConfigured(): void {
   void getApiBaseUrl();
 }
 
+/**
+ * Fire-and-forget ping to wake up the backend (e.g. Render free-tier cold start).
+ * Silently retries up to 8 times with 5-second gaps until the server responds.
+ * Call this once on app mount so the server is warm before the user takes action.
+ */
+export function warmupBackend(): void {
+  let apiBaseUrl: string;
+  try {
+    apiBaseUrl = getApiBaseUrl();
+  } catch {
+    return; // API URL not configured — skip
+  }
+
+  const MAX_ATTEMPTS = 8;
+  const INTERVAL_MS = 5000;
+
+  let attempts = 0;
+  const ping = async () => {
+    attempts++;
+    try {
+      const res = await fetch(`${apiBaseUrl}/`, { method: 'GET' });
+      if (res.ok) return; // server is up — done
+    } catch {
+      // server still sleeping
+    }
+    if (attempts < MAX_ATTEMPTS) {
+      setTimeout(() => { void ping(); }, INTERVAL_MS);
+    }
+  };
+
+  void ping();
+}
+
 export function getStoredAdminToken(): string | null {
   const raw = safeGetItemFromScopes(ADMIN_TOKEN_STORAGE_KEY);
   return raw && raw.trim() ? raw : null;
@@ -891,8 +924,8 @@ async function requestJson<T>(path: string, options: RequestOptions = {}): Promi
   try {
     response = await fetchOnce();
   } catch {
-    // Backend may be waking up (e.g. Render free tier spin-down). Wait 4 s and retry once.
-    await new Promise((resolve) => setTimeout(resolve, 4000));
+    // Backend may be waking up (e.g. Render free tier spin-down). Wait 10 s and retry once.
+    await new Promise((resolve) => setTimeout(resolve, 10000));
     try {
       response = await fetchOnce();
     } catch {

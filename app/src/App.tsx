@@ -1,7 +1,9 @@
+import { useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from '@/components/ui/sonner';
+import { warmupBackend } from '@/lib/backend-api';
 import { AdminLayout } from '@/layouts/AdminLayout';
 import { SiteMotion } from '@/components/motion/SiteMotion';
 import { HomeRoute, PublicOnly, RequireRole } from '@/components/auth/RouteGuards';
@@ -43,6 +45,8 @@ function PlaceholderPage({ title }: { title: string }) {
 }
 
 function App() {
+  useEffect(() => { warmupBackend(); }, []);
+
   return (
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
       <AuthProvider>
