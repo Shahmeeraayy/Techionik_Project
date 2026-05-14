@@ -1,22 +1,24 @@
 import { useCallback, useEffect, useState, type CSSProperties } from 'react';
 import {
-    AlertCircle,
-    Pencil,
-    RefreshCw,
-    UserCog,
-    Moon,
-    Monitor,
-    ListFilter,
-    PlusCircle,
-    Building2,
-    ShieldCheck,
+    BarChart2,
     Bell,
+    Building2,
     CreditCard,
     ExternalLink,
+    History,
+    Link2,
+    ListFilter,
     MapPin,
-    Palette,
+    Moon,
+    Monitor,
+    Pencil,
+    PlusCircle,
+    RefreshCw,
     RotateCcw,
+    ShieldCheck,
+    Trash2,
     Upload,
+    UserCog,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { MOCK_DEALERSHIPS as FALLBACK_DEALERSHIPS } from './Dealerships';
@@ -654,386 +656,277 @@ export default function SettingsPage() {
 
 
     return (
-        <div className="relative w-full pb-10">
-            <div className="pointer-events-none absolute inset-x-0 top-0 h-[380px] rounded-[34px] bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.12),rgba(34,211,238,0)_34%),radial-gradient(circle_at_top_right,rgba(52,211,153,0.08),rgba(52,211,153,0)_30%)]" />
-            <div className="pointer-events-none absolute left-8 top-8 h-40 w-40 rounded-full bg-cyan-400/8 blur-3xl" />
-            <div className="pointer-events-none absolute right-10 top-20 h-48 w-48 rounded-full bg-emerald-400/8 blur-3xl" />
-
-            <div className="relative space-y-6">
-                <section className="relative overflow-hidden rounded-[32px] border border-slate-200 bg-[linear-gradient(135deg,#ffffff,#f7fbff)] shadow-[0_28px_90px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-[linear-gradient(135deg,rgba(7,25,42,0.98),rgba(6,18,32,0.98))] dark:shadow-[0_34px_120px_rgba(0,0,0,0.34)]">
-                    <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(15,23,42,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(15,23,42,0.035)_1px,transparent_1px)] bg-[size:120px_120px] opacity-40 dark:bg-[linear-gradient(rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] dark:opacity-20" />
-                    <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent dark:via-cyan-200/70" />
-                    <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(79,124,255,0.10),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(34,211,238,0.10),transparent_26%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(47,142,146,0.14),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(245,158,11,0.12),transparent_26%)]" />
-                    <div className="relative flex flex-col gap-5 p-6 xl:flex-row xl:items-end xl:justify-between xl:p-8">
-                        <div className="max-w-3xl">
-                            <div className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-blue-700 dark:border-cyan-300/20 dark:bg-cyan-300/10 dark:text-cyan-100">
-                                <Monitor className="h-3.5 w-3.5" />
-                                Admin Controls
-                            </div>
-                            <h1 className="mt-5 text-[2.35rem] font-semibold leading-none tracking-[-0.06em] text-slate-950 dark:text-white md:text-[2.8rem]">
-                                Settings
-                                <span className="block bg-gradient-to-r from-slate-950 via-blue-700 to-cyan-500 bg-clip-text text-transparent dark:from-white dark:via-cyan-100 dark:to-emerald-100">
-                                    command center
-                                </span>
-                            </h1>
-                            <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-600 dark:text-slate-300 sm:text-[15px]">
-                                Configure dispatch ranking, invoice branding, admin access, and interface preferences from one operational control surface.
-                            </p>
-                        </div>
-                        <div className="flex items-center gap-3">
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                className={cn('h-10 gap-2 rounded-full px-4', settingsSecondaryButtonClass)}
-                                onClick={() => void refreshSettingsData()}
-                                disabled={refreshing}
-                            >
-                                <RefreshCw className={cn('w-4 h-4 text-cyan-200', refreshing && 'animate-spin')} />
-                                Refresh
-                            </Button>
+        <div className="w-full space-y-5 pb-10">
+            <div className="relative space-y-5">
+                {/* ── Stat Cards ── */}
+                <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
+                    <div className="rounded-2xl border border-white/8 bg-[#0d1829] p-5">
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">Ranking Rules</p>
+                        <p className="mt-2 text-[2rem] font-bold leading-none text-white">{priorityRules.length}</p>
+                        <div className="mt-3 flex items-center justify-between">
+                            <p className="text-sm text-slate-400">Active configuration</p>
+                            <ListFilter className="h-5 w-5 text-slate-600" />
                         </div>
                     </div>
-                </section>
-
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                    <Card className="overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-[0_18px_54px_rgba(15,23,42,0.07)] dark:border-cyan-400/15 dark:bg-[linear-gradient(180deg,rgba(12,36,55,0.96),rgba(8,24,39,0.96))] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-                        <CardContent className="p-5">
-                            <div className="flex items-start justify-between gap-3">
-                                <div className="space-y-2">
-                                    <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500 dark:text-slate-400">Dispatch Rules</p>
-                                    <p className="mt-3 text-[2.15rem] font-semibold leading-none tracking-[-0.06em] text-slate-950 dark:text-white">{priorityRules.length}</p>
-                                    <p className="text-sm text-slate-600 dark:text-slate-300">Ranking rules configured</p>
-                                </div>
-                                <div className="rounded-2xl border border-cyan-300/20 bg-cyan-300/10 p-3 text-cyan-100">
-                                    <ListFilter className="w-5 h-5" />
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-                    <Card className="overflow-hidden rounded-[24px] border border-emerald-200 bg-emerald-50/70 shadow-[0_18px_54px_rgba(15,23,42,0.06)] dark:border-emerald-400/15 dark:bg-[linear-gradient(180deg,rgba(10,37,45,0.96),rgba(7,25,31,0.96))] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-                        <CardContent className="p-5">
-                            <div className="flex items-start justify-between gap-3">
-                                <div className="space-y-2">
-                                    <p className="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700/70 dark:text-slate-400">Active Rules</p>
-                                    <p className="mt-3 text-[2.15rem] font-semibold leading-none tracking-[-0.06em] text-emerald-950 dark:text-white">{priorityRules.filter((rule) => rule.isActive).length}</p>
-                                    <p className="text-sm text-emerald-800/75 dark:text-slate-300">Rules affecting queue ranking</p>
-                                </div>
-                                <div className="rounded-2xl border border-emerald-300/20 bg-emerald-300/10 p-3 text-emerald-100">
-                                    <ShieldCheck className="w-5 h-5" />
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-                    <Card className="overflow-hidden rounded-[24px] border border-amber-200 bg-amber-50/70 shadow-[0_18px_54px_rgba(15,23,42,0.06)] dark:border-amber-400/15 dark:bg-[linear-gradient(180deg,rgba(41,28,15,0.94),rgba(27,18,10,0.96))] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-                        <CardContent className="p-5">
-                            <div className="flex items-start justify-between gap-3">
-                                <div className="space-y-2">
-                                    <p className="text-xs font-semibold uppercase tracking-[0.24em] text-amber-700/70 dark:text-slate-400">Dealership Coverage</p>
-                                    <p className="mt-3 text-[2.15rem] font-semibold leading-none tracking-[-0.06em] text-amber-950 dark:text-white">{dealershipOptions.length}</p>
-                                    <p className="text-sm text-amber-800/75 dark:text-slate-300">Partners available for rule targeting</p>
-                                </div>
-                                <div className="rounded-2xl border border-amber-300/20 bg-amber-300/10 p-3 text-amber-100">
-                                    <Building2 className="w-5 h-5" />
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-                    <Card className="overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-[0_18px_54px_rgba(15,23,42,0.07)] dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(13,24,38,0.96),rgba(8,17,29,0.96))] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-                        <CardContent className="p-5">
-                            <div className="flex items-start justify-between gap-3">
-                                <div className="space-y-2">
-                                    <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500 dark:text-slate-400">CRM Theme</p>
-                                    <p className="mt-3 text-[2.15rem] font-semibold leading-none tracking-[-0.06em] text-slate-950 dark:text-white">
-                                        {theme === 'dark' ? 'Dark' : theme === 'light' ? 'Light' : 'System'}
-                                    </p>
-                                    <p className="text-sm text-slate-600 dark:text-slate-300">Current interface appearance</p>
-                                </div>
-                                <div className="rounded-2xl border border-white/10 bg-white/[0.05] p-3 text-slate-200">
-                                    <Monitor className="w-5 h-5" />
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
+                    <div className="rounded-2xl border border-white/8 bg-[#0d1829] p-5">
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">Active Impact</p>
+                        <p className="mt-2 text-[2rem] font-bold leading-none text-white">{priorityRules.filter((r) => r.isActive).length}</p>
+                        <div className="mt-3 flex items-center justify-between">
+                            <p className="text-sm text-slate-400">Queue redirection</p>
+                            <BarChart2 className="h-5 w-5 text-slate-600" />
+                        </div>
+                    </div>
+                    <div className="rounded-2xl border border-white/8 bg-[#0d1829] p-5">
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">Partners</p>
+                        <p className="mt-2 text-[2rem] font-bold leading-none text-white">{dealershipOptions.length}</p>
+                        <div className="mt-3 flex items-center justify-between">
+                            <p className="text-sm text-slate-400">Available for targeting</p>
+                            <Building2 className="h-5 w-5 text-slate-600" />
+                        </div>
+                    </div>
+                    <div className="rounded-2xl border border-cyan-400/25 bg-[#0d1829] p-5 shadow-[0_0_0_1px_rgba(34,211,238,0.08)]">
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">CRM Theme</p>
+                        <p className="mt-2 text-[2rem] font-bold leading-none text-white">{theme === 'dark' ? 'Dark' : theme === 'light' ? 'Light' : 'System'}</p>
+                        <div className="mt-3 flex items-center justify-between">
+                            <p className="text-sm text-cyan-300">High-performance mode active</p>
+                            <Monitor className="h-5 w-5 text-cyan-400" />
+                        </div>
+                    </div>
                 </div>
 
-                <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-                    <Card className={sectionCardClass}>
-                        <CardHeader className={sectionHeaderClass}>
-                            <CardTitle className="flex items-center gap-2 text-base font-semibold text-slate-950 dark:text-white">
-                                <span className="rounded-xl border border-blue-200 bg-blue-50 p-2 text-blue-700 dark:border-cyan-300/20 dark:bg-cyan-300/10 dark:text-cyan-100">
-                                    <Palette className="h-4 w-4" />
-                                </span>
-                                Company Profile & Branding
-                            </CardTitle>
-                            <CardDescription className="text-slate-600 dark:text-slate-300">
-                                Controls the tenant identity used in portals, PDF invoices, and branded UI elements.
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-5 pt-0">
-                            <div className="grid gap-4 md:grid-cols-[180px_1fr]">
-                                <div className="rounded-[24px] border border-white/10 bg-[rgba(255,255,255,0.03)] p-4">
-                                    <div className="flex h-24 items-center justify-center overflow-hidden rounded-2xl border border-dashed border-white/12 bg-black/20">
-                                        {companyProfileSettings.logoUrl || invoiceCompany.logo_url ? (
-                                            <img src={companyProfileSettings.logoUrl || invoiceCompany.logo_url} alt="Company logo preview" className="max-h-full max-w-full object-contain" />
-                                        ) : (
-                                            <Upload className="h-7 w-7 text-slate-400" />
-                                        )}
-                                    </div>
-                                    <Label htmlFor="company_logo_upload" className={cn('mt-3 flex h-9 cursor-pointer items-center justify-center rounded-full border text-xs font-semibold transition-colors', settingsSecondaryButtonClass)}>
-                                        Upload logo
-                                    </Label>
-                                    <Input id="company_logo_upload" type="file" accept="image/*" className="hidden" onChange={(event) => handleLogoUpload(event.target.files?.[0])} />
+                {/* ── Company Profile + Sidebar ── */}
+                <div className="grid gap-5 xl:grid-cols-[1.5fr_0.75fr]">
+                    {/* Company Profile */}
+                    <div className="rounded-2xl border border-white/8 bg-[#0d1829] p-6">
+                        <div className="mb-6 flex items-center gap-3">
+                            <Building2 className="h-7 w-7 text-cyan-300" />
+                            <h2 className="text-2xl font-bold text-white">Company Profile &amp; Branding</h2>
+                        </div>
+                        <div className="grid gap-6 md:grid-cols-[1fr_260px]">
+                            {/* Fields */}
+                            <div className="space-y-4">
+                                <div className="space-y-1.5">
+                                    <Label className="text-sm text-slate-400">Company Name</Label>
+                                    <Input style={settingsDarkInputStyle} className="border-white/10 text-white placeholder:text-slate-500" value={invoiceCompany.name} onChange={(e) => setInvoiceCompany({ ...invoiceCompany, name: e.target.value })} />
                                 </div>
-                                <div className="grid gap-4 sm:grid-cols-2">
-                                    <div className="space-y-2">
-                                        <Label className="text-slate-700 dark:text-slate-200">Company Name</Label>
-                                        <Input style={settingsDarkInputStyle} className="border-white/10 text-white placeholder:text-slate-500" value={invoiceCompany.name} onChange={(e) => setInvoiceCompany({ ...invoiceCompany, name: e.target.value })} />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label className="text-slate-700 dark:text-slate-200">Industry Type</Label>
-                                        <Select value={companyProfileSettings.industryType} onValueChange={(value) => setCompanyProfileSettings((prev) => ({ ...prev, industryType: value }))}>
-                                            <SelectTrigger className="border-white/10 bg-[#0b1424] text-white">
-                                                <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="Automotive">Automotive</SelectItem>
-                                                <SelectItem value="HVAC">HVAC</SelectItem>
-                                                <SelectItem value="Appliance Repair">Appliance Repair</SelectItem>
-                                                <SelectItem value="General Field Service">General Field Service</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label className="text-slate-700 dark:text-slate-200">Timezone</Label>
-                                        <Select value={companyProfileSettings.timezone} onValueChange={(value) => setCompanyProfileSettings((prev) => ({ ...prev, timezone: value }))}>
-                                            <SelectTrigger className="border-white/10 bg-[#0b1424] text-white">
-                                                <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="America/Toronto">America/Toronto</SelectItem>
-                                                <SelectItem value="America/New_York">America/New_York</SelectItem>
-                                                <SelectItem value="America/Chicago">America/Chicago</SelectItem>
-                                                <SelectItem value="America/Los_Angeles">America/Los_Angeles</SelectItem>
-                                                <SelectItem value="Asia/Karachi">Asia/Karachi</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label className="text-slate-700 dark:text-slate-200">Primary Colour</Label>
-                                        <div className="flex gap-2">
-                                            <Input type="color" style={settingsDarkInputStyle} className="h-10 w-14 border-white/10 p-1" value={companyProfileSettings.primaryColor} onChange={(e) => setCompanyProfileSettings((prev) => ({ ...prev, primaryColor: e.target.value }))} />
-                                            <Input style={settingsDarkInputStyle} className="border-white/10 text-white placeholder:text-slate-500" value={companyProfileSettings.primaryColor} onChange={(e) => setCompanyProfileSettings((prev) => ({ ...prev, primaryColor: e.target.value }))} />
-                                        </div>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label className="text-slate-700 dark:text-slate-200">Contact Email</Label>
-                                        <Input style={settingsDarkInputStyle} className="border-white/10 text-white placeholder:text-slate-500" value={invoiceCompany.email} onChange={(e) => setInvoiceCompany({ ...invoiceCompany, email: e.target.value })} />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label className="text-slate-700 dark:text-slate-200">Contact Phone</Label>
+                                <div className="space-y-1.5">
+                                    <Label className="text-sm text-slate-400">Contact Email</Label>
+                                    <Input style={settingsDarkInputStyle} className="border-white/10 text-white placeholder:text-slate-500" value={invoiceCompany.email} onChange={(e) => setInvoiceCompany({ ...invoiceCompany, email: e.target.value })} />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <Label className="text-sm text-slate-400">Industry Type</Label>
+                                    <Select value={companyProfileSettings.industryType} onValueChange={(v) => setCompanyProfileSettings((prev) => ({ ...prev, industryType: v }))}>
+                                        <SelectTrigger className="border-white/10 bg-[#0b1424] text-white"><SelectValue /></SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="Automotive">Automotive</SelectItem>
+                                            <SelectItem value="HVAC">HVAC</SelectItem>
+                                            <SelectItem value="Appliance Repair">Appliance Repair</SelectItem>
+                                            <SelectItem value="General Field Service">General Field Service</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-1.5">
+                                        <Label className="text-sm text-slate-400">Contact Phone</Label>
                                         <Input style={settingsDarkInputStyle} className="border-white/10 text-white placeholder:text-slate-500" value={invoiceCompany.phone} onChange={(e) => setInvoiceCompany({ ...invoiceCompany, phone: e.target.value })} />
                                     </div>
-                                    <div className="space-y-2 sm:col-span-2">
-                                        <Label className="text-slate-700 dark:text-slate-200">PDF Footer Text</Label>
-                                        <Textarea style={settingsDarkInputStyle} className="min-h-20 border-white/10 text-white placeholder:text-slate-500" value={companyProfileSettings.customFooterText} onChange={(e) => setCompanyProfileSettings((prev) => ({ ...prev, customFooterText: e.target.value }))} />
+                                    <div className="space-y-1.5">
+                                        <Label className="text-sm text-slate-400">Primary Colour</Label>
+                                        <div className="flex gap-2">
+                                            <Input type="color" style={settingsDarkInputStyle} className="h-[52px] w-14 border-white/10 p-1" value={companyProfileSettings.primaryColor} onChange={(e) => setCompanyProfileSettings((prev) => ({ ...prev, primaryColor: e.target.value }))} />
+                                            <Input style={settingsDarkInputStyle} className="border-white/10 text-white" value={companyProfileSettings.primaryColor} onChange={(e) => setCompanyProfileSettings((prev) => ({ ...prev, primaryColor: e.target.value }))} />
+                                        </div>
                                     </div>
+                                </div>
+                                <div className="space-y-1.5">
+                                    <Label className="text-sm text-slate-400">PDF Footer Text</Label>
+                                    <Textarea style={settingsDarkInputStyle} className="min-h-16 border-white/10 text-white placeholder:text-slate-500" value={companyProfileSettings.customFooterText} onChange={(e) => setCompanyProfileSettings((prev) => ({ ...prev, customFooterText: e.target.value }))} />
                                 </div>
                             </div>
-                        </CardContent>
-                        <CardFooter className={sectionFooterClass}>
-                            <Button size="sm" className={cn('ml-auto', settingsPrimaryButtonClass)} onClick={handleSaveCompanyProfile} disabled={loading}>
-                                {loading && <RefreshCw className="mr-2 h-3 w-3 animate-spin" />}
-                                Save Company Profile
+                            {/* Logo upload */}
+                            <div className="flex flex-col gap-3">
+                                <div className="flex flex-1 flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-white/20 bg-white/[0.02] p-6">
+                                    {companyProfileSettings.logoUrl || invoiceCompany.logo_url ? (
+                                        <img src={companyProfileSettings.logoUrl || invoiceCompany.logo_url} alt="Logo" className="max-h-24 max-w-full object-contain" />
+                                    ) : (
+                                        <>
+                                            <Upload className="h-8 w-8 text-slate-500" />
+                                            <p className="text-center text-sm font-medium text-slate-400">Drag and drop company logo</p>
+                                            <p className="text-xs text-slate-600">SVG, PNG or JPG (Max 2MB)</p>
+                                        </>
+                                    )}
+                                </div>
+                                <Label htmlFor="company_logo_upload" className="flex h-9 cursor-pointer items-center justify-center rounded-lg border border-white/10 bg-white/[0.04] text-sm font-medium text-slate-200 transition-colors hover:bg-white/[0.08]">
+                                    Browse Files
+                                </Label>
+                                <Input id="company_logo_upload" type="file" accept="image/*" className="hidden" onChange={(e) => handleLogoUpload(e.target.files?.[0])} />
+                            </div>
+                        </div>
+                        <Button className="mt-6 h-12 w-full rounded-xl bg-gradient-to-r from-[#4f7cff] to-[#22d3ee] text-base font-semibold text-white shadow-[0_8px_24px_rgba(79,124,255,0.28)] hover:brightness-110 transition-all" onClick={handleSaveCompanyProfile} disabled={loading}>
+                            {loading && <RefreshCw className="mr-2 h-4 w-4 animate-spin" />}
+                            Save Company Profile
+                        </Button>
+                    </div>
+
+                    {/* Right sidebar */}
+                    <div className="space-y-4">
+                        {/* Locations */}
+                        <div className="rounded-2xl border border-white/8 bg-[#0d1829] p-5">
+                            <div className="mb-4 flex items-center gap-2">
+                                <MapPin className="h-4 w-4 text-cyan-300" />
+                                <h3 className="text-sm font-semibold text-white">Locations / Dealerships</h3>
+                            </div>
+                            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">Active Records</p>
+                            <p className="mt-1 text-4xl font-bold text-white">{dealershipOptions.length}</p>
+                            <Button asChild variant="outline" className="mt-4 w-full justify-between rounded-xl border-white/10 bg-white/[0.04] text-slate-200 hover:bg-white/[0.08]">
+                                <Link to="/admin/locations">
+                                    Jump to Management
+                                    <ExternalLink className="h-4 w-4" />
+                                </Link>
                             </Button>
-                        </CardFooter>
-                    </Card>
-
-                    <div className="space-y-6">
-                        <Card className={sectionCardClass}>
-                            <CardHeader className={sectionHeaderClass}>
-                                <CardTitle className="flex items-center gap-2 text-base font-semibold text-slate-950 dark:text-white">
-                                    <span className="rounded-xl border border-emerald-200 bg-emerald-50 p-2 text-emerald-700 dark:border-emerald-300/20 dark:bg-emerald-300/10 dark:text-emerald-100">
-                                        <MapPin className="h-4 w-4" />
-                                    </span>
-                                    Locations / Dealerships
-                                </CardTitle>
-                                <CardDescription className="text-slate-600 dark:text-slate-300">Jump to centralized location management.</CardDescription>
-                            </CardHeader>
-                            <CardContent className="pt-0">
-                                <div className="rounded-[22px] border border-slate-200 bg-slate-50/80 p-4 dark:border-white/10 dark:bg-white/[0.03]">
-                                    <div className="text-2xl font-semibold text-slate-950 dark:text-white">{dealershipOptions.length}</div>
-                                    <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Active location records available for jobs and reports.</p>
-                                    <Button asChild size="sm" variant="outline" className="mt-4 rounded-full border-slate-200 bg-white text-slate-700 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-100">
-                                        <Link to="/admin/locations">
-                                            Open Locations
-                                            <ExternalLink className="ml-2 h-3.5 w-3.5" />
-                                        </Link>
-                                    </Button>
+                        </div>
+                        {/* Billing */}
+                        <div className="rounded-2xl border border-white/8 bg-[#0d1829] p-5">
+                            <div className="mb-4 flex items-center gap-2">
+                                <CreditCard className="h-4 w-4 text-cyan-300" />
+                                <h3 className="text-sm font-semibold text-white">Billing &amp; Subscription</h3>
+                            </div>
+                            <div className="space-y-2.5 text-sm">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-slate-400">Current Plan</span>
+                                    <span className="font-semibold text-cyan-300">{billingSubscription.planName.split(' ').slice(-2).join(' ')}</span>
                                 </div>
-                            </CardContent>
-                        </Card>
-
-                        <Card className={sectionCardClass}>
-                            <CardHeader className={sectionHeaderClass}>
-                                <CardTitle className="flex items-center gap-2 text-base font-semibold text-slate-950 dark:text-white">
-                                    <span className="rounded-xl border border-amber-200 bg-amber-50 p-2 text-amber-700 dark:border-amber-300/20 dark:bg-amber-300/10 dark:text-amber-100">
-                                        <CreditCard className="h-4 w-4" />
-                                    </span>
-                                    Billing & Subscription
-                                </CardTitle>
-                                <CardDescription className="text-slate-600 dark:text-slate-300">Plan, limits, renewal, and billing portal access.</CardDescription>
-                            </CardHeader>
-                            <CardContent className="space-y-4 pt-0">
-                                <div className="grid grid-cols-2 gap-3">
-                                    <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-3 dark:border-white/10 dark:bg-white/[0.03]">
-                                        <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400">Current Plan</p>
-                                        <p className="mt-2 font-semibold text-slate-950 dark:text-white">{billingSubscription.planName}</p>
-                                        <p className="text-xs text-slate-500">{billingSubscription.monthlyPrice}</p>
-                                    </div>
-                                    <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-3 dark:border-white/10 dark:bg-white/[0.03]">
-                                        <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400">Renewal</p>
-                                        <Input type="date" className="mt-2 h-9 border-slate-200 bg-white text-slate-900 dark:border-white/10 dark:bg-white/[0.04] dark:text-white" value={billingSubscription.renewalDate} onChange={(e) => setBillingSubscription((prev) => ({ ...prev, renewalDate: e.target.value }))} />
-                                    </div>
+                                <div className="flex items-center justify-between">
+                                    <span className="text-slate-400">Renewal Date</span>
+                                    <span className="text-white">{new Date(billingSubscription.renewalDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
                                 </div>
-                                <div className="grid grid-cols-2 gap-3 text-sm">
-                                    <div className="rounded-2xl border border-slate-200 bg-white p-3 dark:border-white/10 dark:bg-white/[0.03]">
-                                        <p className="text-slate-500">Technicians</p>
-                                        <p className="font-semibold text-slate-950 dark:text-white">{technicianCount} / {billingSubscription.technicianLimit}</p>
-                                    </div>
-                                    <div className="rounded-2xl border border-slate-200 bg-white p-3 dark:border-white/10 dark:bg-white/[0.03]">
-                                        <p className="text-slate-500">Locations</p>
-                                        <p className="font-semibold text-slate-950 dark:text-white">{dealershipOptions.length} / {billingSubscription.locationLimit}</p>
-                                    </div>
+                            </div>
+                            <div className="mt-4 grid grid-cols-2 gap-3">
+                                <div className="rounded-xl border border-white/8 bg-white/[0.03] p-3 text-center">
+                                    <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">Technicians</p>
+                                    <p className="mt-1 text-base font-bold text-white">{technicianCount} / {billingSubscription.technicianLimit}</p>
                                 </div>
-                            </CardContent>
-                            <CardFooter className={sectionFooterClass}>
-                                <div className="ml-auto flex gap-2">
-                                    <Button size="sm" variant="outline" className="border-slate-200 bg-white text-slate-700 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-100" onClick={handleSaveBillingSubscription}>
-                                        Save Billing View
-                                    </Button>
-                                    <Button size="sm" className="bg-slate-950 text-white hover:bg-slate-800 dark:bg-[#2F8E92] dark:hover:bg-[#267276]">
-                                        Stripe Portal
-                                        <ExternalLink className="ml-2 h-3.5 w-3.5" />
-                                    </Button>
+                                <div className="rounded-xl border border-white/8 bg-white/[0.03] p-3 text-center">
+                                    <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">Locations</p>
+                                    <p className="mt-1 text-base font-bold text-white">{dealershipOptions.length} / {billingSubscription.locationLimit}</p>
                                 </div>
-                            </CardFooter>
-                        </Card>
+                            </div>
+                            <Button size="sm" className="mt-4 w-full bg-[#2F8E92] text-white hover:bg-[#267276]" onClick={handleSaveBillingSubscription}>
+                                Save Billing View
+                            </Button>
+                        </div>
                     </div>
                 </div>
 
-                <Card className={sectionCardClass}>
-                    <CardHeader className={sectionHeaderClass}>
-                        <CardTitle className="flex items-center gap-2 text-base font-semibold text-slate-950 dark:text-white">
-                            <span className="rounded-xl border border-rose-200 bg-rose-50 p-2 text-rose-700 dark:border-rose-300/20 dark:bg-rose-300/10 dark:text-rose-100">
-                                <Bell className="h-4 w-4" />
-                            </span>
-                            Notification Preferences
-                        </CardTitle>
-                        <CardDescription className="text-slate-600 dark:text-slate-300">
-                            Configure admin, technician, customer, SMS, and chat digest notification behavior.
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent className="grid gap-3 pt-0 md:grid-cols-2 xl:grid-cols-4">
-                        {[
-                            ['jobAssignedEmail', 'Job assigned email', 'Admin alert when a technician is assigned.'],
-                            ['jobCompletedEmail', 'Job completed email', 'Admin alert when a job is completed.'],
-                            ['invoiceReadyEmail', 'Invoice ready email', 'Admin alert when an invoice draft is ready.'],
-                            ['technicianSignupEmail', 'Technician signup email', 'Admin alert for new technician signup.'],
-                            ['chatDigestEmail', 'New chat digest', 'Email digest if unread for 30 minutes.'],
-                            ['technicianSmsAssignments', 'SMS job assignment', 'SMS alert to technicians for assigned jobs.'],
-                            ['customerBookingConfirmation', 'Booking confirmation', 'Customer booking confirmation email.'],
-                            ['customerCompletionSummary', 'Completion summary', 'Customer job completion summary email.'],
-                        ].map(([key, title, description]) => (
-                            <div key={key} className="flex items-start justify-between gap-3 rounded-[20px] border border-white/10 bg-[linear-gradient(180deg,rgba(13,24,40,0.82),rgba(8,17,29,0.86))] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] transition-colors hover:border-cyan-300/20 hover:bg-[linear-gradient(180deg,rgba(15,29,48,0.9),rgba(9,19,33,0.92))]">
+                {/* ── Notification Preferences ── */}
+                <div className="rounded-2xl border border-white/8 bg-[#0d1829] p-6">
+                    <div className="mb-6 flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
+                        <div>
+                            <h2 className="text-2xl font-bold text-white">Notification Preferences</h2>
+                            <p className="mt-1 text-sm text-slate-400">Automated alerts and communication triggers</p>
+                        </div>
+                        <Button variant="ghost" className="flex h-9 shrink-0 items-center gap-2 self-start rounded-lg px-3 text-sm text-cyan-300 hover:bg-cyan-300/10 hover:text-cyan-200">
+                            <History className="h-4 w-4" />
+                            Review Audit Logs
+                        </Button>
+                    </div>
+                    <div className="grid gap-4 md:grid-cols-3">
+                        {([
+                            ['jobAssignedEmail',           'Job assigned email',    'Alert when technician is assigned'],
+                            ['jobCompletedEmail',          'Job completed alert',   'Daily summary for managers'],
+                            ['invoiceReadyEmail',          'Invoice ready SMS',     'Direct billing notification'],
+                            ['technicianSignupEmail',      'Technician signup',     'Admin alert for new signup'],
+                            ['chatDigestEmail',            'New chat digest',       'Email digest if unread 30m'],
+                            ['technicianSmsAssignments',   'SMS job assignment',    'SMS alert for assigned jobs'],
+                            ['customerBookingConfirmation','Booking confirmation',  'Customer confirmation email'],
+                            ['customerCompletionSummary',  'Completion summary',    'Customer completion email'],
+                        ] as [keyof NotificationPreferences, string, string][]).map(([key, title, description]) => (
+                            <div key={key} className="flex items-center justify-between gap-4 rounded-xl border border-white/8 bg-white/[0.02] p-4">
                                 <div>
-                                    <p className="font-semibold text-slate-950 dark:text-white">{title}</p>
-                                    <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">{description}</p>
+                                    <p className="font-semibold text-white">{title}</p>
+                                    <p className="mt-0.5 text-xs text-slate-500">{description}</p>
                                 </div>
                                 <Switch
-                                    checked={notificationPreferences[key as keyof NotificationPreferences]}
+                                    checked={notificationPreferences[key]}
                                     onCheckedChange={(checked) => setNotificationPreferences((prev) => ({ ...prev, [key]: checked }))}
-                                    className={settingsSwitchClass}
                                 />
                             </div>
                         ))}
-                    </CardContent>
-                    <CardFooter className={sectionFooterClass}>
-                        <Button size="sm" className="ml-auto bg-slate-950 text-white hover:bg-slate-800 dark:bg-[#2F8E92] dark:hover:bg-[#267276]" onClick={handleSaveNotificationPreferences}>
+                    </div>
+                    <div className="mt-5 flex justify-end">
+                        <Button size="sm" className="bg-[#2F8E92] text-white hover:bg-[#267276]" onClick={handleSaveNotificationPreferences}>
                             Save Notifications
                         </Button>
-                    </CardFooter>
-                </Card>
+                    </div>
+                </div>
 
-                <Card className={sectionCardClass}>
-                    <CardHeader className={sectionHeaderClass}>
-                        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                            <div>
-                                <CardTitle className="flex items-center gap-2 text-base font-semibold text-slate-950 dark:text-white">
-                                    <span className="rounded-xl border border-cyan-300/20 bg-cyan-300/10 p-2 text-cyan-100">
-                                        <ExternalLink className="h-4 w-4" />
-                                    </span>
-                                    Customer Booking Portal
-                                </CardTitle>
-                                <CardDescription className="text-slate-600 dark:text-slate-300">
-                                    Control the public booking experience, visible services, customer confirmation copy, and status lookup behavior.
-                                </CardDescription>
-                            </div>
-                            <div className="flex flex-wrap gap-2">
-                                <Button
-                                    asChild
-                                    size="sm"
-                                    variant="outline"
-                                    className={settingsSecondaryButtonClass}
-                                >
-                                    <Link to="/book" target="_blank" rel="noreferrer">
-                                        Open Booking Form
-                                        <ExternalLink className="ml-2 h-3.5 w-3.5" />
-                                    </Link>
-                                </Button>
-                                <Button
-                                    asChild
-                                    size="sm"
-                                    variant="outline"
-                                    className={settingsSecondaryButtonClass}
-                                >
-                                    <Link to="/book/status" target="_blank" rel="noreferrer">
-                                        Open Status Lookup
-                                        <ExternalLink className="ml-2 h-3.5 w-3.5" />
-                                    </Link>
-                                </Button>
-                            </div>
+                {/* ── Customer Booking Portal ── */}
+                <div className="overflow-hidden rounded-2xl border border-white/8 bg-[#0d1829]">
+                    {/* Dark header bar */}
+                    <div className="flex flex-col gap-3 border-b border-white/8 bg-[#080f1c] px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex items-center gap-2.5">
+                            <Monitor className="h-4 w-4 text-cyan-300" />
+                            <span className="text-xs font-bold uppercase tracking-[0.22em] text-white">Customer Booking Portal</span>
                         </div>
-                    </CardHeader>
-                    <CardContent className="grid gap-5 pt-0 xl:grid-cols-[1fr_1fr]">
+                        <div className="flex gap-2">
+                            <Button asChild size="sm" variant="outline" className="h-8 rounded-lg border-white/15 bg-transparent px-3 text-xs font-semibold text-slate-200 hover:bg-white/[0.06]">
+                                <Link to="/book" target="_blank" rel="noreferrer">Preview Portal</Link>
+                            </Button>
+                            <Button asChild size="sm" variant="outline" className="h-8 rounded-lg border-white/15 bg-transparent px-3 text-xs font-semibold text-slate-200 hover:bg-white/[0.06]">
+                                <Link to="/book/status" target="_blank" rel="noreferrer">Get Embed Code</Link>
+                            </Button>
+                        </div>
+                    </div>
+                    {/* Content */}
+                    <div className="grid gap-6 p-6 xl:grid-cols-2">
+                        {/* Left */}
                         <div className="space-y-5">
-                            <div className="flex items-center justify-between rounded-[22px] border border-white/10 bg-[rgba(255,255,255,0.03)] p-4">
+                            <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="font-semibold text-slate-950 dark:text-white">Booking portal enabled</p>
-                                    <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">Allow public customers to submit service requests from the branded booking page.</p>
+                                    <p className="font-semibold text-white">Enable Booking Portal</p>
+                                    <p className="mt-0.5 text-xs text-slate-500">Allow public customers to submit service requests</p>
                                 </div>
-                                <Switch
-                                    checked={bookingPortalSettings.isEnabled}
-                                    onCheckedChange={(checked) => setBookingPortalSettings((prev) => ({ ...prev, isEnabled: checked }))}
-                                    className={settingsSwitchClass}
-                                />
+                                <div className="flex items-center gap-2.5">
+                                    <span className={cn('text-xs font-bold uppercase tracking-wide', bookingPortalSettings.isEnabled ? 'text-emerald-400' : 'text-slate-500')}>
+                                        {bookingPortalSettings.isEnabled ? 'Online' : 'Offline'}
+                                    </span>
+                                    <Switch checked={bookingPortalSettings.isEnabled} onCheckedChange={(c) => setBookingPortalSettings((prev) => ({ ...prev, isEnabled: c }))} />
+                                </div>
                             </div>
-                            <div className="flex items-center justify-between rounded-[22px] border border-white/10 bg-[rgba(255,255,255,0.03)] p-4">
+                            <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="font-semibold text-slate-950 dark:text-white">Status lookup page</p>
-                                    <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">Let customers check status with reference number and email.</p>
+                                    <p className="font-semibold text-white">Status Lookup Page</p>
+                                    <p className="mt-0.5 text-xs text-slate-500">Let customers check status with reference number</p>
                                 </div>
-                                <Switch
-                                    checked={bookingPortalSettings.statusLookupEnabled}
-                                    onCheckedChange={(checked) => setBookingPortalSettings((prev) => ({ ...prev, statusLookupEnabled: checked }))}
-                                    className={settingsSwitchClass}
-                                />
+                                <Switch checked={bookingPortalSettings.statusLookupEnabled} onCheckedChange={(c) => setBookingPortalSettings((prev) => ({ ...prev, statusLookupEnabled: c }))} />
                             </div>
                             <div className="space-y-2">
-                                <Label className="text-slate-700 dark:text-slate-200">Industry type</Label>
-                                <Select value={bookingPortalSettings.industryType} onValueChange={(value) => setBookingPortalSettings((prev) => ({ ...prev, industryType: value as BookingPortalSettingsState['industryType'] }))}>
-                                    <SelectTrigger className="border-white/10 bg-white/[0.04] text-white">
-                                        <SelectValue />
-                                    </SelectTrigger>
+                                <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">Service Type Filter</p>
+                                <Input style={settingsDarkInputStyle} className="border-white/10 text-white placeholder:text-slate-500" placeholder="Search services..." value={bookingServiceSearch} onChange={(e) => setBookingServiceSearch(e.target.value)} />
+                                <div className="flex flex-wrap gap-1.5 pt-1">
+                                    {serviceOptions.filter((s) => bookingPortalSettings.visibleServiceIds.includes(s.id)).slice(0, 5).map((s) => (
+                                        <button key={s.id} onClick={() => setBookingPortalSettings((prev) => ({ ...prev, visibleServiceIds: prev.visibleServiceIds.filter((id) => id !== s.id) }))} className="inline-flex items-center rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1 text-xs font-medium text-cyan-200 transition-colors hover:bg-cyan-400/20">
+                                            {s.name}
+                                        </button>
+                                    ))}
+                                </div>
+                                <div className="max-h-48 overflow-y-auto rounded-xl border border-white/8 bg-white/[0.02] p-2">
+                                    {filteredBookingServiceOptions.map((service) => {
+                                        const checked = bookingPortalSettings.visibleServiceIds.includes(service.id);
+                                        return (
+                                            <label key={service.id} className="flex cursor-pointer items-center justify-between rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-white/[0.04]">
+                                                <span>{service.name}</span>
+                                                <Switch checked={checked} onCheckedChange={(c) => setBookingPortalSettings((prev) => ({ ...prev, visibleServiceIds: c ? [...prev.visibleServiceIds, service.id] : prev.visibleServiceIds.filter((id) => id !== service.id) }))} />
+                                            </label>
+                                        );
+                                    })}
+                                    {filteredBookingServiceOptions.length === 0 && <p className="px-2 py-4 text-xs text-slate-500">No services match.</p>}
+                                </div>
+                            </div>
+                            <div className="space-y-1.5">
+                                <Label className="text-sm text-slate-400">Industry type</Label>
+                                <Select value={bookingPortalSettings.industryType} onValueChange={(v) => setBookingPortalSettings((prev) => ({ ...prev, industryType: v as BookingPortalSettingsState['industryType'] }))}>
+                                    <SelectTrigger className="border-white/10 bg-[#0b1424] text-white"><SelectValue /></SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="automotive">Automotive</SelectItem>
                                         <SelectItem value="property">Property</SelectItem>
@@ -1041,451 +934,224 @@ export default function SettingsPage() {
                                     </SelectContent>
                                 </Select>
                             </div>
-                            <div className="space-y-2">
-                                <Label className="text-slate-700 dark:text-slate-200">Details field label override</Label>
-                                <Input
-                                    style={settingsDarkInputStyle}
-                                    className="border-white/10 text-white placeholder:text-slate-500"
-                                    placeholder="Leave blank to use the industry default"
-                                    value={bookingPortalSettings.detailsFieldLabel}
-                                    onChange={(e) => setBookingPortalSettings((prev) => ({ ...prev, detailsFieldLabel: e.target.value }))}
-                                />
+                            <div className="space-y-1.5">
+                                <Label className="text-sm text-slate-400">Response time message</Label>
+                                <Input style={settingsDarkInputStyle} className="border-white/10 text-white placeholder:text-slate-500" value={bookingPortalSettings.estimatedResponseTimeMessage} onChange={(e) => setBookingPortalSettings((prev) => ({ ...prev, estimatedResponseTimeMessage: e.target.value }))} />
                             </div>
-                            <div className="space-y-2">
-                                <Label className="text-slate-700 dark:text-slate-200">Estimated response time message</Label>
-                                <Input
-                                    style={settingsDarkInputStyle}
-                                    className="border-white/10 text-white placeholder:text-slate-500"
-                                    value={bookingPortalSettings.estimatedResponseTimeMessage}
-                                    onChange={(e) => setBookingPortalSettings((prev) => ({ ...prev, estimatedResponseTimeMessage: e.target.value }))}
-                                />
+                            <div className="space-y-1.5">
+                                <Label className="text-sm text-slate-400">Details field label override</Label>
+                                <Input style={settingsDarkInputStyle} className="border-white/10 text-white placeholder:text-slate-500" placeholder="Leave blank to use industry default" value={bookingPortalSettings.detailsFieldLabel} onChange={(e) => setBookingPortalSettings((prev) => ({ ...prev, detailsFieldLabel: e.target.value }))} />
                             </div>
                         </div>
-                        <div className="space-y-5">
-                            <div className="space-y-2">
-                                <Label className="text-slate-700 dark:text-slate-200">Confirmation email body</Label>
-                                <Textarea
-                                    style={settingsDarkInputStyle}
-                                    className="min-h-[180px] border-white/10 text-white placeholder:text-slate-500"
-                                    value={bookingPortalSettings.confirmationEmailBody}
-                                    onChange={(e) => setBookingPortalSettings((prev) => ({ ...prev, confirmationEmailBody: e.target.value }))}
-                                />
-                                <p className="text-xs leading-5 text-slate-500 dark:text-slate-400">
-                                    Supported placeholders: <code>${'{customer_name}'}</code>, <code>${'{company_name}'}</code>, <code>${'{reference_number}'}</code>, <code>${'{estimated_response_time_message}'}</code>, <code>${'{admin_contact_email}'}</code>, <code>${'{booking_portal_url}'}</code>, <code>${'{booking_status_url}'}</code>
-                                </p>
+                        {/* Right — email body */}
+                        <div className="space-y-0">
+                            <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">Confirmation Email Body</p>
+                            <div className="flex items-center gap-0.5 rounded-t-xl border border-white/10 bg-white/[0.04] px-3 py-2">
+                                <button className="flex h-7 w-7 items-center justify-center rounded text-sm font-bold text-slate-400 hover:bg-white/[0.06] hover:text-white">B</button>
+                                <button className="flex h-7 w-7 items-center justify-center rounded text-sm italic text-slate-400 hover:bg-white/[0.06] hover:text-white">I</button>
+                                <button className="flex h-7 w-7 items-center justify-center rounded text-slate-400 hover:bg-white/[0.06] hover:text-white">
+                                    <Link2 className="h-3.5 w-3.5" />
+                                </button>
                             </div>
-                            <div className="space-y-3">
-                                <div className="flex flex-wrap items-center justify-between gap-3">
-                                    <Label className="text-slate-700 dark:text-slate-200">Visible service types</Label>
-                                    <Badge variant="outline" className="border-cyan-300/20 bg-cyan-300/10 text-cyan-100">
-                                        {bookingPortalSettings.visibleServiceIds.length} selected
-                                    </Badge>
-                                </div>
-                                <Input
-                                    style={settingsDarkInputStyle}
-                                    className="border-white/10 text-white placeholder:text-slate-500"
-                                    placeholder="Search services..."
-                                    value={bookingServiceSearch}
-                                    onChange={(e) => setBookingServiceSearch(e.target.value)}
-                                />
-                                <div className="flex flex-wrap gap-2">
-                                    <Button
-                                        type="button"
-                                        size="sm"
-                                        variant="outline"
-                                        className={settingsSecondaryButtonClass}
-                                        onClick={() => setBookingPortalSettings((prev) => ({
-                                            ...prev,
-                                            visibleServiceIds: serviceOptions.map((service) => service.id),
-                                        }))}
-                                    >
-                                        Select all
-                                    </Button>
-                                    <Button
-                                        type="button"
-                                        size="sm"
-                                        variant="outline"
-                                        className={settingsSecondaryButtonClass}
-                                        onClick={() => setBookingPortalSettings((prev) => ({ ...prev, visibleServiceIds: [] }))}
-                                    >
-                                        Clear
-                                    </Button>
-                                </div>
-                                <div className="max-h-[360px] overflow-y-auto rounded-[22px] border border-white/10 bg-[rgba(255,255,255,0.03)] p-3">
-                                    <div className="grid gap-3 sm:grid-cols-2">
-                                    {filteredBookingServiceOptions.map((service) => {
-                                        const checked = bookingPortalSettings.visibleServiceIds.includes(service.id);
-                                        return (
-                                            <label key={service.id} className="flex items-center justify-between rounded-[18px] border border-white/10 bg-[rgba(255,255,255,0.03)] px-4 py-3 text-sm text-slate-200">
-                                                <span>{service.name}</span>
-                                                <Switch
-                                                    checked={checked}
-                                                    onCheckedChange={(nextChecked) => setBookingPortalSettings((prev) => ({
-                                                        ...prev,
-                                                        visibleServiceIds: nextChecked
-                                                            ? [...prev.visibleServiceIds, service.id]
-                                                            : prev.visibleServiceIds.filter((item) => item !== service.id),
-                                                    }))}
-                                                    className={settingsSwitchClass}
-                                                />
-                                            </label>
-                                        );
-                                    })}
+                            <Textarea style={settingsDarkInputStyle} className="min-h-[240px] rounded-t-none border-t-0 border-white/10 text-white placeholder:text-slate-500" value={bookingPortalSettings.confirmationEmailBody} onChange={(e) => setBookingPortalSettings((prev) => ({ ...prev, confirmationEmailBody: e.target.value }))} />
+                            <p className="mt-2 text-xs leading-5 text-slate-600">
+                                Available dynamic tags: <code className="text-slate-400">${'{customer_name}'}</code>, <code className="text-slate-400">${'{booking_id}'}</code>, <code className="text-slate-400">${'{technician_name}'}</code>, <code className="text-slate-400">${'{arrival_window}'}</code>
+                            </p>
+                        </div>
+                    </div>
+                    <div className="flex items-center justify-end gap-2 border-t border-white/8 bg-[#080f1c] px-6 py-4">
+                        <Button size="sm" variant="outline" className="border-white/10 bg-transparent text-slate-200 hover:bg-white/[0.05]" onClick={() => setBookingPortalSettings(savedBookingPortalSettings)} disabled={isSavingBookingPortalSettings}>Reset</Button>
+                        <Button size="sm" className="bg-[#2F8E92] text-white hover:bg-[#267276]" onClick={handleSaveBookingPortalSettings} disabled={isSavingBookingPortalSettings}>
+                            {isSavingBookingPortalSettings ? 'Saving...' : 'Save Booking Portal'}
+                        </Button>
+                    </div>
+                </div>
+
+                {/* ── Dispatch Ranking Rules ── */}
+                <div className="overflow-hidden rounded-2xl border border-white/8 bg-[#0d1829]">
+                    <div className="flex flex-col gap-3 p-6 sm:flex-row sm:items-start sm:justify-between">
+                        <div>
+                            <h2 className="text-2xl font-bold text-white">Dispatch Ranking Rules</h2>
+                            <p className="mt-1 text-sm text-slate-400">Manage algorithmic prioritization for inbound job requests</p>
+                        </div>
+                        <Dialog open={isAddingRule} onOpenChange={setIsAddingRule}>
+                            <DialogTrigger asChild>
+                                <Button size="sm" variant="outline" className="h-9 shrink-0 gap-1.5 rounded-xl border-white/15 bg-transparent text-sm font-semibold text-white hover:bg-white/[0.06]">
+                                    <PlusCircle className="h-4 w-4" /> New Rule
+                                </Button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-md">
+                                <DialogHeader>
+                                    <DialogTitle>Create New Ranking Rule</DialogTitle>
+                                    <DialogDescription>Define logic to automatically escalate job ranking.</DialogDescription>
+                                </DialogHeader>
+                                <div className="space-y-4 py-4">
+                                    <div className="space-y-2">
+                                        <Label>Rule Description</Label>
+                                        <Input placeholder="e.g., Prioritize Audi repairs" value={newRule.description} onChange={(e) => setNewRule({ ...newRule, description: e.target.value })} />
                                     </div>
-                                    {filteredBookingServiceOptions.length === 0 ? (
-                                        <div className="px-2 py-6 text-sm text-slate-400">No services match this search.</div>
-                                    ) : null}
-                                </div>
-                            </div>
-                        </div>
-                    </CardContent>
-                    <CardFooter className={sectionFooterClass}>
-                        <div className="ml-auto flex items-center gap-2">
-                            <Button
-                                size="sm"
-                                variant="outline"
-                                className={settingsSecondaryButtonClass}
-                                onClick={() => setBookingPortalSettings(savedBookingPortalSettings)}
-                                disabled={isSavingBookingPortalSettings}
-                            >
-                                Reset
-                            </Button>
-                            <Button
-                                size="sm"
-                                className={settingsPrimaryButtonClass}
-                                onClick={handleSaveBookingPortalSettings}
-                                disabled={isSavingBookingPortalSettings}
-                            >
-                                {isSavingBookingPortalSettings ? 'Saving...' : 'Save Booking Portal'}
-                            </Button>
-                        </div>
-                    </CardFooter>
-                </Card>
-
-            <div className="grid gap-6 xl:grid-cols-[1.35fr_0.95fr]">
-
-                <Card className={cn(sectionCardClass, 'xl:row-span-2')}>
-                    <CardHeader className={sectionHeaderClass}>
-                        <div className="flex items-center justify-between">
-                            <CardTitle className="text-base font-semibold flex items-center gap-2 text-slate-950 dark:text-white">
-                                <span className="rounded-xl border border-cyan-300/20 bg-cyan-300/10 p-2 text-cyan-100">
-                                    <ListFilter className="w-4 h-4" />
-                                </span>
-                                Dispatch Ranking Rules
-                            </CardTitle>
-
-                            <Dialog open={isAddingRule} onOpenChange={setIsAddingRule}>
-                                <DialogTrigger asChild>
-                                    <Button size="sm" className="h-9 rounded-full bg-[#2F8E92] px-4 text-white shadow-[0_12px_30px_rgba(47,142,146,0.28)] hover:bg-[#267276]">
-                                        <PlusCircle className="w-3.5 h-3.5 mr-2" /> Add Rule
-                                    </Button>
-                                </DialogTrigger>
-                                <DialogContent className="max-w-md">
-                                    <DialogHeader>
-                                        <DialogTitle>Create New Ranking Rule</DialogTitle>
-                                        <DialogDescription>Define logic to automatically escalate job ranking.</DialogDescription>
-                                    </DialogHeader>
-
-                                    <div className="space-y-4 py-4">
+                                    <div className="grid grid-cols-2 gap-4">
                                         <div className="space-y-2">
-                                            <Label>Rule Description</Label>
-                                            <Input
-                                                placeholder="e.g., Prioritize Audi repairs"
-                                                value={newRule.description}
-                                                onChange={(e) => setNewRule({ ...newRule, description: e.target.value })}
-                                            />
+                                            <Label>Dealership</Label>
+                                            <Select value={newRule.dealershipId} onValueChange={(v) => setNewRule({ ...newRule, dealershipId: v })}>
+                                                <SelectTrigger><SelectValue placeholder="Select dealer" /></SelectTrigger>
+                                                <SelectContent>{MOCK_DEALERSHIPS.map((d) => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}</SelectContent>
+                                            </Select>
                                         </div>
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div className="space-y-2">
-                                                <Label>Dealership</Label>
-                                                <Select
-                                                    value={newRule.dealershipId}
-                                                    onValueChange={(v) => setNewRule({ ...newRule, dealershipId: v })}
-                                                >
-                                                    <SelectTrigger>
-                                                        <SelectValue placeholder="Select dealer" />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        {MOCK_DEALERSHIPS.map(d => (
-                                                            <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
-                                                        ))}
-                                                    </SelectContent>
-                                                </Select>
-                                            </div>
-                                            <div className="space-y-2">
-                                                <Label>Service Type</Label>
-                                                <Select
-                                                    value={newRule.serviceId}
-                                                    onValueChange={(v) => setNewRule({ ...newRule, serviceId: v })}
-                                                >
-                                                    <SelectTrigger>
-                                                        <SelectValue placeholder="Any Service" />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        <SelectItem value="any">Any Service</SelectItem>
-                                                        {serviceOptions.map(s => (
-                                                            <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
-                                                        ))}
-                                                    </SelectContent>
-                                                </Select>
-                                            </div>
-                                        </div>
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div className="space-y-2">
-                                                <Label>Target Urgency</Label>
-                                                <Select
-                                                    value={newRule.targetUrgency}
-                                                    onValueChange={(v) => setNewRule({ ...newRule, targetUrgency: v as UrgencyLevel })}
-                                                >
-                                                    <SelectTrigger>
-                                                        <SelectValue />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        <SelectItem value="LOW">Low</SelectItem>
-                                                        <SelectItem value="MEDIUM">Medium</SelectItem>
-                                                        <SelectItem value="HIGH">High</SelectItem>
-                                                        <SelectItem value="CRITICAL">Critical</SelectItem>
-                                                    </SelectContent>
-                                                </Select>
-                                            </div>
-                                            <div className="space-y-2">
-                                                <Label>Ranking Score</Label>
-                                                <Input
-                                                    type="number"
-                                                    value={newRule.rankingScore}
-                                                    onChange={(e) => setNewRule({ ...newRule, rankingScore: parseInt(e.target.value) })}
-                                                />
-                                            </div>
-
-                                        </div>
-                                    </div>
-                                    <DialogFooter>
-                                        <Button variant="outline" onClick={() => setIsAddingRule(false)}>Cancel</Button>
-                                        <Button className="bg-[#2F8E92] text-white hover:bg-[#267276]" onClick={handleAddRule}>Save Rule</Button>
-                                    </DialogFooter>
-
-                                </DialogContent>
-                            </Dialog>
-                            <Dialog open={isEditingRule} onOpenChange={setIsEditingRule}>
-                                <DialogContent className="max-w-md">
-                                    <DialogHeader>
-                                        <DialogTitle>Edit Ranking Rule</DialogTitle>
-                                        <DialogDescription>Update rule logic for dispatch ranking.</DialogDescription>
-                                    </DialogHeader>
-
-                                    <div className="space-y-4 py-4">
                                         <div className="space-y-2">
-                                            <Label>Rule Description</Label>
-                                            <Input
-                                                placeholder="e.g., Prioritize Audi repairs"
-                                                value={editRule.description || ''}
-                                                onChange={(e) => setEditRule({ ...editRule, description: e.target.value })}
-                                            />
-                                        </div>
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div className="space-y-2">
-                                                <Label>Dealership</Label>
-                                                <Select
-                                                    value={editRule.dealershipId}
-                                                    onValueChange={(v) => setEditRule({ ...editRule, dealershipId: v })}
-                                                >
-                                                    <SelectTrigger>
-                                                        <SelectValue placeholder="Select dealer" />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        {MOCK_DEALERSHIPS.map(d => (
-                                                            <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
-                                                        ))}
-                                                    </SelectContent>
-                                                </Select>
-                                            </div>
-                                            <div className="space-y-2">
-                                                <Label>Service Type</Label>
-                                                <Select
-                                                    value={editRule.serviceId}
-                                                    onValueChange={(v) => setEditRule({ ...editRule, serviceId: v })}
-                                                >
-                                                    <SelectTrigger>
-                                                        <SelectValue placeholder="Any Service" />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        <SelectItem value="any">Any Service</SelectItem>
-                                                        {serviceOptions.map(s => (
-                                                            <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
-                                                        ))}
-                                                    </SelectContent>
-                                                </Select>
-                                            </div>
-                                        </div>
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div className="space-y-2">
-                                                <Label>Target Urgency</Label>
-                                                <Select
-                                                    value={editRule.targetUrgency}
-                                                    onValueChange={(v) => setEditRule({ ...editRule, targetUrgency: v as UrgencyLevel })}
-                                                >
-                                                    <SelectTrigger>
-                                                        <SelectValue />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        <SelectItem value="LOW">Low</SelectItem>
-                                                        <SelectItem value="MEDIUM">Medium</SelectItem>
-                                                        <SelectItem value="HIGH">High</SelectItem>
-                                                        <SelectItem value="CRITICAL">Critical</SelectItem>
-                                                    </SelectContent>
-                                                </Select>
-                                            </div>
-                                            <div className="space-y-2">
-                                                <Label>Ranking Score</Label>
-                                                <Input
-                                                    type="number"
-                                                    value={editRule.rankingScore}
-                                                    onChange={(e) => setEditRule({ ...editRule, rankingScore: parseInt(e.target.value) })}
-                                                />
-                                            </div>
+                                            <Label>Service Type</Label>
+                                            <Select value={newRule.serviceId} onValueChange={(v) => setNewRule({ ...newRule, serviceId: v })}>
+                                                <SelectTrigger><SelectValue placeholder="Any Service" /></SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="any">Any Service</SelectItem>
+                                                    {serviceOptions.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                                                </SelectContent>
+                                            </Select>
                                         </div>
                                     </div>
-                                    <DialogFooter>
-                                        <Button variant="outline" onClick={() => setIsEditingRule(false)}>Cancel</Button>
-                                        <Button className="bg-[#2F8E92] text-white hover:bg-[#267276]" onClick={handleEditRule}>Save Changes</Button>
-                                    </DialogFooter>
-                                </DialogContent>
-                            </Dialog>
-                        </div>
-                        <CardDescription className="text-slate-600 dark:text-slate-300">Manage rule-based escalation and sorting for inbound jobs. Active rule weights stack into each job ranking score.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="pt-0">
-                        <div className="mb-5 grid gap-3">
-                            <div className="rounded-[22px] border border-white/10 bg-[rgba(255,255,255,0.03)] p-4">
-                                <div className="flex flex-wrap items-center justify-between gap-3">
-                                    <div>
-                                        <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">Live Preview</p>
-                                        <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Sample jobs re-ranked by current active urgency weights.</p>
-                                    </div>
-                                    <Button size="sm" variant="outline" className={cn('rounded-full', settingsSecondaryButtonClass)} onClick={handleResetPriorityRules}>
-                                        <RotateCcw className="mr-2 h-3.5 w-3.5" />
-                                        Reset to defaults
-                                    </Button>
-                                </div>
-                                <div className="mt-4 grid gap-3 md:grid-cols-3">
-                                    {previewJobs.map((job, index) => (
-                                        <div key={job.id} className="rounded-2xl border border-white/10 bg-black/20 p-4">
-                                            <div className="flex items-start justify-between gap-3">
-                                                <span className="max-w-[140px] text-sm font-semibold leading-5 text-slate-950 dark:text-white">{index + 1}. {job.id}</span>
-                                                <Badge variant="outline" className="shrink-0 border-cyan-300/20 bg-cyan-300/10 text-cyan-100">Score {job.score}</Badge>
-                                            </div>
-                                            <p className="mt-3 text-xs leading-5 text-slate-500">Base {job.base} + active {job.urgency.toLowerCase()} rules</p>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label>Target Urgency</Label>
+                                            <Select value={newRule.targetUrgency} onValueChange={(v) => setNewRule({ ...newRule, targetUrgency: v as UrgencyLevel })}>
+                                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="LOW">Low</SelectItem>
+                                                    <SelectItem value="MEDIUM">Medium</SelectItem>
+                                                    <SelectItem value="HIGH">High</SelectItem>
+                                                    <SelectItem value="CRITICAL">Critical</SelectItem>
+                                                </SelectContent>
+                                            </Select>
                                         </div>
-                                    ))}
+                                        <div className="space-y-2">
+                                            <Label>Ranking Score</Label>
+                                            <Input type="number" value={newRule.rankingScore} onChange={(e) => setNewRule({ ...newRule, rankingScore: parseInt(e.target.value) })} />
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                            <div className="rounded-[22px] border border-white/10 bg-[rgba(255,255,255,0.03)] p-4 text-sm">
-                                <p className="font-semibold text-slate-950 dark:text-white">Rule attributes</p>
-                                <p className="mt-2 leading-6 text-slate-600 dark:text-slate-300">
-                                    Urgency, location zone, service type, technician skill match, and time since job creation are supported by the rule model and dispatch scoring surface.
-                                </p>
-                            </div>
-                        </div>
-                        <div className="overflow-hidden rounded-[22px] border border-white/8 bg-black/10 shadow-sm">
-                            <Table>
-                                <TableHeader className="bg-[rgba(255,255,255,0.04)]">
-                                    <TableRow>
-                                        <TableHead className="w-[300px] text-slate-500 dark:text-slate-400">Rule & Description</TableHead>
-                                        <TableHead className="text-slate-500 dark:text-slate-400">Target</TableHead>
-                                        <TableHead className="text-slate-500 dark:text-slate-400">Ranking</TableHead>
-                                        <TableHead className="text-center text-slate-500 dark:text-slate-400">Active</TableHead>
-                                        <TableHead className="text-right text-slate-500 dark:text-slate-400">Actions</TableHead>
-                                    </TableRow>
-
-                                </TableHeader>
-                                <TableBody>
-                                    {priorityRules.map(rule => {
-                                        const dealer = MOCK_DEALERSHIPS.find(d => d.id === rule.dealershipId);
-                                        return (
-                                            <TableRow key={rule.id} className="border-slate-100 dark:border-white/6">
-                                                <TableCell className="py-3">
-                                                    <div className="flex flex-col">
-                                                        <span className="font-semibold text-sm text-slate-950 dark:text-white">{rule.description}</span>
-                                                        <span className="text-[10px] uppercase text-slate-400">{dealer?.name || 'Global'}</span>
-                                                    </div>
-                                                </TableCell>
-                                                <TableCell>
-                                                    <Badge variant="outline" className={cn(
-                                                        "font-bold text-[10px]",
-                                                        rule.targetUrgency === 'CRITICAL' ? "bg-rose-50 dark:bg-rose-900/20 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-800" :
-                                                            rule.targetUrgency === 'HIGH' ? "bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400 border-orange-200 dark:border-orange-800" :
-                                                                "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800"
-                                                    )}>
-                                                        {rule.targetUrgency}
-                                                    </Badge>
-                                                </TableCell>
-
-                                                <TableCell className="font-mono text-sm text-slate-700 dark:text-slate-100">+{rule.rankingScore}</TableCell>
-
-                                                <TableCell className="text-center">
-                                                    <Switch
-                                                        checked={rule.isActive}
-                                                        onCheckedChange={() => handleToggleRule(rule.id)}
-                                                    />
-                                                </TableCell>
-                                                <TableCell className="text-right">
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="h-8 w-8 text-slate-400 hover:bg-cyan-400/10 hover:text-cyan-200"
-                                                        onClick={() => handleOpenEditRule(rule)}
-                                                    >
-                                                        <Pencil className="w-4 h-4" />
-                                                    </Button>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="h-8 w-8 text-slate-400 hover:bg-rose-400/10 hover:text-rose-200"
-                                                        onClick={() => handleDeleteRule(rule.id)}
-                                                    >
-                                                        <AlertCircle className="w-4 h-4" />
-                                                    </Button>
-                                                </TableCell>
-                                            </TableRow>
-                                        );
-                                    })}
-                                </TableBody>
-                            </Table>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                <div className="space-y-6">
-                <Card className={sectionCardClass}>
-                    <CardHeader className={sectionHeaderClass}>
-                        <CardTitle className="text-base font-semibold flex items-center gap-2 text-slate-950 dark:text-white">
-                            <span className="rounded-xl border border-cyan-300/20 bg-cyan-300/10 p-2 text-cyan-100">
-                                <Moon className="w-4 h-4" />
-                            </span>
-                            Appearance
-                        </CardTitle>
-                        <CardDescription className="text-slate-600 dark:text-slate-300">NexusOps now runs in dark mode only.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="pt-0">
-                        <div className="rounded-[22px] border border-cyan-300/20 bg-cyan-300/10 p-5">
-                            <div className="flex items-start gap-4">
-                                <div className="rounded-2xl border border-cyan-300/25 bg-[#0b1424] p-3 text-cyan-100">
-                                    <Moon className="h-5 w-5" />
+                                <DialogFooter>
+                                    <Button variant="outline" onClick={() => setIsAddingRule(false)}>Cancel</Button>
+                                    <Button className="bg-[#2F8E92] text-white hover:bg-[#267276]" onClick={handleAddRule}>Save Rule</Button>
+                                </DialogFooter>
+                            </DialogContent>
+                        </Dialog>
+                        <Dialog open={isEditingRule} onOpenChange={setIsEditingRule}>
+                            <DialogContent className="max-w-md">
+                                <DialogHeader>
+                                    <DialogTitle>Edit Ranking Rule</DialogTitle>
+                                    <DialogDescription>Update rule logic for dispatch ranking.</DialogDescription>
+                                </DialogHeader>
+                                <div className="space-y-4 py-4">
+                                    <div className="space-y-2">
+                                        <Label>Rule Description</Label>
+                                        <Input placeholder="e.g., Prioritize Audi repairs" value={editRule.description || ''} onChange={(e) => setEditRule({ ...editRule, description: e.target.value })} />
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label>Dealership</Label>
+                                            <Select value={editRule.dealershipId} onValueChange={(v) => setEditRule({ ...editRule, dealershipId: v })}>
+                                                <SelectTrigger><SelectValue placeholder="Select dealer" /></SelectTrigger>
+                                                <SelectContent>{MOCK_DEALERSHIPS.map((d) => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}</SelectContent>
+                                            </Select>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label>Service Type</Label>
+                                            <Select value={editRule.serviceId} onValueChange={(v) => setEditRule({ ...editRule, serviceId: v })}>
+                                                <SelectTrigger><SelectValue placeholder="Any Service" /></SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="any">Any Service</SelectItem>
+                                                    {serviceOptions.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label>Target Urgency</Label>
+                                            <Select value={editRule.targetUrgency} onValueChange={(v) => setEditRule({ ...editRule, targetUrgency: v as UrgencyLevel })}>
+                                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="LOW">Low</SelectItem>
+                                                    <SelectItem value="MEDIUM">Medium</SelectItem>
+                                                    <SelectItem value="HIGH">High</SelectItem>
+                                                    <SelectItem value="CRITICAL">Critical</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label>Ranking Score</Label>
+                                            <Input type="number" value={editRule.rankingScore} onChange={(e) => setEditRule({ ...editRule, rankingScore: parseInt(e.target.value) })} />
+                                        </div>
+                                    </div>
                                 </div>
-                                <div className="space-y-2">
-                                    <p className="text-sm font-semibold text-white">Dark mode is active</p>
-                                    <p className="text-sm text-slate-300">
-                                        We removed light and system theme switching so the whole product stays consistent, clean, and operationally focused.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
+                                <DialogFooter>
+                                    <Button variant="outline" onClick={() => setIsEditingRule(false)}>Cancel</Button>
+                                    <Button className="bg-[#2F8E92] text-white hover:bg-[#267276]" onClick={handleEditRule}>Save Changes</Button>
+                                </DialogFooter>
+                            </DialogContent>
+                        </Dialog>
+                    </div>
+                    {/* Table */}
+                    <div className="overflow-x-auto">
+                        <table className="w-full">
+                            <thead>
+                                <tr className="border-y border-white/8 bg-[#080f1c]">
+                                    <th className="px-6 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">Rule &amp; Description</th>
+                                    <th className="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">Target</th>
+                                    <th className="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">Impact</th>
+                                    <th className="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">Status</th>
+                                    <th className="px-6 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {priorityRules.map((rule) => {
+                                    const dealer = MOCK_DEALERSHIPS.find((d) => d.id === rule.dealershipId);
+                                    return (
+                                        <tr key={rule.id} className="border-b border-white/[0.06] transition-colors hover:bg-white/[0.015]">
+                                            <td className="px-6 py-4">
+                                                <p className="font-semibold text-white">{rule.description}</p>
+                                                <p className="mt-0.5 text-xs text-slate-500">{dealer?.name ? `Auto-escalate ${dealer.name} service requests` : 'Global ranking rule'}</p>
+                                            </td>
+                                            <td className="px-4 py-4">
+                                                <span className={cn(
+                                                    'rounded px-2.5 py-1 text-[10px] font-bold uppercase',
+                                                    rule.targetUrgency === 'CRITICAL' ? 'bg-rose-500/20 text-rose-400' :
+                                                    rule.targetUrgency === 'HIGH'     ? 'bg-orange-500/20 text-orange-400' :
+                                                                                        'bg-slate-500/20 text-slate-300'
+                                                )}>
+                                                    {dealer?.name || rule.targetUrgency}
+                                                </span>
+                                            </td>
+                                            <td className="px-4 py-4">
+                                                <span className="font-mono text-sm font-semibold text-cyan-300">+{rule.rankingScore} pts</span>
+                                            </td>
+                                            <td className="px-4 py-4">
+                                                <button onClick={() => void handleToggleRule(rule.id)} className={cn('flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide transition-colors', rule.isActive ? 'text-emerald-400 hover:text-emerald-300' : 'text-slate-500 hover:text-slate-400')}>
+                                                    <span className={cn('h-1.5 w-1.5 rounded-full', rule.isActive ? 'bg-emerald-400' : 'bg-slate-600')} />
+                                                    {rule.isActive ? 'Active' : 'Paused'}
+                                                </button>
+                                            </td>
+                                            <td className="px-6 py-4 text-right">
+                                                <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-500 hover:bg-cyan-400/10 hover:text-cyan-300" onClick={() => handleOpenEditRule(rule)}>
+                                                    <Pencil className="h-3.5 w-3.5" />
+                                                </Button>
+                                                <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-500 hover:bg-rose-400/10 hover:text-rose-400" onClick={() => void handleDeleteRule(rule.id)}>
+                                                    <Trash2 className="h-3.5 w-3.5" />
+                                                </Button>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                                {priorityRules.length === 0 && (
+                                    <tr>
+                                        <td colSpan={5} className="px-6 py-10 text-center text-sm text-slate-500">No ranking rules configured yet.</td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
             </div>
-        </div>
         </div>
     );
 }
