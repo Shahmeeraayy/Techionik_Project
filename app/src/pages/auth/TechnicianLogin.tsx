@@ -95,12 +95,12 @@ export default function TechnicianLoginPage() {
       footer={
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="flex h-full flex-col rounded-[22px] border border-[rgba(148,163,184,0.18)] bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] px-4 py-4 text-white shadow-[0_18px_54px_rgba(2,6,23,0.24),inset_0_1px_0_rgba(255,255,255,0.045)]">
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-white/70">New technician</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-white/70">Invite only</p>
             <p className="mt-2 flex-1 text-sm leading-6 text-white/84">
-              Need an account before taking assignments?
+              Need a technician account created for you?
             </p>
             <Link to="/tech/signup" className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-white hover:text-white/80">
-              Create account
+              View invite instructions
               <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
@@ -199,7 +199,7 @@ export default function TechnicianLoginPage() {
 
                   <DialogFooter className="mt-6 gap-3 sm:justify-between">
                     <Button type="button" variant="outline" asChild className="rounded-[18px] border-[rgba(148,163,184,0.18)] bg-[rgba(12,20,34,0.9)] text-[#eaf1ff] hover:bg-[rgba(23,37,64,0.94)]">
-                      <Link to="/tech/signup">Create account</Link>
+                      <Link to="/tech/signup">Invite help</Link>
                     </Button>
                     <Button
                       type="button"

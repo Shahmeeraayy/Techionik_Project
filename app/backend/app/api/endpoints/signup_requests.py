@@ -1,7 +1,7 @@
 from typing import List, Optional
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from ...api import deps
@@ -23,7 +23,10 @@ def create_technician_signup_request(
     payload: TechnicianSignupRequestCreate,
     db: Session = Depends(deps.get_db),
 ):
-    return SignupRequestService(db).create_request(payload)
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="Technician self-signup is disabled. Ask an admin to create your account and send an invite.",
+    )
 
 
 @admin_router.get("", response_model=List[TechnicianSignupRequestResponse])
