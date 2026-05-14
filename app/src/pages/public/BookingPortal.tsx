@@ -39,6 +39,12 @@ const initialFormState: BookingFormState = {
   additionalNotes: '',
 };
 
+const portalInputClass = 'h-[52px] rounded-2xl border border-white/10 bg-[linear-gradient(180deg,rgba(10,18,32,0.96),rgba(8,14,26,0.96))] text-white placeholder:text-slate-500';
+const portalTextareaClass = 'rounded-2xl border border-white/10 bg-[linear-gradient(180deg,rgba(10,18,32,0.96),rgba(8,14,26,0.96))] text-white placeholder:text-slate-500';
+const portalSelectContentClass = 'border-white/10 bg-[linear-gradient(180deg,rgba(11,25,42,0.98),rgba(10,20,35,0.94))] text-white';
+const portalPrimaryButtonClass = 'h-[54px] w-full rounded-2xl border border-[#7db0ff]/40 bg-[linear-gradient(135deg,#4f7cff,#22d3ee)] text-base font-semibold text-white shadow-[0_16px_34px_rgba(79,124,255,0.22)] hover:brightness-105';
+const portalSecondaryButtonClass = 'border-white/10 bg-[rgba(12,20,34,0.9)] text-slate-100 hover:bg-[rgba(23,37,64,0.94)] hover:text-white';
+
 export default function BookingPortalPage() {
   const location = useLocation();
   const isStatusMode = location.pathname.endsWith('/status');
@@ -183,11 +189,11 @@ export default function BookingPortalPage() {
           <div className="relative">
             <div className="inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-100">
               <Wrench className="h-3.5 w-3.5" />
-              DispatchIQ Booking Portal
+              NexusOps Booking Portal
             </div>
             <h1 className="mt-5 text-[2.35rem] font-semibold leading-none tracking-[-0.06em] text-white md:text-[2.9rem]">
               Book service
-              <span className="block bg-gradient-to-r from-white via-cyan-100 to-emerald-100 bg-clip-text text-transparent">
+              <span className="block text-white">
                 without the back-and-forth
               </span>
             </h1>
@@ -234,7 +240,7 @@ export default function BookingPortalPage() {
                     Request received
                   </div>
                   <div>
-                    <h2 className="text-2xl font-semibold text-white">You’re all set.</h2>
+                    <h2 className="text-2xl font-semibold text-white">You're all set.</h2>
                     <p className="mt-2 text-sm leading-6 text-slate-300">
                       Your booking request has been recorded. Keep this reference number handy for follow-up.
                     </p>
@@ -245,11 +251,11 @@ export default function BookingPortalPage() {
                     <p className="mt-3 text-sm text-slate-300">{config.estimated_response_time_message}</p>
                   </div>
                   <div className="flex flex-wrap gap-3">
-                    <Button type="button" onClick={() => setSuccessReference(null)} className="bg-[#2F8E92] text-white hover:bg-[#267276]">
+                    <Button type="button" onClick={() => setSuccessReference(null)} className="rounded-2xl border border-[#7db0ff]/40 bg-[linear-gradient(135deg,#4f7cff,#22d3ee)] text-white shadow-[0_16px_34px_rgba(79,124,255,0.22)] hover:brightness-105">
                       Submit another request
                     </Button>
                     {config.status_lookup_enabled ? (
-                      <Button asChild variant="outline" className="border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]">
+                      <Button asChild variant="outline" className={portalSecondaryButtonClass}>
                         <Link to="/book/status">
                           Check booking status
                           <ArrowRight className="ml-2 h-4 w-4" />
@@ -266,7 +272,7 @@ export default function BookingPortalPage() {
                       <Input
                         value={form.customerName}
                         onChange={(event) => setForm((prev) => ({ ...prev, customerName: event.target.value }))}
-                        className="h-[52px] rounded-2xl border-white/14 bg-white/[0.04] text-white placeholder:text-slate-500"
+                        className={portalInputClass}
                       />
                     </div>
                     <div className="space-y-2">
@@ -275,7 +281,7 @@ export default function BookingPortalPage() {
                         value={form.phoneNumber}
                         onChange={(event) => setForm((prev) => ({ ...prev, phoneNumber: formatUsPhoneInput(event.target.value) }))}
                         placeholder="+1(586) 556-0113"
-                        className="h-[52px] rounded-2xl border-white/14 bg-white/[0.04] text-white placeholder:text-slate-500"
+                        className={portalInputClass}
                       />
                     </div>
                     <div className="space-y-2">
@@ -284,16 +290,16 @@ export default function BookingPortalPage() {
                         type="email"
                         value={form.emailAddress}
                         onChange={(event) => setForm((prev) => ({ ...prev, emailAddress: event.target.value }))}
-                        className="h-[52px] rounded-2xl border-white/14 bg-white/[0.04] text-white placeholder:text-slate-500"
+                        className={portalInputClass}
                       />
                     </div>
                     <div className="space-y-2">
                       <Label className="text-slate-200">Service type</Label>
                       <Select value={form.serviceId} onValueChange={(value) => setForm((prev) => ({ ...prev, serviceId: value }))}>
-                        <SelectTrigger className="h-[52px] rounded-2xl border-white/14 bg-white/[0.04] text-white">
+                        <SelectTrigger className={portalInputClass}>
                           <SelectValue placeholder="Select service" />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className={portalSelectContentClass}>
                           {config.services.map((service) => (
                             <SelectItem key={service.id} value={service.id}>{service.name}</SelectItem>
                           ))}
@@ -307,7 +313,7 @@ export default function BookingPortalPage() {
                     <Textarea
                       value={form.assetDetails}
                       onChange={(event) => setForm((prev) => ({ ...prev, assetDetails: event.target.value }))}
-                      className="min-h-[132px] rounded-2xl border-white/14 bg-white/[0.04] text-white placeholder:text-slate-500"
+                      className={`min-h-[132px] ${portalTextareaClass}`}
                       placeholder={`Describe the ${detailsLabel.toLowerCase()} and what needs attention.`}
                     />
                   </div>
@@ -319,16 +325,17 @@ export default function BookingPortalPage() {
                         type="date"
                         value={form.preferredDate}
                         onChange={(event) => setForm((prev) => ({ ...prev, preferredDate: event.target.value }))}
-                        className="h-[52px] rounded-2xl border-white/14 bg-white/[0.04] text-white"
+                        className={portalInputClass}
+                        style={{ colorScheme: 'dark' }}
                       />
                     </div>
                     <div className="space-y-2">
                       <Label className="text-slate-200">Preferred time of day</Label>
                       <Select value={form.preferredTimeOfDay} onValueChange={(value) => setForm((prev) => ({ ...prev, preferredTimeOfDay: value as BookingFormState['preferredTimeOfDay'] }))}>
-                        <SelectTrigger className="h-[52px] rounded-2xl border-white/14 bg-white/[0.04] text-white">
+                        <SelectTrigger className={portalInputClass}>
                           <SelectValue />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className={portalSelectContentClass}>
                           <SelectItem value="morning">Morning</SelectItem>
                           <SelectItem value="afternoon">Afternoon</SelectItem>
                           <SelectItem value="evening">Evening</SelectItem>
@@ -343,7 +350,7 @@ export default function BookingPortalPage() {
                     <Textarea
                       value={form.additionalNotes}
                       onChange={(event) => setForm((prev) => ({ ...prev, additionalNotes: event.target.value }))}
-                      className="min-h-[110px] rounded-2xl border-white/14 bg-white/[0.04] text-white placeholder:text-slate-500"
+                      className={`min-h-[110px] ${portalTextareaClass}`}
                       placeholder="Optional access notes, urgency details, or scheduling context."
                     />
                   </div>
@@ -354,7 +361,7 @@ export default function BookingPortalPage() {
                     </div>
                   ) : null}
 
-                  <Button type="submit" disabled={isSubmitting} className="h-[54px] w-full rounded-2xl bg-[#2F8E92] text-base font-semibold text-white hover:bg-[#267276]">
+                  <Button type="submit" disabled={isSubmitting} className={portalPrimaryButtonClass}>
                     {isSubmitting ? 'Sending request...' : 'Request Service'}
                   </Button>
                 </form>
@@ -365,7 +372,7 @@ export default function BookingPortalPage() {
                     <Input
                       value={lookupReference}
                       onChange={(event) => setLookupReference(event.target.value.toUpperCase())}
-                      className="h-[52px] rounded-2xl border-white/14 bg-white/[0.04] text-white placeholder:text-slate-500"
+                      className={portalInputClass}
                     />
                   </div>
                   <div className="space-y-2">
@@ -374,7 +381,7 @@ export default function BookingPortalPage() {
                       type="email"
                       value={lookupEmail}
                       onChange={(event) => setLookupEmail(event.target.value)}
-                      className="h-[52px] rounded-2xl border-white/14 bg-white/[0.04] text-white placeholder:text-slate-500"
+                      className={portalInputClass}
                     />
                   </div>
                   {lookupError ? (
@@ -400,7 +407,7 @@ export default function BookingPortalPage() {
                       ) : null}
                     </div>
                   ) : null}
-                  <Button type="submit" disabled={isLookingUp} className="h-[54px] w-full rounded-2xl bg-[#2F8E92] text-base font-semibold text-white hover:bg-[#267276]">
+                  <Button type="submit" disabled={isLookingUp} className={portalPrimaryButtonClass}>
                     {isLookingUp ? 'Checking status...' : 'Check status'}
                   </Button>
                 </form>
@@ -437,7 +444,7 @@ export default function BookingPortalPage() {
               {config?.estimated_response_time_message ?? 'We will contact you shortly after review.'}
             </p>
             {config?.status_lookup_enabled ? (
-              <Button asChild variant="outline" className="mt-5 border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]">
+              <Button asChild variant="outline" className={`mt-5 ${portalSecondaryButtonClass}`}>
                 <Link to={isStatusMode ? '/book' : '/book/status'}>
                   {isStatusMode ? 'Back to booking form' : 'Open status lookup'}
                   {isStatusMode ? <ArrowRight className="ml-2 h-4 w-4 rotate-180" /> : <Search className="ml-2 h-4 w-4" />}
