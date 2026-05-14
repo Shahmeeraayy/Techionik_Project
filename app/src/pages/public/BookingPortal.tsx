@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { ArrowRight, CalendarDays, CheckCircle2, ChevronDown, Clock3, Mail, Phone, Search, Wrench } from 'lucide-react';
+import {
+  ArrowRight, Bell, CalendarDays, CheckCircle2, ChevronDown,
+  Clock3, Mail, Phone, Search, Settings, Wrench,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -37,15 +40,15 @@ const initialFormState: BookingFormState = {
   serviceIds: [],
   assetDetails: '',
   preferredDate: '',
-  preferredTimeOfDay: 'no_preference',
+  preferredTimeOfDay: 'afternoon',
   additionalNotes: '',
 };
 
-const portalInputClass = 'h-[52px] rounded-2xl border border-white/10 bg-[linear-gradient(180deg,rgba(10,18,32,0.96),rgba(8,14,26,0.96))] text-white placeholder:text-slate-500';
-const portalTextareaClass = 'rounded-2xl border border-white/10 bg-[linear-gradient(180deg,rgba(10,18,32,0.96),rgba(8,14,26,0.96))] text-white placeholder:text-slate-500';
-const portalSelectContentClass = 'border-white/10 bg-[linear-gradient(180deg,rgba(11,25,42,0.98),rgba(10,20,35,0.94))] text-white';
-const portalPrimaryButtonClass = 'h-[54px] w-full rounded-2xl border border-[#7db0ff]/40 bg-[linear-gradient(135deg,#4f7cff,#22d3ee)] text-base font-semibold text-white shadow-[0_16px_34px_rgba(79,124,255,0.22)] hover:brightness-105';
-const portalSecondaryButtonClass = 'border-white/10 bg-[rgba(12,20,34,0.9)] text-slate-100 hover:bg-[rgba(23,37,64,0.94)] hover:text-white';
+const inputCls = 'h-[52px] rounded-xl border border-white/10 bg-[rgba(10,18,32,0.96)] text-white placeholder:text-slate-500 focus-visible:ring-1 focus-visible:ring-cyan-400/40';
+const textareaCls = 'rounded-xl border border-white/10 bg-[rgba(10,18,32,0.96)] text-white placeholder:text-slate-500 focus-visible:ring-1 focus-visible:ring-cyan-400/40';
+const selectContentCls = 'border-white/10 bg-[rgba(11,25,42,0.98)] text-white';
+const primaryBtnCls = 'h-[52px] w-full rounded-xl bg-gradient-to-r from-[#4f7cff] to-[#22d3ee] text-base font-semibold text-white shadow-[0_8px_24px_rgba(79,124,255,0.28)] hover:brightness-110 transition-all';
+const secondaryBtnCls = 'border-white/10 bg-[rgba(12,20,34,0.9)] text-slate-200 hover:bg-[rgba(23,37,64,0.94)] hover:text-white rounded-xl';
 
 export default function BookingPortalPage() {
   const location = useLocation();
@@ -67,12 +70,8 @@ export default function BookingPortalPage() {
     const params = new URLSearchParams(location.search);
     const reference = params.get('reference') ?? '';
     const email = params.get('email') ?? '';
-    if (reference) {
-      setLookupReference(reference.toUpperCase());
-    }
-    if (email) {
-      setLookupEmail(email.toLowerCase());
-    }
+    if (reference) setLookupReference(reference.toUpperCase());
+    if (email) setLookupEmail(email.toLowerCase());
   }, [location.search]);
 
   useEffect(() => {
@@ -82,59 +81,40 @@ export default function BookingPortalPage() {
       setErrorMessage(null);
       try {
         const next = await fetchBookingPortalPublicConfig();
-        if (!isMounted) {
-          return;
-        }
+        if (!isMounted) return;
         setConfig(next);
         setForm((prev) => ({
           ...prev,
           serviceIds: prev.serviceIds.length > 0 ? prev.serviceIds : (next.services[0]?.id ? [next.services[0].id] : []),
         }));
       } catch (error) {
-        if (isMounted) {
-          setErrorMessage(error instanceof Error ? error.message : 'Unable to load booking portal.');
-        }
+        if (isMounted) setErrorMessage(error instanceof Error ? error.message : 'Unable to load booking portal.');
       } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
+        if (isMounted) setIsLoading(false);
       }
     })();
-    return () => {
-      isMounted = false;
-    };
+    return () => { isMounted = false; };
   }, []);
 
-  const detailsLabel = config?.details_field_label ?? 'Details';
+  const detailsLabel = config?.details_field_label ?? 'Vehicle details';
   const selectedServiceNames = useMemo(() => {
-    if (!config) {
-      return [];
-    }
-    const serviceMap = new Map(config.services.map((service) => [service.id, service.name]));
-    return form.serviceIds.map((id) => serviceMap.get(id)).filter((value): value is string => Boolean(value));
+    if (!config) return [];
+    const serviceMap = new Map(config.services.map((s) => [s.id, s.name]));
+    return form.serviceIds.map((id) => serviceMap.get(id)).filter((v): v is string => Boolean(v));
   }, [config, form.serviceIds]);
+
   const selectedServiceSummary = useMemo(() => {
-    if (selectedServiceNames.length === 0) {
-      return 'Select one or more services';
-    }
-    if (selectedServiceNames.length === 1) {
-      return selectedServiceNames[0];
-    }
-    if (selectedServiceNames.length === 2) {
-      return `${selectedServiceNames[0]}, ${selectedServiceNames[1]}`;
-    }
+    if (selectedServiceNames.length === 0) return 'Select one or more services';
+    if (selectedServiceNames.length === 1) return selectedServiceNames[0];
+    if (selectedServiceNames.length === 2) return `${selectedServiceNames[0]}, ${selectedServiceNames[1]}`;
     return `${selectedServiceNames[0]}, ${selectedServiceNames[1]} +${selectedServiceNames.length - 2} more`;
   }, [selectedServiceNames]);
+
   const statusLabel = lookupResult?.status ?? null;
   const estimatedCompletionLabel = useMemo(() => {
-    if (!lookupResult?.estimated_completion_date) {
-      return null;
-    }
+    if (!lookupResult?.estimated_completion_date) return null;
     const parsed = new Date(lookupResult.estimated_completion_date);
-    if (Number.isNaN(parsed.getTime())) {
-      return lookupResult.estimated_completion_date;
-    }
-    return parsed.toLocaleDateString();
+    return Number.isNaN(parsed.getTime()) ? lookupResult.estimated_completion_date : parsed.toLocaleDateString();
   }, [lookupResult]);
 
   const validateBookingForm = () => {
@@ -151,10 +131,7 @@ export default function BookingPortalPage() {
     setFormError(null);
     setErrorMessage(null);
     const validationError = validateBookingForm();
-    if (validationError) {
-      setFormError(validationError);
-      return;
-    }
+    if (validationError) { setFormError(validationError); return; }
     setIsSubmitting(true);
     try {
       const response = await submitBookingPortalRequest({
@@ -189,14 +166,8 @@ export default function BookingPortalPage() {
     event.preventDefault();
     setLookupError(null);
     setLookupResult(null);
-    if (!lookupReference.trim()) {
-      setLookupError('Reference number is required.');
-      return;
-    }
-    if (!/\S+@\S+\.\S+/.test(lookupEmail.trim())) {
-      setLookupError('Enter the booking email address.');
-      return;
-    }
+    if (!lookupReference.trim()) { setLookupError('Reference number is required.'); return; }
+    if (!/\S+@\S+\.\S+/.test(lookupEmail.trim())) { setLookupError('Enter the booking email address.'); return; }
     setIsLookingUp(true);
     try {
       const response = await lookupBookingPortalStatus({
@@ -212,308 +183,428 @@ export default function BookingPortalPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[linear-gradient(180deg,#07111d_0%,#0a1626_100%)] text-white">
-      <div className="mx-auto flex min-h-screen max-w-7xl flex-col gap-8 px-4 py-8 lg:grid lg:grid-cols-[1.05fr_0.95fr] lg:items-stretch lg:px-8">
-        <section className="relative overflow-hidden rounded-[32px] border border-white/10 bg-[linear-gradient(135deg,rgba(7,25,42,0.98),rgba(6,18,32,0.98))] p-6 shadow-[0_34px_120px_rgba(0,0,0,0.34)] sm:p-8">
-          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] bg-[size:120px_120px] opacity-20" />
-          <div className="relative">
-            <div className="inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-100">
-              <Wrench className="h-3.5 w-3.5" />
-              NexusOps Booking Portal
-            </div>
-            <h1 className="mt-5 text-[2.35rem] font-semibold leading-none tracking-[-0.06em] text-white md:text-[2.9rem]">
-              Book service
-              <span className="block text-white">
-                without the back-and-forth
+    <div className="min-h-screen bg-[#07101d] text-white">
+
+      {/* ── Top Navigation ── */}
+      <header className="border-b border-white/[0.06] bg-[rgba(7,16,29,0.95)] backdrop-blur-md">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
+          {/* Logo */}
+          <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-cyan-300 to-blue-400 bg-clip-text text-transparent">
+            NexusOps
+          </span>
+
+          {/* Nav links */}
+          <nav className="hidden items-center gap-6 md:flex">
+            {['Dashboard', 'Services', 'Schedules', 'Fleet', 'Support'].map((item) => (
+              <span key={item} className="cursor-pointer text-sm text-slate-400 transition-colors hover:text-white">
+                {item}
               </span>
-            </h1>
-            <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-300 sm:text-[15px]">
-              Share the job details once and let the dispatch team pick it up from intake to scheduling.
-            </p>
-            {config ? (
-              <div className="mt-6 flex flex-wrap items-center gap-3 text-sm text-slate-300">
-                <Badge variant="outline" className="border-white/10 bg-white/[0.04] text-slate-200">
-                  {config.company_name}
-                </Badge>
-                <span className="inline-flex items-center gap-2">
-                  <Mail className="h-4 w-4 text-cyan-200" />
-                  {config.admin_contact_email}
-                </span>
-                <span className="inline-flex items-center gap-2">
-                  <Phone className="h-4 w-4 text-cyan-200" />
-                  {config.admin_contact_phone}
-                </span>
+            ))}
+          </nav>
+
+          {/* Actions */}
+          <div className="flex items-center gap-3">
+            <button className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-400 hover:bg-white/[0.05] hover:text-white transition-colors">
+              <Bell className="h-4.5 w-4.5" />
+            </button>
+            <button className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-400 hover:bg-white/[0.05] hover:text-white transition-colors">
+              <Settings className="h-4.5 w-4.5" />
+            </button>
+            <Button asChild className="h-9 rounded-lg bg-gradient-to-r from-[#4f7cff] to-[#22d3ee] px-4 text-sm font-semibold text-white shadow-[0_4px_14px_rgba(79,124,255,0.35)] hover:brightness-110 transition-all">
+              <Link to="/admin/login">Admin Login</Link>
+            </Button>
+          </div>
+        </div>
+      </header>
+
+      {/* ── Main Content ── */}
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:grid lg:grid-cols-[1.15fr_0.85fr] lg:gap-6 lg:py-10">
+
+        {/* ── Left: Booking Form ── */}
+        <section className="rounded-2xl border border-white/[0.08] bg-[rgba(10,18,32,0.7)] p-6 shadow-[0_24px_80px_rgba(0,0,0,0.4)] backdrop-blur-sm sm:p-8">
+          {/* Badge */}
+          <div className="inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-cyan-200">
+            <Wrench className="h-3 w-3" />
+            NexusOps Booking Portal
+          </div>
+
+          {/* Heading */}
+          <h1 className="mt-5 text-[2.1rem] font-bold leading-[1.08] tracking-[-0.04em] text-white md:text-[2.6rem]">
+            Book service without the<br />back-and-forth
+          </h1>
+          <p className="mt-3 max-w-xl text-sm leading-6 text-slate-400">
+            Share the job details once and let the dispatch team pick it up from intake to scheduling.
+            Efficient, automated, and secure management for your infrastructure needs.
+          </p>
+
+          {/* Company info chips */}
+          {config ? (
+            <div className="mt-5 flex flex-wrap items-center gap-3 text-sm">
+              <Badge variant="outline" className="rounded-md border-white/10 bg-white/[0.04] px-3 py-1 text-slate-200">
+                {config.company_name}
+              </Badge>
+              <span className="inline-flex items-center gap-1.5 text-slate-400">
+                <Mail className="h-3.5 w-3.5 text-cyan-300" />
+                {config.admin_contact_email}
+              </span>
+              <span className="inline-flex items-center gap-1.5 text-slate-400">
+                <Phone className="h-3.5 w-3.5 text-cyan-300" />
+                {config.admin_contact_phone}
+              </span>
+            </div>
+          ) : null}
+
+          {/* Form area */}
+          <div className="mt-7">
+            {isLoading ? (
+              <div className="space-y-3">
+                <div className="h-12 animate-pulse rounded-xl bg-white/5" />
+                <div className="h-12 animate-pulse rounded-xl bg-white/5" />
+                <div className="h-32 animate-pulse rounded-xl bg-white/5" />
               </div>
-            ) : null}
-            <div className="mt-8 rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(8,27,43,0.92),rgba(7,23,37,0.92))] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_24px_60px_rgba(3,12,24,0.34)] sm:p-6">
-              {isLoading ? (
-                <div className="space-y-3">
-                  <div className="h-12 animate-pulse rounded-2xl bg-white/5" />
-                  <div className="h-12 animate-pulse rounded-2xl bg-white/5" />
-                  <div className="h-32 animate-pulse rounded-2xl bg-white/5" />
+            ) : errorMessage ? (
+              <div className="rounded-xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+                {errorMessage}
+              </div>
+            ) : !config?.is_enabled ? (
+              <div className="space-y-3">
+                <div className="rounded-xl border border-amber-400/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
+                  This booking portal is currently offline.
                 </div>
-              ) : errorMessage ? (
-                <div className="rounded-2xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-sm text-red-100">
-                  {errorMessage}
+                <p className="text-sm text-slate-500">Please contact the dispatch team directly for help.</p>
+              </div>
+            ) : successReference && !isStatusMode ? (
+              /* ── Success State ── */
+              <div className="space-y-5">
+                <div className="inline-flex items-center gap-2 rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-emerald-200">
+                  <CheckCircle2 className="h-3 w-3" />
+                  Request received
                 </div>
-              ) : !config?.is_enabled ? (
-                <div className="space-y-3">
-                  <div className="rounded-2xl border border-amber-400/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
-                    This booking portal is currently offline.
-                  </div>
-                  <p className="text-sm text-slate-400">Please contact the dispatch team directly for help.</p>
+                <div>
+                  <h2 className="text-2xl font-bold text-white">You're all set.</h2>
+                  <p className="mt-2 text-sm leading-6 text-slate-400">
+                    Your booking request has been recorded. Keep this reference number handy for follow-up.
+                  </p>
                 </div>
-              ) : successReference && !isStatusMode ? (
-                <div className="space-y-5">
-                  <div className="inline-flex items-center gap-2 rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-emerald-100">
-                    <CheckCircle2 className="h-3.5 w-3.5" />
-                    Request received
-                  </div>
-                  <div>
-                    <h2 className="text-2xl font-semibold text-white">You're all set.</h2>
-                    <p className="mt-2 text-sm leading-6 text-slate-300">
-                      Your booking request has been recorded. Keep this reference number handy for follow-up.
-                    </p>
-                  </div>
-                  <div className="rounded-[24px] border border-white/10 bg-black/20 p-5">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Reference number</p>
-                    <p className="mt-3 text-3xl font-semibold tracking-[-0.05em] text-white">{successReference}</p>
-                    <p className="mt-3 text-sm text-slate-300">{config.estimated_response_time_message}</p>
-                  </div>
-                  <div className="flex flex-wrap gap-3">
-                    <Button type="button" onClick={() => setSuccessReference(null)} className="rounded-2xl border border-[#7db0ff]/40 bg-[linear-gradient(135deg,#4f7cff,#22d3ee)] text-white shadow-[0_16px_34px_rgba(79,124,255,0.22)] hover:brightness-105">
-                      Submit another request
+                <div className="rounded-xl border border-white/10 bg-black/20 p-5">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">Reference number</p>
+                  <p className="mt-3 text-3xl font-bold tracking-[-0.04em] text-white">{successReference}</p>
+                  <p className="mt-3 text-sm text-slate-400">{config.estimated_response_time_message}</p>
+                </div>
+                <div className="flex flex-wrap gap-3">
+                  <Button type="button" onClick={() => setSuccessReference(null)} className={primaryBtnCls} style={{ width: 'auto', height: '44px', padding: '0 20px' }}>
+                    Submit another request
+                  </Button>
+                  {config.status_lookup_enabled ? (
+                    <Button asChild variant="outline" className={secondaryBtnCls} style={{ height: '44px', padding: '0 16px' }}>
+                      <Link to="/book/status">
+                        Check booking status
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      </Link>
                     </Button>
-                    {config.status_lookup_enabled ? (
-                      <Button asChild variant="outline" className={portalSecondaryButtonClass}>
-                        <Link to="/book/status">
-                          Check booking status
-                          <ArrowRight className="ml-2 h-4 w-4" />
-                        </Link>
-                      </Button>
+                  ) : null}
+                </div>
+              </div>
+            ) : !isStatusMode ? (
+              /* ── Booking Form ── */
+              <form onSubmit={handleSubmit} className="space-y-5">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <Label className="text-sm text-slate-300">Customer full name</Label>
+                    <Input
+                      value={form.customerName}
+                      onChange={(e) => setForm((p) => ({ ...p, customerName: e.target.value }))}
+                      placeholder="John Doe"
+                      className={inputCls}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-sm text-slate-300">Phone number</Label>
+                    <Input
+                      value={form.phoneNumber}
+                      onChange={(e) => setForm((p) => ({ ...p, phoneNumber: formatUsPhoneInput(e.target.value) }))}
+                      placeholder="+1 (555) 000-0000"
+                      className={inputCls}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-sm text-slate-300">Email address</Label>
+                    <Input
+                      type="email"
+                      value={form.emailAddress}
+                      onChange={(e) => setForm((p) => ({ ...p, emailAddress: e.target.value }))}
+                      placeholder="jdoe@example.com"
+                      className={inputCls}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-sm text-slate-300">Service type</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className={`${inputCls} w-full justify-between px-4 font-normal hover:bg-[rgba(10,18,32,0.96)]`}
+                        >
+                          <span className="truncate text-left">{selectedServiceSummary}</span>
+                          <ChevronDown className="h-4 w-4 shrink-0 text-slate-400" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent align="start" className="w-[var(--radix-popover-trigger-width)] border-white/10 bg-[rgba(11,25,42,0.98)] p-2 text-white shadow-[0_16px_60px_rgba(0,0,0,0.4)]">
+                        <div className="max-h-64 space-y-0.5 overflow-y-auto pr-1">
+                          {config?.services.map((service) => {
+                            const checked = form.serviceIds.includes(service.id);
+                            return (
+                              <label
+                                key={service.id}
+                                className="flex cursor-pointer items-start gap-3 rounded-lg border border-transparent px-3 py-2 text-sm text-slate-200 hover:bg-white/[0.04]"
+                              >
+                                <Checkbox
+                                  checked={checked}
+                                  onCheckedChange={(v) => toggleService(service.id, v === true)}
+                                  className="mt-0.5 border-white/20 data-[state=checked]:border-[#4f7cff] data-[state=checked]:bg-[#4f7cff]"
+                                />
+                                <span className="min-w-0 flex-1">
+                                  <span className="block truncate font-medium text-white">{service.name}</span>
+                                  <span className="block text-xs text-slate-500">{service.category}</span>
+                                </span>
+                              </label>
+                            );
+                          })}
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                    {selectedServiceNames.length > 0 ? (
+                      <div className="flex flex-wrap gap-1.5 pt-1">
+                        {selectedServiceNames.slice(0, 2).map((name) => (
+                          <span key={name} className="inline-flex items-center gap-1 rounded-full border border-cyan-400/20 bg-cyan-400/10 px-2.5 py-0.5 text-xs text-cyan-200">
+                            <span className="h-1.5 w-1.5 rounded-full bg-cyan-400" />
+                            {name}
+                          </span>
+                        ))}
+                        {selectedServiceNames.length > 2 && (
+                          <span className="inline-flex items-center rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-0.5 text-xs text-slate-400">
+                            +{selectedServiceNames.length - 2} more
+                          </span>
+                        )}
+                      </div>
                     ) : null}
                   </div>
                 </div>
-              ) : !isStatusMode ? (
-                <form onSubmit={handleSubmit} className="space-y-5">
-                  <div className="grid gap-5 sm:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label className="text-slate-200">Customer full name</Label>
-                      <Input
-                        value={form.customerName}
-                        onChange={(event) => setForm((prev) => ({ ...prev, customerName: event.target.value }))}
-                        className={portalInputClass}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-slate-200">Phone number</Label>
-                      <Input
-                        value={form.phoneNumber}
-                        onChange={(event) => setForm((prev) => ({ ...prev, phoneNumber: formatUsPhoneInput(event.target.value) }))}
-                        placeholder="+1(586) 556-0113"
-                        className={portalInputClass}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-slate-200">Email address</Label>
-                      <Input
-                        type="email"
-                        value={form.emailAddress}
-                        onChange={(event) => setForm((prev) => ({ ...prev, emailAddress: event.target.value }))}
-                        className={portalInputClass}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-slate-200">Service type</Label>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            className={`${portalInputClass} w-full justify-between px-4 font-normal text-left hover:bg-[linear-gradient(180deg,rgba(10,18,32,0.96),rgba(8,14,26,0.96))]`}
-                          >
-                            <span className="truncate">{selectedServiceSummary}</span>
-                            <ChevronDown className="h-4 w-4 text-slate-400" />
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent align="start" className="w-[var(--radix-popover-trigger-width)] border-white/10 bg-[linear-gradient(180deg,rgba(11,25,42,0.98),rgba(10,20,35,0.94))] p-2 text-white shadow-[0_24px_80px_rgba(0,0,0,0.28)]">
-                          <div className="max-h-72 space-y-1 overflow-y-auto pr-1">
-                            {config.services.map((service) => {
-                              const checked = form.serviceIds.includes(service.id);
-                              return (
-                                <label
-                                  key={service.id}
-                                  className="flex cursor-pointer items-start gap-3 rounded-xl border border-transparent px-3 py-2 text-sm text-slate-200 hover:border-white/8 hover:bg-white/[0.04]"
-                                >
-                                  <Checkbox
-                                    checked={checked}
-                                    onCheckedChange={(value) => toggleService(service.id, value === true)}
-                                    className="mt-0.5 border-white/18 bg-[rgba(10,18,32,0.96)] data-[state=checked]:border-[#4f7cff] data-[state=checked]:bg-[#4f7cff] data-[state=checked]:text-white"
-                                  />
-                                  <span className="min-w-0 flex-1">
-                                    <span className="block truncate font-medium text-white">{service.name}</span>
-                                    <span className="block text-xs text-slate-400">{service.category}</span>
-                                  </span>
-                                </label>
-                              );
-                            })}
-                          </div>
-                        </PopoverContent>
-                      </Popover>
-                      {selectedServiceNames.length > 0 ? (
-                        <p className="pt-1 text-xs text-slate-400">
-                          {selectedServiceNames.length} service{selectedServiceNames.length === 1 ? '' : 's'} selected
-                        </p>
-                      ) : null}
-                    </div>
-                  </div>
 
-                  <div className="space-y-2">
-                    <Label className="text-slate-200">{detailsLabel}</Label>
-                    <Textarea
-                      value={form.assetDetails}
-                      onChange={(event) => setForm((prev) => ({ ...prev, assetDetails: event.target.value }))}
-                      className={`min-h-[132px] ${portalTextareaClass}`}
-                      placeholder={`Describe the ${detailsLabel.toLowerCase()} and what needs attention.`}
-                    />
-                  </div>
+                <div className="space-y-1.5">
+                  <Label className="text-sm text-slate-300">{detailsLabel}</Label>
+                  <Textarea
+                    value={form.assetDetails}
+                    onChange={(e) => setForm((p) => ({ ...p, assetDetails: e.target.value }))}
+                    className={`min-h-[120px] ${textareaCls}`}
+                    placeholder={`Describe the ${detailsLabel.toLowerCase()} and what needs attention.`}
+                  />
+                </div>
 
-                  <div className="grid gap-5 sm:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label className="text-slate-200">Preferred date</Label>
-                      <Input
-                        type="date"
-                        value={form.preferredDate}
-                        onChange={(event) => setForm((prev) => ({ ...prev, preferredDate: event.target.value }))}
-                        className={portalInputClass}
-                        style={{ colorScheme: 'dark' }}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-slate-200">Preferred time of day</Label>
-                      <Select value={form.preferredTimeOfDay} onValueChange={(value) => setForm((prev) => ({ ...prev, preferredTimeOfDay: value as BookingFormState['preferredTimeOfDay'] }))}>
-                        <SelectTrigger className={portalInputClass}>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className={portalSelectContentClass}>
-                          <SelectItem value="morning">Morning</SelectItem>
-                          <SelectItem value="afternoon">Afternoon</SelectItem>
-                          <SelectItem value="evening">Evening</SelectItem>
-                          <SelectItem value="no_preference">No preference</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-slate-200">Additional notes</Label>
-                    <Textarea
-                      value={form.additionalNotes}
-                      onChange={(event) => setForm((prev) => ({ ...prev, additionalNotes: event.target.value }))}
-                      className={`min-h-[110px] ${portalTextareaClass}`}
-                      placeholder="Optional access notes, urgency details, or scheduling context."
-                    />
-                  </div>
-
-                  {formError ? (
-                    <div className="rounded-2xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-sm text-red-100">
-                      {formError}
-                    </div>
-                  ) : null}
-
-                  <Button type="submit" disabled={isSubmitting} className={portalPrimaryButtonClass}>
-                    {isSubmitting ? 'Sending request...' : 'Request Service'}
-                  </Button>
-                </form>
-              ) : (
-                <form onSubmit={handleLookup} className="space-y-5">
-                  <div className="space-y-2">
-                    <Label className="text-slate-200">Reference number</Label>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <Label className="text-sm text-slate-300">Preferred date</Label>
                     <Input
-                      value={lookupReference}
-                      onChange={(event) => setLookupReference(event.target.value.toUpperCase())}
-                      className={portalInputClass}
+                      type="date"
+                      value={form.preferredDate}
+                      onChange={(e) => setForm((p) => ({ ...p, preferredDate: e.target.value }))}
+                      className={inputCls}
+                      style={{ colorScheme: 'dark' }}
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label className="text-slate-200">Email address</Label>
-                    <Input
-                      type="email"
-                      value={lookupEmail}
-                      onChange={(event) => setLookupEmail(event.target.value)}
-                      className={portalInputClass}
-                    />
+                  <div className="space-y-1.5">
+                    <Label className="text-sm text-slate-300">Preferred time of day</Label>
+                    <Select value={form.preferredTimeOfDay} onValueChange={(v) => setForm((p) => ({ ...p, preferredTimeOfDay: v as BookingFormState['preferredTimeOfDay'] }))}>
+                      <SelectTrigger className={inputCls}>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className={selectContentCls}>
+                        <SelectItem value="morning">Morning (8AM – 12PM)</SelectItem>
+                        <SelectItem value="afternoon">Afternoon (12PM – 4PM)</SelectItem>
+                        <SelectItem value="evening">Evening (4PM – 8PM)</SelectItem>
+                        <SelectItem value="no_preference">No preference</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
-                  {lookupError ? (
-                    <div className="rounded-2xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-sm text-red-100">
-                      {lookupError}
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-sm text-slate-300">Additional notes</Label>
+                  <Textarea
+                    value={form.additionalNotes}
+                    onChange={(e) => setForm((p) => ({ ...p, additionalNotes: e.target.value }))}
+                    className={`min-h-[96px] ${textareaCls}`}
+                    placeholder="Optional access notes, urgency details, or scheduling context."
+                  />
+                </div>
+
+                {formError ? (
+                  <div className="rounded-xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+                    {formError}
+                  </div>
+                ) : null}
+
+                <Button type="submit" disabled={isSubmitting} className={primaryBtnCls}>
+                  {isSubmitting ? 'Sending request...' : 'Request Service'}
+                </Button>
+              </form>
+            ) : (
+              /* ── Status Lookup Form ── */
+              <form onSubmit={handleLookup} className="space-y-5">
+                <div className="space-y-1.5">
+                  <Label className="text-sm text-slate-300">Reference number</Label>
+                  <Input
+                    value={lookupReference}
+                    onChange={(e) => setLookupReference(e.target.value.toUpperCase())}
+                    placeholder="e.g. REF-ABC123"
+                    className={inputCls}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-sm text-slate-300">Email address</Label>
+                  <Input
+                    type="email"
+                    value={lookupEmail}
+                    onChange={(e) => setLookupEmail(e.target.value)}
+                    placeholder="jdoe@example.com"
+                    className={inputCls}
+                  />
+                </div>
+                {lookupError ? (
+                  <div className="rounded-xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+                    {lookupError}
+                  </div>
+                ) : null}
+                {lookupResult ? (
+                  <div className="rounded-xl border border-white/10 bg-black/20 p-5">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Badge variant="outline" className="border-cyan-300/20 bg-cyan-300/10 text-cyan-100">
+                        {lookupResult.reference_number}
+                      </Badge>
+                      <Badge variant="outline" className="border-emerald-300/20 bg-emerald-300/10 text-emerald-100">
+                        {statusLabel}
+                      </Badge>
                     </div>
-                  ) : null}
-                  {lookupResult ? (
-                    <div className="rounded-[24px] border border-white/10 bg-black/20 p-5">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <Badge variant="outline" className="border-cyan-300/20 bg-cyan-300/10 text-cyan-100">
-                          {lookupResult.reference_number}
-                        </Badge>
-                        <Badge variant="outline" className="border-emerald-300/20 bg-emerald-300/10 text-emerald-100">
-                          {statusLabel}
-                        </Badge>
-                      </div>
-                      {lookupResult.assigned_technician_first_name ? (
-                        <p className="mt-4 text-sm text-slate-300">Assigned technician: {lookupResult.assigned_technician_first_name}</p>
-                      ) : null}
-                      {estimatedCompletionLabel ? (
-                        <p className="mt-2 text-sm text-slate-300">Estimated completion: {estimatedCompletionLabel}</p>
-                      ) : null}
-                    </div>
-                  ) : null}
-                  <Button type="submit" disabled={isLookingUp} className={portalPrimaryButtonClass}>
-                    {isLookingUp ? 'Checking status...' : 'Check status'}
-                  </Button>
-                </form>
-              )}
-            </div>
+                    {lookupResult.assigned_technician_first_name ? (
+                      <p className="mt-4 text-sm text-slate-400">Assigned technician: {lookupResult.assigned_technician_first_name}</p>
+                    ) : null}
+                    {estimatedCompletionLabel ? (
+                      <p className="mt-2 text-sm text-slate-400">Estimated completion: {estimatedCompletionLabel}</p>
+                    ) : null}
+                  </div>
+                ) : null}
+                <Button type="submit" disabled={isLookingUp} className={primaryBtnCls}>
+                  {isLookingUp ? 'Checking status...' : 'Check status'}
+                </Button>
+              </form>
+            )}
           </div>
         </section>
 
-        <aside className="space-y-6">
-          <Card className="overflow-hidden rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(9,24,39,0.96),rgba(6,17,29,0.96))] p-6 shadow-[0_24px_80px_rgba(0,0,0,0.28)]">
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-300">
-              <CalendarDays className="h-3.5 w-3.5 text-cyan-200" />
+        {/* ── Right: Sidebar ── */}
+        <aside className="mt-6 flex flex-col gap-4 lg:mt-0">
+
+          {/* Network Status Card */}
+          <Card className="overflow-hidden rounded-2xl border border-white/[0.08] bg-[rgba(10,18,32,0.7)] p-0 shadow-[0_16px_60px_rgba(0,0,0,0.35)]">
+            {/* Decorative wave graphic */}
+            <div className="relative h-36 overflow-hidden bg-[#070e1a]">
+              <div className="absolute inset-0 bg-[radial-gradient(ellipse_120%_80%_at_50%_60%,rgba(34,211,238,0.18),transparent_70%)]" />
+              <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_30%_40%,rgba(79,124,255,0.15),transparent_60%)]" />
+              <svg viewBox="0 0 400 150" className="absolute bottom-0 left-0 w-full" preserveAspectRatio="none">
+                <defs>
+                  <linearGradient id="wave1" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0%" stopColor="#22d3ee" stopOpacity="0.5" />
+                    <stop offset="50%" stopColor="#4f7cff" stopOpacity="0.4" />
+                    <stop offset="100%" stopColor="#22d3ee" stopOpacity="0.3" />
+                  </linearGradient>
+                  <linearGradient id="wave2" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0%" stopColor="#4f7cff" stopOpacity="0.3" />
+                    <stop offset="100%" stopColor="#22d3ee" stopOpacity="0.2" />
+                  </linearGradient>
+                </defs>
+                <path d="M0,80 C60,50 120,110 200,75 C280,40 340,100 400,70 L400,150 L0,150 Z" fill="url(#wave1)" />
+                <path d="M0,100 C80,70 160,120 240,90 C320,60 370,110 400,85 L400,150 L0,150 Z" fill="url(#wave2)" opacity="0.6" />
+                <path d="M0,115 C100,90 180,130 280,105 C350,85 380,120 400,100 L400,150 L0,150 Z" fill="rgba(34,211,238,0.08)" />
+              </svg>
+            </div>
+            <div className="p-5">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">Network Status</p>
+              <div className="mt-2 flex items-center gap-2">
+                <span className="relative flex h-2.5 w-2.5">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
+                  <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-400" />
+                </span>
+                <span className="text-sm font-medium text-emerald-300">All nodes operational</span>
+              </div>
+            </div>
+          </Card>
+
+          {/* What Happens Next */}
+          <Card className="rounded-2xl border border-white/[0.08] bg-[rgba(10,18,32,0.7)] p-5 shadow-[0_16px_60px_rgba(0,0,0,0.35)]">
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-400">
+              <CalendarDays className="h-3 w-3 text-cyan-300" />
               What happens next
             </div>
-            <div className="mt-5 space-y-4">
+            <div className="mt-4 space-y-3">
               {[
                 'Your request lands in the admin intake queue immediately.',
                 'Dispatch reviews the service details and scheduling preferences.',
                 'You receive a confirmation reference and follow-up by email.',
-              ].map((item) => (
-                <div key={item} className="rounded-[22px] border border-white/10 bg-white/[0.03] p-4 text-sm leading-6 text-slate-300">
+              ].map((item, i) => (
+                <div key={i} className="flex items-start gap-3 rounded-xl border border-white/[0.06] bg-white/[0.02] p-3.5 text-sm leading-6 text-slate-400">
+                  <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white/[0.06] text-[10px] font-bold text-slate-400">
+                    {i + 1}
+                  </span>
                   {item}
                 </div>
               ))}
             </div>
           </Card>
 
-          <Card className="overflow-hidden rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(9,24,39,0.96),rgba(6,17,29,0.96))] p-6 shadow-[0_24px_80px_rgba(0,0,0,0.28)]">
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-300">
-              <Clock3 className="h-3.5 w-3.5 text-cyan-200" />
+          {/* Response Window */}
+          <Card className="rounded-2xl border border-white/[0.08] bg-[rgba(10,18,32,0.7)] p-5 shadow-[0_16px_60px_rgba(0,0,0,0.35)]">
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-400">
+              <Clock3 className="h-3 w-3 text-cyan-300" />
               Response window
             </div>
-            <p className="mt-5 text-sm leading-7 text-slate-300">
-              {config?.estimated_response_time_message ?? 'We will contact you shortly after review.'}
+            <p className="mt-4 text-sm leading-7 text-slate-400">
+              {config?.estimated_response_time_message
+                ? <>{config.estimated_response_time_message}</>
+                : <>We will contact you within <span className="font-semibold text-cyan-300">2 business hours</span>.</>
+              }
             </p>
             {config?.status_lookup_enabled ? (
-              <Button asChild variant="outline" className={`mt-5 ${portalSecondaryButtonClass}`}>
+              <Button asChild variant="outline" className={`mt-4 w-full justify-center ${secondaryBtnCls}`} style={{ height: '44px' }}>
                 <Link to={isStatusMode ? '/book' : '/book/status'}>
                   {isStatusMode ? 'Back to booking form' : 'Open status lookup'}
-                  {isStatusMode ? <ArrowRight className="ml-2 h-4 w-4 rotate-180" /> : <Search className="ml-2 h-4 w-4" />}
+                  {isStatusMode
+                    ? <ArrowRight className="ml-2 h-4 w-4 rotate-180" />
+                    : <Search className="ml-2 h-4 w-4" />
+                  }
                 </Link>
               </Button>
             ) : null}
           </Card>
         </aside>
       </div>
+
+      {/* ── Footer ── */}
+      <footer className="mt-8 border-t border-white/[0.06] px-6 py-8">
+        <div className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+          <div>
+            <span className="text-lg font-bold bg-gradient-to-r from-cyan-300 to-blue-400 bg-clip-text text-transparent">
+              NexusOps
+            </span>
+            <p className="mt-1 text-xs text-slate-600">© 2024 NexusOps Infrastructure. All rights reserved.</p>
+          </div>
+          <div className="flex flex-wrap gap-5 text-xs text-slate-600">
+            {['Privacy Policy', 'Terms of Service', 'API Documentation', 'System Status'].map((item) => (
+              <span key={item} className="cursor-pointer hover:text-slate-400 transition-colors">{item}</span>
+            ))}
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
