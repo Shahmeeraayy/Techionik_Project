@@ -48,7 +48,7 @@ const inputCls = 'h-[52px] rounded-xl border border-white/10 bg-[linear-gradient
 const textareaCls = 'rounded-xl border border-white/10 bg-[linear-gradient(180deg,rgba(10,18,32,0.97),rgba(8,14,26,0.97))] text-white placeholder:text-slate-500 focus-visible:ring-1 focus-visible:ring-cyan-400/40';
 const selectContentCls = 'border-white/10 bg-[rgba(11,25,42,0.98)] text-white';
 const primaryBtnCls = 'h-[52px] w-full rounded-xl bg-gradient-to-r from-[#4f7cff] to-[#22d3ee] text-base font-semibold text-white shadow-[0_8px_24px_rgba(79,124,255,0.28)] hover:brightness-110 transition-all';
-const secondaryBtnCls = 'border-white/10 bg-[rgba(12,20,34,0.9)] text-slate-200 hover:bg-[rgba(23,37,64,0.94)] hover:text-white rounded-xl';
+const secondaryBtnCls = 'border-white/10 bg-[linear-gradient(180deg,rgba(12,20,34,0.95),rgba(8,14,26,0.95))] text-slate-200 hover:bg-[linear-gradient(180deg,rgba(23,37,64,0.98),rgba(15,24,44,0.98))] hover:text-white rounded-xl';
 
 export default function BookingPortalPage() {
   const location = useLocation();
