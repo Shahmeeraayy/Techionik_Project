@@ -64,7 +64,7 @@ class BookingPortalSubmissionRequest(BaseModel):
     customer_full_name: str = Field(..., min_length=1, max_length=255)
     phone_number: str = Field(..., min_length=7, max_length=64)
     email_address: str = Field(..., min_length=3, max_length=255)
-    service_catalog_id: UUID
+    service_catalog_ids: list[UUID] = Field(..., min_length=1)
     asset_details: str = Field(..., min_length=1, max_length=5000)
     preferred_date: Optional[date] = None
     preferred_time_of_day: Literal["morning", "afternoon", "evening", "no_preference"] = "no_preference"
@@ -100,6 +100,20 @@ class BookingPortalSubmissionRequest(BaseModel):
             return None
         normalized = value.strip()
         return normalized or None
+
+    @field_validator("service_catalog_ids")
+    @classmethod
+    def _normalize_service_ids(cls, value: list[UUID]) -> list[UUID]:
+        unique: list[UUID] = []
+        seen: set[UUID] = set()
+        for item in value:
+            if item in seen:
+                continue
+            seen.add(item)
+            unique.append(item)
+        if not unique:
+            raise ValueError("Select at least one service.")
+        return unique
 
 
 class BookingPortalSubmissionResponse(BaseModel):
@@ -141,6 +155,8 @@ class BookingRequestAdminResponse(BaseModel):
     email_address: str
     service_catalog_id: Optional[UUID] = None
     service_name: str
+    service_catalog_ids: list[UUID] = Field(default_factory=list)
+    service_names: list[str] = Field(default_factory=list)
     asset_details: str
     preferred_date: Optional[date] = None
     preferred_time_of_day: Literal["morning", "afternoon", "evening", "no_preference"]

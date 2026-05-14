@@ -59,15 +59,27 @@ class BookingPortalApiTests(unittest.TestCase):
                     updated_by="test",
                 )
             )
+            db.add(
+                ServiceCatalog(
+                    id=uuid4(),
+                    code="CER-COAT",
+                    name="Ceramic Coating",
+                    category="Automotive",
+                    default_price=Decimal("0"),
+                    approval_required=False,
+                    status="active",
+                    updated_by="test",
+                )
+            )
             db.commit()
 
-    def _service_id(self) -> str:
+    def _service_ids(self) -> list[str]:
         with SessionLocal() as db:
-            row = db.query(ServiceCatalog).first()
-            return str(row.id)
+            rows = db.query(ServiceCatalog).order_by(ServiceCatalog.name.asc()).all()
+            return [str(row.id) for row in rows]
 
     def test_public_config_and_submission_and_lookup_flow(self):
-        service_id = self._service_id()
+        service_ids = self._service_ids()
 
         update_response = self.client.put(
             "/admin/booking-portal/settings",
@@ -80,7 +92,7 @@ class BookingPortalApiTests(unittest.TestCase):
                     "Booking form: ${booking_portal_url}\n"
                     "Track: ${booking_status_url}"
                 ),
-                "visible_service_ids": [service_id],
+                "visible_service_ids": service_ids,
                 "status_lookup_enabled": True,
                 "industry_type": "automotive",
                 "details_field_label": "Vehicle details",
@@ -92,7 +104,7 @@ class BookingPortalApiTests(unittest.TestCase):
         self.assertEqual(config_response.status_code, 200, config_response.text)
         config_payload = config_response.json()
         self.assertTrue(config_payload["is_enabled"])
-        self.assertEqual(len(config_payload["services"]), 1)
+        self.assertEqual(len(config_payload["services"]), 2)
 
         submit_response = self.client.post(
             "/booking-portal/submit",
@@ -100,7 +112,7 @@ class BookingPortalApiTests(unittest.TestCase):
                 "customer_full_name": "Alex Client",
                 "phone_number": "+1(586) 556-0113",
                 "email_address": "alex@example.com",
-                "service_catalog_id": service_id,
+                "service_catalog_ids": service_ids,
                 "asset_details": "2024 Ford F-150 with front window damage.",
                 "preferred_date": "2026-05-12",
                 "preferred_time_of_day": "morning",
@@ -124,6 +136,7 @@ class BookingPortalApiTests(unittest.TestCase):
         with SessionLocal() as db:
             booking_rows = db.query(BookingRequest).all()
             self.assertEqual(len(booking_rows), 1)
+            self.assertEqual(booking_rows[0].service_names, ["Ceramic Coating", "Window Tint"])
             email_rows = db.query(EmailOutbox).all()
             self.assertEqual(len(email_rows), 2)
             customer_email = next(row for row in email_rows if row.recipient_email == "alex@example.com")
@@ -132,7 +145,7 @@ class BookingPortalApiTests(unittest.TestCase):
             self.assertIn("email=alex%40example.com", customer_email.body)
 
     def test_admin_can_update_booking_status(self):
-        service_id = self._service_id()
+        service_ids = self._service_ids()
         self.client.put(
             "/admin/booking-portal/settings",
             headers=self.admin_auth_header,
@@ -144,7 +157,7 @@ class BookingPortalApiTests(unittest.TestCase):
                     "Booking form: ${booking_portal_url}\n"
                     "Track: ${booking_status_url}"
                 ),
-                "visible_service_ids": [service_id],
+                "visible_service_ids": service_ids,
                 "status_lookup_enabled": True,
                 "industry_type": "automotive",
                 "details_field_label": "Vehicle details",
@@ -156,7 +169,7 @@ class BookingPortalApiTests(unittest.TestCase):
                 "customer_full_name": "Alex Client",
                 "phone_number": "+1(586) 556-0113",
                 "email_address": "alex@example.com",
-                "service_catalog_id": service_id,
+                "service_catalog_ids": [service_ids[0]],
                 "asset_details": "Vehicle details here",
                 "preferred_time_of_day": "afternoon",
             },

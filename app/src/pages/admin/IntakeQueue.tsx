@@ -86,6 +86,7 @@ export default function IntakeQueuePage() {
       || row.customer_full_name.toLowerCase().includes(query)
       || row.email_address.toLowerCase().includes(query)
       || row.service_name.toLowerCase().includes(query)
+      || (row.service_names ?? []).some((serviceName) => serviceName.toLowerCase().includes(query))
     );
   }, [rows, searchQuery]);
 
@@ -213,7 +214,7 @@ export default function IntakeQueuePage() {
                       <div className="space-y-1">
                         <div className="flex items-center gap-2 text-sm text-slate-200">
                           <Wrench className="h-3.5 w-3.5 text-slate-500" />
-                          <span>{row.service_name}</span>
+                          <span>{(row.service_names && row.service_names.length > 0 ? row.service_names : [row.service_name]).join(', ')}</span>
                         </div>
                         <p className="max-w-[22rem] text-sm text-slate-400">{row.asset_details}</p>
                       </div>

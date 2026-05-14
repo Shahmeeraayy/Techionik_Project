@@ -282,9 +282,13 @@ class BookingPortalService:
 
         visible_service_rows = self._list_visible_service_rows(settings)
         service_by_id = {str(row.id): row for row in visible_service_rows}
-        service_row = service_by_id.get(str(payload.service_catalog_id))
-        if service_row is None:
-            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Selected service is not available")
+        selected_service_rows = [service_by_id.get(str(service_id)) for service_id in payload.service_catalog_ids]
+        if any(row is None for row in selected_service_rows):
+            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="One or more selected services are not available")
+        resolved_service_rows = [row for row in selected_service_rows if row is not None]
+        primary_service_row = resolved_service_rows[0]
+        selected_service_names = [row.name for row in resolved_service_rows]
+        selected_service_ids = [str(row.id) for row in resolved_service_rows]
 
         company_name, admin_email, admin_phone, _ = self._get_admin_contact()
         reference_number = self._next_reference_number()
@@ -293,8 +297,10 @@ class BookingPortalService:
             customer_full_name=payload.customer_full_name,
             phone_number=payload.phone_number,
             email_address=payload.email_address,
-            service_catalog_id=service_row.id,
-            service_name=service_row.name,
+            service_catalog_id=primary_service_row.id,
+            service_name=primary_service_row.name,
+            service_catalog_ids=selected_service_ids,
+            service_names=selected_service_names,
             asset_details=payload.asset_details,
             preferred_date=payload.preferred_date,
             preferred_time_of_day=payload.preferred_time_of_day,
@@ -337,7 +343,7 @@ class BookingPortalService:
                     f"Customer: {row.customer_full_name}\n"
                     f"Phone: {row.phone_number}\n"
                     f"Email: {row.email_address}\n"
-                    f"Service: {row.service_name}\n"
+                    f"Services: {', '.join(selected_service_names)}\n"
                     f"Preferred date: {row.preferred_date or 'Not set'}\n"
                     f"Preferred time: {row.preferred_time_of_day}\n"
                     f"Details: {row.asset_details}\n"
@@ -394,7 +400,34 @@ class BookingPortalService:
             .order_by(BookingRequest.created_at.desc())
             .all()
         )
-        return [BookingRequestAdminResponse.model_validate(row, from_attributes=True) for row in rows]
+        payload: list[BookingRequestAdminResponse] = []
+        for row in rows:
+            payload.append(
+                BookingRequestAdminResponse.model_validate(
+                    {
+                        "id": row.id,
+                        "reference_number": row.reference_number,
+                        "customer_full_name": row.customer_full_name,
+                        "phone_number": row.phone_number,
+                        "email_address": row.email_address,
+                        "service_catalog_id": row.service_catalog_id,
+                        "service_name": row.service_name,
+                        "service_catalog_ids": row.service_catalog_ids or ([row.service_catalog_id] if row.service_catalog_id else []),
+                        "service_names": row.service_names or ([row.service_name] if row.service_name else []),
+                        "asset_details": row.asset_details,
+                        "preferred_date": row.preferred_date,
+                        "preferred_time_of_day": row.preferred_time_of_day,
+                        "additional_notes": row.additional_notes,
+                        "status": row.status,
+                        "assigned_technician_first_name": row.assigned_technician_first_name,
+                        "estimated_completion_date": row.estimated_completion_date,
+                        "source": row.source,
+                        "created_at": row.created_at,
+                        "updated_at": row.updated_at,
+                    }
+                )
+            )
+        return payload
 
     def update_admin_booking(self, booking_id: UUID, payload: BookingRequestAdminUpdatePayload) -> BookingRequestAdminResponse:
         row = self.db.query(BookingRequest).filter(BookingRequest.id == booking_id).first()

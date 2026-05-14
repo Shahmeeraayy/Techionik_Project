@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { ArrowRight, CalendarDays, CheckCircle2, Clock3, Mail, Phone, Search, Wrench } from 'lucide-react';
+import { ArrowRight, CalendarDays, CheckCircle2, CheckSquare, ChevronDown, Clock3, Mail, Phone, Search, Wrench } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -8,6 +8,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
   fetchBookingPortalPublicConfig,
   lookupBookingPortalStatus,
@@ -21,7 +23,7 @@ type BookingFormState = {
   customerName: string;
   phoneNumber: string;
   emailAddress: string;
-  serviceId: string;
+  serviceIds: string[];
   assetDetails: string;
   preferredDate: string;
   preferredTimeOfDay: 'morning' | 'afternoon' | 'evening' | 'no_preference';
@@ -32,7 +34,7 @@ const initialFormState: BookingFormState = {
   customerName: '',
   phoneNumber: '',
   emailAddress: '',
-  serviceId: '',
+  serviceIds: [],
   assetDetails: '',
   preferredDate: '',
   preferredTimeOfDay: 'no_preference',
@@ -86,7 +88,7 @@ export default function BookingPortalPage() {
         setConfig(next);
         setForm((prev) => ({
           ...prev,
-          serviceId: prev.serviceId || next.services[0]?.id || '',
+          serviceIds: prev.serviceIds.length > 0 ? prev.serviceIds : (next.services[0]?.id ? [next.services[0].id] : []),
         }));
       } catch (error) {
         if (isMounted) {
@@ -104,6 +106,13 @@ export default function BookingPortalPage() {
   }, []);
 
   const detailsLabel = config?.details_field_label ?? 'Details';
+  const selectedServiceNames = useMemo(() => {
+    if (!config) {
+      return [];
+    }
+    const serviceMap = new Map(config.services.map((service) => [service.id, service.name]));
+    return form.serviceIds.map((id) => serviceMap.get(id)).filter((value): value is string => Boolean(value));
+  }, [config, form.serviceIds]);
   const statusLabel = lookupResult?.status ?? null;
   const estimatedCompletionLabel = useMemo(() => {
     if (!lookupResult?.estimated_completion_date) {
@@ -120,7 +129,7 @@ export default function BookingPortalPage() {
     if (!form.customerName.trim()) return 'Customer full name is required.';
     if (form.phoneNumber.replace(/\D/g, '').length < 10) return 'Enter a valid phone number.';
     if (!/\S+@\S+\.\S+/.test(form.emailAddress.trim())) return 'Enter a valid email address.';
-    if (!form.serviceId) return 'Select a service type.';
+    if (form.serviceIds.length === 0) return 'Select at least one service type.';
     if (!form.assetDetails.trim()) return `${detailsLabel} is required.`;
     return null;
   };
@@ -140,7 +149,7 @@ export default function BookingPortalPage() {
         customer_full_name: form.customerName.trim(),
         phone_number: form.phoneNumber.trim(),
         email_address: form.emailAddress.trim().toLowerCase(),
-        service_catalog_id: form.serviceId,
+        service_catalog_ids: form.serviceIds,
         asset_details: form.assetDetails.trim(),
         preferred_date: form.preferredDate || null,
         preferred_time_of_day: form.preferredTimeOfDay,
@@ -153,6 +162,15 @@ export default function BookingPortalPage() {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const toggleService = (serviceId: string, checked: boolean) => {
+    setForm((prev) => ({
+      ...prev,
+      serviceIds: checked
+        ? Array.from(new Set([...prev.serviceIds, serviceId]))
+        : prev.serviceIds.filter((id) => id !== serviceId),
+    }));
   };
 
   const handleLookup = async (event: FormEvent<HTMLFormElement>) => {
@@ -295,16 +313,55 @@ export default function BookingPortalPage() {
                     </div>
                     <div className="space-y-2">
                       <Label className="text-slate-200">Service type</Label>
-                      <Select value={form.serviceId} onValueChange={(value) => setForm((prev) => ({ ...prev, serviceId: value }))}>
-                        <SelectTrigger className={portalInputClass}>
-                          <SelectValue placeholder="Select service" />
-                        </SelectTrigger>
-                        <SelectContent className={portalSelectContentClass}>
-                          {config.services.map((service) => (
-                            <SelectItem key={service.id} value={service.id}>{service.name}</SelectItem>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className={`${portalInputClass} w-full justify-between px-4 font-normal text-left hover:bg-[linear-gradient(180deg,rgba(10,18,32,0.96),rgba(8,14,26,0.96))]`}
+                          >
+                            <span className="truncate">
+                              {selectedServiceNames.length > 0
+                                ? selectedServiceNames.join(', ')
+                                : 'Select one or more services'}
+                            </span>
+                            <ChevronDown className="h-4 w-4 text-slate-400" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent align="start" className="w-[var(--radix-popover-trigger-width)] border-white/10 bg-[linear-gradient(180deg,rgba(11,25,42,0.98),rgba(10,20,35,0.94))] p-2 text-white shadow-[0_24px_80px_rgba(0,0,0,0.28)]">
+                          <div className="max-h-72 space-y-1 overflow-y-auto pr-1">
+                            {config.services.map((service) => {
+                              const checked = form.serviceIds.includes(service.id);
+                              return (
+                                <label
+                                  key={service.id}
+                                  className="flex cursor-pointer items-start gap-3 rounded-xl border border-transparent px-3 py-2 text-sm text-slate-200 hover:border-white/8 hover:bg-white/[0.04]"
+                                >
+                                  <Checkbox
+                                    checked={checked}
+                                    onCheckedChange={(value) => toggleService(service.id, value === true)}
+                                    className="mt-0.5 border-white/18 bg-[rgba(10,18,32,0.96)] data-[state=checked]:border-[#4f7cff] data-[state=checked]:bg-[#4f7cff] data-[state=checked]:text-white"
+                                  />
+                                  <span className="min-w-0 flex-1">
+                                    <span className="block truncate font-medium text-white">{service.name}</span>
+                                    <span className="block text-xs text-slate-400">{service.category}</span>
+                                  </span>
+                                </label>
+                              );
+                            })}
+                          </div>
+                        </PopoverContent>
+                      </Popover>
+                      {selectedServiceNames.length > 0 ? (
+                        <div className="flex flex-wrap gap-2 pt-1">
+                          {selectedServiceNames.map((serviceName) => (
+                            <Badge key={serviceName} variant="outline" className="border-cyan-300/20 bg-cyan-300/10 text-cyan-100">
+                              <CheckSquare className="mr-1 h-3 w-3" />
+                              {serviceName}
+                            </Badge>
                           ))}
-                        </SelectContent>
-                      </Select>
+                        </div>
+                      ) : null}
                     </div>
                   </div>
 

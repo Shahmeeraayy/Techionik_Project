@@ -1,6 +1,6 @@
 from uuid import uuid4
 
-from sqlalchemy import CheckConstraint, Column, Date, DateTime, ForeignKey, String, Text, Uuid, text
+from sqlalchemy import CheckConstraint, Column, Date, DateTime, ForeignKey, JSON, String, Text, Uuid, text
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
@@ -17,6 +17,8 @@ class BookingRequest(TenantScopedMixin, Base):
     email_address = Column(String(255), nullable=False)
     service_catalog_id = Column(Uuid(as_uuid=True), ForeignKey("service_catalog.id"), nullable=True)
     service_name = Column(String(255), nullable=False)
+    service_catalog_ids = Column(JSON, nullable=True)
+    service_names = Column(JSON, nullable=True)
     asset_details = Column(Text, nullable=False)
     preferred_date = Column(Date, nullable=True)
     preferred_time_of_day = Column(String(32), nullable=False, server_default=text("'no_preference'"))

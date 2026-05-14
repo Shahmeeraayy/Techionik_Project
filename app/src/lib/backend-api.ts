@@ -235,6 +235,8 @@ export type BackendBookingRequest = {
   email_address: string;
   service_catalog_id?: string | null;
   service_name: string;
+  service_catalog_ids?: string[];
+  service_names?: string[];
   asset_details: string;
   preferred_date?: string | null;
   preferred_time_of_day: 'morning' | 'afternoon' | 'evening' | 'no_preference';
@@ -1442,7 +1444,7 @@ export async function submitBookingPortalRequest(payload: {
   customer_full_name: string;
   phone_number: string;
   email_address: string;
-  service_catalog_id: string;
+  service_catalog_ids: string[];
   asset_details: string;
   preferred_date?: string | null;
   preferred_time_of_day: 'morning' | 'afternoon' | 'evening' | 'no_preference';
