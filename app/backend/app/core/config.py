@@ -87,6 +87,10 @@ CORS_ALLOW_ORIGINS = get_env_csv(
     "CORS_ALLOW_ORIGINS",
     "http://localhost:5173,http://127.0.0.1:5173",
 )
+CORS_ALLOW_ORIGIN_REGEX = get_env(
+    "CORS_ALLOW_ORIGIN_REGEX",
+    r"https://.*\.vercel\.app",
+).strip()
 
 COMPANY_LOGO_URL = get_env("COMPANY_LOGO_URL", "")
 COMPANY_NAME = get_env("COMPANY_NAME", "NexusOps")

@@ -24,7 +24,7 @@ from .api.endpoints import (
     technician_profile,
     technician_time_off,
 )
-from .core.config import CORS_ALLOW_ORIGINS
+from .core.config import CORS_ALLOW_ORIGINS, CORS_ALLOW_ORIGIN_REGEX
 from .core.security import decode_access_token
 from .core.tenant import (
     TenantContext,
@@ -78,6 +78,7 @@ def ensure_runtime_schema() -> None:
 app.add_middleware(
     CORSMiddleware,
     allow_origins=CORS_ALLOW_ORIGINS,
+    allow_origin_regex=CORS_ALLOW_ORIGIN_REGEX or None,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
