@@ -44,8 +44,8 @@ const initialFormState: BookingFormState = {
   additionalNotes: '',
 };
 
-const inputCls = 'h-[52px] rounded-xl border border-white/10 bg-[rgba(10,18,32,0.96)] text-white placeholder:text-slate-500 focus-visible:ring-1 focus-visible:ring-cyan-400/40';
-const textareaCls = 'rounded-xl border border-white/10 bg-[rgba(10,18,32,0.96)] text-white placeholder:text-slate-500 focus-visible:ring-1 focus-visible:ring-cyan-400/40';
+const inputCls = 'h-[52px] rounded-xl border border-white/10 bg-[linear-gradient(180deg,rgba(10,18,32,0.97),rgba(8,14,26,0.97))] text-white placeholder:text-slate-500 focus-visible:ring-[1px] focus-visible:ring-cyan-400/40 focus-visible:bg-[linear-gradient(180deg,rgba(10,18,32,0.99),rgba(8,14,26,0.99))] focus-visible:border-cyan-400/30';
+const textareaCls = 'rounded-xl border border-white/10 bg-[linear-gradient(180deg,rgba(10,18,32,0.97),rgba(8,14,26,0.97))] text-white placeholder:text-slate-500 focus-visible:ring-1 focus-visible:ring-cyan-400/40';
 const selectContentCls = 'border-white/10 bg-[rgba(11,25,42,0.98)] text-white';
 const primaryBtnCls = 'h-[52px] w-full rounded-xl bg-gradient-to-r from-[#4f7cff] to-[#22d3ee] text-base font-semibold text-white shadow-[0_8px_24px_rgba(79,124,255,0.28)] hover:brightness-110 transition-all';
 const secondaryBtnCls = 'border-white/10 bg-[rgba(12,20,34,0.9)] text-slate-200 hover:bg-[rgba(23,37,64,0.94)] hover:text-white rounded-xl';
@@ -211,7 +211,7 @@ export default function BookingPortalPage() {
               <Settings className="h-4.5 w-4.5" />
             </button>
             <Button asChild className="h-9 rounded-lg bg-gradient-to-r from-[#4f7cff] to-[#22d3ee] px-4 text-sm font-semibold text-white shadow-[0_4px_14px_rgba(79,124,255,0.35)] hover:brightness-110 transition-all">
-              <Link to="/admin/login">Admin Login</Link>
+              <a href="mailto:admin@sm2dispatch.com">Contact Us</a>
             </Button>
           </div>
         </div>
