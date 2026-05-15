@@ -1075,7 +1075,7 @@ export default function InvoiceApprovalsPage() {
                                         </TableCell>
                                         {queueTab === 'blocked' ? (
                                             <TableCell className="py-4">
-                                                <div className="flex flex-wrap gap-2">
+                                                <div className="max-h-28 overflow-y-auto flex flex-wrap gap-2 pr-1">
                                                     {(inv as BlockedInvoice).blocking_reasons.map((reason) => (
                                                         <Badge key={`${inv.job_id}-${reason}`} variant="outline" className="rounded-full border-red-300/20 bg-red-300/10 text-red-100">
                                                             {reason}
@@ -1177,16 +1177,16 @@ export default function InvoiceApprovalsPage() {
                                             variant="outline"
                                             className={cn(
                                                 'border-amber-500/30 bg-amber-500/10 text-amber-300',
-                                                selectedInvoice.blocking_reasons.length > 0 && 'border-red-500/30 bg-red-500/10 text-red-200',
+                                                unresolvedBlockingReasons.length > 0 && 'border-red-500/30 bg-red-500/10 text-red-200',
                                             )}
                                         >
-                                            {selectedInvoice.blocking_reasons.length > 0 ? 'Blocked Approval' : 'Pending Approval'}
+                                            {unresolvedBlockingReasons.length > 0 ? 'Blocked Approval' : 'Pending Approval'}
                                         </Badge>
                                         <span className="text-xs font-mono text-muted-foreground">ID: {selectedInvoice.job_id}</span>
                                     </div>
                                     <SheetTitle className="text-xl font-bold text-foreground">Invoice Preview - {selectedInvoice.job_code}</SheetTitle>
                                     <SheetDescription className="text-sm text-muted-foreground">
-                                        {selectedInvoice.blocking_reasons.length > 0
+                                        {unresolvedBlockingReasons.length > 0
                                             ? 'Review blockers, fix service lines, and recheck invoice readiness.'
                                             : 'Review and approve services for invoice generation.'}
                                     </SheetDescription>
@@ -1195,7 +1195,7 @@ export default function InvoiceApprovalsPage() {
 
                             <ScrollArea className="flex-1">
                                 <div className="p-6 space-y-8">
-                                    {selectedInvoice.blocking_reasons.length > 0 && (
+                                    {unresolvedBlockingReasons.length > 0 && (
                                         <section className="rounded-xl border border-red-500/30 bg-red-500/10 p-4">
                                             <div className="flex items-start gap-3">
                                                 <AlertTriangle className="mt-0.5 h-4 w-4 text-red-300" />
@@ -1207,7 +1207,7 @@ export default function InvoiceApprovalsPage() {
                                                         </p>
                                                     </div>
                                                     <div className="flex flex-wrap gap-2">
-                                                        {selectedInvoice.blocking_reasons.map((reason) => (
+                                                        {unresolvedBlockingReasons.map((reason) => (
                                                             <Badge
                                                                 key={`${selectedInvoice.job_id}-${reason}`}
                                                                 variant="outline"
