@@ -5,7 +5,6 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
@@ -45,6 +44,8 @@ const statusBadgeClass = (status: BookingStatus) => cn(
   status === 'IN_PROGRESS' && 'border-violet-300/20 bg-violet-300/10 text-violet-100',
   status === 'COMPLETED' && 'border-emerald-300/20 bg-emerald-300/10 text-emerald-100',
 );
+
+const ROW_COLS = 'grid-cols-[13%_21%_1fr_13%_18%_7%]';
 
 export default function IntakeQueuePage() {
   const [rows, setRows] = useState<BackendBookingRequest[]>([]);
@@ -170,84 +171,74 @@ export default function IntakeQueuePage() {
               className="h-11 rounded-full border-white/10 bg-white/[0.04] pl-9 text-slate-100 placeholder:text-slate-500"
             />
           </div>
-          <div className="mt-4 rounded-2xl border border-white/8 bg-black/10">
-            <Table className="w-full table-fixed">
-              <colgroup>
-                <col className="w-[14%]" />
-                <col className="w-[22%]" />
-                <col className="w-[30%]" />
-                <col className="w-[11%]" />
-                <col className="w-[15%]" />
-                <col className="w-[8%]" />
-              </colgroup>
-              <TableHeader className="border-b border-white/10 bg-[linear-gradient(180deg,rgba(11,25,42,0.98),rgba(10,20,35,0.92))]">
-                <TableRow className="border-white/0 hover:bg-transparent">
-                  <TableHead className="pl-6 text-[11px] uppercase tracking-[0.24em] text-slate-400">Reference</TableHead>
-                  <TableHead className="text-[11px] uppercase tracking-[0.24em] text-slate-400">Customer</TableHead>
-                  <TableHead className="text-[11px] uppercase tracking-[0.24em] text-slate-400">Service</TableHead>
-                  <TableHead className="text-[11px] uppercase tracking-[0.24em] text-slate-400">Status</TableHead>
-                  <TableHead className="text-[11px] uppercase tracking-[0.24em] text-slate-400">Created</TableHead>
-                  <TableHead className="pr-6 text-right text-[11px] uppercase tracking-[0.24em] text-slate-400">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredRows.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="h-28 text-center text-sm text-slate-400">
-                      No booking requests found.
-                    </TableCell>
-                  </TableRow>
-                ) : filteredRows.map((row) => (
-                  <TableRow key={row.id} className="border-white/6 hover:bg-white/[0.045]">
-                    <TableCell className="pl-6">
-                      <p className="font-semibold text-white">{row.reference_number}</p>
-                      <p className="text-xs text-slate-500">{row.source}</p>
-                    </TableCell>
-                    <TableCell className="min-w-0">
-                      <p className="truncate font-medium text-slate-200">{row.customer_full_name}</p>
-                      <div className="flex min-w-0 items-center gap-1.5 text-xs text-slate-400">
-                        <Mail className="h-3 w-3 shrink-0" />
-                        <span className="truncate">{row.email_address}</span>
-                      </div>
-                      <div className="flex items-center gap-1.5 text-xs text-slate-400">
-                        <Phone className="h-3 w-3 shrink-0" />
-                        <span>{row.phone_number}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="min-w-0">
-                      <div className="flex min-w-0 items-start gap-1.5">
-                        <Wrench className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-500" />
-                        <span className="break-words text-sm text-slate-200">
-                          {(row.service_names && row.service_names.length > 0 ? row.service_names : [row.service_name]).join(', ')}
-                        </span>
-                      </div>
-                      <p className="mt-0.5 line-clamp-2 text-xs text-slate-400">{row.asset_details}</p>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className={statusBadgeClass(row.status)}>
-                        {statusOptions.find((option) => option.value === row.status)?.label ?? row.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-xs text-slate-300">
-                      <div className="flex items-center gap-1.5">
-                        <Calendar className="h-3.5 w-3.5 shrink-0 text-slate-500" />
-                        <span>{formatDateTime(row.created_at)}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="pr-6 text-right">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => openEditDialog(row)}
-                        className="border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
-                      >
-                        <Pencil className="h-3.5 w-3.5" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+        </div>
+
+        <div>
+          {/* Header row */}
+          <div className={cn('grid border-b border-white/10 bg-[linear-gradient(180deg,rgba(11,25,42,0.98),rgba(10,20,35,0.92))]', ROW_COLS)}>
+            <div className="py-3 pl-6 text-[11px] uppercase tracking-[0.24em] text-slate-400">Reference</div>
+            <div className="py-3 text-[11px] uppercase tracking-[0.24em] text-slate-400">Customer</div>
+            <div className="py-3 text-[11px] uppercase tracking-[0.24em] text-slate-400">Service</div>
+            <div className="py-3 text-[11px] uppercase tracking-[0.24em] text-slate-400">Status</div>
+            <div className="py-3 text-[11px] uppercase tracking-[0.24em] text-slate-400">Created</div>
+            <div className="py-3 pr-6 text-right text-[11px] uppercase tracking-[0.24em] text-slate-400">Actions</div>
+          </div>
+
+          {/* Data rows */}
+          <div className="divide-y divide-white/[0.06]">
+            {filteredRows.length === 0 ? (
+              <div className="flex h-28 items-center justify-center text-sm text-slate-400">
+                No booking requests found.
+              </div>
+            ) : filteredRows.map((row) => (
+              <div key={row.id} className={cn('grid items-start py-4 hover:bg-white/[0.045]', ROW_COLS)}>
+                <div className="pl-6">
+                  <p className="font-semibold text-white">{row.reference_number}</p>
+                  <p className="text-xs text-slate-500">{row.source}</p>
+                </div>
+                <div className="min-w-0 pr-3">
+                  <p className="truncate font-medium text-slate-200">{row.customer_full_name}</p>
+                  <div className="flex min-w-0 items-center gap-1.5 text-xs text-slate-400">
+                    <Mail className="h-3 w-3 shrink-0" />
+                    <span className="truncate">{row.email_address}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-xs text-slate-400">
+                    <Phone className="h-3 w-3 shrink-0" />
+                    <span>{row.phone_number}</span>
+                  </div>
+                </div>
+                <div className="min-w-0 pr-3">
+                  <div className="flex min-w-0 items-start gap-1.5">
+                    <Wrench className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-500" />
+                    <span className="break-words text-sm text-slate-200">
+                      {(row.service_names && row.service_names.length > 0 ? row.service_names : [row.service_name]).join(', ')}
+                    </span>
+                  </div>
+                  <p className="mt-0.5 line-clamp-2 text-xs text-slate-400">{row.asset_details}</p>
+                </div>
+                <div className="pt-0.5">
+                  <Badge variant="outline" className={statusBadgeClass(row.status)}>
+                    {statusOptions.find((option) => option.value === row.status)?.label ?? row.status}
+                  </Badge>
+                </div>
+                <div className="text-xs text-slate-300">
+                  <div className="flex items-center gap-1.5">
+                    <Calendar className="h-3.5 w-3.5 shrink-0 text-slate-500" />
+                    <span>{formatDateTime(row.created_at)}</span>
+                  </div>
+                </div>
+                <div className="flex justify-end pr-6 pt-0.5">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => openEditDialog(row)}
+                    className="border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </Card>
