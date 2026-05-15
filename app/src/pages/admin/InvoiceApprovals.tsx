@@ -1216,32 +1216,41 @@ export default function InvoiceApprovalsPage() {
 
                             <ScrollArea className="flex-1">
                                 <div className="p-6 space-y-8">
-                                    {unresolvedBlockingReasons.length > 0 && (
-                                        <section className="rounded-xl border border-red-500/30 bg-red-500/10 p-4">
-                                            <div className="flex items-start gap-3">
-                                                <AlertTriangle className="mt-0.5 h-4 w-4 text-red-300" />
-                                                <div className="space-y-3">
-                                                    <div>
-                                                        <h3 className="text-sm font-semibold text-red-100">Approval blockers</h3>
-                                                        <p className="text-sm text-red-200/80">
-                                                            This job cannot be approved until the blocking issues below are resolved.
-                                                        </p>
-                                                    </div>
-                                                    <div className="flex flex-wrap gap-2">
-                                                        {unresolvedBlockingReasons.map((reason) => (
-                                                            <Badge
-                                                                key={`${selectedInvoice.job_id}-${reason}`}
-                                                                variant="outline"
-                                                                className="border-red-500/30 bg-red-500/10 text-red-200"
-                                                            >
-                                                                {reason}
-                                                            </Badge>
-                                                        ))}
+                                    {unresolvedBlockingReasons.length > 0 && (() => {
+                                        const pricingIssues = unresolvedBlockingReasons.filter((r) => r.toLowerCase().includes('missing price'));
+                                        const otherIssues = unresolvedBlockingReasons.filter((r) => !r.toLowerCase().includes('missing price'));
+                                        return (
+                                            <section className="rounded-xl border border-red-500/30 bg-red-500/10 p-4">
+                                                <div className="flex items-start gap-3">
+                                                    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-red-300" />
+                                                    <div className="min-w-0 flex-1 space-y-3">
+                                                        <div>
+                                                            <h3 className="text-sm font-semibold text-red-100">Approval blockers</h3>
+                                                            <p className="text-xs text-red-200/70 mt-0.5">
+                                                                Resolve all issues below before approving.
+                                                            </p>
+                                                        </div>
+                                                        <div className="flex flex-col gap-1.5">
+                                                            {pricingIssues.length > 0 && (
+                                                                <div className="inline-flex items-center gap-2 rounded-lg border border-amber-400/25 bg-amber-400/10 px-3 py-2">
+                                                                    <div className="h-1.5 w-1.5 rounded-full bg-amber-400 shrink-0" />
+                                                                    <span className="text-xs font-medium text-amber-200">
+                                                                        {pricingIssues.length} service{pricingIssues.length !== 1 ? 's' : ''} missing price — set prices in the Services page
+                                                                    </span>
+                                                                </div>
+                                                            )}
+                                                            {otherIssues.map((reason) => (
+                                                                <div key={reason} className="inline-flex items-center gap-2 rounded-lg border border-red-400/25 bg-red-400/10 px-3 py-2">
+                                                                    <div className="h-1.5 w-1.5 rounded-full bg-red-400 shrink-0" />
+                                                                    <span className="text-xs font-medium text-red-200">{reason}</span>
+                                                                </div>
+                                                            ))}
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        </section>
-                                    )}
+                                            </section>
+                                        );
+                                    })()}
                                     <section className="rounded-xl border border-white/10 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] p-4 shadow-[0_18px_45px_rgba(0,0,0,0.2)]">
                                         <div className="mb-4 flex items-start justify-between gap-3">
                                             <div>
