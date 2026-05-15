@@ -16,7 +16,7 @@ import {
 import { cn } from '@/lib/utils';
 
 const sectionCardClass = 'overflow-hidden rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(9,24,39,0.96),rgba(6,17,29,0.96))] shadow-[0_24px_80px_rgba(0,0,0,0.28)]';
-const sectionHeaderClass = 'border-b border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0))] p-6';
+const sectionHeaderClass = 'border-b border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0))] p-4 sm:p-6';
 
 const statusOptions = [
   { value: 'RECEIVED', label: 'Received' },
@@ -125,21 +125,22 @@ export default function IntakeQueuePage() {
 
   return (
     <div className="relative w-full space-y-6 pb-10">
-      <section className="relative overflow-hidden rounded-[32px] border border-white/10 bg-[linear-gradient(135deg,rgba(7,25,42,0.98),rgba(6,18,32,0.98))] shadow-[0_34px_120px_rgba(0,0,0,0.34)]">
+      {/* Hero header */}
+      <section className="relative overflow-hidden rounded-[28px] border border-white/10 bg-[linear-gradient(135deg,rgba(7,25,42,0.98),rgba(6,18,32,0.98))] shadow-[0_34px_120px_rgba(0,0,0,0.34)] sm:rounded-[32px]">
         <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] bg-[size:120px_120px] opacity-20" />
-        <div className="relative flex flex-col gap-5 p-6 xl:flex-row xl:items-end xl:justify-between xl:p-8">
+        <div className="relative flex flex-col gap-4 p-5 sm:gap-5 sm:p-6 xl:flex-row xl:items-end xl:justify-between xl:p-8">
           <div className="max-w-3xl">
             <div className="inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-100">
               <ClipboardList className="h-3.5 w-3.5" />
               Intake Queue
             </div>
-            <h1 className="mt-5 text-[2.35rem] font-semibold leading-none tracking-[-0.06em] text-white md:text-[2.8rem]">
+            <h1 className="mt-4 text-[1.9rem] font-semibold leading-none tracking-[-0.06em] text-white sm:mt-5 sm:text-[2.35rem] md:text-[2.8rem]">
               Booking requests
               <span className="block bg-gradient-to-r from-white via-cyan-100 to-emerald-100 bg-clip-text text-transparent">
                 ready for review
               </span>
             </h1>
-            <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-300 sm:text-[15px]">
+            <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-300 sm:mt-4 sm:text-[15px]">
               Public booking portal requests arrive here tagged with source Booking Portal, ready for admin review and customer status updates.
             </p>
           </div>
@@ -162,9 +163,11 @@ export default function IntakeQueuePage() {
         </div>
       </section>
 
+      {/* Requests card */}
       <Card className={sectionCardClass}>
+        {/* Search bar */}
         <div className={sectionHeaderClass}>
-          <div className="relative max-w-md">
+          <div className="relative w-full max-w-md">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <Input
               placeholder="Search by reference, customer, email, or service"
@@ -176,77 +179,144 @@ export default function IntakeQueuePage() {
         </div>
 
         <div className="w-full overflow-x-hidden">
-          {/* Header row */}
-          <div className="grid border-b border-white/10 bg-[linear-gradient(180deg,rgba(11,25,42,0.98),rgba(10,20,35,0.92))]" style={GRID_COLS}>
-            <div className="py-3 pl-6 text-[11px] uppercase tracking-[0.24em] text-slate-400">Reference</div>
-            <div className="py-3 text-[11px] uppercase tracking-[0.24em] text-slate-400">Customer</div>
-            <div className="py-3 text-[11px] uppercase tracking-[0.24em] text-slate-400">Service</div>
-            <div className="py-3 text-[11px] uppercase tracking-[0.24em] text-slate-400">Status</div>
-            <div className="py-3 text-[11px] uppercase tracking-[0.24em] text-slate-400">Created</div>
-            <div className="py-3 pr-6 text-right text-[11px] uppercase tracking-[0.24em] text-slate-400">Actions</div>
+
+          {/* ── Desktop grid (md+) ── */}
+          <div className="hidden md:block">
+            {/* Header */}
+            <div
+              className="grid border-b border-white/10 bg-[linear-gradient(180deg,rgba(11,25,42,0.98),rgba(10,20,35,0.92))]"
+              style={GRID_COLS}
+            >
+              <div className="py-3 pl-6 text-[11px] uppercase tracking-[0.24em] text-slate-400">Reference</div>
+              <div className="py-3 text-[11px] uppercase tracking-[0.24em] text-slate-400">Customer</div>
+              <div className="py-3 text-[11px] uppercase tracking-[0.24em] text-slate-400">Service</div>
+              <div className="py-3 text-[11px] uppercase tracking-[0.24em] text-slate-400">Status</div>
+              <div className="py-3 text-[11px] uppercase tracking-[0.24em] text-slate-400">Created</div>
+              <div className="py-3 pr-6 text-right text-[11px] uppercase tracking-[0.24em] text-slate-400">Actions</div>
+            </div>
+            {/* Rows */}
+            <div className="divide-y divide-white/[0.06]">
+              {filteredRows.length === 0 ? (
+                <div className="flex h-28 items-center justify-center text-sm text-slate-400">
+                  No booking requests found.
+                </div>
+              ) : filteredRows.map((row) => (
+                <div key={row.id} className="grid items-start py-4 hover:bg-white/[0.045]" style={GRID_COLS}>
+                  <div className="overflow-hidden pl-6">
+                    <p className="truncate font-semibold text-white">{row.reference_number}</p>
+                    <p className="truncate text-xs text-slate-500">{row.source}</p>
+                  </div>
+                  <div className="overflow-hidden pr-3">
+                    <p className="truncate font-medium text-slate-200">{row.customer_full_name}</p>
+                    <div className="flex items-center gap-1.5 overflow-hidden text-xs text-slate-400">
+                      <Mail className="h-3 w-3 shrink-0" />
+                      <span className="truncate">{row.email_address}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 overflow-hidden text-xs text-slate-400">
+                      <Phone className="h-3 w-3 shrink-0" />
+                      <span className="truncate">{row.phone_number}</span>
+                    </div>
+                  </div>
+                  <div className="overflow-hidden pr-3">
+                    <div className="flex items-start gap-1.5">
+                      <Wrench className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-500" />
+                      <span className="break-words text-sm text-slate-200">
+                        {(row.service_names && row.service_names.length > 0 ? row.service_names : [row.service_name]).join(', ')}
+                      </span>
+                    </div>
+                    <p className="mt-0.5 line-clamp-2 text-xs text-slate-400">{row.asset_details}</p>
+                  </div>
+                  <div className="overflow-hidden pt-0.5">
+                    <Badge variant="outline" className={cn('block truncate', statusBadgeClass(row.status))}>
+                      {statusOptions.find((o) => o.value === row.status)?.label ?? row.status}
+                    </Badge>
+                  </div>
+                  <div className="overflow-hidden text-xs text-slate-300">
+                    <div className="flex items-center gap-1.5">
+                      <Calendar className="h-3.5 w-3.5 shrink-0 text-slate-500" />
+                      <span className="truncate">{formatDateTime(row.created_at)}</span>
+                    </div>
+                  </div>
+                  <div className="flex justify-end pr-6 pt-0.5">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => openEditDialog(row)}
+                      className="border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
 
-          {/* Data rows */}
-          <div className="divide-y divide-white/[0.06]">
+          {/* ── Mobile cards (< md) ── */}
+          <div className="divide-y divide-white/[0.06] md:hidden">
             {filteredRows.length === 0 ? (
               <div className="flex h-28 items-center justify-center text-sm text-slate-400">
                 No booking requests found.
               </div>
             ) : filteredRows.map((row) => (
-              <div key={row.id} className="grid items-start py-4 hover:bg-white/[0.045]" style={GRID_COLS}>
-                <div className="overflow-hidden pl-6">
-                  <p className="truncate font-semibold text-white">{row.reference_number}</p>
-                  <p className="truncate text-xs text-slate-500">{row.source}</p>
+              <div key={row.id} className="flex flex-col gap-3 p-4 hover:bg-white/[0.03]">
+                {/* Top row: ref + badge + edit */}
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="truncate font-semibold text-white">{row.reference_number}</p>
+                    <p className="text-xs text-slate-500">{row.source}</p>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-2">
+                    <Badge variant="outline" className={statusBadgeClass(row.status)}>
+                      {statusOptions.find((o) => o.value === row.status)?.label ?? row.status}
+                    </Badge>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => openEditDialog(row)}
+                      className="border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
                 </div>
-                <div className="overflow-hidden pr-3">
+
+                {/* Customer */}
+                <div className="space-y-1">
                   <p className="truncate font-medium text-slate-200">{row.customer_full_name}</p>
-                  <div className="flex items-center gap-1.5 overflow-hidden text-xs text-slate-400">
+                  <div className="flex items-center gap-1.5 text-xs text-slate-400">
                     <Mail className="h-3 w-3 shrink-0" />
                     <span className="truncate">{row.email_address}</span>
                   </div>
-                  <div className="flex items-center gap-1.5 overflow-hidden text-xs text-slate-400">
+                  <div className="flex items-center gap-1.5 text-xs text-slate-400">
                     <Phone className="h-3 w-3 shrink-0" />
-                    <span className="truncate">{row.phone_number}</span>
+                    <span>{row.phone_number}</span>
                   </div>
                 </div>
-                <div className="overflow-hidden pr-3">
-                  <div className="flex items-start gap-1.5">
-                    <Wrench className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-500" />
-                    <span className="break-words text-sm text-slate-200">
-                      {(row.service_names && row.service_names.length > 0 ? row.service_names : [row.service_name]).join(', ')}
-                    </span>
-                  </div>
-                  <p className="mt-0.5 line-clamp-2 text-xs text-slate-400">{row.asset_details}</p>
+
+                {/* Service */}
+                <div className="flex items-start gap-1.5">
+                  <Wrench className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-500" />
+                  <span className="break-words text-sm text-slate-300">
+                    {(row.service_names && row.service_names.length > 0 ? row.service_names : [row.service_name]).join(', ')}
+                  </span>
                 </div>
-                <div className="overflow-hidden pt-0.5">
-                  <Badge variant="outline" className={cn('block truncate', statusBadgeClass(row.status))}>
-                    {statusOptions.find((option) => option.value === row.status)?.label ?? row.status}
-                  </Badge>
-                </div>
-                <div className="overflow-hidden text-xs text-slate-300">
-                  <div className="flex items-center gap-1.5">
-                    <Calendar className="h-3.5 w-3.5 shrink-0 text-slate-500" />
-                    <span className="truncate">{formatDateTime(row.created_at)}</span>
-                  </div>
-                </div>
-                <div className="flex justify-end pr-6 pt-0.5">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => openEditDialog(row)}
-                    className="border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
-                  >
-                    <Pencil className="h-3.5 w-3.5" />
-                  </Button>
+
+                {/* Date */}
+                <div className="flex items-center gap-1.5 text-xs text-slate-400">
+                  <Calendar className="h-3.5 w-3.5 shrink-0 text-slate-500" />
+                  <span>{formatDateTime(row.created_at)}</span>
                 </div>
               </div>
             ))}
           </div>
+
         </div>
       </Card>
 
+      {/* Edit dialog */}
       <Dialog open={Boolean(editingRow)} onOpenChange={(open) => { if (!open) setEditingRow(null); }}>
-        <DialogContent className="sm:max-w-lg border-white/10 bg-[linear-gradient(180deg,rgba(9,24,39,0.98),rgba(6,17,29,0.98))] text-slate-100">
+        <DialogContent className="border-white/10 bg-[linear-gradient(180deg,rgba(9,24,39,0.98),rgba(6,17,29,0.98))] text-slate-100 sm:max-w-lg">
           <DialogHeader>
             <DialogTitle className="text-white">Update booking request</DialogTitle>
             <DialogDescription className="text-slate-300">
@@ -288,10 +358,10 @@ export default function IntakeQueuePage() {
               />
             </div>
           </div>
-          <DialogFooter>
+          <DialogFooter className="flex-col gap-2 sm:flex-row">
             <Button
               variant="outline"
-              className="h-11 rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] px-5 text-slate-100 shadow-[0_14px_34px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.055)] hover:bg-[linear-gradient(180deg,rgba(24,38,64,0.98),rgba(12,20,34,0.98))] hover:text-white"
+              className="h-11 w-full rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] px-5 text-slate-100 shadow-[0_14px_34px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.055)] hover:bg-[linear-gradient(180deg,rgba(24,38,64,0.98),rgba(12,20,34,0.98))] hover:text-white sm:w-auto"
               onClick={() => setEditingRow(null)}
             >
               Cancel
@@ -299,7 +369,7 @@ export default function IntakeQueuePage() {
             <Button
               onClick={() => { void handleSave(); }}
               disabled={isSaving}
-              className="h-11 rounded-2xl border border-[#7db0ff]/40 bg-[linear-gradient(135deg,#4f7cff,#22d3ee)] px-5 text-white shadow-[0_16px_34px_rgba(79,124,255,0.22)] hover:brightness-105"
+              className="h-11 w-full rounded-2xl border border-[#7db0ff]/40 bg-[linear-gradient(135deg,#4f7cff,#22d3ee)] px-5 text-white shadow-[0_16px_34px_rgba(79,124,255,0.22)] hover:brightness-105 sm:w-auto"
             >
               {isSaving ? 'Saving...' : 'Save updates'}
             </Button>
