@@ -1408,7 +1408,8 @@ export default function InvoiceApprovalsPage() {
                                                             <div className="mb-2">
                                                                 <Label className="mb-1 block text-[11px] uppercase tracking-wide text-slate-400">Service</Label>
                                                                 <Input
-                                                                    className="h-8 border-white/10 !bg-[#081525] text-slate-100 placeholder:text-slate-500"
+                                                                    className="h-8 border-white/10 text-slate-100 placeholder:text-slate-500"
+                                                                    style={{ backgroundColor: '#0d1a2d', colorScheme: 'dark' }}
                                                                     value={item.name}
                                                                     list="invoice-service-suggestions"
                                                                     onChange={(e) => handleUpdateServiceName(item.id, e.target.value)}
@@ -1422,7 +1423,7 @@ export default function InvoiceApprovalsPage() {
                                                                         type="number"
                                                                         min="0"
                                                                         step="0.01"
-                                                                        className="h-8 border-white/10 !bg-[#081525] text-right text-slate-100"
+                                                                        className="h-8 border-white/10 text-right text-slate-100" style={{ backgroundColor: '#0d1a2d', colorScheme: 'dark' }}
                                                                         value={item.quantity}
                                                                         onChange={(e) => handleUpdateService(item.id, 'quantity', e.target.value)}
                                                                     />
@@ -1433,7 +1434,7 @@ export default function InvoiceApprovalsPage() {
                                                                         type="number"
                                                                         min="0"
                                                                         step="0.01"
-                                                                        className="h-8 border-white/10 !bg-[#081525] text-right text-slate-100"
+                                                                        className="h-8 border-white/10 text-right text-slate-100" style={{ backgroundColor: '#0d1a2d', colorScheme: 'dark' }}
                                                                         value={item.price}
                                                                         onChange={(e) => handleUpdateService(item.id, 'price', e.target.value)}
                                                                     />
@@ -1476,7 +1477,8 @@ export default function InvoiceApprovalsPage() {
                                                                 <TableCell className="pl-4 align-middle py-2.5 text-sm text-slate-100">
                                                                     {isEditingInvoice ? (
                                                                         <Input
-                                                                            className="h-8 border-white/10 !bg-[#0d1a2d] text-slate-100 placeholder:text-slate-500 focus:border-cyan-500/50"
+                                                                            className="h-8 border-white/10 text-slate-100 placeholder:text-slate-500"
+                                                                            style={{ backgroundColor: '#0d1a2d', colorScheme: 'dark' }}
                                                                             value={item.name}
                                                                             list="invoice-service-suggestions"
                                                                             onChange={(e) => handleUpdateServiceName(item.id, e.target.value)}
@@ -1492,7 +1494,8 @@ export default function InvoiceApprovalsPage() {
                                                                             type="number"
                                                                             min="0"
                                                                             step="0.01"
-                                                                            className="ml-auto h-8 w-[80px] border-white/10 !bg-[#0d1a2d] text-right text-slate-100 focus:border-cyan-500/50"
+                                                                            className="ml-auto h-8 w-[80px] border-white/10 text-right text-slate-100"
+                                                                            style={{ backgroundColor: '#0d1a2d', colorScheme: 'dark' }}
                                                                             value={item.quantity}
                                                                             onChange={(e) => handleUpdateService(item.id, 'quantity', e.target.value)}
                                                                         />
@@ -1506,7 +1509,8 @@ export default function InvoiceApprovalsPage() {
                                                                             type="number"
                                                                             min="0"
                                                                             step="0.01"
-                                                                            className="ml-auto h-8 w-[88px] border-white/10 !bg-[#0d1a2d] text-right text-slate-100 focus:border-cyan-500/50"
+                                                                            className="ml-auto h-8 w-[88px] border-white/10 text-right text-slate-100"
+                                                                            style={{ backgroundColor: '#0d1a2d', colorScheme: 'dark' }}
                                                                             value={item.price}
                                                                             onChange={(e) => handleUpdateService(item.id, 'price', e.target.value)}
                                                                         />
