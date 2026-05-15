@@ -373,9 +373,9 @@ function ProfileStat({
     valueClassName?: string;
 }) {
     return (
-        <div className="rounded-[18px] border border-slate-200 bg-white p-3 shadow-sm dark:border-white/10 dark:bg-white/[0.03] dark:shadow-none">
-            <p className="text-[11px] uppercase tracking-wider text-slate-500 dark:text-slate-400">{label}</p>
-            <p className={cn('mt-1 text-lg font-semibold leading-none', valueClassName)}>{value}</p>
+        <div className="min-w-0 overflow-hidden rounded-[18px] border border-slate-200 bg-white p-3 shadow-sm dark:border-white/10 dark:bg-white/[0.03] dark:shadow-none">
+            <p className="truncate text-[11px] uppercase tracking-wider text-slate-500 dark:text-slate-400">{label}</p>
+            <p className={cn('mt-1 truncate text-lg font-semibold leading-none', valueClassName)}>{value}</p>
             {hint ? <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-500">{hint}</p> : null}
         </div>
     );
@@ -1638,16 +1638,19 @@ export default function TechniciansPage() {
                                 <div className="px-6 pt-5 pb-4 pr-14">
                                     <div className="flex flex-col gap-4">
                                         <div className="flex flex-col gap-1.5">
-                                            <div className="flex items-center gap-2">
+                                            <div className="flex min-w-0 flex-wrap items-center gap-2">
                                                 <h2 className="text-xl font-bold text-white">{selectedTech.name}</h2>
-                                                <StatusBadge status={getOperationalStatus(selectedTech)} />
+                                                <StatusBadge
+                                                    status={getOperationalStatus(selectedTech)}
+                                                    className="border-white/15 bg-white/[0.07] text-slate-200"
+                                                />
                                             </div>
-                                            <div className="flex items-center gap-2 text-sm text-slate-400">
+                                            <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm text-slate-400">
                                                 <span className="font-mono">{selectedTech.tech_code}</span>
-                                                <span>|</span>
-                                                <span>{selectedTech.email}</span>
-                                                <span>|</span>
-                                                <span>{formatPhoneForDisplay(selectedTech.phone) || 'No phone on file'}</span>
+                                                <span className="text-slate-600">|</span>
+                                                <span className="truncate">{selectedTech.email}</span>
+                                                <span className="text-slate-600">|</span>
+                                                <span className="shrink-0">{formatPhoneForDisplay(selectedTech.phone) || 'No phone on file'}</span>
                                             </div>
                                             {selectedTech.has_pending_email_change_request ? (
                                                 <div className="pt-0.5">
@@ -1661,50 +1664,55 @@ export default function TechniciansPage() {
                                             ) : null}
                                         </div>
 
-                                        <div className="flex flex-wrap gap-2">
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                onClick={() => setTimeOffModalOpen(true)}
-                                                className="h-9 rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] px-4 text-slate-100 shadow-[0_14px_34px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.055)] hover:bg-[linear-gradient(180deg,rgba(24,38,64,0.98),rgba(12,20,34,0.98))] hover:text-white"
-                                            >
-                                                Mark Out of Office
-                                            </Button>
-                                            {selectedTech.current_assignments[0] ? (
+                                        {/* Action buttons row: secondary actions left, save/cancel right */}
+                                        <div className="flex flex-wrap items-center justify-between gap-2">
+                                            <div className="flex flex-wrap gap-2">
                                                 <Button
-                                                variant="outline"
-                                                size="sm"
-                                                onClick={() => navigate(`/admin/jobs/${selectedTech.current_assignments[0].id}`)}
-                                                className="h-9 rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] px-4 text-slate-100 shadow-[0_14px_34px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.055)] hover:bg-[linear-gradient(180deg,rgba(24,38,64,0.98),rgba(12,20,34,0.98))] hover:text-white"
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => setTimeOffModalOpen(true)}
+                                                    className="h-9 rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] px-4 text-slate-100 shadow-[0_14px_34px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.055)] hover:bg-[linear-gradient(180deg,rgba(24,38,64,0.98),rgba(12,20,34,0.98))] hover:text-white"
                                                 >
-                                                    View Current Job
+                                                    Mark Out of Office
                                                 </Button>
-                                            ) : null}
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                onClick={() => navigate('/admin/accounts')}
-                                                className="h-9 rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] px-4 text-slate-100 shadow-[0_14px_34px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.055)] hover:bg-[linear-gradient(180deg,rgba(24,38,64,0.98),rgba(12,20,34,0.98))] hover:text-white"
+                                                {selectedTech.current_assignments[0] ? (
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={() => navigate(`/admin/jobs/${selectedTech.current_assignments[0].id}`)}
+                                                        className="h-9 rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] px-4 text-slate-100 shadow-[0_14px_34px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.055)] hover:bg-[linear-gradient(180deg,rgba(24,38,64,0.98),rgba(12,20,34,0.98))] hover:text-white"
+                                                    >
+                                                        View Current Job
+                                                    </Button>
+                                                ) : null}
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => navigate('/admin/accounts')}
+                                                    className="h-9 rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] px-4 text-slate-100 shadow-[0_14px_34px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.055)] hover:bg-[linear-gradient(180deg,rgba(24,38,64,0.98),rgba(12,20,34,0.98))] hover:text-white"
                                                 >
                                                     Technician Accounts
                                                 </Button>
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                disabled={!hasDrawerChanges}
-                                                onClick={handleCancelDrawerChanges}
-                                                className="h-9 rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] px-4 text-slate-100 shadow-[0_14px_34px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.055)] hover:bg-[linear-gradient(180deg,rgba(24,38,64,0.98),rgba(12,20,34,0.98))] hover:text-white"
-                                            >
-                                                Cancel
-                                            </Button>
-                                            <Button
-                                                size="sm"
-                                                disabled={!hasDrawerChanges}
-                                                className="h-9 rounded-2xl border border-[#7db0ff]/40 bg-[linear-gradient(135deg,#4f7cff,#22d3ee)] px-4 text-white shadow-[0_16px_34px_rgba(79,124,255,0.22)] hover:brightness-105"
-                                                onClick={handleSaveDrawerChanges}
-                                            >
-                                                Save Changes
-                                            </Button>
+                                            </div>
+                                            <div className="flex shrink-0 gap-2">
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    disabled={!hasDrawerChanges}
+                                                    onClick={handleCancelDrawerChanges}
+                                                    className="h-9 rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] px-4 text-slate-100 shadow-[0_14px_34px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.055)] hover:bg-[linear-gradient(180deg,rgba(24,38,64,0.98),rgba(12,20,34,0.98))] hover:text-white"
+                                                >
+                                                    Cancel
+                                                </Button>
+                                                <Button
+                                                    size="sm"
+                                                    disabled={!hasDrawerChanges}
+                                                    className="h-9 rounded-2xl border border-[#7db0ff]/40 bg-[linear-gradient(135deg,#4f7cff,#22d3ee)] px-4 text-white shadow-[0_16px_34px_rgba(79,124,255,0.22)] hover:brightness-105 disabled:opacity-50"
+                                                    onClick={handleSaveDrawerChanges}
+                                                >
+                                                    Save Changes
+                                                </Button>
+                                            </div>
                                         </div>
 
                                         {profileSummary ? (
