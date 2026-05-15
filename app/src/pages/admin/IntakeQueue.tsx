@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Calendar, ClipboardList, Mail, Pencil, Phone, RefreshCw, Search, Wrench } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -45,7 +45,7 @@ const statusBadgeClass = (status: BookingStatus) => cn(
   status === 'COMPLETED' && 'border-emerald-300/20 bg-emerald-300/10 text-emerald-100',
 );
 
-const ROW_COLS = 'grid-cols-[13%_21%_1fr_13%_18%_7%]';
+const GRID_COLS: React.CSSProperties = { gridTemplateColumns: '13% 21% 1fr 13% 18% 7%' };
 
 export default function IntakeQueuePage() {
   const [rows, setRows] = useState<BackendBookingRequest[]>([]);
@@ -175,7 +175,7 @@ export default function IntakeQueuePage() {
 
         <div>
           {/* Header row */}
-          <div className={cn('grid border-b border-white/10 bg-[linear-gradient(180deg,rgba(11,25,42,0.98),rgba(10,20,35,0.92))]', ROW_COLS)}>
+          <div className="grid border-b border-white/10 bg-[linear-gradient(180deg,rgba(11,25,42,0.98),rgba(10,20,35,0.92))]" style={GRID_COLS}>
             <div className="py-3 pl-6 text-[11px] uppercase tracking-[0.24em] text-slate-400">Reference</div>
             <div className="py-3 text-[11px] uppercase tracking-[0.24em] text-slate-400">Customer</div>
             <div className="py-3 text-[11px] uppercase tracking-[0.24em] text-slate-400">Service</div>
@@ -191,7 +191,7 @@ export default function IntakeQueuePage() {
                 No booking requests found.
               </div>
             ) : filteredRows.map((row) => (
-              <div key={row.id} className={cn('grid items-start py-4 hover:bg-white/[0.045]', ROW_COLS)}>
+              <div key={row.id} className="grid items-start py-4 hover:bg-white/[0.045]" style={GRID_COLS}>
                 <div className="pl-6">
                   <p className="font-semibold text-white">{row.reference_number}</p>
                   <p className="text-xs text-slate-500">{row.source}</p>
