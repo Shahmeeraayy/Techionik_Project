@@ -40,7 +40,6 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { formatPhoneForDisplay, formatUsPhoneInput } from '@/lib/phone';
 import { cn } from '@/lib/utils';
 import { createAdminTechnician, getStoredAdminToken, issueAdminTechnicianPasswordResetLink } from '@/lib/backend-api';
@@ -689,16 +688,6 @@ export default function TechnicianAccountsPage() {
                         <Button variant="outline" size="sm" onClick={() => openEditDialog(account)} className="border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]">
                           <Pencil className="w-4 h-4 mr-1" />
                           Edit
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => { void handleSendResetLink({ technicianId: account.id, email: account.email, name: account.name }); }}
-                          disabled={isSendingResetLinkFor === account.id}
-                          className="border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
-                        >
-                          <Send className="w-4 h-4 mr-1" />
-                          {isSendingResetLinkFor === account.id ? 'Sending...' : 'Invite Email'}
                         </Button>
                         <Button
                           size="sm"
