@@ -217,11 +217,11 @@ export default function IntakeQueuePage() {
                     <TableCell className="min-w-0">
                       <div className="flex min-w-0 items-start gap-1.5">
                         <Wrench className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-500" />
-                        <span className="truncate text-sm text-slate-200">
+                        <span className="break-words text-sm text-slate-200">
                           {(row.service_names && row.service_names.length > 0 ? row.service_names : [row.service_name]).join(', ')}
                         </span>
                       </div>
-                      <p className="mt-0.5 truncate text-xs text-slate-400">{row.asset_details}</p>
+                      <p className="mt-0.5 line-clamp-2 text-xs text-slate-400">{row.asset_details}</p>
                     </TableCell>
                     <TableCell>
                       <Badge variant="outline" className={statusBadgeClass(row.status)}>
