@@ -917,8 +917,14 @@ class InvoiceService:
             invoice.invoice_number = self.repo.generate_next_invoice_number()
             try:
                 return self.repo.create(invoice)
-            except IntegrityError:
+            except IntegrityError as exc:
                 self.db.rollback()
+                exc_text = str(getattr(exc, "orig", exc) or exc).lower()
+                if "invoice_number" not in exc_text and "invoices_invoice_number" not in exc_text:
+                    raise HTTPException(
+                        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                        detail=f"Invoice creation failed: {getattr(exc, 'orig', exc)}",
+                    ) from exc
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to generate unique invoice number",
