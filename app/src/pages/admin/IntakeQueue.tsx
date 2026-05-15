@@ -170,8 +170,16 @@ export default function IntakeQueuePage() {
               className="h-11 rounded-full border-white/10 bg-white/[0.04] pl-9 text-slate-100 placeholder:text-slate-500"
             />
           </div>
-          <div className="mt-4 overflow-hidden rounded-2xl border border-white/8 bg-black/10">
-            <Table>
+          <div className="mt-4 rounded-2xl border border-white/8 bg-black/10">
+            <Table className="w-full table-fixed">
+              <colgroup>
+                <col className="w-[14%]" />
+                <col className="w-[22%]" />
+                <col className="w-[30%]" />
+                <col className="w-[11%]" />
+                <col className="w-[15%]" />
+                <col className="w-[8%]" />
+              </colgroup>
               <TableHeader className="border-b border-white/10 bg-[linear-gradient(180deg,rgba(11,25,42,0.98),rgba(10,20,35,0.92))]">
                 <TableRow className="border-white/0 hover:bg-transparent">
                   <TableHead className="pl-6 text-[11px] uppercase tracking-[0.24em] text-slate-400">Reference</TableHead>
@@ -192,41 +200,37 @@ export default function IntakeQueuePage() {
                 ) : filteredRows.map((row) => (
                   <TableRow key={row.id} className="border-white/6 hover:bg-white/[0.045]">
                     <TableCell className="pl-6">
-                      <div>
-                        <p className="font-semibold text-white">{row.reference_number}</p>
-                        <p className="text-xs text-slate-500">{row.source}</p>
+                      <p className="font-semibold text-white">{row.reference_number}</p>
+                      <p className="text-xs text-slate-500">{row.source}</p>
+                    </TableCell>
+                    <TableCell className="min-w-0">
+                      <p className="truncate font-medium text-slate-200">{row.customer_full_name}</p>
+                      <div className="flex min-w-0 items-center gap-1.5 text-xs text-slate-400">
+                        <Mail className="h-3 w-3 shrink-0" />
+                        <span className="truncate">{row.email_address}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-xs text-slate-400">
+                        <Phone className="h-3 w-3 shrink-0" />
+                        <span>{row.phone_number}</span>
                       </div>
                     </TableCell>
-                    <TableCell>
-                      <div className="space-y-1">
-                        <p className="font-medium text-slate-200">{row.customer_full_name}</p>
-                        <div className="flex items-center gap-2 text-sm text-slate-400">
-                          <Mail className="h-3.5 w-3.5" />
-                          <span>{row.email_address}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-slate-400">
-                          <Phone className="h-3.5 w-3.5" />
-                          <span>{row.phone_number}</span>
-                        </div>
+                    <TableCell className="min-w-0">
+                      <div className="flex min-w-0 items-start gap-1.5">
+                        <Wrench className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-500" />
+                        <span className="truncate text-sm text-slate-200">
+                          {(row.service_names && row.service_names.length > 0 ? row.service_names : [row.service_name]).join(', ')}
+                        </span>
                       </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2 text-sm text-slate-200">
-                          <Wrench className="h-3.5 w-3.5 text-slate-500" />
-                          <span>{(row.service_names && row.service_names.length > 0 ? row.service_names : [row.service_name]).join(', ')}</span>
-                        </div>
-                        <p className="max-w-[22rem] text-sm text-slate-400">{row.asset_details}</p>
-                      </div>
+                      <p className="mt-0.5 truncate text-xs text-slate-400">{row.asset_details}</p>
                     </TableCell>
                     <TableCell>
                       <Badge variant="outline" className={statusBadgeClass(row.status)}>
                         {statusOptions.find((option) => option.value === row.status)?.label ?? row.status}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-sm text-slate-300">
-                      <div className="flex items-center gap-2">
-                        <Calendar className="h-3.5 w-3.5 text-slate-500" />
+                    <TableCell className="text-xs text-slate-300">
+                      <div className="flex items-center gap-1.5">
+                        <Calendar className="h-3.5 w-3.5 shrink-0 text-slate-500" />
                         <span>{formatDateTime(row.created_at)}</span>
                       </div>
                     </TableCell>
@@ -237,8 +241,7 @@ export default function IntakeQueuePage() {
                         onClick={() => openEditDialog(row)}
                         className="border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
                       >
-                        <Pencil className="mr-2 h-4 w-4" />
-                        Update
+                        <Pencil className="h-3.5 w-3.5" />
                       </Button>
                     </TableCell>
                   </TableRow>
