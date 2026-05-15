@@ -717,6 +717,7 @@ class InvoiceService:
         *,
         current_invoice_id: Optional[UUID] = None,
         allow_missing_job_billing: bool = False,
+        skip_line_validation: bool = False,
     ) -> tuple[List[InvoiceLineItemPayload], InvoiceBillingPayload, list[UUID]]:
         if not dispatch_job_ids:
             return [], InvoiceBillingPayload(), []
@@ -757,21 +758,22 @@ class InvoiceService:
 
             if not bill_to_name or not bill_to_address:
                 if allow_missing_job_billing:
-                    resolved_lines = self._resolve_job_dispatch_line_inputs(job)
-                    for line in resolved_lines:
-                        quantity = _to_money(line.quantity if line.quantity is not None else Decimal("1"))
-                        rate = _to_money(line.rate)
-                        if quantity <= ZERO:
-                            raise HTTPException(
-                                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                                detail=f"Job {job.job_code} has invalid service quantity for invoicing",
-                            )
-                        if rate <= ZERO:
-                            raise HTTPException(
-                                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                                detail=f"Job {job.job_code} has missing service pricing for invoicing",
-                            )
-                    line_items.extend(resolved_lines)
+                    if not skip_line_validation:
+                        resolved_lines = self._resolve_job_dispatch_line_inputs(job)
+                        for line in resolved_lines:
+                            quantity = _to_money(line.quantity if line.quantity is not None else Decimal("1"))
+                            rate = _to_money(line.rate)
+                            if quantity <= ZERO:
+                                raise HTTPException(
+                                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                                    detail=f"Job {job.job_code} has invalid service quantity for invoicing",
+                                )
+                            if rate <= ZERO:
+                                raise HTTPException(
+                                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                                    detail=f"Job {job.job_code} has missing service pricing for invoicing",
+                                )
+                        line_items.extend(resolved_lines)
                     linked_job_ids.append(job.id)
                     continue
                 raise HTTPException(
@@ -800,21 +802,22 @@ class InvoiceService:
                     detail="All merged dispatch jobs must belong to the same bill-to customer",
                 )
 
-            resolved_lines = self._resolve_job_dispatch_line_inputs(job)
-            for line in resolved_lines:
-                quantity = _to_money(line.quantity if line.quantity is not None else Decimal("1"))
-                rate = _to_money(line.rate)
-                if quantity <= ZERO:
-                    raise HTTPException(
-                        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                        detail=f"Job {job.job_code} has invalid service quantity for invoicing",
-                    )
-                if rate <= ZERO:
-                    raise HTTPException(
-                        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                        detail=f"Job {job.job_code} has missing service pricing for invoicing",
-                    )
-            line_items.extend(resolved_lines)
+            if not skip_line_validation:
+                resolved_lines = self._resolve_job_dispatch_line_inputs(job)
+                for line in resolved_lines:
+                    quantity = _to_money(line.quantity if line.quantity is not None else Decimal("1"))
+                    rate = _to_money(line.rate)
+                    if quantity <= ZERO:
+                        raise HTTPException(
+                            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                            detail=f"Job {job.job_code} has invalid service quantity for invoicing",
+                        )
+                    if rate <= ZERO:
+                        raise HTTPException(
+                            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                            detail=f"Job {job.job_code} has missing service pricing for invoicing",
+                        )
+                line_items.extend(resolved_lines)
             linked_job_ids.append(job.id)
 
         return line_items, billing_payload or InvoiceBillingPayload(), linked_job_ids
@@ -1184,9 +1187,11 @@ class InvoiceService:
             and requested_billing.bill_to_name
             and requested_billing.bill_to_address
         )
+        replacing_lines = bool(payload.replace_dispatch_line_items and payload.line_items)
         dispatch_lines, dispatch_billing, dispatch_job_ids = self._build_dispatch_line_items(
             payload.dispatch_job_ids,
             allow_missing_job_billing=has_requested_bill_to,
+            skip_line_validation=replacing_lines,
         )
         company = self._resolve_company_payload(payload.company, payload.company_info)
         billing = self._resolve_billing_payload(requested_billing, dispatch_billing)
