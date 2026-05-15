@@ -45,7 +45,9 @@ const statusBadgeClass = (status: BookingStatus) => cn(
   status === 'COMPLETED' && 'border-emerald-300/20 bg-emerald-300/10 text-emerald-100',
 );
 
-const GRID_COLS: React.CSSProperties = { gridTemplateColumns: '13% 21% 1fr 13% 18% 7%' };
+const GRID_COLS: React.CSSProperties = {
+  gridTemplateColumns: 'minmax(0,13%) minmax(0,21%) minmax(0,1fr) minmax(0,13%) minmax(0,18%) minmax(0,7%)',
+};
 
 export default function IntakeQueuePage() {
   const [rows, setRows] = useState<BackendBookingRequest[]>([]);
@@ -173,7 +175,7 @@ export default function IntakeQueuePage() {
           </div>
         </div>
 
-        <div>
+        <div className="w-full overflow-x-hidden">
           {/* Header row */}
           <div className="grid border-b border-white/10 bg-[linear-gradient(180deg,rgba(11,25,42,0.98),rgba(10,20,35,0.92))]" style={GRID_COLS}>
             <div className="py-3 pl-6 text-[11px] uppercase tracking-[0.24em] text-slate-400">Reference</div>
@@ -192,23 +194,23 @@ export default function IntakeQueuePage() {
               </div>
             ) : filteredRows.map((row) => (
               <div key={row.id} className="grid items-start py-4 hover:bg-white/[0.045]" style={GRID_COLS}>
-                <div className="pl-6">
-                  <p className="font-semibold text-white">{row.reference_number}</p>
-                  <p className="text-xs text-slate-500">{row.source}</p>
+                <div className="overflow-hidden pl-6">
+                  <p className="truncate font-semibold text-white">{row.reference_number}</p>
+                  <p className="truncate text-xs text-slate-500">{row.source}</p>
                 </div>
-                <div className="min-w-0 pr-3">
+                <div className="overflow-hidden pr-3">
                   <p className="truncate font-medium text-slate-200">{row.customer_full_name}</p>
-                  <div className="flex min-w-0 items-center gap-1.5 text-xs text-slate-400">
+                  <div className="flex items-center gap-1.5 overflow-hidden text-xs text-slate-400">
                     <Mail className="h-3 w-3 shrink-0" />
                     <span className="truncate">{row.email_address}</span>
                   </div>
-                  <div className="flex items-center gap-1.5 text-xs text-slate-400">
+                  <div className="flex items-center gap-1.5 overflow-hidden text-xs text-slate-400">
                     <Phone className="h-3 w-3 shrink-0" />
-                    <span>{row.phone_number}</span>
+                    <span className="truncate">{row.phone_number}</span>
                   </div>
                 </div>
-                <div className="min-w-0 pr-3">
-                  <div className="flex min-w-0 items-start gap-1.5">
+                <div className="overflow-hidden pr-3">
+                  <div className="flex items-start gap-1.5">
                     <Wrench className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-500" />
                     <span className="break-words text-sm text-slate-200">
                       {(row.service_names && row.service_names.length > 0 ? row.service_names : [row.service_name]).join(', ')}
@@ -216,15 +218,15 @@ export default function IntakeQueuePage() {
                   </div>
                   <p className="mt-0.5 line-clamp-2 text-xs text-slate-400">{row.asset_details}</p>
                 </div>
-                <div className="pt-0.5">
-                  <Badge variant="outline" className={statusBadgeClass(row.status)}>
+                <div className="overflow-hidden pt-0.5">
+                  <Badge variant="outline" className={cn('block truncate', statusBadgeClass(row.status))}>
                     {statusOptions.find((option) => option.value === row.status)?.label ?? row.status}
                   </Badge>
                 </div>
-                <div className="text-xs text-slate-300">
+                <div className="overflow-hidden text-xs text-slate-300">
                   <div className="flex items-center gap-1.5">
                     <Calendar className="h-3.5 w-3.5 shrink-0 text-slate-500" />
-                    <span>{formatDateTime(row.created_at)}</span>
+                    <span className="truncate">{formatDateTime(row.created_at)}</span>
                   </div>
                 </div>
                 <div className="flex justify-end pr-6 pt-0.5">
