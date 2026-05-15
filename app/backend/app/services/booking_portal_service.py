@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 from urllib.parse import quote
 
 from ..core.config import COMPANY_EMAIL, COMPANY_LOGO_URL, COMPANY_NAME, COMPANY_PHONE, COMPANY_WEBSITE, CUSTOMER_PORTAL_BASE_URL, DEFAULT_TENANT_ID
-from ..services.email_service import send_email
+from .email_service import send_email
 from ..core.security import AuthenticatedUser
 from ..models.admin_credential_settings import AdminCredentialSettings
 from ..models.admin_user import AdminUser
