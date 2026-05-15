@@ -739,24 +739,8 @@ function getApiBaseUrl(): string {
       hostname === '127.0.0.1' ||
       hostname === '::1';
 
-    if (isLocalHost) {
-      if (!normalized) {
-        return LOCAL_API_FALLBACK;
-      }
-
-      try {
-        const parsed = new URL(normalized);
-        const apiIsLocal =
-          parsed.hostname === 'localhost' ||
-          parsed.hostname === '127.0.0.1' ||
-          parsed.hostname === '::1';
-
-        if (!apiIsLocal) {
-          return LOCAL_API_FALLBACK;
-        }
-      } catch {
-        return LOCAL_API_FALLBACK;
-      }
+    if (isLocalHost && !normalized) {
+      return LOCAL_API_FALLBACK;
     }
   }
 

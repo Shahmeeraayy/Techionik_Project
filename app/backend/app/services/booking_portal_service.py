@@ -437,8 +437,11 @@ class BookingPortalService:
         )
 
     def list_admin_bookings(self) -> list[BookingRequestAdminResponse]:
+        owner_tenant_id = self._get_owner_tenant_id()
         rows = (
             self.db.query(BookingRequest)
+            .execution_options(skip_tenant_scope=True)
+            .filter(BookingRequest.tenant_id == owner_tenant_id)
             .order_by(BookingRequest.created_at.desc())
             .all()
         )
@@ -472,7 +475,12 @@ class BookingPortalService:
         return payload
 
     def update_admin_booking(self, booking_id: UUID, payload: BookingRequestAdminUpdatePayload) -> BookingRequestAdminResponse:
-        row = self.db.query(BookingRequest).filter(BookingRequest.id == booking_id).first()
+        row = (
+            self.db.query(BookingRequest)
+            .execution_options(skip_tenant_scope=True)
+            .filter(BookingRequest.id == booking_id)
+            .first()
+        )
         if row is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Booking request not found")
 
