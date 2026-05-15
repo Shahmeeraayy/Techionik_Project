@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from typing import List
 from uuid import UUID
@@ -21,8 +22,13 @@ from ...schemas.settings import (
     PriorityRuleUpdatePayload,
 )
 from ...services.admin_credential_settings_service import AdminCredentialSettingsService
+from ...services.email_service import send_email_or_raise, smtp_config_summary
 from ...services.invoice_branding_settings_service import InvoiceBrandingSettingsService
 from ...services.priority_rules_service import PriorityRulesService
+
+
+class TestEmailPayload(BaseModel):
+    to: str
 
 router = APIRouter(prefix="/admin/settings", tags=["admin-settings"])
 
@@ -159,3 +165,33 @@ def delete_priority_rule(
 ):
     _ = current_user
     return PriorityRulesService(db, current_user).delete_rule(rule_id)
+
+
+@router.get("/email-config")
+def get_email_config(
+    current_user: AuthenticatedUser = Depends(deps.require_roles(UserRole.ADMIN)),
+):
+    """Returns which SMTP env vars are loaded (passwords masked)."""
+    _ = current_user
+    return smtp_config_summary()
+
+
+@router.post("/test-email")
+def send_test_email(
+    payload: TestEmailPayload,
+    current_user: AuthenticatedUser = Depends(deps.require_roles(UserRole.ADMIN)),
+):
+    """Send a test email to verify SMTP configuration."""
+    _ = current_user
+    try:
+        send_email_or_raise(
+            to=payload.to,
+            subject="NexusOps — SMTP test",
+            body="This is a test email from NexusOps. SMTP is configured correctly.",
+        )
+        return {"status": "sent", "to": payload.to}
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(exc),
+        ) from exc
