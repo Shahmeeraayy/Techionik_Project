@@ -924,11 +924,19 @@ async function requestJson<T>(path: string, options: RequestOptions = {}): Promi
   try {
     response = await fetchOnce();
   } catch {
-    // Backend may be waking up (e.g. Render free tier spin-down). Wait 10 s and retry once.
-    await new Promise((resolve) => setTimeout(resolve, 10000));
-    try {
-      response = await fetchOnce();
-    } catch {
+    // Backend may be waking up (e.g. Render free tier spin-down). Retry up to 5 times with 8 s gaps (40 s total).
+    let connected = false;
+    for (let i = 0; i < 5; i++) {
+      await new Promise((resolve) => setTimeout(resolve, 8000));
+      try {
+        response = await fetchOnce();
+        connected = true;
+        break;
+      } catch {
+        // still starting up
+      }
+    }
+    if (!connected) {
       throw new Error(`Unable to reach backend at ${apiBaseUrl}. The server may still be starting up — please wait a moment and try again.`);
     }
   }

@@ -317,11 +317,13 @@ function JobCard({
 }) {
     const [actionLoading, setActionLoading] = useState<string | null>(null);
 
-    const handleAction = async (action: string, handler: (jobId: string) => void) => {
+    const handleAction = async (action: string, handler: (jobId: string) => Promise<void> | void) => {
         setActionLoading(action);
-        await new Promise(resolve => setTimeout(resolve, 600));
-        handler(job.job_id);
-        setActionLoading(null);
+        try {
+            await handler(job.job_id);
+        } finally {
+            setActionLoading(null);
+        }
     };
 
     const formatScheduledDateTime = (isoString: string): string => {
