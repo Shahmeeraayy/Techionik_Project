@@ -1214,7 +1214,7 @@ export default function InvoiceApprovalsPage() {
                                 </SheetHeader>
                             </div>
 
-                            <ScrollArea className="flex-1">
+                            <ScrollArea className="flex-1 min-h-0">
                                 <div className="p-6 space-y-8">
                                     {unresolvedBlockingReasons.length > 0 && (() => {
                                         const pricingIssues = unresolvedBlockingReasons.filter((r) => r.toLowerCase().includes('missing price'));
