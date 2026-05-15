@@ -1404,11 +1404,11 @@ export default function InvoiceApprovalsPage() {
                                             {isEditingInvoice && isMobile ? (
                                                 <div className="space-y-3 p-3">
                                                     {editableServices.map((item) => (
-                                                        <div key={item.id} className="rounded-lg border border-border/60 bg-slate-900/70 p-3">
+                                                        <div key={item.id} className="rounded-lg border border-white/10 bg-[#0d1a2d] p-3">
                                                             <div className="mb-2">
                                                                 <Label className="mb-1 block text-[11px] uppercase tracking-wide text-slate-400">Service</Label>
                                                                 <Input
-                                                                    className="h-8 border-border/60 bg-slate-900 text-slate-100"
+                                                                    className="h-8 border-white/10 !bg-[#081525] text-slate-100 placeholder:text-slate-500"
                                                                     value={item.name}
                                                                     list="invoice-service-suggestions"
                                                                     onChange={(e) => handleUpdateServiceName(item.id, e.target.value)}
@@ -1422,7 +1422,7 @@ export default function InvoiceApprovalsPage() {
                                                                         type="number"
                                                                         min="0"
                                                                         step="0.01"
-                                                                        className="h-8 border-border/60 bg-slate-900 text-right text-slate-100"
+                                                                        className="h-8 border-white/10 !bg-[#081525] text-right text-slate-100"
                                                                         value={item.quantity}
                                                                         onChange={(e) => handleUpdateService(item.id, 'quantity', e.target.value)}
                                                                     />
@@ -1433,7 +1433,7 @@ export default function InvoiceApprovalsPage() {
                                                                         type="number"
                                                                         min="0"
                                                                         step="0.01"
-                                                                        className="h-8 border-border/60 bg-slate-900 text-right text-slate-100"
+                                                                        className="h-8 border-white/10 !bg-[#081525] text-right text-slate-100"
                                                                         value={item.price}
                                                                         onChange={(e) => handleUpdateService(item.id, 'price', e.target.value)}
                                                                     />
@@ -1458,43 +1458,41 @@ export default function InvoiceApprovalsPage() {
                                                     ))}
                                                 </div>
                                             ) : (
-                                                <Table className="table-fixed">
+                                                <Table className="table-fixed [&_tr]:bg-transparent [&_td]:bg-transparent">
                                                     <TableHeader className="bg-slate-900/90">
-                                                        <TableRow>
-                                                            <TableHead className={cn('h-10 text-xs font-semibold text-slate-300', isEditingInvoice ? 'w-[28%]' : 'w-[48%]')}>
+                                                        <TableRow className="border-white/10 hover:bg-transparent">
+                                                            <TableHead className={cn('h-10 pl-4 text-xs font-semibold text-slate-400', isEditingInvoice ? 'w-[28%]' : 'w-[48%]')}>
                                                                 Service
                                                             </TableHead>
-                                                            <TableHead className="h-10 w-[14%] text-center text-xs font-semibold text-slate-300">Qty</TableHead>
-                                                            <TableHead className="h-10 w-[14%] text-right text-xs font-semibold text-slate-300">Price</TableHead>
-                                                            <TableHead className="h-10 w-[14%] text-right text-xs font-semibold text-slate-300">Total</TableHead>
-                                                            {isEditingInvoice && <TableHead className="h-10 w-[6%] text-right text-xs font-semibold text-slate-300">Del</TableHead>}
+                                                            <TableHead className="h-10 w-[14%] text-center text-xs font-semibold text-slate-400">Qty</TableHead>
+                                                            <TableHead className="h-10 w-[14%] text-right text-xs font-semibold text-slate-400">Price</TableHead>
+                                                            <TableHead className="h-10 w-[14%] pr-4 text-right text-xs font-semibold text-slate-400">Total</TableHead>
+                                                            {isEditingInvoice && <TableHead className="h-10 w-[6%] pr-2 text-right text-xs font-semibold text-slate-400" />}
                                                         </TableRow>
                                                     </TableHeader>
                                                     <TableBody>
                                                         {editableServices.map((item) => (
-                                                            <TableRow key={item.id} className="border-border/50">
-                                                                <TableCell className="align-middle py-3 text-sm text-slate-100">
+                                                            <TableRow key={item.id} className="border-white/[0.06] hover:bg-white/[0.03]">
+                                                                <TableCell className="pl-4 align-middle py-2.5 text-sm text-slate-100">
                                                                     {isEditingInvoice ? (
                                                                         <Input
-                                                                            className="h-8 border-border/60 bg-slate-900 text-slate-100"
+                                                                            className="h-8 border-white/10 !bg-[#0d1a2d] text-slate-100 placeholder:text-slate-500 focus:border-cyan-500/50"
                                                                             value={item.name}
                                                                             list="invoice-service-suggestions"
                                                                             onChange={(e) => handleUpdateServiceName(item.id, e.target.value)}
                                                                             placeholder="Service name"
                                                                         />
                                                                     ) : (
-                                                                        <div className="space-y-1">
-                                                                            <OverflowText text={item.name} className="max-w-[16rem]" />
-                                                                        </div>
+                                                                        <OverflowText text={item.name || '—'} className="max-w-[16rem] text-slate-200" />
                                                                     )}
                                                                 </TableCell>
-                                                                <TableCell className="align-middle py-3 text-center text-sm text-slate-200">
+                                                                <TableCell className="align-middle py-2.5 text-center text-sm text-slate-300">
                                                                     {isEditingInvoice ? (
                                                                         <Input
                                                                             type="number"
                                                                             min="0"
                                                                             step="0.01"
-                                                                            className="ml-auto h-8 w-[88px] border-border/60 bg-slate-900 text-right text-slate-100"
+                                                                            className="ml-auto h-8 w-[80px] border-white/10 !bg-[#0d1a2d] text-right text-slate-100 focus:border-cyan-500/50"
                                                                             value={item.quantity}
                                                                             onChange={(e) => handleUpdateService(item.id, 'quantity', e.target.value)}
                                                                         />
@@ -1502,32 +1500,32 @@ export default function InvoiceApprovalsPage() {
                                                                         item.quantity.toFixed(2)
                                                                     )}
                                                                 </TableCell>
-                                                                <TableCell className="align-middle py-3 text-right text-sm text-slate-100">
+                                                                <TableCell className="align-middle py-2.5 text-right text-sm text-slate-300">
                                                                     {isEditingInvoice ? (
                                                                         <Input
                                                                             type="number"
                                                                             min="0"
                                                                             step="0.01"
-                                                                            className="ml-auto h-8 w-[96px] border-border/60 bg-slate-900 text-right text-slate-100"
+                                                                            className="ml-auto h-8 w-[88px] border-white/10 !bg-[#0d1a2d] text-right text-slate-100 focus:border-cyan-500/50"
                                                                             value={item.price}
                                                                             onChange={(e) => handleUpdateService(item.id, 'price', e.target.value)}
                                                                         />
                                                                     ) : (
-                                                                        `$${item.price.toFixed(2)}`
+                                                                        <span className={item.price <= 0 ? 'text-red-400' : 'text-slate-200'}>${item.price.toFixed(2)}</span>
                                                                     )}
                                                                 </TableCell>
-                                                                <TableCell className="align-middle py-3 text-right font-mono text-sm text-cyan-200">
+                                                                <TableCell className="pr-4 align-middle py-2.5 text-right font-mono text-sm font-semibold text-cyan-300">
                                                                     ${(item.quantity * item.price).toFixed(2)}
                                                                 </TableCell>
                                                                 {isEditingInvoice && (
-                                                                    <TableCell className="align-middle py-3 text-right">
+                                                                    <TableCell className="pr-2 align-middle py-2.5 text-right">
                                                                         <Button
                                                                             variant="ghost"
                                                                             size="sm"
-                                                                            className="h-8 w-8 p-0 text-red-300 hover:bg-red-500/10 hover:text-red-200"
+                                                                            className="h-7 w-7 p-0 text-red-400/70 hover:bg-red-500/10 hover:text-red-300"
                                                                             onClick={() => handleDeleteService(item.id)}
                                                                         >
-                                                                            <Trash2 className="h-4 w-4" />
+                                                                            <Trash2 className="h-3.5 w-3.5" />
                                                                         </Button>
                                                                     </TableCell>
                                                                 )}
