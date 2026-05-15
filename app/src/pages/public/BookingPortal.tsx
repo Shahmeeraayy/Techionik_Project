@@ -26,6 +26,10 @@ type BookingFormState = {
   customerName: string;
   phoneNumber: string;
   emailAddress: string;
+  serviceLocationAddress: string;
+  serviceLocationCity: string;
+  serviceLocationState: string;
+  serviceLocationZipCode: string;
   serviceIds: string[];
   assetDetails: string;
   preferredDate: string;
@@ -37,6 +41,10 @@ const initialFormState: BookingFormState = {
   customerName: '',
   phoneNumber: '',
   emailAddress: '',
+  serviceLocationAddress: '',
+  serviceLocationCity: '',
+  serviceLocationState: '',
+  serviceLocationZipCode: '',
   serviceIds: [],
   assetDetails: '',
   preferredDate: '',
@@ -121,6 +129,7 @@ export default function BookingPortalPage() {
     if (!form.customerName.trim()) return 'Customer full name is required.';
     if (form.phoneNumber.replace(/\D/g, '').length < 10) return 'Enter a valid phone number.';
     if (!/\S+@\S+\.\S+/.test(form.emailAddress.trim())) return 'Enter a valid email address.';
+    if (!form.serviceLocationAddress.trim()) return 'Service location is required.';
     if (form.serviceIds.length === 0) return 'Select at least one service type.';
     if (!form.assetDetails.trim()) return `${detailsLabel} is required.`;
     return null;
@@ -138,6 +147,10 @@ export default function BookingPortalPage() {
         customer_full_name: form.customerName.trim(),
         phone_number: form.phoneNumber.trim(),
         email_address: form.emailAddress.trim().toLowerCase(),
+        service_location_address: form.serviceLocationAddress.trim(),
+        service_location_city: form.serviceLocationCity.trim() || null,
+        service_location_state: form.serviceLocationState.trim() || null,
+        service_location_zip_code: form.serviceLocationZipCode.trim() || null,
         service_catalog_ids: form.serviceIds,
         asset_details: form.assetDetails.trim(),
         preferred_date: form.preferredDate || null,
@@ -389,6 +402,46 @@ export default function BookingPortalPage() {
                         )}
                       </div>
                     ) : null}
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-sm text-slate-300">Service location</Label>
+                  <Input
+                    value={form.serviceLocationAddress}
+                    onChange={(e) => setForm((p) => ({ ...p, serviceLocationAddress: e.target.value }))}
+                    placeholder="Street address, dealership, or site location"
+                    className={inputCls}
+                  />
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-[1fr_0.65fr_0.65fr]">
+                  <div className="space-y-1.5">
+                    <Label className="text-sm text-slate-300">City</Label>
+                    <Input
+                      value={form.serviceLocationCity}
+                      onChange={(e) => setForm((p) => ({ ...p, serviceLocationCity: e.target.value }))}
+                      placeholder="City"
+                      className={inputCls}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-sm text-slate-300">State / Province</Label>
+                    <Input
+                      value={form.serviceLocationState}
+                      onChange={(e) => setForm((p) => ({ ...p, serviceLocationState: e.target.value }))}
+                      placeholder="State"
+                      className={inputCls}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-sm text-slate-300">ZIP / Postal</Label>
+                    <Input
+                      value={form.serviceLocationZipCode}
+                      onChange={(e) => setForm((p) => ({ ...p, serviceLocationZipCode: e.target.value }))}
+                      placeholder="ZIP"
+                      className={inputCls}
+                    />
                   </div>
                 </div>
 

@@ -64,13 +64,17 @@ class BookingPortalSubmissionRequest(BaseModel):
     customer_full_name: str = Field(..., min_length=1, max_length=255)
     phone_number: str = Field(..., min_length=7, max_length=64)
     email_address: str = Field(..., min_length=3, max_length=255)
+    service_location_address: str = Field(..., min_length=1, max_length=1000)
+    service_location_city: Optional[str] = Field(default=None, max_length=128)
+    service_location_state: Optional[str] = Field(default=None, max_length=128)
+    service_location_zip_code: Optional[str] = Field(default=None, max_length=32)
     service_catalog_ids: list[UUID] = Field(..., min_length=1)
     asset_details: str = Field(..., min_length=1, max_length=5000)
     preferred_date: Optional[date] = None
     preferred_time_of_day: Literal["morning", "afternoon", "evening", "no_preference"] = "no_preference"
     additional_notes: Optional[str] = Field(default=None, max_length=5000)
 
-    @field_validator("customer_full_name", "asset_details")
+    @field_validator("customer_full_name", "asset_details", "service_location_address")
     @classmethod
     def _normalize_required_text(cls, value: str) -> str:
         normalized = value.strip()
@@ -96,6 +100,14 @@ class BookingPortalSubmissionRequest(BaseModel):
     @field_validator("additional_notes")
     @classmethod
     def _normalize_optional_notes(cls, value: Optional[str]) -> Optional[str]:
+        if value is None:
+            return None
+        normalized = value.strip()
+        return normalized or None
+
+    @field_validator("service_location_city", "service_location_state", "service_location_zip_code")
+    @classmethod
+    def _normalize_optional_location_text(cls, value: Optional[str]) -> Optional[str]:
         if value is None:
             return None
         normalized = value.strip()
@@ -143,6 +155,7 @@ class BookingPortalStatusLookupRequest(BaseModel):
 class BookingPortalStatusLookupResponse(BaseModel):
     reference_number: str
     status: Literal["Received", "Under Review", "Job Scheduled", "In Progress", "Completed"]
+    assigned_technician_id: Optional[UUID] = None
     assigned_technician_first_name: Optional[str] = None
     estimated_completion_date: Optional[date] = None
 
@@ -153,6 +166,10 @@ class BookingRequestAdminResponse(BaseModel):
     customer_full_name: str
     phone_number: str
     email_address: str
+    service_location_address: Optional[str] = None
+    service_location_city: Optional[str] = None
+    service_location_state: Optional[str] = None
+    service_location_zip_code: Optional[str] = None
     service_catalog_id: Optional[UUID] = None
     service_name: str
     service_catalog_ids: list[UUID] = Field(default_factory=list)
@@ -162,6 +179,7 @@ class BookingRequestAdminResponse(BaseModel):
     preferred_time_of_day: Literal["morning", "afternoon", "evening", "no_preference"]
     additional_notes: Optional[str] = None
     status: Literal["RECEIVED", "UNDER_REVIEW", "JOB_SCHEDULED", "IN_PROGRESS", "COMPLETED"]
+    assigned_technician_id: Optional[UUID] = None
     assigned_technician_first_name: Optional[str] = None
     estimated_completion_date: Optional[date] = None
     source: str
@@ -174,6 +192,7 @@ class BookingRequestAdminResponse(BaseModel):
 
 class BookingRequestAdminUpdatePayload(BaseModel):
     status: Optional[Literal["RECEIVED", "UNDER_REVIEW", "JOB_SCHEDULED", "IN_PROGRESS", "COMPLETED"]] = None
+    assigned_technician_id: Optional[UUID] = None
     assigned_technician_first_name: Optional[str] = Field(default=None, max_length=64)
     estimated_completion_date: Optional[date] = None
 

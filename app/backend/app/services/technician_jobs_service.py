@@ -268,7 +268,7 @@ class TechnicianJobsService:
         event_type: str,
         event_payload: dict[str, Any],
     ) -> Job:
-        with self.db.begin():
+        try:
             row = self._lock_assigned_job(job_id=job_id)
             if row.assigned_tech_id != technician_id:
                 raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Job is not assigned to current technician")
@@ -296,9 +296,12 @@ class TechnicianJobsService:
                     },
                 )
             )
-
-        self.db.refresh(row)
-        return row
+            self.db.commit()
+            self.db.refresh(row)
+            return row
+        except Exception:
+            self.db.rollback()
+            raise
 
     def _lock_assigned_job(self, *, job_id: UUID) -> Job:
         row = self.db.query(Job).filter(Job.id == job_id).with_for_update().first()

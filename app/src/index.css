@@ -2090,6 +2090,16 @@
   color: #8ea3c5 !important;
 }
 
+.admin-shell .intake-queue-grid-header {
+  background: linear-gradient(180deg, rgb(0, 16, 37), rgba(1, 12, 29, 0.92)) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  box-shadow: none !important;
+}
+
+.admin-shell .intake-queue-grid-header > div {
+  color: #8ea3c5 !important;
+}
+
 /* Print Styles */
 @media print {
   .no-print {

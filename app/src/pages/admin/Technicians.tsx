@@ -349,16 +349,16 @@ const mapBackendTechnician = (item: BackendTechnicianListItem, index: number): T
 
 // --- Components ---
 
-function StatusBadge({ status }: { status: OperationalStatus }) {
+function StatusBadge({ status, className }: { status: OperationalStatus; className?: string }) {
     const label = getOperationalStatusLabel(status);
-    const className = {
+    const statusClass = {
         available: 'border-emerald-300/45 bg-emerald-50 text-emerald-700 dark:border-emerald-300/20 dark:bg-emerald-300/12 dark:text-emerald-100',
         in_progress: 'border-amber-300/55 bg-amber-50 text-amber-700 dark:border-amber-300/20 dark:bg-amber-300/12 dark:text-amber-100',
         offline: 'border-slate-500/30 bg-slate-500/10 text-slate-300',
         out_of_office: 'border-violet-300/45 bg-violet-50 text-violet-700 dark:border-violet-300/20 dark:bg-violet-300/12 dark:text-violet-100',
     }[status];
 
-    return <Badge className={cn('shadow-none hover:bg-inherit', className)}>{label}</Badge>;
+    return <Badge className={cn('shadow-none hover:bg-inherit', statusClass, className)}>{label}</Badge>;
 }
 
 function ProfileStat({

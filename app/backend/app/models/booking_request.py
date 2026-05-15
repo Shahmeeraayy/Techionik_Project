@@ -15,6 +15,10 @@ class BookingRequest(TenantScopedMixin, Base):
     customer_full_name = Column(String(255), nullable=False)
     phone_number = Column(String(64), nullable=False)
     email_address = Column(String(255), nullable=False)
+    service_location_address = Column(Text, nullable=True)
+    service_location_city = Column(String(128), nullable=True)
+    service_location_state = Column(String(128), nullable=True)
+    service_location_zip_code = Column(String(32), nullable=True)
     service_catalog_id = Column(Uuid(as_uuid=True), ForeignKey("service_catalog.id"), nullable=True)
     service_name = Column(String(255), nullable=False)
     service_catalog_ids = Column(JSON, nullable=True)
@@ -24,6 +28,7 @@ class BookingRequest(TenantScopedMixin, Base):
     preferred_time_of_day = Column(String(32), nullable=False, server_default=text("'no_preference'"))
     additional_notes = Column(Text, nullable=True)
     status = Column(String(32), nullable=False, server_default=text("'RECEIVED'"))
+    assigned_technician_id = Column(Uuid(as_uuid=True), ForeignKey("technicians.id"), nullable=True)
     assigned_technician_first_name = Column(String(64), nullable=True)
     estimated_completion_date = Column(Date, nullable=True)
     source = Column(String(64), nullable=False, server_default=text("'Booking Portal'"))
@@ -31,6 +36,7 @@ class BookingRequest(TenantScopedMixin, Base):
     updated_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now())
 
     service_catalog = relationship("ServiceCatalog")
+    assigned_technician = relationship("Technician")
 
     __table_args__ = (
         CheckConstraint(

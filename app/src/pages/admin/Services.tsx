@@ -766,7 +766,7 @@ export default function ServicesPage() {
                         </div>
 
                         <div className="mt-5 flex flex-col gap-4 lg:flex-row lg:items-center">
-                            <div className="relative flex-1 min-w-[300px]">
+                            <div className="relative min-w-0 flex-1">
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                                 <Input
                                     placeholder="Search by service name, category, code, or SKU..."
@@ -775,9 +775,9 @@ export default function ServicesPage() {
                                     onChange={e => setSearchQuery(e.target.value)}
                                 />
                             </div>
-                            <div className="flex items-center gap-2 w-full lg:w-auto overflow-x-auto">
+                            <div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-2 lg:flex lg:w-auto lg:items-center">
                                 <Select value={filterCategory} onValueChange={(value) => setFilterCategory(value as BusinessCategoryFilter)}>
-                                    <SelectTrigger className="h-11 w-[180px] border-white/10 bg-white/[0.04] text-slate-100">
+                                    <SelectTrigger className="h-11 w-full border-white/10 bg-white/[0.04] text-slate-100 lg:w-[180px]">
                                         <SelectValue placeholder="Business Category" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -793,7 +793,7 @@ export default function ServicesPage() {
                                 </Select>
 
                                 <Select value={filterStatus} onValueChange={(value) => setFilterStatus(value as ServiceStatusFilter)}>
-                                    <SelectTrigger className="h-11 w-[150px] border-white/10 bg-white/[0.04] text-slate-100">
+                                    <SelectTrigger className="h-11 w-full border-white/10 bg-white/[0.04] text-slate-100 lg:w-[150px]">
                                         <SelectValue placeholder="Status" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -805,11 +805,11 @@ export default function ServicesPage() {
 
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
-                                        <Button variant="outline" className="h-11 w-[180px] justify-start border-white/10 bg-white/[0.04] text-slate-100 hover:bg-white/[0.08]">
+                                        <Button variant="outline" className="h-11 w-full justify-start border-white/10 bg-white/[0.04] text-slate-100 hover:bg-white/[0.08] lg:w-[180px]">
                                             Prices
                                         </Button>
                                     </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="start" className="w-[260px] border-white/10 bg-[#091827] p-3 text-slate-100">
+                                    <DropdownMenuContent align="start" className="w-[var(--radix-dropdown-menu-trigger-width)] min-w-0 border-white/10 bg-[#091827] p-3 text-slate-100">
                                         <div className="space-y-2">
                                             <Label className="text-xs text-slate-400">Min Price</Label>
                                             <Input
@@ -817,6 +817,8 @@ export default function ServicesPage() {
                                                 min="0"
                                                 step="0.01"
                                                 placeholder="Min Price"
+                                                data-admin-dark-input="true"
+                                                className="[color-scheme:dark]"
                                                 value={minPrice}
                                                 onChange={(e) => setMinPrice(e.target.value)}
                                             />
@@ -828,6 +830,8 @@ export default function ServicesPage() {
                                                 min="0"
                                                 step="0.01"
                                                 placeholder="Max Price"
+                                                data-admin-dark-input="true"
+                                                className="[color-scheme:dark]"
                                                 value={maxPrice}
                                                 onChange={(e) => setMaxPrice(e.target.value)}
                                             />

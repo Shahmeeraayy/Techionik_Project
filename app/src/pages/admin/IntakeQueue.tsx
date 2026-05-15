@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Calendar, ClipboardList, Mail, Pencil, Phone, RefreshCw, Search, Wrench } from 'lucide-react';
+import { Calendar, ClipboardList, ListChecks, Mail, MapPin, Pencil, Phone, RefreshCw, Search, Wrench } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -9,9 +9,11 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   fetchAdminBookingRequests,
+  fetchAdminTechnicians,
   getStoredAdminToken,
   updateAdminBookingRequest,
   type BackendBookingRequest,
+  type BackendTechnicianListItem,
 } from '@/lib/backend-api';
 import { cn } from '@/lib/utils';
 
@@ -49,14 +51,28 @@ const GRID_COLS: React.CSSProperties = {
   gridTemplateColumns: 'minmax(0,13%) minmax(0,21%) minmax(0,1fr) minmax(0,13%) minmax(0,18%) minmax(0,7%)',
 };
 
+const getBookingServices = (row: BackendBookingRequest) => {
+  const names = row.service_names && row.service_names.length > 0 ? row.service_names : [row.service_name];
+  return names.map((name) => name.trim()).filter(Boolean);
+};
+
+const formatBookingLocation = (row: BackendBookingRequest) => {
+  const cityLine = [row.service_location_city, row.service_location_state].filter(Boolean).join(', ');
+  return [row.service_location_address, [cityLine, row.service_location_zip_code].filter(Boolean).join(' ')]
+    .filter(Boolean)
+    .join(', ');
+};
+
 export default function IntakeQueuePage() {
   const [rows, setRows] = useState<BackendBookingRequest[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [editingRow, setEditingRow] = useState<BackendBookingRequest | null>(null);
+  const [serviceDetailRow, setServiceDetailRow] = useState<BackendBookingRequest | null>(null);
   const [editStatus, setEditStatus] = useState<BookingStatus>('RECEIVED');
-  const [editTechnician, setEditTechnician] = useState('');
+  const [editTechnicianId, setEditTechnicianId] = useState('unassigned');
   const [editEta, setEditEta] = useState('');
+  const [technicians, setTechnicians] = useState<BackendTechnicianListItem[]>([]);
   const [isSaving, setIsSaving] = useState(false);
 
   const refreshRows = useCallback(async () => {
@@ -79,6 +95,18 @@ export default function IntakeQueuePage() {
     void refreshRows();
   }, [refreshRows]);
 
+  useEffect(() => {
+    const token = getStoredAdminToken();
+    if (!token) {
+      setTechnicians([]);
+      return;
+    }
+
+    void fetchAdminTechnicians(token)
+      .then((rows) => setTechnicians(rows.filter((row) => row.status === 'active')))
+      .catch(() => setTechnicians([]));
+  }, []);
+
   const filteredRows = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
     if (!query) {
@@ -92,11 +120,12 @@ export default function IntakeQueuePage() {
       || (row.service_names ?? []).some((serviceName) => serviceName.toLowerCase().includes(query))
     );
   }, [rows, searchQuery]);
+  const serviceDetailServices = serviceDetailRow ? getBookingServices(serviceDetailRow) : [];
 
   const openEditDialog = (row: BackendBookingRequest) => {
     setEditingRow(row);
     setEditStatus(row.status);
-    setEditTechnician(row.assigned_technician_first_name ?? '');
+    setEditTechnicianId(row.assigned_technician_id ?? 'unassigned');
     setEditEta(row.estimated_completion_date ?? '');
   };
 
@@ -106,18 +135,26 @@ export default function IntakeQueuePage() {
     }
     const token = getStoredAdminToken();
     if (!token) {
+      window.alert('Please sign in again before updating booking requests.');
       return;
     }
 
     setIsSaving(true);
     try {
-      await updateAdminBookingRequest(token, editingRow.id, {
+      const updatedRow = await updateAdminBookingRequest(token, editingRow.id, {
         status: editStatus,
-        assigned_technician_first_name: editTechnician.trim() || null,
+        assigned_technician_id: editTechnicianId === 'unassigned' ? null : editTechnicianId,
         estimated_completion_date: editEta || null,
       });
+      setRows((currentRows) => currentRows.map((row) => (row.id === updatedRow.id ? updatedRow : row)));
       setEditingRow(null);
-      await refreshRows();
+      try {
+        await refreshRows();
+      } catch (error) {
+        console.warn('Booking request saved, but the queue refresh failed.', error);
+      }
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : 'Unable to save booking request updates.');
     } finally {
       setIsSaving(false);
     }
@@ -184,7 +221,7 @@ export default function IntakeQueuePage() {
           <div className="hidden md:block">
             {/* Header */}
             <div
-              className="grid border-b border-white/10 bg-[linear-gradient(180deg,rgba(11,25,42,0.98),rgba(10,20,35,0.92))]"
+              className="intake-queue-grid-header grid border-b border-white/10 bg-[linear-gradient(180deg,rgba(11,25,42,0.98),rgba(10,20,35,0.92))]"
               style={GRID_COLS}
             >
               <div className="py-3 pl-6 text-[11px] uppercase tracking-[0.24em] text-slate-400">Reference</div>
@@ -200,7 +237,10 @@ export default function IntakeQueuePage() {
                 <div className="flex h-28 items-center justify-center text-sm text-slate-400">
                   No booking requests found.
                 </div>
-              ) : filteredRows.map((row) => (
+              ) : filteredRows.map((row) => {
+                const services = getBookingServices(row);
+                const serviceSummary = services.length > 1 ? `${services[0]} + ${services.length - 1} more` : services[0] || 'No service selected';
+                return (
                 <div key={row.id} className="grid items-start py-4 hover:bg-white/[0.045]" style={GRID_COLS}>
                   <div className="overflow-hidden pl-6">
                     <p className="truncate font-semibold text-white">{row.reference_number}</p>
@@ -216,14 +256,32 @@ export default function IntakeQueuePage() {
                       <Phone className="h-3 w-3 shrink-0" />
                       <span className="truncate">{row.phone_number}</span>
                     </div>
+                    {formatBookingLocation(row) ? (
+                      <div className="flex items-center gap-1.5 overflow-hidden text-xs text-slate-400">
+                        <MapPin className="h-3 w-3 shrink-0" />
+                        <span className="truncate">{formatBookingLocation(row)}</span>
+                      </div>
+                    ) : null}
                   </div>
                   <div className="overflow-hidden pr-3">
-                    <div className="flex items-start gap-1.5">
-                      <Wrench className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-500" />
-                      <span className="break-words text-sm text-slate-200">
-                        {(row.service_names && row.service_names.length > 0 ? row.service_names : [row.service_name]).join(', ')}
+                    <button
+                      type="button"
+                      onClick={() => setServiceDetailRow(row)}
+                      className="group flex max-w-full items-start gap-1.5 text-left"
+                    >
+                      <Wrench className="mt-0.5 h-3.5 w-3.5 shrink-0 text-cyan-200/70 transition-colors group-hover:text-cyan-100" />
+                      <span className="line-clamp-2 text-sm font-medium text-slate-200 transition-colors group-hover:text-white">
+                        {serviceSummary}
                       </span>
-                    </div>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setServiceDetailRow(row)}
+                      className="mt-1 inline-flex items-center gap-1 rounded-full border border-cyan-300/15 bg-cyan-300/10 px-2 py-0.5 text-[11px] font-medium text-cyan-100 hover:bg-cyan-300/15"
+                    >
+                      <ListChecks className="h-3 w-3" />
+                      {services.length} {services.length === 1 ? 'service' : 'services'}
+                    </button>
                     <p className="mt-0.5 line-clamp-2 text-xs text-slate-400">{row.asset_details}</p>
                   </div>
                   <div className="overflow-hidden pt-0.5">
@@ -248,7 +306,8 @@ export default function IntakeQueuePage() {
                     </Button>
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
@@ -258,7 +317,10 @@ export default function IntakeQueuePage() {
               <div className="flex h-28 items-center justify-center text-sm text-slate-400">
                 No booking requests found.
               </div>
-            ) : filteredRows.map((row) => (
+            ) : filteredRows.map((row) => {
+              const services = getBookingServices(row);
+              const serviceSummary = services.length > 1 ? `${services[0]} + ${services.length - 1} more` : services[0] || 'No service selected';
+              return (
               <div key={row.id} className="flex flex-col gap-3 p-4 hover:bg-white/[0.03]">
                 {/* Top row: ref + badge + edit */}
                 <div className="flex items-start justify-between gap-3">
@@ -292,14 +354,34 @@ export default function IntakeQueuePage() {
                     <Phone className="h-3 w-3 shrink-0" />
                     <span>{row.phone_number}</span>
                   </div>
+                  {formatBookingLocation(row) ? (
+                    <div className="flex items-center gap-1.5 text-xs text-slate-400">
+                      <MapPin className="h-3 w-3 shrink-0" />
+                      <span>{formatBookingLocation(row)}</span>
+                    </div>
+                  ) : null}
                 </div>
 
                 {/* Service */}
-                <div className="flex items-start gap-1.5">
-                  <Wrench className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-500" />
-                  <span className="break-words text-sm text-slate-300">
-                    {(row.service_names && row.service_names.length > 0 ? row.service_names : [row.service_name]).join(', ')}
-                  </span>
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => setServiceDetailRow(row)}
+                    className="flex w-full items-start gap-1.5 text-left"
+                  >
+                    <Wrench className="mt-0.5 h-3.5 w-3.5 shrink-0 text-cyan-200/70" />
+                    <span className="line-clamp-2 text-sm font-medium text-slate-200">
+                      {serviceSummary}
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setServiceDetailRow(row)}
+                    className="mt-2 inline-flex items-center gap-1 rounded-full border border-cyan-300/15 bg-cyan-300/10 px-2 py-0.5 text-[11px] font-medium text-cyan-100"
+                  >
+                    <ListChecks className="h-3 w-3" />
+                    View {services.length} {services.length === 1 ? 'service' : 'services'}
+                  </button>
                 </div>
 
                 {/* Date */}
@@ -308,11 +390,50 @@ export default function IntakeQueuePage() {
                   <span>{formatDateTime(row.created_at)}</span>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
 
         </div>
       </Card>
+
+      {/* Service details dialog */}
+      <Dialog open={Boolean(serviceDetailRow)} onOpenChange={(open) => { if (!open) setServiceDetailRow(null); }}>
+        <DialogContent className="border-white/10 bg-[linear-gradient(180deg,rgba(9,24,39,0.98),rgba(6,17,29,0.98))] text-slate-100 sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-white">Requested services</DialogTitle>
+            <DialogDescription className="text-slate-300">
+              {serviceDetailRow?.reference_number} · {serviceDetailRow?.customer_full_name}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="max-h-[56vh] space-y-3 overflow-y-auto pr-1">
+            {serviceDetailServices.map((serviceName, index) => (
+              <div
+                key={`${serviceName}-${index}`}
+                className="flex gap-3 rounded-2xl border border-white/10 bg-white/[0.035] p-3"
+              >
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-cyan-300/20 bg-cyan-300/10 text-xs font-semibold text-cyan-100">
+                  {index + 1}
+                </div>
+                <div className="min-w-0">
+                  <p className="break-words text-sm font-semibold leading-6 text-white">{serviceName}</p>
+                </div>
+              </div>
+            ))}
+            {serviceDetailServices.length === 0 ? (
+              <div className="rounded-2xl border border-white/10 bg-white/[0.035] p-4 text-sm text-slate-400">
+                No services were attached to this request.
+              </div>
+            ) : null}
+          </div>
+          {serviceDetailRow?.asset_details ? (
+            <div className="rounded-2xl border border-white/10 bg-black/20 p-3">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">Customer notes</p>
+              <p className="mt-2 whitespace-pre-wrap break-words text-sm text-slate-300">{serviceDetailRow.asset_details}</p>
+            </div>
+          ) : null}
+        </DialogContent>
+      </Dialog>
 
       {/* Edit dialog */}
       <Dialog open={Boolean(editingRow)} onOpenChange={(open) => { if (!open) setEditingRow(null); }}>
@@ -338,14 +459,22 @@ export default function IntakeQueuePage() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="booking-tech" className="text-slate-200">Assigned technician first name</Label>
-              <Input
-                id="booking-tech"
-                value={editTechnician}
-                onChange={(event) => setEditTechnician(event.target.value)}
-                className="h-12 rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(10,18,32,0.96),rgba(8,14,26,0.96))] text-white placeholder:text-slate-500"
-                placeholder="Optional"
-              />
+              <Label className="text-slate-200">Assign technician</Label>
+              <Select value={editTechnicianId} onValueChange={setEditTechnicianId}>
+                <SelectTrigger className="h-12 rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(10,18,32,0.96),rgba(8,14,26,0.96))] text-white focus:border-[#7db0ff]/45 focus:ring-[#7db0ff]/20">
+                  <SelectValue placeholder="Select technician" />
+                </SelectTrigger>
+                <SelectContent className="admin-dark-scrollbar max-h-72 rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] text-slate-100 shadow-[0_24px_60px_rgba(0,0,0,0.34)]">
+                  <SelectItem className="rounded-xl text-slate-200 focus:bg-white/[0.08] focus:text-white" value="unassigned">
+                    Unassigned
+                  </SelectItem>
+                  {technicians.map((technician) => (
+                    <SelectItem className="rounded-xl text-slate-200 focus:bg-white/[0.08] focus:text-white" key={technician.id} value={technician.id}>
+                      {technician.name || technician.full_name || technician.email}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-2">
               <Label htmlFor="booking-eta" className="text-slate-200">Estimated completion date</Label>

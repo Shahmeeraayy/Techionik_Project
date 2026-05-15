@@ -71,6 +71,16 @@ def ensure_runtime_schema() -> None:
             conn.exec_driver_sql("ALTER TABLE booking_requests ADD COLUMN service_catalog_ids JSON")
         if booking_request_columns and "service_names" not in booking_request_columns:
             conn.exec_driver_sql("ALTER TABLE booking_requests ADD COLUMN service_names JSON")
+        if booking_request_columns and "assigned_technician_id" not in booking_request_columns:
+            conn.exec_driver_sql("ALTER TABLE booking_requests ADD COLUMN assigned_technician_id UUID REFERENCES technicians(id)")
+        if booking_request_columns and "service_location_address" not in booking_request_columns:
+            conn.exec_driver_sql("ALTER TABLE booking_requests ADD COLUMN service_location_address TEXT")
+        if booking_request_columns and "service_location_city" not in booking_request_columns:
+            conn.exec_driver_sql("ALTER TABLE booking_requests ADD COLUMN service_location_city VARCHAR(128)")
+        if booking_request_columns and "service_location_state" not in booking_request_columns:
+            conn.exec_driver_sql("ALTER TABLE booking_requests ADD COLUMN service_location_state VARCHAR(128)")
+        if booking_request_columns and "service_location_zip_code" not in booking_request_columns:
+            conn.exec_driver_sql("ALTER TABLE booking_requests ADD COLUMN service_location_zip_code VARCHAR(32)")
 
     with deps.SessionLocal() as session:
         service = JobServicesService(session)

@@ -223,6 +223,7 @@ export type BackendBookingPortalSubmissionResponse = {
 export type BackendBookingPortalStatusLookupResponse = {
   reference_number: string;
   status: 'Received' | 'Under Review' | 'Job Scheduled' | 'In Progress' | 'Completed';
+  assigned_technician_id?: string | null;
   assigned_technician_first_name?: string | null;
   estimated_completion_date?: string | null;
 };
@@ -233,6 +234,10 @@ export type BackendBookingRequest = {
   customer_full_name: string;
   phone_number: string;
   email_address: string;
+  service_location_address?: string | null;
+  service_location_city?: string | null;
+  service_location_state?: string | null;
+  service_location_zip_code?: string | null;
   service_catalog_id?: string | null;
   service_name: string;
   service_catalog_ids?: string[];
@@ -242,6 +247,7 @@ export type BackendBookingRequest = {
   preferred_time_of_day: 'morning' | 'afternoon' | 'evening' | 'no_preference';
   additional_notes?: string | null;
   status: 'RECEIVED' | 'UNDER_REVIEW' | 'JOB_SCHEDULED' | 'IN_PROGRESS' | 'COMPLETED';
+  assigned_technician_id?: string | null;
   assigned_technician_first_name?: string | null;
   estimated_completion_date?: string | null;
   source: string;
@@ -1475,6 +1481,10 @@ export async function submitBookingPortalRequest(payload: {
   customer_full_name: string;
   phone_number: string;
   email_address: string;
+  service_location_address: string;
+  service_location_city?: string | null;
+  service_location_state?: string | null;
+  service_location_zip_code?: string | null;
   service_catalog_ids: string[];
   asset_details: string;
   preferred_date?: string | null;
@@ -1529,6 +1539,7 @@ export async function updateAdminBookingRequest(
   bookingId: string,
   payload: {
     status?: 'RECEIVED' | 'UNDER_REVIEW' | 'JOB_SCHEDULED' | 'IN_PROGRESS' | 'COMPLETED';
+    assigned_technician_id?: string | null;
     assigned_technician_first_name?: string | null;
     estimated_completion_date?: string | null;
   },

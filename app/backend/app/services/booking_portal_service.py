@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 from urllib.parse import quote
 
 from ..core.config import COMPANY_EMAIL, COMPANY_LOGO_URL, COMPANY_NAME, COMPANY_PHONE, COMPANY_WEBSITE, CUSTOMER_PORTAL_BASE_URL, DEFAULT_TENANT_ID
+from ..core.job_status import DispatchJobStatus, db_status_from_dispatch_status
 from .email_service import send_email
 from ..core.security import AuthenticatedUser
 from ..models.admin_credential_settings import AdminCredentialSettings
@@ -19,8 +20,10 @@ from ..models.admin_user import AdminUser
 from ..models.booking_portal_settings import BookingPortalSettings
 from ..models.booking_request import BookingRequest
 from ..models.email_outbox import EmailOutbox
+from ..models.job import Job
 from ..models.invoice_branding_settings import InvoiceBrandingSettings
 from ..models.service_catalog import ServiceCatalog
+from ..models.technician import Technician
 from ..schemas.booking_portal import (
     BookingPortalPublicConfigResponse,
     BookingPortalServiceOption,
@@ -33,6 +36,7 @@ from ..schemas.booking_portal import (
     BookingRequestAdminResponse,
     BookingRequestAdminUpdatePayload,
 )
+from .job_services_service import JobServicesService
 
 
 BOOKING_PORTAL_SETTINGS_KEY = "default"
@@ -69,6 +73,137 @@ class BookingPortalService:
         if row is not None and row.tenant_id is not None:
             return row.tenant_id
         return UUID(DEFAULT_TENANT_ID)
+
+    def _set_session_tenant(self, tenant_id: UUID | None) -> None:
+        self.db.info["tenant_id"] = tenant_id
+        if tenant_id is not None:
+            self.db.execute(
+                text("SELECT set_config('app.current_tenant_id', :tenant_id, true)"),
+                {"tenant_id": str(tenant_id)},
+            )
+
+    def _booking_status_to_job_status(self, booking_status: str) -> str:
+        if booking_status == "IN_PROGRESS":
+            return db_status_from_dispatch_status(DispatchJobStatus.IN_PROGRESS)
+        if booking_status == "COMPLETED":
+            return db_status_from_dispatch_status(DispatchJobStatus.COMPLETED)
+        if booking_status == "JOB_SCHEDULED":
+            return db_status_from_dispatch_status(DispatchJobStatus.SCHEDULED)
+        return db_status_from_dispatch_status(DispatchJobStatus.PENDING)
+
+    def _render_status_update_email(
+        self,
+        *,
+        row: BookingRequest,
+        company_name: str,
+    ) -> tuple[str, str]:
+        public_status = self.STATUS_PUBLIC_LABELS.get(row.status, row.status.replace("_", " ").title())
+        subject = f"{company_name} booking update {row.reference_number}"
+        lines = [
+            f"Hello {row.customer_full_name},",
+            "",
+            f"Your booking request {row.reference_number} has been updated.",
+            "",
+            f"Status: {public_status}",
+        ]
+        if row.assigned_technician_first_name:
+            lines.append(f"Assigned technician: {row.assigned_technician_first_name}")
+        if row.estimated_completion_date:
+            lines.append(f"Estimated completion date: {row.estimated_completion_date}")
+        location = self._format_service_location(row)
+        if location:
+            lines.extend(["", f"Service location:\n{location}"])
+        lines.extend(
+            [
+                "",
+                f"Track your request: {self._booking_status_url(row.reference_number, row.email_address)}",
+                "",
+                f"Thank you,",
+                company_name,
+            ]
+        )
+        return subject, "\n".join(lines)
+
+    @staticmethod
+    def _format_service_location(row: BookingRequest) -> str:
+        city_line = ", ".join(
+            item for item in [row.service_location_city, row.service_location_state] if item
+        )
+        tail = " ".join(item for item in [city_line, row.service_location_zip_code] if item)
+        return "\n".join(item for item in [row.service_location_address, tail] if item)
+
+    def _find_job_for_booking(self, row: BookingRequest) -> Job | None:
+        candidates = (
+            self.db.query(Job)
+            .execution_options(skip_tenant_scope=True)
+            .filter(Job.source_system == "booking_portal")
+            .all()
+        )
+        for job in candidates:
+            metadata = job.source_metadata if isinstance(job.source_metadata, dict) else {}
+            if metadata.get("booking_request_id") == str(row.id):
+                return job
+        return (
+            self.db.query(Job)
+            .execution_options(skip_tenant_scope=True)
+            .filter(Job.job_code == row.reference_number)
+            .first()
+        )
+
+    def _sync_booking_job(self, row: BookingRequest, technician: Technician | None) -> None:
+        job_row = self._find_job_for_booking(row)
+        if technician is None:
+            if job_row is not None:
+                self._set_session_tenant(job_row.tenant_id)
+                job_row.assigned_tech_id = None
+                job_row.pre_assigned_technician_id = None
+                job_row.pre_assignment_reason = None
+                if row.status != "COMPLETED":
+                    job_row.status = db_status_from_dispatch_status(DispatchJobStatus.PENDING)
+            return
+
+        metadata = dict(job_row.source_metadata) if job_row is not None and isinstance(job_row.source_metadata, dict) else {}
+        metadata.update(
+            {
+                "source": "booking_portal",
+                "booking_request_id": str(row.id),
+                "booking_reference_number": row.reference_number,
+                "customer_email": row.email_address,
+                "customer_phone": row.phone_number,
+            }
+        )
+
+        service_names = row.service_names or ([row.service_name] if row.service_name else [])
+        if job_row is None:
+            job_row = Job(
+                job_code=row.reference_number,
+                source_system="booking_portal",
+                source_metadata=metadata,
+            )
+            self.db.add(job_row)
+
+        self._set_session_tenant(technician.tenant_id)
+        job_row.tenant_id = technician.tenant_id
+        job_row.status = self._booking_status_to_job_status(row.status)
+        job_row.assigned_tech_id = technician.id
+        job_row.pre_assigned_technician_id = technician.id
+        job_row.pre_assignment_reason = "booking_request_assignment"
+        job_row.customer_name = row.customer_full_name
+        job_row.customer_address = row.service_location_address
+        job_row.customer_city = row.service_location_city
+        job_row.customer_state = row.service_location_state
+        job_row.customer_zip_code = row.service_location_zip_code
+        job_row.service_type = service_names[0] if service_names else row.service_name
+        job_row.vehicle = row.asset_details
+        job_row.location = self._format_service_location(row) or row.service_location_address
+        job_row.requested_service_date = row.preferred_date or row.estimated_completion_date
+        job_row.source_system = "booking_portal"
+        job_row.source_metadata = metadata
+        JobServicesService(self.db).replace_services(
+            job=job_row,
+            service_names=service_names or ["Booking request"],
+            source="admin",
+        )
 
     def _get_admin_contact(self) -> tuple[str, str, str, Optional[str]]:
         branding = (
@@ -111,6 +246,7 @@ class BookingPortalService:
             confirmation_email_body=(
                 "Hello ${customer_name},\n\n"
                 "Thanks for contacting ${company_name}. We received your service request ${reference_number}.\n\n"
+                "Service location:\n${service_location}\n\n"
                 "${estimated_response_time_message}\n\n"
                 "Booking form: ${booking_portal_url}\n"
                 "Track your request: ${booking_status_url}\n\n"
@@ -240,6 +376,7 @@ class BookingPortalService:
         admin_contact_email: str,
         booking_portal_url: str,
         booking_status_url: str,
+        service_location: str,
     ) -> str:
         return Template(template_body).safe_substitute(
             customer_name=customer_name,
@@ -249,6 +386,7 @@ class BookingPortalService:
             admin_contact_email=admin_contact_email,
             booking_portal_url=booking_portal_url,
             booking_status_url=booking_status_url,
+            service_location=service_location,
         )
 
     def _normalize_customer_portal_base_url(self) -> str:
@@ -329,13 +467,17 @@ class BookingPortalService:
         # Temporarily set session tenant to the owner so BookingRequest and
         # EmailOutbox are written under the correct tenant without a cross-tenant error.
         original_tenant_id = self.db.info.get("tenant_id")
-        self.db.info["tenant_id"] = owner_tenant_id
+        self._set_session_tenant(owner_tenant_id)
 
         row = BookingRequest(
             reference_number=reference_number,
             customer_full_name=payload.customer_full_name,
             phone_number=payload.phone_number,
             email_address=payload.email_address,
+            service_location_address=payload.service_location_address,
+            service_location_city=payload.service_location_city,
+            service_location_state=payload.service_location_state,
+            service_location_zip_code=payload.service_location_zip_code,
             service_catalog_id=primary_service_row.id,
             service_name=primary_service_row.name,
             service_catalog_ids=selected_service_ids,
@@ -360,6 +502,7 @@ class BookingPortalService:
             admin_contact_email=admin_email,
             booking_portal_url=self._booking_portal_url(),
             booking_status_url=self._booking_status_url(row.reference_number, row.email_address),
+            service_location=self._format_service_location(row) or "Not provided",
         )
 
         customer_subject = f"{company_name} booking confirmation {row.reference_number}"
@@ -370,6 +513,7 @@ class BookingPortalService:
             f"Customer: {row.customer_full_name}\n"
             f"Phone: {row.phone_number}\n"
             f"Email: {row.email_address}\n"
+            f"Location: {self._format_service_location(row) or 'Not provided'}\n"
             f"Services: {', '.join(selected_service_names)}\n"
             f"Preferred date: {row.preferred_date or 'Not set'}\n"
             f"Preferred time: {row.preferred_time_of_day}\n"
@@ -411,7 +555,7 @@ class BookingPortalService:
         self.db.commit()
         # Restore the original tenant scope so subsequent queries in the same
         # request are not inadvertently scoped to the owner tenant.
-        self.db.info["tenant_id"] = original_tenant_id
+        self._set_session_tenant(original_tenant_id)
 
         # Send emails immediately after commit. Failures are logged but do not
         # surface as HTTP errors — the booking is already saved.
@@ -460,6 +604,7 @@ class BookingPortalService:
         return BookingPortalStatusLookupResponse(
             reference_number=row.reference_number,
             status=self.STATUS_PUBLIC_LABELS[row.status],
+            assigned_technician_id=row.assigned_technician_id,
             assigned_technician_first_name=row.assigned_technician_first_name,
             estimated_completion_date=row.estimated_completion_date,
         )
@@ -476,29 +621,7 @@ class BookingPortalService:
         payload: list[BookingRequestAdminResponse] = []
         for row in rows:
             payload.append(
-                BookingRequestAdminResponse.model_validate(
-                    {
-                        "id": row.id,
-                        "reference_number": row.reference_number,
-                        "customer_full_name": row.customer_full_name,
-                        "phone_number": row.phone_number,
-                        "email_address": row.email_address,
-                        "service_catalog_id": row.service_catalog_id,
-                        "service_name": row.service_name,
-                        "service_catalog_ids": row.service_catalog_ids or ([row.service_catalog_id] if row.service_catalog_id else []),
-                        "service_names": row.service_names or ([row.service_name] if row.service_name else []),
-                        "asset_details": row.asset_details,
-                        "preferred_date": row.preferred_date,
-                        "preferred_time_of_day": row.preferred_time_of_day,
-                        "additional_notes": row.additional_notes,
-                        "status": row.status,
-                        "assigned_technician_first_name": row.assigned_technician_first_name,
-                        "estimated_completion_date": row.estimated_completion_date,
-                        "source": row.source,
-                        "created_at": row.created_at,
-                        "updated_at": row.updated_at,
-                    }
-                )
+                self._to_admin_booking_response(row)
             )
         return payload
 
@@ -512,10 +635,91 @@ class BookingPortalService:
         if row is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Booking request not found")
 
+        original_tenant_id = self.db.info.get("tenant_id")
+        self._set_session_tenant(row.tenant_id)
         updates = payload.model_dump(exclude_unset=True)
-        for key, value in updates.items():
-            setattr(row, key, value)
+        try:
+            assigned_technician = None
+            if "assigned_technician_id" in updates and updates["assigned_technician_id"] is not None:
+                assigned_technician = (
+                    self.db.query(Technician)
+                    .execution_options(skip_tenant_scope=True)
+                    .filter(Technician.id == updates["assigned_technician_id"])
+                    .first()
+                )
+                if assigned_technician is None:
+                    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Technician not found")
+                if assigned_technician.status != "active":
+                    raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Technician is not active")
+                updates["assigned_technician_first_name"] = (assigned_technician.name or assigned_technician.full_name or "").split(" ")[0] or None
+            elif "assigned_technician_id" in updates:
+                updates["assigned_technician_first_name"] = None
 
-        self.db.commit()
-        self.db.refresh(row)
-        return BookingRequestAdminResponse.model_validate(row, from_attributes=True)
+            for key, value in updates.items():
+                setattr(row, key, value)
+
+            if assigned_technician is None and row.assigned_technician_id is not None:
+                assigned_technician = (
+                    self.db.query(Technician)
+                    .execution_options(skip_tenant_scope=True)
+                    .filter(Technician.id == row.assigned_technician_id)
+                    .first()
+                )
+            self.db.flush()
+            self.db.refresh(row)
+            company_name, _, _, _ = self._get_admin_contact()
+            email_subject, email_body = self._render_status_update_email(row=row, company_name=company_name)
+            self._set_session_tenant(row.tenant_id)
+            self.db.add(
+                EmailOutbox(
+                    recipient_email=row.email_address,
+                    subject=email_subject,
+                    body=email_body,
+                    message_type="booking_status_update_customer",
+                    related_entity_type="booking_request",
+                    related_entity_id=str(row.id),
+                )
+            )
+            self._sync_booking_job(row, assigned_technician)
+
+            self.db.commit()
+            self.db.refresh(row)
+            response = self._to_admin_booking_response(row)
+        except Exception:
+            self.db.rollback()
+            self._set_session_tenant(original_tenant_id)
+            raise
+        self._set_session_tenant(original_tenant_id)
+        send_email(to=row.email_address, subject=email_subject, body=email_body)
+        return response
+
+    @staticmethod
+    def _to_admin_booking_response(row: BookingRequest) -> BookingRequestAdminResponse:
+        return BookingRequestAdminResponse.model_validate(
+            {
+                "id": row.id,
+                "reference_number": row.reference_number,
+                "customer_full_name": row.customer_full_name,
+                "phone_number": row.phone_number,
+                "email_address": row.email_address,
+                "service_location_address": row.service_location_address,
+                "service_location_city": row.service_location_city,
+                "service_location_state": row.service_location_state,
+                "service_location_zip_code": row.service_location_zip_code,
+                "service_catalog_id": row.service_catalog_id,
+                "service_name": row.service_name,
+                "service_catalog_ids": row.service_catalog_ids or ([row.service_catalog_id] if row.service_catalog_id else []),
+                "service_names": row.service_names or ([row.service_name] if row.service_name else []),
+                "asset_details": row.asset_details,
+                "preferred_date": row.preferred_date,
+                "preferred_time_of_day": row.preferred_time_of_day,
+                "additional_notes": row.additional_notes,
+                "status": row.status,
+                "assigned_technician_id": row.assigned_technician_id,
+                "assigned_technician_first_name": row.assigned_technician_first_name,
+                "estimated_completion_date": row.estimated_completion_date,
+                "source": row.source,
+                "created_at": row.created_at,
+                "updated_at": row.updated_at,
+            }
+        )

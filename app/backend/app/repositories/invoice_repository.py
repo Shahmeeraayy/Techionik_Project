@@ -41,7 +41,7 @@ class InvoiceRepository:
 
     def generate_next_invoice_number(self) -> str:
         max_number = 0
-        for row in self.db.query(Invoice.invoice_number).all():
+        for row in self.db.query(Invoice.invoice_number).execution_options(skip_tenant_scope=True).all():
             value = str(row[0] or "").strip().upper()
             match = INVOICE_NUMBER_PATTERN.match(value)
             if not match:
