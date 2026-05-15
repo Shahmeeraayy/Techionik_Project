@@ -110,6 +110,13 @@ DEFAULT_TENANT_NAME = get_env("DEFAULT_TENANT_NAME", COMPANY_NAME)
 TENANT_HOST_SUFFIX = get_env("TENANT_HOST_SUFFIX", "dispatchiq.com")
 TENANT_CACHE_PREFIX = get_env("TENANT_CACHE_PREFIX", "dispatchiq")
 
+SMTP_HOST = get_env("SMTP_HOST", "")
+SMTP_PORT = int(get_env("SMTP_PORT", "587"))
+SMTP_USERNAME = get_env("SMTP_USERNAME", "")
+SMTP_PASSWORD = get_env("SMTP_PASSWORD", "")
+SMTP_FROM_EMAIL = get_env("SMTP_FROM_EMAIL", COMPANY_EMAIL)
+SMTP_FROM_NAME = get_env("SMTP_FROM_NAME", COMPANY_NAME)
+
 if APP_ENV != "development" and JWT_SECRET_KEY.startswith("change-me"):
     raise RuntimeError("JWT_SECRET_KEY must be set to a secure value outside development")
 

@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 from urllib.parse import quote
 
 from ..core.config import COMPANY_EMAIL, COMPANY_LOGO_URL, COMPANY_NAME, COMPANY_PHONE, COMPANY_WEBSITE, CUSTOMER_PORTAL_BASE_URL, DEFAULT_TENANT_ID
+from ..services.email_service import send_email
 from ..core.security import AuthenticatedUser
 from ..models.admin_credential_settings import AdminCredentialSettings
 from ..models.admin_user import AdminUser
@@ -361,38 +362,40 @@ class BookingPortalService:
             booking_status_url=self._booking_status_url(row.reference_number, row.email_address),
         )
 
-        self.db.add(
-            EmailOutbox(
-                recipient_email=row.email_address,
-                subject=f"{company_name} booking confirmation {row.reference_number}",
-                body=confirmation_body,
-                message_type="booking_confirmation_customer",
-                related_entity_type="booking_request",
-                related_entity_id=str(row.id),
-            )
+        customer_subject = f"{company_name} booking confirmation {row.reference_number}"
+        admin_subject = f"New booking request {row.reference_number}"
+        admin_body = (
+            f"New booking request received.\n\n"
+            f"Reference: {row.reference_number}\n"
+            f"Customer: {row.customer_full_name}\n"
+            f"Phone: {row.phone_number}\n"
+            f"Email: {row.email_address}\n"
+            f"Services: {', '.join(selected_service_names)}\n"
+            f"Preferred date: {row.preferred_date or 'Not set'}\n"
+            f"Preferred time: {row.preferred_time_of_day}\n"
+            f"Details: {row.asset_details}\n"
+            f"Notes: {row.additional_notes or 'None'}\n"
+            f"Admin contact phone: {admin_phone}\n"
         )
-        self.db.add(
-            EmailOutbox(
-                recipient_email=admin_email,
-                subject=f"New booking request {row.reference_number}",
-                body=(
-                    f"New booking request received.\n\n"
-                    f"Reference: {row.reference_number}\n"
-                    f"Customer: {row.customer_full_name}\n"
-                    f"Phone: {row.phone_number}\n"
-                    f"Email: {row.email_address}\n"
-                    f"Services: {', '.join(selected_service_names)}\n"
-                    f"Preferred date: {row.preferred_date or 'Not set'}\n"
-                    f"Preferred time: {row.preferred_time_of_day}\n"
-                    f"Details: {row.asset_details}\n"
-                    f"Notes: {row.additional_notes or 'None'}\n"
-                    f"Admin contact phone: {admin_phone}\n"
-                ),
-                message_type="booking_notification_admin",
-                related_entity_type="booking_request",
-                related_entity_id=str(row.id),
-            )
+
+        customer_outbox = EmailOutbox(
+            recipient_email=row.email_address,
+            subject=customer_subject,
+            body=confirmation_body,
+            message_type="booking_confirmation_customer",
+            related_entity_type="booking_request",
+            related_entity_id=str(row.id),
         )
+        admin_outbox = EmailOutbox(
+            recipient_email=admin_email,
+            subject=admin_subject,
+            body=admin_body,
+            message_type="booking_notification_admin",
+            related_entity_type="booking_request",
+            related_entity_id=str(row.id),
+        )
+        self.db.add(customer_outbox)
+        self.db.add(admin_outbox)
 
         self._create_admin_notification(
             f"New booking request {row.reference_number} from {row.customer_full_name}",
@@ -409,6 +412,31 @@ class BookingPortalService:
         # Restore the original tenant scope so subsequent queries in the same
         # request are not inadvertently scoped to the owner tenant.
         self.db.info["tenant_id"] = original_tenant_id
+
+        # Send emails immediately after commit. Failures are logged but do not
+        # surface as HTTP errors — the booking is already saved.
+        customer_sent = send_email(
+            to=row.email_address,
+            subject=customer_subject,
+            body=confirmation_body,
+        )
+        send_email(
+            to=admin_email,
+            subject=admin_subject,
+            body=admin_body,
+        )
+
+        # Update outbox status so we have a record of delivery attempts.
+        customer_status = "sent" if customer_sent else "failed"
+        try:
+            self.db.execute(
+                text("UPDATE email_outbox SET status = :status WHERE id = :id"),
+                {"status": customer_status, "id": str(customer_outbox.id)},
+            )
+            self.db.commit()
+        except Exception:
+            pass
+
         return BookingPortalSubmissionResponse(
             reference_number=row.reference_number,
             estimated_response_time_message=settings.estimated_response_time_message,
