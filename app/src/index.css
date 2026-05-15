@@ -193,75 +193,6 @@
     @apply bg-gray-100 text-gray-600 border-gray-200;
   }
   
-  /* Card Styles */
-  .card-elevated {
-    @apply rounded-[28px] border border-black/[0.08] bg-white shadow-[0_18px_54px_rgba(15,23,42,0.07),0_4px_18px_rgba(15,23,42,0.04)] backdrop-blur-sm;
-  }
-  
-  .card-hover {
-    @apply transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_24px_58px_rgba(16,24,39,0.18)];
-  }
-  
-  /* Button Styles */
-  .btn-primary {
-    @apply bg-[linear-gradient(135deg,#0f172a,#111827)] text-white rounded-2xl px-4 py-2.5 font-medium 
-           transition-all duration-200 hover:-translate-y-0.5
-           active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed;
-  }
-  
-  .btn-secondary {
-    @apply bg-white text-gray-700 border border-black/[0.08] rounded-2xl px-4 py-2.5 font-medium backdrop-blur-sm
-           transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#fafafa] hover:border-black/[0.12]
-           active:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed;
-  }
-  
-  .btn-outline {
-    @apply bg-transparent text-[#111827] border border-black/[0.12] rounded-2xl px-4 py-2.5 font-medium
-           transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#f5f5f5]
-           active:bg-[#ededed] disabled:opacity-50 disabled:cursor-not-allowed;
-  }
-  
-  /* Form Input Styles */
-  .input-field {
-    @apply w-full px-4 py-3 bg-white border border-black/[0.08] rounded-2xl text-gray-900 backdrop-blur-sm
-           placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-black/10 
-           focus:border-black/30 transition-all duration-200;
-  }
-  
-  /* Table Styles */
-  .table-container {
-    @apply bg-white rounded-[28px] border border-black/[0.08] overflow-hidden backdrop-blur-sm shadow-[0_18px_54px_rgba(15,23,42,0.06),0_4px_18px_rgba(15,23,42,0.04)];
-  }
-  
-  .table-header {
-    @apply bg-[#fbfbfb] border-b border-black/[0.06] backdrop-blur-sm;
-  }
-  
-  .table-row {
-    @apply border-b border-slate-200/70 transition-colors hover:bg-[#f6f9ff];
-  }
-  
-  /* Timeline Styles */
-  .timeline-item {
-    @apply relative pl-8 pb-8 border-l-2 border-gray-200 last:border-l-0 last:pb-0;
-  }
-  
-  .timeline-dot {
-    @apply absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-white border-2 border-[#4f7cff];
-  }
-  
-  /* Animation Classes */
-  .fade-in {
-    @apply animate-[fadeIn_0.3s_ease-out];
-  }
-  
-  .slide-in-right {
-    @apply animate-[slideInRight_0.3s_ease-out];
-  }
-  
-  .slide-in-up {
-    @apply animate-[slideInUp_0.3s_ease-out];
-  }
 }
 
 @layer utilities {
@@ -329,38 +260,9 @@
     animation: admin-login-scan 4.4s linear infinite;
   }
 
-  /* Scrollbar Styles */
-  .scrollbar-thin {
-    scrollbar-width: thin;
-    scrollbar-color: #D1D5DB transparent;
-  }
-  
-  .scrollbar-thin::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
-  
-  .scrollbar-thin::-webkit-scrollbar-track {
-    background: transparent;
-  }
-  
-  .scrollbar-thin::-webkit-scrollbar-thumb {
-    background-color: #D1D5DB;
-    border-radius: 3px;
-  }
-  
-  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-    background-color: #9CA3AF;
-  }
-  
   /* Text Utilities */
   .text-balance {
     text-wrap: balance;
-  }
-  
-  /* Focus Ring */
-  .focus-ring {
-    @apply focus:outline-none focus:ring-2 focus:ring-[#4f7cff]/20 focus:border-[#4f7cff];
   }
 }
 

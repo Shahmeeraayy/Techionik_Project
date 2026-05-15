@@ -40,10 +40,6 @@ import JobHistoryPage from '@/pages/technician/JobHistory';
 import ProfilePage from '@/pages/technician/Profile';
 import TechnicianChatPage from '@/pages/technician/Chat';
 
-function PlaceholderPage({ title }: { title: string }) {
-  return <div className="p-4"><h1 className="text-2xl font-bold">{title}</h1><p className="mt-2 text-gray-500">Functionality coming soon.</p></div>;
-}
-
 function App() {
   useEffect(() => { warmupBackend(); }, []);
 
