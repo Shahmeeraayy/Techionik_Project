@@ -1563,20 +1563,30 @@ export default function InvoiceApprovalsPage() {
                                                 Approve & Generate
                                             </Button>
                                             </DialogTrigger>
-                                        <DialogContent className="border-border/60 bg-slate-950 text-foreground">
+                                        <DialogContent className="border-white/10 bg-[linear-gradient(180deg,rgba(9,24,39,0.98),rgba(6,17,29,0.98))] text-slate-100 sm:max-w-md">
                                             <DialogHeader>
-                                                <DialogTitle className="flex items-center gap-2 text-foreground">
+                                                <DialogTitle className="flex items-center gap-2 text-white">
                                                     <ShieldAlert className="h-5 w-5 text-amber-300" /> Confirm Invoice Generation
                                                 </DialogTitle>
-                                                <DialogDescription className="pt-2 text-muted-foreground">
-                                                    This will immediately create an invoice for <strong>{selectedInvoice.job_code}</strong> with a total of <strong>${totals.total.toFixed(2)}</strong>.
+                                                <DialogDescription className="pt-2 text-slate-300">
+                                                    This will immediately create an invoice for <strong className="text-white">{selectedInvoice.job_code}</strong> with a total of <strong className="text-white">${totals.total.toFixed(2)}</strong>.
                                                     <br /><br />
                                                     This action cannot be undone from the portal. Are you sure?
                                                 </DialogDescription>
                                             </DialogHeader>
-                                            <DialogFooter className="mt-4">
-                                                <Button variant="outline" className="border-border/70 bg-transparent text-slate-200 hover:bg-slate-900 hover:text-white" onClick={() => setConfirmDialogOpen(false)}>Cancel</Button>
-                                                <Button onClick={() => void handleApprove()} disabled={isApproving} className="bg-[#2F8E92] hover:bg-[#267276]">
+                                            <DialogFooter className="mt-4 flex-col gap-2 sm:flex-row">
+                                                <Button
+                                                    variant="outline"
+                                                    className="h-11 w-full rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] px-5 text-slate-100 shadow-[0_14px_34px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.055)] hover:bg-[linear-gradient(180deg,rgba(24,38,64,0.98),rgba(12,20,34,0.98))] hover:text-white sm:w-auto"
+                                                    onClick={() => setConfirmDialogOpen(false)}
+                                                >
+                                                    Cancel
+                                                </Button>
+                                                <Button
+                                                    onClick={() => void handleApprove()}
+                                                    disabled={isApproving}
+                                                    className="h-11 w-full rounded-2xl border border-emerald-400/30 bg-[linear-gradient(135deg,#2F8E92,#1a6b6f)] px-5 font-semibold text-white shadow-[0_16px_34px_rgba(47,142,146,0.22)] hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+                                                >
                                                     {isApproving ? 'Processing...' : 'Yes, Create Invoice'}
                                                 </Button>
                                             </DialogFooter>

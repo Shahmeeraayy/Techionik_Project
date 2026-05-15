@@ -1263,22 +1263,33 @@ export default function JobDetailPage() {
                                                 Approve & Generate
                                             </Button>
                                         </DialogTrigger>
-                                        <DialogContent>
+                                        <DialogContent className="border-white/10 bg-[linear-gradient(180deg,rgba(9,24,39,0.98),rgba(6,17,29,0.98))] text-slate-100 sm:max-w-md">
                                             <DialogHeader>
-                                                <DialogTitle>Confirm Invoice Approval</DialogTitle>
-                                                <DialogDescription>
+                                                <DialogTitle className="text-white">Confirm Invoice Approval</DialogTitle>
+                                                <DialogDescription className="text-slate-300">
                                                     This will lock the invoice and generate it. This action triggers financial events.
                                                 </DialogDescription>
                                             </DialogHeader>
-                                            <div className="bg-gray-50 p-4 rounded-lg my-2">
-                                                <div className="flex justify-between font-medium">
-                                                    <span>Total Amount</span>
-                                                    <span>${job.invoice.total.toFixed(2)}</span>
+                                            <div className="my-2 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3">
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-sm font-medium text-slate-400">Total Amount</span>
+                                                    <span className="text-base font-semibold text-white">${job.invoice.total.toFixed(2)}</span>
                                                 </div>
                                             </div>
-                                            <DialogFooter>
-                                                <Button variant="outline" onClick={() => setInvoiceModalOpen(false)}>Cancel</Button>
-                                                <Button onClick={handleApproveInvoice} className="bg-[#2F8E92] hover:bg-[#267276]">Confirm Approval</Button>
+                                            <DialogFooter className="flex-col gap-2 sm:flex-row">
+                                                <Button
+                                                    variant="outline"
+                                                    onClick={() => setInvoiceModalOpen(false)}
+                                                    className="h-11 w-full rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] px-5 text-slate-100 shadow-[0_14px_34px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.055)] hover:bg-[linear-gradient(180deg,rgba(24,38,64,0.98),rgba(12,20,34,0.98))] hover:text-white sm:w-auto"
+                                                >
+                                                    Cancel
+                                                </Button>
+                                                <Button
+                                                    onClick={handleApproveInvoice}
+                                                    className="h-11 w-full rounded-2xl border border-emerald-400/30 bg-[linear-gradient(135deg,#2F8E92,#1a6b6f)] px-5 font-semibold text-white shadow-[0_16px_34px_rgba(47,142,146,0.22)] hover:brightness-105 sm:w-auto"
+                                                >
+                                                    Confirm Approval
+                                                </Button>
                                             </DialogFooter>
                                         </DialogContent>
                                     </Dialog>
