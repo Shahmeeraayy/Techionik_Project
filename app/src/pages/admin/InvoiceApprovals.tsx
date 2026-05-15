@@ -1075,13 +1075,34 @@ export default function InvoiceApprovalsPage() {
                                         </TableCell>
                                         {queueTab === 'blocked' ? (
                                             <TableCell className="py-4">
-                                                <div className="max-h-28 overflow-y-auto flex flex-wrap gap-2 pr-1">
-                                                    {(inv as BlockedInvoice).blocking_reasons.map((reason) => (
-                                                        <Badge key={`${inv.job_id}-${reason}`} variant="outline" className="rounded-full border-red-300/20 bg-red-300/10 text-red-100">
-                                                            {reason}
-                                                        </Badge>
-                                                    ))}
-                                                </div>
+                                                {(() => {
+                                                    const reasons = (inv as BlockedInvoice).blocking_reasons;
+                                                    const pricingIssues = reasons.filter((r) => r.toLowerCase().includes('missing price'));
+                                                    const otherIssues = reasons.filter((r) => !r.toLowerCase().includes('missing price'));
+                                                    return (
+                                                        <div className="flex flex-col gap-1.5">
+                                                            {pricingIssues.length > 0 && (
+                                                                <div className="inline-flex items-center gap-2 rounded-lg border border-amber-400/20 bg-amber-400/10 px-2.5 py-1.5">
+                                                                    <div className="h-1.5 w-1.5 rounded-full bg-amber-400 shrink-0" />
+                                                                    <span className="text-xs font-medium text-amber-200">
+                                                                        {pricingIssues.length} service{pricingIssues.length !== 1 ? 's' : ''} missing price
+                                                                    </span>
+                                                                </div>
+                                                            )}
+                                                            {otherIssues.slice(0, 3).map((reason) => (
+                                                                <div key={reason} className="inline-flex items-center gap-2 rounded-lg border border-red-400/20 bg-red-400/10 px-2.5 py-1.5">
+                                                                    <div className="h-1.5 w-1.5 rounded-full bg-red-400 shrink-0" />
+                                                                    <span className="text-xs font-medium text-red-200 leading-tight">{reason}</span>
+                                                                </div>
+                                                            ))}
+                                                            {otherIssues.length > 3 && (
+                                                                <div className="inline-flex items-center gap-2 rounded-lg border border-red-400/20 bg-red-400/10 px-2.5 py-1.5">
+                                                                    <span className="text-xs font-medium text-red-300">+{otherIssues.length - 3} more</span>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    );
+                                                })()}
                                             </TableCell>
                                         ) : null}
                                         <TableCell className="py-4 text-center">
