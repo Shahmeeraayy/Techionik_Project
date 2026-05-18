@@ -530,29 +530,28 @@ export default function Dashboard() {
                 Monitor jobs, technician capacity, invoice approvals, and operational risk from one live dispatch workspace.
               </p>
 
-              <div className="mt-6 flex flex-wrap gap-3">
-                {leadMetrics.map((metric) => (
-                  <div
-                    key={metric.id}
-                    className="rounded-full border border-black/8 bg-white px-4 py-2 text-sm text-slate-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-200 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
-                  >
-                    <span className="text-slate-500 dark:text-slate-400">{metric.label}</span>
-                    <span className="ml-2 font-semibold text-slate-900 dark:text-white">{metric.value}</span>
+              <div className="mt-6 flex items-start gap-3">
+                {/* Left column: Jobs Completed Today + Last sync */}
+                <div className="flex flex-col gap-3">
+                  {leadMetrics[0] && (
+                    <div className="rounded-full border border-black/8 bg-white px-4 py-2 text-sm text-slate-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-200 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                      <span className="text-slate-500 dark:text-slate-400">{leadMetrics[0].label}</span>
+                      <span className="ml-2 font-semibold text-slate-900 dark:text-white">{leadMetrics[0].value}</span>
+                    </div>
+                  )}
+                  <div className="inline-flex items-center gap-2 rounded-full border border-black/8 bg-white px-4 py-2 text-sm text-slate-600 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300">
+                    <Clock3 className="h-4 w-4 text-slate-700 dark:text-cyan-200" />
+                    Last sync {lastUpdated ? lastUpdated.toLocaleTimeString() : '--'}
                   </div>
-                ))}
-              </div>
-
-              <div className="mt-6 flex flex-wrap items-center gap-3">
-                <div className="inline-flex items-center gap-2 rounded-full border border-black/8 bg-white px-4 py-2 text-sm text-slate-600 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300">
-                  <Clock3 className="h-4 w-4 text-slate-700 dark:text-cyan-200" />
-                  Last sync {lastUpdated ? lastUpdated.toLocaleTimeString() : '--'}
                 </div>
-                <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm text-emerald-700 dark:border-emerald-300/20 dark:bg-emerald-300/10 dark:text-emerald-100">
-                  <span className="relative flex h-2 w-2">
-                    <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" style={{ animation: 'live-ping 1.2s ease-out infinite' }} />
-                    <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
-                  </span>
-                  Live backend session
+                {/* Right column: Pending Invoice Approvals + Technicians Online */}
+                <div className="flex flex-col gap-3">
+                  {leadMetrics.slice(1).map((metric) => (
+                    <div key={metric.id} className="rounded-full border border-black/8 bg-white px-4 py-2 text-sm text-slate-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-200 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                      <span className="text-slate-500 dark:text-slate-400">{metric.label}</span>
+                      <span className="ml-2 font-semibold text-slate-900 dark:text-white">{metric.value}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
