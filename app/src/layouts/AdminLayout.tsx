@@ -16,7 +16,6 @@ import {
   LogOut,
   Shield,
   RefreshCw,
-  Bell,
   Eye,
   UserCog,
   Inbox,
@@ -37,6 +36,9 @@ import {
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { TechnicianPreviewModal } from '@/components/modals/TechnicianPreviewModal';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 const navItems = [
   { path: '/admin', label: 'Overview', icon: LayoutDashboard },
@@ -209,9 +211,102 @@ function Sidebar({
   );
 }
 
+function ProfileDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
+  const { user, updateAdminProfile } = useAuth();
+  const [fullName, setFullName] = useState(user?.name ?? '');
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
+
+  useEffect(() => {
+    if (open) {
+      setFullName(user?.name ?? '');
+      setCurrentPassword('');
+      setNewPassword('');
+      setError('');
+      setSuccess(false);
+    }
+  }, [open, user?.name]);
+
+  const handleSave = async () => {
+    setError('');
+    setSuccess(false);
+    if (!currentPassword) { setError('Current password is required.'); return; }
+    setSaving(true);
+    try {
+      await updateAdminProfile({ fullName, currentPassword, newPassword: newPassword || undefined });
+      setSuccess(true);
+      setCurrentPassword('');
+      setNewPassword('');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to update profile.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Manage Profile</DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-4 py-2">
+          <div className="flex items-center gap-4">
+            <Avatar className="h-14 w-14 border border-white/10">
+              <AvatarImage src={user?.avatar} alt={user?.name} />
+              <AvatarFallback className="bg-muted text-primary text-lg font-bold">
+                {user?.name?.split(' ').map(n => n[0]).join('').substring(0, 2)}
+              </AvatarFallback>
+            </Avatar>
+            <div>
+              <p className="text-sm font-semibold text-white">{user?.name}</p>
+              <p className="text-xs text-slate-400">{user?.email}</p>
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="profile-name">Full Name</Label>
+            <Input id="profile-name" value={fullName} onChange={e => setFullName(e.target.value)} placeholder="Your full name" />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="profile-email">Email</Label>
+            <Input id="profile-email" value={user?.email ?? ''} disabled />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="current-password">Current Password <span className="text-rose-400">*</span></Label>
+            <Input id="current-password" type="password" value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} placeholder="Required to save changes" />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="new-password">New Password <span className="text-slate-400 text-xs">(optional)</span></Label>
+            <Input id="new-password" type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="Leave blank to keep current" />
+          </div>
+
+          {error && <p className="text-sm text-rose-400">{error}</p>}
+          {success && <p className="text-sm text-emerald-400">Profile updated successfully.</p>}
+        </div>
+
+        <DialogFooter>
+          <Button variant="ghost" className="border border-white/10 !bg-[#0b1424] !text-slate-100 hover:!bg-[#122039] hover:!text-white" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button onClick={handleSave} disabled={saving} className="bg-[linear-gradient(135deg,#4f7cff,#22d3ee)] text-white hover:brightness-105">
+            {saving ? 'Saving…' : 'Save Changes'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function UserMenu() {
   const { user, logout } = useAuth();
   const [previewModalOpen, setPreviewModalOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
 
   return (
     <>
@@ -231,6 +326,10 @@ function UserMenu() {
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-56 mt-1">
+          <DropdownMenuItem onClick={() => setProfileOpen(true)} className="cursor-pointer">
+            <UserCog className="w-4 h-4 mr-2" />
+            Manage Profile
+          </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setPreviewModalOpen(true)} className="cursor-pointer">
             <Eye className="w-4 h-4 mr-2" />
             View as Technician
@@ -243,11 +342,8 @@ function UserMenu() {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      {/* Technician Preview Modal */}
-      <TechnicianPreviewModal
-        open={previewModalOpen}
-        onOpenChange={setPreviewModalOpen}
-      />
+      <ProfileDialog open={profileOpen} onOpenChange={setProfileOpen} />
+      <TechnicianPreviewModal open={previewModalOpen} onOpenChange={setPreviewModalOpen} />
     </>
   );
 }

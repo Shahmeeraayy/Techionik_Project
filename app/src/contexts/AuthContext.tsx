@@ -31,6 +31,7 @@ import {
   setStoredTechnicianToken,
   signupAdminOwner,
   updateAdminTechnician,
+  updateAdminCredentialSettings,
 } from '@/lib/backend-api';
 
 type TechnicianAccount = {
@@ -154,6 +155,7 @@ interface AuthContextType {
   resolveTechnicianPasswordResetRequest: (requestId: string, remarks?: string) => Promise<void>;
   updateTechnicianAccount: (id: string, input: TechnicianAccountUpdateInput) => Promise<void>;
   setTechnicianAccountActive: (id: string, isActive: boolean) => Promise<void>;
+  updateAdminProfile: (input: { fullName: string; currentPassword: string; newPassword?: string }) => Promise<void>;
   logout: () => void;
   switchRole: (role: UserRole) => void;
 }
@@ -1079,6 +1081,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [refreshBackendAdminData, technicianAccounts, user]);
 
+  const updateAdminProfile = useCallback(async (input: { fullName: string; currentPassword: string; newPassword?: string }) => {
+    const token = getStoredAdminToken();
+    if (!token) throw new Error('Admin session required.');
+    const fullName = input.fullName.trim();
+    if (!fullName) throw new Error('Full name is required.');
+    const updated = await updateAdminCredentialSettings(token, {
+      full_name: fullName,
+      admin_email: user?.email ?? '',
+      current_password: input.currentPassword,
+      new_password: input.newPassword?.trim() || undefined,
+    });
+    setUser((prev) => prev ? { ...prev, name: updated.full_name, email: updated.admin_email, updatedAt: new Date().toISOString() } : prev);
+  }, [user?.email]);
+
   const logout = useCallback(() => {
     setUser(null);
     setPendingTechnicianPasswordResetRequests([]);
@@ -1124,6 +1140,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     resolveTechnicianPasswordResetRequest,
     updateTechnicianAccount,
     setTechnicianAccountActive,
+    updateAdminProfile,
     logout,
     switchRole,
   };
