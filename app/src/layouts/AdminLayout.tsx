@@ -22,6 +22,7 @@ import {
   MessageSquareText,
   PanelLeftClose,
   PanelLeftOpen,
+  CalendarClock,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -51,6 +52,7 @@ const navItems = [
   { path: '/admin/accounts', label: 'Accounts', icon: UserCog },
   { path: '/admin/locations', label: 'Locations', icon: Building2 },
   { path: '/admin/services', label: 'Services', icon: Wrench },
+  { path: '/admin/attendance', label: 'Attendance', icon: CalendarClock },
   { path: '/admin/reports', label: 'Reports', icon: BarChart3 },
 ];
 

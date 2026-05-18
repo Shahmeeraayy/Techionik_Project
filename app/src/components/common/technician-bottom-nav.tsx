@@ -1,8 +1,8 @@
-import { Briefcase, Calendar, Clock, MessageSquareText, User } from 'lucide-react';
+import { Briefcase, Calendar, Clock, MessageSquareText, User, CalendarClock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 
-export type TechnicianBottomNavTab = 'jobs' | 'current-job' | 'history' | 'chat' | 'profile';
+export type TechnicianBottomNavTab = 'jobs' | 'current-job' | 'history' | 'chat' | 'profile' | 'attendance';
 
 export default function TechnicianBottomNav({
     activeTab,
@@ -16,6 +16,7 @@ export default function TechnicianBottomNav({
         { id: 'jobs', label: 'Jobs', icon: Briefcase, path: `${routeBase}/jobs` },
         { id: 'current-job', label: 'Current Job', icon: Calendar, path: `${routeBase}/current-job` },
         { id: 'history', label: 'History', icon: Clock, path: `${routeBase}/history` },
+        { id: 'attendance', label: 'Attendance', icon: CalendarClock, path: `${routeBase}/attendance` },
         { id: 'chat', label: 'Chat', icon: MessageSquareText, path: `${routeBase}/chat` },
         { id: 'profile', label: 'Profile', icon: User, path: `${routeBase}/profile` },
     ] as const;

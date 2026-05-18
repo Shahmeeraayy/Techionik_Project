@@ -39,6 +39,10 @@ import MyJobsPage from '@/pages/technician/MyJobs';
 import JobHistoryPage from '@/pages/technician/JobHistory';
 import ProfilePage from '@/pages/technician/Profile';
 import TechnicianChatPage from '@/pages/technician/Chat';
+import TechnicianAttendancePage from '@/pages/technician/Attendance';
+
+// Admin Attendance
+import AdminAttendancePage from '@/pages/admin/Attendance';
 
 function App() {
   useEffect(() => { warmupBackend(); }, []);
@@ -175,6 +179,7 @@ function App() {
                     <Route path="dealerships" element={<DealershipsPage />} />
                     <Route path="services" element={<ServicesPage />} />
                     <Route path="reports" element={<ReportsPage />} />
+                    <Route path="attendance" element={<AdminAttendancePage />} />
                     <Route path="settings" element={<SettingsPage />} />
                   </Routes>
                 </AdminLayout>
@@ -261,6 +266,14 @@ function App() {
             element={
               <RequireRole role="technician">
                 <TechnicianChatPage />
+              </RequireRole>
+            }
+          />
+          <Route
+            path="/tech/attendance"
+            element={
+              <RequireRole role="technician">
+                <TechnicianAttendancePage />
               </RequireRole>
             }
           />
