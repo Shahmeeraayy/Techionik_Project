@@ -432,7 +432,7 @@ export default function Dashboard() {
         id: 'jobs',
         label: 'Jobs in System',
         value: snapshot.stats.jobs,
-        description: 'Live dispatch records across the backend.',
+        description: 'Live job records across the backend.',
         icon: Briefcase,
       },
       {
@@ -520,7 +520,7 @@ export default function Dashboard() {
                 className="mt-5 text-[clamp(2.1rem,4vw,4.2rem)] font-semibold leading-[0.92] tracking-[-0.07em] text-slate-900 dark:text-white"
                 style={displayFontStyle}
               >
-                Dispatch
+                NexusOps
                 <span className="block bg-gradient-to-r from-slate-900 via-slate-700 to-slate-500 bg-clip-text text-transparent dark:from-white dark:via-cyan-100 dark:to-emerald-100">
                   command dashboard
                 </span>
