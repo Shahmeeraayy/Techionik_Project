@@ -95,9 +95,9 @@ export default function ColumnExportDialog({
                         <div className="flex items-center gap-2">
                             <Button
                                 type="button"
-                                variant="outline"
+                                variant="ghost"
                                 size="sm"
-                                className="h-8 rounded-full border-white/10 bg-white/[0.04] px-3 text-xs text-slate-200 hover:bg-white/[0.08] hover:text-white"
+                                className="h-8 rounded-full border border-white/10 !bg-[#0b1424] px-3 text-xs !text-slate-200 hover:!bg-[#122039] hover:!text-white"
                                 onClick={() => setSelectedColumns(availableColumns)}
                             >
                                 Select all
@@ -106,7 +106,7 @@ export default function ColumnExportDialog({
                                 type="button"
                                 variant="ghost"
                                 size="sm"
-                                className="h-8 rounded-full px-2 text-xs text-slate-400 hover:bg-white/[0.05] hover:text-white"
+                                className="h-8 rounded-full border border-white/10 !bg-[#0b1424] px-3 text-xs !text-slate-400 hover:!bg-[#122039] hover:!text-white"
                                 onClick={() => setSelectedColumns([])}
                             >
                                 Clear all
@@ -161,7 +161,7 @@ export default function ColumnExportDialog({
                             Excel
                         </Button>
                     </div>
-                    <Button type="button" variant="outline" className="h-10 rounded-2xl border-white/10 bg-white/[0.04] text-slate-100 hover:bg-white/[0.08] hover:text-white" onClick={() => onOpenChange(false)}>
+                    <Button type="button" variant="ghost" className="h-10 rounded-2xl border border-white/10 !bg-[#0b1424] !text-slate-100 hover:!bg-[#122039] hover:!text-white" onClick={() => onOpenChange(false)}>
                         Cancel
                     </Button>
                     <Button type="button" className="h-10 min-w-32 rounded-2xl bg-gradient-to-r from-[#0ca6a6] to-[#149fcb] text-white shadow-[0_18px_44px_rgba(12,166,166,0.22)] hover:from-[#11b5b5] hover:to-[#1aaedf]" onClick={handleExport}>

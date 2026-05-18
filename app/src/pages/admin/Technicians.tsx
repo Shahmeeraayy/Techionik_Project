@@ -1242,16 +1242,16 @@ export default function TechniciansPage() {
     };
 
     const getTechnicianExportRows = () => techs.map(t => ({
-            Name: t.name,
-            Email: t.email,
-            Phone: t.phone,
-            Zones: t.zones.join('; '),
-            Skills: t.skills.join('; '),
-            CurrentStatus: getOperationalStatusLabel(getOperationalStatus(t)),
-            ActiveJobs: t.current_jobs_count,
-            CurrentJob: t.current_assignments[0]?.job_code ?? '',
-            WorkingHours: JSON.stringify(t.working_hours) // Simplify for CSV
-        }));
+        Name: t.name,
+        Email: t.email,
+        Phone: t.phone,
+        Zones: t.zones.join('; '),
+        Skills: t.skills.join('; '),
+        CurrentStatus: getOperationalStatusLabel(getOperationalStatus(t)),
+        ActiveJobs: t.current_jobs_count,
+        CurrentJob: t.current_assignments[0]?.job_code ?? '',
+        WorkingHours: JSON.stringify(t.working_hours) // Simplify for CSV
+    }));
 
     const handleExport = (selectedColumns: string[], format: ExportFormat = 'csv') => {
         const exportData = selectColumnsForExport(getTechnicianExportRows(), selectedColumns);
@@ -1269,819 +1269,819 @@ export default function TechniciansPage() {
 
             <div className="relative space-y-6">
 
-            {/* 1. Header */}
-            <section className="relative overflow-hidden rounded-[32px] border border-white/10 bg-[linear-gradient(135deg,rgba(7,25,42,0.98),rgba(6,18,32,0.98))] shadow-[0_34px_120px_rgba(0,0,0,0.34)]">
-                <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(15,23,42,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(15,23,42,0.035)_1px,transparent_1px)] bg-[size:120px_120px] opacity-40 dark:bg-[linear-gradient(rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] dark:opacity-20" />
-                <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent dark:via-cyan-200/70" />
-                <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(79,124,255,0.10),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(34,211,238,0.10),transparent_26%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(47,142,146,0.14),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(245,158,11,0.12),transparent_26%)]" />
-                <div className="relative flex flex-col gap-5 p-6 xl:flex-row xl:items-end xl:justify-between xl:p-8">
-                    <div className="max-w-3xl">
-                        <div className="inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-100">
-                            <User className="h-3.5 w-3.5" />
-                            Field Workforce
+                {/* 1. Header */}
+                <section className="relative overflow-hidden rounded-[32px] border border-white/10 bg-[linear-gradient(135deg,rgba(7,25,42,0.98),rgba(6,18,32,0.98))] shadow-[0_34px_120px_rgba(0,0,0,0.34)]">
+                    <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(15,23,42,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(15,23,42,0.035)_1px,transparent_1px)] bg-[size:120px_120px] opacity-40 dark:bg-[linear-gradient(rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] dark:opacity-20" />
+                    <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent dark:via-cyan-200/70" />
+                    <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(79,124,255,0.10),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(34,211,238,0.10),transparent_26%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(47,142,146,0.14),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(245,158,11,0.12),transparent_26%)]" />
+                    <div className="relative flex flex-col gap-5 p-6 xl:flex-row xl:items-end xl:justify-between xl:p-8">
+                        <div className="max-w-3xl">
+                            <div className="inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-100">
+                                <User className="h-3.5 w-3.5" />
+                                Field Workforce
+                            </div>
+                            <h1 className="mt-5 text-[2.35rem] font-semibold leading-none tracking-[-0.06em] text-slate-950 dark:text-white md:text-[2.8rem]">
+                                Technicians
+                                <span className="block bg-gradient-to-r from-slate-950 via-blue-700 to-cyan-500 bg-clip-text text-transparent dark:from-white dark:via-cyan-100 dark:to-emerald-100">
+                                    workforce board
+                                </span>
+                            </h1>
+                            <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-600 dark:text-slate-300 sm:text-[15px]">
+                                Manage technician profiles, schedules, zones, skills, and availability across the active dispatch network.
+                            </p>
+                            <div className="mt-5 flex flex-wrap items-center gap-2">
+                                <Badge variant="outline" className="border-cyan-300/20 bg-cyan-300/10 px-3 py-1 text-cyan-100">
+                                    {totalTechCount} technicians
+                                </Badge>
+                                <Badge variant="outline" className="border-amber-300/20 bg-amber-300/10 px-3 py-1 text-amber-100">
+                                    {busyTechniciansCount} busy now
+                                </Badge>
+                                <Badge variant="outline" className="border-white/10 bg-white/[0.04] px-3 py-1 text-slate-300">
+                                    {zoneFilterOptions.length} zones
+                                </Badge>
+                            </div>
                         </div>
-                        <h1 className="mt-5 text-[2.35rem] font-semibold leading-none tracking-[-0.06em] text-slate-950 dark:text-white md:text-[2.8rem]">
-                            Technicians
-                            <span className="block bg-gradient-to-r from-slate-950 via-blue-700 to-cyan-500 bg-clip-text text-transparent dark:from-white dark:via-cyan-100 dark:to-emerald-100">
-                                workforce board
-                            </span>
-                        </h1>
-                        <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-600 dark:text-slate-300 sm:text-[15px]">
-                            Manage technician profiles, schedules, zones, skills, and availability across the active dispatch network.
-                        </p>
-                        <div className="mt-5 flex flex-wrap items-center gap-2">
-                            <Badge variant="outline" className="border-cyan-300/20 bg-cyan-300/10 px-3 py-1 text-cyan-100">
-                                {totalTechCount} technicians
-                            </Badge>
-                            <Badge variant="outline" className="border-amber-300/20 bg-amber-300/10 px-3 py-1 text-amber-100">
-                                {busyTechniciansCount} busy now
-                            </Badge>
-                            <Badge variant="outline" className="border-white/10 bg-white/[0.04] px-3 py-1 text-slate-300">
-                                {zoneFilterOptions.length} zones
-                            </Badge>
-                        </div>
-                    </div>
-                    <div className="flex flex-wrap items-center justify-end gap-3">
-                    <Button variant="outline" size="sm" onClick={() => void fetchTechs()} className="h-10 gap-2 rounded-full border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]" disabled={loading}>
-                        <RefreshCw className={cn('w-4 h-4 text-cyan-200', loading && 'animate-spin')} /> Refresh
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={() => setExportModalOpen(true)} className="h-10 gap-2 rounded-full border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]">
-                        <FileDown className="w-4 h-4" /> Export
-                    </Button>
-                    <Dialog open={addTechModalOpen} onOpenChange={setAddTechModalOpen}>
-                        <DialogTrigger asChild>
-                            <Button size="sm" className="h-10 gap-2 rounded-full bg-[#2F8E92] px-5 text-white shadow-[0_12px_30px_rgba(47,142,146,0.28)] hover:bg-[#267276]">
-                                <Plus className="w-4 h-4" /> Add Technician
+                        <div className="flex flex-wrap items-center justify-end gap-3">
+                            <Button variant="outline" size="sm" onClick={() => void fetchTechs()} className="h-10 gap-2 rounded-full border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]" disabled={loading}>
+                                <RefreshCw className={cn('w-4 h-4 text-cyan-200', loading && 'animate-spin')} /> Refresh
                             </Button>
-                        </DialogTrigger>
-                        <DialogContent className="border-white/10 bg-[linear-gradient(180deg,rgba(9,24,39,0.98),rgba(6,17,29,0.98))] text-slate-100">
-                            <DialogHeader>
-                                <DialogTitle className="text-white">Add New Technician</DialogTitle>
-                                <DialogDescription className="text-slate-300">Create a new technician profile. They will start as active.</DialogDescription>
-                            </DialogHeader>
-                            <div className="space-y-4 py-2">
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <Label className="text-slate-200">Full Name</Label>
-                                        <Input data-admin-dark-input="true" style={adminDarkInputStyle} className="h-12 rounded-2xl border-white/10 !text-white placeholder:!text-slate-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] focus-visible:border-cyan-300/40 focus-visible:ring-cyan-300/15" placeholder="e.g. John Doe" value={newTechForm.name} onChange={e => setNewTechForm({ ...newTechForm, name: e.target.value })} />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label className="text-slate-200">Email</Label>
-                                        <Input data-admin-dark-input="true" style={adminDarkInputStyle} className="h-12 rounded-2xl border-white/10 !text-white placeholder:!text-slate-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] focus-visible:border-cyan-300/40 focus-visible:ring-cyan-300/15" placeholder="e.g. john@example.com" value={newTechForm.email} onChange={e => setNewTechForm({ ...newTechForm, email: e.target.value })} />
-                                    </div>
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <Label className="text-slate-200">Tech Code</Label>
-                                        <Input data-admin-dark-input="true" style={adminDarkInputStyle} className="h-12 rounded-2xl border-white/10 !text-white placeholder:!text-slate-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] focus-visible:border-cyan-300/40 focus-visible:ring-cyan-300/15" placeholder="e.g. TECH-999" value={newTechForm.code} onChange={e => setNewTechForm({ ...newTechForm, code: e.target.value })} />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label className="text-slate-200">Phone</Label>
-                                        <Input
-                                            data-admin-dark-input="true"
-                                            style={adminDarkInputStyle}
-                                            className="h-12 rounded-2xl border-white/10 !text-white placeholder:!text-slate-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] focus-visible:border-cyan-300/40 focus-visible:ring-cyan-300/15"
-                                            placeholder={phoneExampleFormat}
-                                            value={newTechForm.phone}
-                                            onChange={e => setNewTechForm({ ...newTechForm, phone: formatUsPhoneInput(e.target.value) })}
-                                        />
-                                    </div>
-                                </div>
-                                <div className="space-y-2">
-                                    <Label className="text-slate-200">Default Zones (comma separated)</Label>
-                                    <Input data-admin-dark-input="true" style={adminDarkInputStyle} className="h-12 rounded-2xl border-white/10 !text-white placeholder:!text-slate-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] focus-visible:border-cyan-300/40 focus-visible:ring-cyan-300/15" placeholder="North, Downtown" value={newTechForm.zones} onChange={e => setNewTechForm({ ...newTechForm, zones: e.target.value })} />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label className="text-slate-200">Default Skills (comma separated)</Label>
-                                    <Input data-admin-dark-input="true" style={adminDarkInputStyle} className="h-12 rounded-2xl border-white/10 !text-white placeholder:!text-slate-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] focus-visible:border-cyan-300/40 focus-visible:ring-cyan-300/15" placeholder="Locksmith, Towing" value={newTechForm.skills} onChange={e => setNewTechForm({ ...newTechForm, skills: e.target.value })} />
-                                </div>
-                            </div>
-                            <DialogFooter>
-                                <Button variant="outline" className="h-11 rounded-2xl border-white/10 bg-[#0b1424] text-slate-100 hover:bg-[#122039] hover:text-white" onClick={() => setAddTechModalOpen(false)}>Cancel</Button>
-                                <Button onClick={handleAddTech} className="bg-[#2F8E92] hover:bg-[#267276]">Create Technician</Button>
-                            </DialogFooter>
-                        </DialogContent>
-                    </Dialog>
-                    </div>
-                </div>
-            </section>
-
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                <Card className="overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-[0_18px_54px_rgba(15,23,42,0.07)] dark:border-cyan-400/15 dark:bg-[linear-gradient(180deg,rgba(12,36,55,0.96),rgba(8,24,39,0.96))] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-                    <div className="p-5">
-                        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500 dark:text-slate-400">Total Technicians</p>
-                        <p className="mt-3 text-[2.15rem] font-semibold leading-none tracking-[-0.06em] text-slate-950 dark:text-white">{totalTechCount}</p>
-                        <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">Visible workforce profiles</p>
-                    </div>
-                </Card>
-                <Card className="overflow-hidden rounded-[24px] border border-emerald-200 bg-emerald-50/70 shadow-[0_18px_54px_rgba(15,23,42,0.06)] dark:border-emerald-400/15 dark:bg-[linear-gradient(180deg,rgba(10,37,45,0.96),rgba(7,25,31,0.96))] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-                    <div className="p-5">
-                        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700/70 dark:text-slate-400">Available</p>
-                        <p className="mt-3 text-[2.15rem] font-semibold leading-none tracking-[-0.06em] text-emerald-950 dark:text-white">{availableTechCount}</p>
-                        <p className="mt-2 text-sm text-emerald-800/75 dark:text-slate-300">Ready for dispatch right now</p>
-                    </div>
-                </Card>
-                <Card className="overflow-hidden rounded-[24px] border border-violet-200 bg-violet-50/60 shadow-[0_18px_54px_rgba(15,23,42,0.06)] dark:border-violet-400/15 dark:bg-[linear-gradient(180deg,rgba(30,23,49,0.96),rgba(18,16,33,0.96))] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-                    <div className="p-5">
-                        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-violet-700/70 dark:text-slate-400">Out of Office</p>
-                        <p className="mt-3 text-[2.15rem] font-semibold leading-none tracking-[-0.06em] text-violet-950 dark:text-white">{outOfOfficeCount}</p>
-                        <p className="mt-2 text-sm text-violet-800/75 dark:text-slate-300">Temporarily removed from dispatch</p>
-                    </div>
-                </Card>
-                <Card className="overflow-hidden rounded-[24px] border border-amber-200 bg-amber-50/70 shadow-[0_18px_54px_rgba(15,23,42,0.06)] dark:border-amber-400/15 dark:bg-[linear-gradient(180deg,rgba(41,28,15,0.94),rgba(27,18,10,0.96))] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-                    <div className="p-5">
-                        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-amber-700/70 dark:text-slate-400">In Progress / Offline</p>
-                        <p className="mt-3 text-[2.15rem] font-semibold leading-none tracking-[-0.06em] text-amber-950 dark:text-white">{busyTechniciansCount} / {offlineTechCount}</p>
-                        <p className="mt-2 text-sm text-amber-800/75 dark:text-slate-300">{assignedJobsCount} active jobs across the roster</p>
-                    </div>
-                </Card>
-            </div>
-
-            {/* 2. Filter Bar */}
-            <Card className={sectionCardClass}>
-                <div className={sectionHeaderClass}>
-                    <div className="flex flex-col gap-4">
-                        <div className="flex flex-col gap-2 lg:flex-row lg:items-end lg:justify-between">
-                            <div>
-                                <h2 className="text-base font-semibold text-slate-950 dark:text-white">Technician Filters</h2>
-                                <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Search by name, email, or zone and narrow by readiness, coverage, and skill fit.</p>
-                            </div>
-                            <Badge variant="outline" className="w-fit border-white/10 bg-white/[0.03] text-slate-300">
-                                Showing {filteredTechs.length} of {totalTechCount}
-                            </Badge>
-                        </div>
-                        <div className="flex flex-col lg:flex-row gap-4 items-center">
-                            <div className="relative flex-1 w-full lg:w-auto min-w-0 lg:min-w-[300px]">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                                <Input
-                                    placeholder="Search by name, email, phone, or zone..."
-                                    className="h-11 rounded-full border-white/10 bg-[#0b1424] pl-9 text-slate-100 placeholder:text-slate-500 transition-all focus:bg-[#122039]"
-                                    value={searchQuery}
-                                    onChange={e => setSearchQuery(e.target.value)}
-                                />
-                            </div>
-                            <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
-                                <Select value={filterStatus} onValueChange={setFilterStatus}>
-                                    <SelectTrigger className="h-11 w-full border-white/10 bg-[#0b1424] text-slate-100 sm:w-[140px]">
-                                        <SelectValue placeholder="Status" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">All Statuses</SelectItem>
-                                        <SelectItem value="available">Available</SelectItem>
-                                        <SelectItem value="in_progress">In Progress</SelectItem>
-                                        <SelectItem value="offline">Offline</SelectItem>
-                                        <SelectItem value="out_of_office">Out of Office</SelectItem>
-                                    </SelectContent>
-                                </Select>
-
-                                <Select value={filterZone} onValueChange={setFilterZone}>
-                                    <SelectTrigger className="h-11 w-full border-white/10 bg-[#0b1424] text-slate-100 sm:w-[160px]">
-                                        <div className="flex items-center gap-2">
-                                            <MapPin className="w-4 h-4" />
-                                            <SelectValue placeholder="Zone" />
-                                        </div>
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">Zone</SelectItem>
-                                        {zoneFilterOptions.map((zone) => (
-                                            <SelectItem key={zone} value={zone}>
-                                                {zone}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-
-                                <Select value={filterSkill} onValueChange={setFilterSkill}>
-                                    <SelectTrigger className="h-11 w-full border-white/10 bg-[#0b1424] text-slate-100 sm:w-[170px]">
-                                        <div className="flex items-center gap-2">
-                                            <Briefcase className="w-4 h-4" />
-                                            <SelectValue placeholder="Skills" />
-                                        </div>
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">Skills</SelectItem>
-                                        {skillFilterOptions.map((skill) => (
-                                            <SelectItem key={skill} value={skill}>
-                                                {skill}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-
-                                {hasActiveFilters ? (
-                                    <Button variant="ghost" size="sm" onClick={clearFilters} className="h-8 px-2 text-slate-400 hover:text-slate-200">
-                                        Clear Filters
+                            <Button variant="outline" size="sm" onClick={() => setExportModalOpen(true)} className="h-10 gap-2 rounded-full border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]">
+                                <FileDown className="w-4 h-4" /> Export
+                            </Button>
+                            <Dialog open={addTechModalOpen} onOpenChange={setAddTechModalOpen}>
+                                <DialogTrigger asChild>
+                                    <Button size="sm" className="h-10 gap-2 rounded-full bg-[#2F8E92] px-5 text-white shadow-[0_12px_30px_rgba(47,142,146,0.28)] hover:bg-[#267276]">
+                                        <Plus className="w-4 h-4" /> Add Technician
                                     </Button>
-                                ) : null}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </Card>
-
-            {/* 3. Technicians Table */}
-            <Card className={cn(sectionCardClass, 'flex-1 flex flex-col')}>
-                {loading ? (
-                    <div className="p-4 space-y-4">
-                        {Array.from({ length: 5 }).map((_, i) => (
-                            <Skeleton key={i} className="h-12 w-full bg-white/10" />
-                        ))}
-                    </div>
-                ) : filteredTechs.length === 0 ? (
-                    <div className="flex-1 flex flex-col items-center justify-center py-20 text-slate-500 dark:text-slate-400">
-                        <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mb-4 dark:bg-white/[0.05]">
-                            <User className="w-8 h-8 text-slate-500 dark:text-slate-400" />
-                        </div>
-                        <h3 className="text-lg font-semibold text-slate-950 dark:text-white">No technicians found</h3>
-                        <p className="text-sm mt-1">Try adjusting your filters or search query.</p>
-                        <Button variant="outline" className="mt-4 border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]" onClick={clearFilters}>Clear Filters</Button>
-                    </div>
-                ) : (
-                    <div className="overflow-hidden">
-                        <div className="flex items-start justify-between gap-3 border-b border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0))] px-6 py-5">
-                            <div className="space-y-2">
-                                <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500 dark:text-slate-400">Technician Board</div>
-                                <div className="text-sm text-slate-600 dark:text-slate-200">Active workforce records with status, routing zones, and current dispatch readiness.</div>
-                            </div>
-                            <Badge variant="outline" className="rounded-full border-cyan-300/18 bg-cyan-300/10 px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-cyan-100">
-                                {filteredTechs.length} visible
-                            </Badge>
-                        </div>
-                        <div className="overflow-auto">
-                            <Table className="min-w-[1320px]">
-                                <TableHeader className="sticky top-0 z-10 border-b border-white/10 bg-[linear-gradient(180deg,rgba(11,25,42,0.98),rgba(10,20,35,0.92))] backdrop-blur-xl">
-                                    <TableRow className="border-white/0 hover:bg-transparent">
-                                        <TableHead className="pl-6 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Technician Name</TableHead>
-                                        <TableHead className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Email</TableHead>
-                                        <TableHead className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Phone</TableHead>
-                                        <TableHead className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Assigned Zones</TableHead>
-                                        <TableHead className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Skill Tags</TableHead>
-                                        <TableHead className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Current Status</TableHead>
-                                        <TableHead className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Active Job Count</TableHead>
-                                        <TableHead className="w-[64px] pr-6 text-right text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Open</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {filteredTechs.map((tech, index) => (
-                                        <TableRow
-                                            key={tech.id}
-                                            className={cn(
-                                                'group cursor-pointer border-b border-white/6 transition-colors hover:bg-white/[0.045]',
-                                                index % 2 === 1 && 'bg-white/[0.015]',
-                                            )}
-                                            onClick={() => handleOpenProfile(tech)}
-                                        >
-                                            <TableCell className="pl-6 py-4">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-cyan-300/18 bg-cyan-300/[0.08] text-[10px] font-semibold uppercase tracking-[0.14em] text-cyan-100">
-                                                        {tech.name.substring(0, 2)}
-                                                    </div>
-                                                    <div className="space-y-1.5">
-                                                        <div className="text-sm font-semibold tracking-[-0.03em] text-slate-950 transition-colors group-hover:text-blue-700 dark:text-white dark:group-hover:text-cyan-100">
-                                                            {tech.name}
-                                                        </div>
-                                                        <div className="flex items-center gap-2 text-xs text-slate-500">
-                                                            <span className="font-mono">{tech.tech_code}</span>
-                                                            <span>&bull;</span>
-                                                            <span>{tech.current_assignments[0]?.job_code ?? 'No active assignment'}</span>
-                                                        </div>
-                                                        {tech.has_pending_email_change_request ? (
-                                                            <Badge
-                                                                variant="outline"
-                                                                className="w-fit border-amber-300/20 bg-amber-300/10 px-2 py-0.5 text-[10px] text-amber-100"
-                                                            >
-                                                                Pending Email Change
-                                                            </Badge>
-                                                        ) : null}
-                                                    </div>
-                                                </div>
-                                            </TableCell>
-                                            <TableCell className="py-4">
-                                                <div className="text-sm text-slate-700 dark:text-slate-200">{tech.email}</div>
-                                            </TableCell>
-                                            <TableCell className="py-4">
-                                                <div className="text-sm text-slate-600 dark:text-slate-300">{formatPhoneForDisplay(tech.phone) || 'Not set'}</div>
-                                            </TableCell>
-                                            <TableCell className="py-4">
-                                                <div className="flex flex-wrap items-center gap-1.5">
-                                                    {tech.zones.slice(0, 2).map((zone) => (
-                                                        <Badge key={zone} variant="secondary" className="h-5 border border-white/10 bg-white/[0.04] px-2 py-0 text-[10px] text-slate-300">
-                                                            {zone}
-                                                        </Badge>
-                                                    ))}
-                                                    {tech.zones.length > 2 ? <span className="text-[10px] text-slate-500">+{tech.zones.length - 2}</span> : null}
-                                                </div>
-                                            </TableCell>
-                                            <TableCell className="py-4">
-                                                <div className="flex flex-wrap items-center gap-1.5">
-                                                    {tech.skills.slice(0, 2).map((skill) => (
-                                                        <Badge key={skill} variant="secondary" className="h-5 border border-cyan-300/20 bg-cyan-300/10 px-2 py-0 text-[10px] text-cyan-100">
-                                                            {skill}
-                                                        </Badge>
-                                                    ))}
-                                                    {tech.skills.length > 2 ? <span className="text-[10px] text-slate-500">+{tech.skills.length - 2}</span> : null}
-                                                </div>
-                                            </TableCell>
-                                            <TableCell className="py-4">
-                                                <StatusBadge status={getOperationalStatus(tech)} />
-                                            </TableCell>
-                                            <TableCell className="py-4">
-                                                <Badge
-                                                    variant="outline"
-                                                    className={cn(
-                                                        'min-w-8 justify-center rounded-full px-2.5 py-1 text-[10px] shadow-none',
-                                                        tech.current_jobs_count > 0
-                                                            ? 'border-amber-300/20 bg-amber-300/10 text-amber-100'
-                                                            : 'border-white/10 bg-white/[0.03] text-slate-400',
-                                                    )}
-                                                >
-                                                    {tech.current_jobs_count}
-                                                </Badge>
-                                            </TableCell>
-                                            <TableCell className="pr-6 text-right">
-                                                <div onClick={(e) => e.stopPropagation()}>
-                                                    <DropdownMenu>
-                                                        <DropdownMenuTrigger asChild>
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="icon"
-                                                                className="h-10 w-10 rounded-2xl border border-white/10 bg-white/[0.03] text-slate-300 transition-all hover:bg-white/[0.08] hover:text-white"
-                                                            >
-                                                                <MoreVertical className="h-4 w-4" />
-                                                            </Button>
-                                                        </DropdownMenuTrigger>
-                                                        <DropdownMenuContent align="end" className="border-white/10 bg-[#091827] text-slate-100">
-                                                            <DropdownMenuItem onClick={() => handleOpenProfile(tech)}>View Profile</DropdownMenuItem>
-                                                            {tech.current_assignments[0] ? (
-                                                                <DropdownMenuItem onClick={() => navigate(`/admin/jobs/${tech.current_assignments[0].id}`)}>
-                                                                    View Current Job
-                                                                </DropdownMenuItem>
-                                                            ) : null}
-                                                            <DropdownMenuSeparator />
-                                                            <DropdownMenuItem onClick={() => navigate('/admin/accounts')}>
-                                                                Open Technician Accounts
-                                                            </DropdownMenuItem>
-                                                        </DropdownMenuContent>
-                                                    </DropdownMenu>
-                                                </div>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        </div>
-                    </div>
-                )}
-            </Card>
-
-            {/* 5. Technician Profile Drawer */}
-            <Sheet open={drawerOpen} onOpenChange={handleDrawerOpenChange}>
-                <SheetContent className="w-full sm:max-w-2xl lg:max-w-3xl p-0 flex flex-col gap-0 border-white/10 bg-[linear-gradient(180deg,rgba(7,21,37,0.99),rgba(4,13,24,1))] text-slate-100">
-                    {selectedTech && techDraft && (
-                        <>
-                            <div className="bg-white/[0.03] border-b border-white/10 sticky top-0 z-10">
-                                <div className="px-6 pt-5 pb-4 pr-14">
-                                    <div className="flex flex-col gap-4">
-                                        <div className="flex flex-col gap-1.5">
-                                            <div className="flex min-w-0 flex-wrap items-center gap-2">
-                                                <h2 className="text-xl font-bold text-white">{selectedTech.name}</h2>
-                                                <StatusBadge
-                                                    status={getOperationalStatus(selectedTech)}
-                                                    className="border-white/15 bg-white/[0.07] text-slate-200"
+                                </DialogTrigger>
+                                <DialogContent className="border-white/10 bg-[linear-gradient(180deg,rgba(9,24,39,0.98),rgba(6,17,29,0.98))] text-slate-100">
+                                    <DialogHeader>
+                                        <DialogTitle className="text-white">Add New Technician</DialogTitle>
+                                        <DialogDescription className="text-slate-300">Create a new technician profile. They will start as active.</DialogDescription>
+                                    </DialogHeader>
+                                    <div className="space-y-4 py-2">
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <Label className="text-slate-200">Full Name</Label>
+                                                <Input data-admin-dark-input="true" style={adminDarkInputStyle} className="h-12 rounded-2xl border-white/10 !text-white placeholder:!text-slate-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] focus-visible:border-cyan-300/40 focus-visible:ring-cyan-300/15" placeholder="e.g. John Doe" value={newTechForm.name} onChange={e => setNewTechForm({ ...newTechForm, name: e.target.value })} />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label className="text-slate-200">Email</Label>
+                                                <Input data-admin-dark-input="true" style={adminDarkInputStyle} className="h-12 rounded-2xl border-white/10 !text-white placeholder:!text-slate-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] focus-visible:border-cyan-300/40 focus-visible:ring-cyan-300/15" placeholder="e.g. john@example.com" value={newTechForm.email} onChange={e => setNewTechForm({ ...newTechForm, email: e.target.value })} />
+                                            </div>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <Label className="text-slate-200">Tech Code</Label>
+                                                <Input data-admin-dark-input="true" style={adminDarkInputStyle} className="h-12 rounded-2xl border-white/10 !text-white placeholder:!text-slate-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] focus-visible:border-cyan-300/40 focus-visible:ring-cyan-300/15" placeholder="e.g. TECH-999" value={newTechForm.code} onChange={e => setNewTechForm({ ...newTechForm, code: e.target.value })} />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label className="text-slate-200">Phone</Label>
+                                                <Input
+                                                    data-admin-dark-input="true"
+                                                    style={adminDarkInputStyle}
+                                                    className="h-12 rounded-2xl border-white/10 !text-white placeholder:!text-slate-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] focus-visible:border-cyan-300/40 focus-visible:ring-cyan-300/15"
+                                                    placeholder={phoneExampleFormat}
+                                                    value={newTechForm.phone}
+                                                    onChange={e => setNewTechForm({ ...newTechForm, phone: formatUsPhoneInput(e.target.value) })}
                                                 />
                                             </div>
-                                            <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm text-slate-400">
-                                                <span className="font-mono">{selectedTech.tech_code}</span>
-                                                <span className="text-slate-600">|</span>
-                                                <span className="truncate">{selectedTech.email}</span>
-                                                <span className="text-slate-600">|</span>
-                                                <span className="shrink-0">{formatPhoneForDisplay(selectedTech.phone) || 'No phone on file'}</span>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label className="text-slate-200">Default Zones (comma separated)</Label>
+                                            <Input data-admin-dark-input="true" style={adminDarkInputStyle} className="h-12 rounded-2xl border-white/10 !text-white placeholder:!text-slate-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] focus-visible:border-cyan-300/40 focus-visible:ring-cyan-300/15" placeholder="North, Downtown" value={newTechForm.zones} onChange={e => setNewTechForm({ ...newTechForm, zones: e.target.value })} />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label className="text-slate-200">Default Skills (comma separated)</Label>
+                                            <Input data-admin-dark-input="true" style={adminDarkInputStyle} className="h-12 rounded-2xl border-white/10 !text-white placeholder:!text-slate-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] focus-visible:border-cyan-300/40 focus-visible:ring-cyan-300/15" placeholder="Locksmith, Towing" value={newTechForm.skills} onChange={e => setNewTechForm({ ...newTechForm, skills: e.target.value })} />
+                                        </div>
+                                    </div>
+                                    <DialogFooter>
+                                        <Button variant="ghost" className="h-11 rounded-2xl border border-white/10 !bg-[#0b1424] !text-slate-100 hover:!bg-[#122039] hover:!text-white" onClick={() => setAddTechModalOpen(false)}>Cancel</Button>
+                                        <Button onClick={handleAddTech} className="bg-[#2F8E92] hover:bg-[#267276]">Create Technician</Button>
+                                    </DialogFooter>
+                                </DialogContent>
+                            </Dialog>
+                        </div>
+                    </div>
+                </section>
+
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                    <Card className="overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-[0_18px_54px_rgba(15,23,42,0.07)] dark:border-cyan-400/15 dark:bg-[linear-gradient(180deg,rgba(12,36,55,0.96),rgba(8,24,39,0.96))] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                        <div className="p-5">
+                            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500 dark:text-slate-400">Total Technicians</p>
+                            <p className="mt-3 text-[2.15rem] font-semibold leading-none tracking-[-0.06em] text-slate-950 dark:text-white">{totalTechCount}</p>
+                            <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">Visible workforce profiles</p>
+                        </div>
+                    </Card>
+                    <Card className="overflow-hidden rounded-[24px] border border-emerald-200 bg-emerald-50/70 shadow-[0_18px_54px_rgba(15,23,42,0.06)] dark:border-emerald-400/15 dark:bg-[linear-gradient(180deg,rgba(10,37,45,0.96),rgba(7,25,31,0.96))] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                        <div className="p-5">
+                            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700/70 dark:text-slate-400">Available</p>
+                            <p className="mt-3 text-[2.15rem] font-semibold leading-none tracking-[-0.06em] text-emerald-950 dark:text-white">{availableTechCount}</p>
+                            <p className="mt-2 text-sm text-emerald-800/75 dark:text-slate-300">Ready for dispatch right now</p>
+                        </div>
+                    </Card>
+                    <Card className="overflow-hidden rounded-[24px] border border-violet-200 bg-violet-50/60 shadow-[0_18px_54px_rgba(15,23,42,0.06)] dark:border-violet-400/15 dark:bg-[linear-gradient(180deg,rgba(30,23,49,0.96),rgba(18,16,33,0.96))] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                        <div className="p-5">
+                            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-violet-700/70 dark:text-slate-400">Out of Office</p>
+                            <p className="mt-3 text-[2.15rem] font-semibold leading-none tracking-[-0.06em] text-violet-950 dark:text-white">{outOfOfficeCount}</p>
+                            <p className="mt-2 text-sm text-violet-800/75 dark:text-slate-300">Temporarily removed from dispatch</p>
+                        </div>
+                    </Card>
+                    <Card className="overflow-hidden rounded-[24px] border border-amber-200 bg-amber-50/70 shadow-[0_18px_54px_rgba(15,23,42,0.06)] dark:border-amber-400/15 dark:bg-[linear-gradient(180deg,rgba(41,28,15,0.94),rgba(27,18,10,0.96))] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                        <div className="p-5">
+                            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-amber-700/70 dark:text-slate-400">In Progress / Offline</p>
+                            <p className="mt-3 text-[2.15rem] font-semibold leading-none tracking-[-0.06em] text-amber-950 dark:text-white">{busyTechniciansCount} / {offlineTechCount}</p>
+                            <p className="mt-2 text-sm text-amber-800/75 dark:text-slate-300">{assignedJobsCount} active jobs across the roster</p>
+                        </div>
+                    </Card>
+                </div>
+
+                {/* 2. Filter Bar */}
+                <Card className={sectionCardClass}>
+                    <div className={sectionHeaderClass}>
+                        <div className="flex flex-col gap-4">
+                            <div className="flex flex-col gap-2 lg:flex-row lg:items-end lg:justify-between">
+                                <div>
+                                    <h2 className="text-base font-semibold text-slate-950 dark:text-white">Technician Filters</h2>
+                                    <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Search by name, email, or zone and narrow by readiness, coverage, and skill fit.</p>
+                                </div>
+                                <Badge variant="outline" className="w-fit border-white/10 bg-white/[0.03] text-slate-300">
+                                    Showing {filteredTechs.length} of {totalTechCount}
+                                </Badge>
+                            </div>
+                            <div className="flex flex-col lg:flex-row gap-4 items-center">
+                                <div className="relative flex-1 w-full lg:w-auto min-w-0 lg:min-w-[300px]">
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                    <Input
+                                        placeholder="Search by name, email, phone, or zone..."
+                                        className="h-11 rounded-full border-white/10 bg-[#0b1424] pl-9 text-slate-100 placeholder:text-slate-500 transition-all focus:bg-[#122039]"
+                                        value={searchQuery}
+                                        onChange={e => setSearchQuery(e.target.value)}
+                                    />
+                                </div>
+                                <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
+                                    <Select value={filterStatus} onValueChange={setFilterStatus}>
+                                        <SelectTrigger className="h-11 w-full border-white/10 bg-[#0b1424] text-slate-100 sm:w-[140px]">
+                                            <SelectValue placeholder="Status" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">All Statuses</SelectItem>
+                                            <SelectItem value="available">Available</SelectItem>
+                                            <SelectItem value="in_progress">In Progress</SelectItem>
+                                            <SelectItem value="offline">Offline</SelectItem>
+                                            <SelectItem value="out_of_office">Out of Office</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+
+                                    <Select value={filterZone} onValueChange={setFilterZone}>
+                                        <SelectTrigger className="h-11 w-full border-white/10 bg-[#0b1424] text-slate-100 sm:w-[160px]">
+                                            <div className="flex items-center gap-2">
+                                                <MapPin className="w-4 h-4" />
+                                                <SelectValue placeholder="Zone" />
                                             </div>
-                                            {selectedTech.has_pending_email_change_request ? (
-                                                <div className="pt-0.5">
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">Zone</SelectItem>
+                                            {zoneFilterOptions.map((zone) => (
+                                                <SelectItem key={zone} value={zone}>
+                                                    {zone}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+
+                                    <Select value={filterSkill} onValueChange={setFilterSkill}>
+                                        <SelectTrigger className="h-11 w-full border-white/10 bg-[#0b1424] text-slate-100 sm:w-[170px]">
+                                            <div className="flex items-center gap-2">
+                                                <Briefcase className="w-4 h-4" />
+                                                <SelectValue placeholder="Skills" />
+                                            </div>
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">Skills</SelectItem>
+                                            {skillFilterOptions.map((skill) => (
+                                                <SelectItem key={skill} value={skill}>
+                                                    {skill}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+
+                                    {hasActiveFilters ? (
+                                        <Button variant="ghost" size="sm" onClick={clearFilters} className="h-8 px-2 text-slate-400 hover:text-slate-200">
+                                            Clear Filters
+                                        </Button>
+                                    ) : null}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </Card>
+
+                {/* 3. Technicians Table */}
+                <Card className={cn(sectionCardClass, 'flex-1 flex flex-col')}>
+                    {loading ? (
+                        <div className="p-4 space-y-4">
+                            {Array.from({ length: 5 }).map((_, i) => (
+                                <Skeleton key={i} className="h-12 w-full bg-white/10" />
+                            ))}
+                        </div>
+                    ) : filteredTechs.length === 0 ? (
+                        <div className="flex-1 flex flex-col items-center justify-center py-20 text-slate-500 dark:text-slate-400">
+                            <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mb-4 dark:bg-white/[0.05]">
+                                <User className="w-8 h-8 text-slate-500 dark:text-slate-400" />
+                            </div>
+                            <h3 className="text-lg font-semibold text-slate-950 dark:text-white">No technicians found</h3>
+                            <p className="text-sm mt-1">Try adjusting your filters or search query.</p>
+                            <Button variant="outline" className="mt-4 border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]" onClick={clearFilters}>Clear Filters</Button>
+                        </div>
+                    ) : (
+                        <div className="overflow-hidden">
+                            <div className="flex items-start justify-between gap-3 border-b border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0))] px-6 py-5">
+                                <div className="space-y-2">
+                                    <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500 dark:text-slate-400">Technician Board</div>
+                                    <div className="text-sm text-slate-600 dark:text-slate-200">Active workforce records with status, routing zones, and current dispatch readiness.</div>
+                                </div>
+                                <Badge variant="outline" className="rounded-full border-cyan-300/18 bg-cyan-300/10 px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-cyan-100">
+                                    {filteredTechs.length} visible
+                                </Badge>
+                            </div>
+                            <div className="overflow-auto">
+                                <Table className="min-w-[1320px]">
+                                    <TableHeader className="sticky top-0 z-10 border-b border-white/10 bg-[linear-gradient(180deg,rgba(11,25,42,0.98),rgba(10,20,35,0.92))] backdrop-blur-xl">
+                                        <TableRow className="border-white/0 hover:bg-transparent">
+                                            <TableHead className="pl-6 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Technician Name</TableHead>
+                                            <TableHead className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Email</TableHead>
+                                            <TableHead className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Phone</TableHead>
+                                            <TableHead className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Assigned Zones</TableHead>
+                                            <TableHead className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Skill Tags</TableHead>
+                                            <TableHead className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Current Status</TableHead>
+                                            <TableHead className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Active Job Count</TableHead>
+                                            <TableHead className="w-[64px] pr-6 text-right text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Open</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {filteredTechs.map((tech, index) => (
+                                            <TableRow
+                                                key={tech.id}
+                                                className={cn(
+                                                    'group cursor-pointer border-b border-white/6 transition-colors hover:bg-white/[0.045]',
+                                                    index % 2 === 1 && 'bg-white/[0.015]',
+                                                )}
+                                                onClick={() => handleOpenProfile(tech)}
+                                            >
+                                                <TableCell className="pl-6 py-4">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-cyan-300/18 bg-cyan-300/[0.08] text-[10px] font-semibold uppercase tracking-[0.14em] text-cyan-100">
+                                                            {tech.name.substring(0, 2)}
+                                                        </div>
+                                                        <div className="space-y-1.5">
+                                                            <div className="text-sm font-semibold tracking-[-0.03em] text-slate-950 transition-colors group-hover:text-blue-700 dark:text-white dark:group-hover:text-cyan-100">
+                                                                {tech.name}
+                                                            </div>
+                                                            <div className="flex items-center gap-2 text-xs text-slate-500">
+                                                                <span className="font-mono">{tech.tech_code}</span>
+                                                                <span>&bull;</span>
+                                                                <span>{tech.current_assignments[0]?.job_code ?? 'No active assignment'}</span>
+                                                            </div>
+                                                            {tech.has_pending_email_change_request ? (
+                                                                <Badge
+                                                                    variant="outline"
+                                                                    className="w-fit border-amber-300/20 bg-amber-300/10 px-2 py-0.5 text-[10px] text-amber-100"
+                                                                >
+                                                                    Pending Email Change
+                                                                </Badge>
+                                                            ) : null}
+                                                        </div>
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell className="py-4">
+                                                    <div className="text-sm text-slate-700 dark:text-slate-200">{tech.email}</div>
+                                                </TableCell>
+                                                <TableCell className="py-4">
+                                                    <div className="text-sm text-slate-600 dark:text-slate-300">{formatPhoneForDisplay(tech.phone) || 'Not set'}</div>
+                                                </TableCell>
+                                                <TableCell className="py-4">
+                                                    <div className="flex flex-wrap items-center gap-1.5">
+                                                        {tech.zones.slice(0, 2).map((zone) => (
+                                                            <Badge key={zone} variant="secondary" className="h-5 border border-white/10 bg-white/[0.04] px-2 py-0 text-[10px] text-slate-300">
+                                                                {zone}
+                                                            </Badge>
+                                                        ))}
+                                                        {tech.zones.length > 2 ? <span className="text-[10px] text-slate-500">+{tech.zones.length - 2}</span> : null}
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell className="py-4">
+                                                    <div className="flex flex-wrap items-center gap-1.5">
+                                                        {tech.skills.slice(0, 2).map((skill) => (
+                                                            <Badge key={skill} variant="secondary" className="h-5 border border-cyan-300/20 bg-cyan-300/10 px-2 py-0 text-[10px] text-cyan-100">
+                                                                {skill}
+                                                            </Badge>
+                                                        ))}
+                                                        {tech.skills.length > 2 ? <span className="text-[10px] text-slate-500">+{tech.skills.length - 2}</span> : null}
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell className="py-4">
+                                                    <StatusBadge status={getOperationalStatus(tech)} />
+                                                </TableCell>
+                                                <TableCell className="py-4">
                                                     <Badge
                                                         variant="outline"
-                                                        className="text-[10px] h-5 px-2 border-amber-300/20 bg-amber-300/10 text-amber-100"
+                                                        className={cn(
+                                                            'min-w-8 justify-center rounded-full px-2.5 py-1 text-[10px] shadow-none',
+                                                            tech.current_jobs_count > 0
+                                                                ? 'border-amber-300/20 bg-amber-300/10 text-amber-100'
+                                                                : 'border-white/10 bg-white/[0.03] text-slate-400',
+                                                        )}
                                                     >
-                                                        Pending Email Change: {selectedTech.pending_email_change_requested_email || 'Review required'}
+                                                        {tech.current_jobs_count}
                                                     </Badge>
-                                                </div>
-                                            ) : null}
-                                        </div>
+                                                </TableCell>
+                                                <TableCell className="pr-6 text-right">
+                                                    <div onClick={(e) => e.stopPropagation()}>
+                                                        <DropdownMenu>
+                                                            <DropdownMenuTrigger asChild>
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="icon"
+                                                                    className="h-10 w-10 rounded-2xl border border-white/10 bg-white/[0.03] text-slate-300 transition-all hover:bg-white/[0.08] hover:text-white"
+                                                                >
+                                                                    <MoreVertical className="h-4 w-4" />
+                                                                </Button>
+                                                            </DropdownMenuTrigger>
+                                                            <DropdownMenuContent align="end" className="border-white/10 bg-[#091827] text-slate-100">
+                                                                <DropdownMenuItem onClick={() => handleOpenProfile(tech)}>View Profile</DropdownMenuItem>
+                                                                {tech.current_assignments[0] ? (
+                                                                    <DropdownMenuItem onClick={() => navigate(`/admin/jobs/${tech.current_assignments[0].id}`)}>
+                                                                        View Current Job
+                                                                    </DropdownMenuItem>
+                                                                ) : null}
+                                                                <DropdownMenuSeparator />
+                                                                <DropdownMenuItem onClick={() => navigate('/admin/accounts')}>
+                                                                    Open Technician Accounts
+                                                                </DropdownMenuItem>
+                                                            </DropdownMenuContent>
+                                                        </DropdownMenu>
+                                                    </div>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </div>
+                        </div>
+                    )}
+                </Card>
 
-                                        {/* Action buttons row: secondary actions left, save/cancel right */}
-                                        <div className="flex flex-wrap items-center justify-between gap-2">
-                                            <div className="flex flex-wrap gap-2">
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    onClick={() => setTimeOffModalOpen(true)}
-                                                    className="h-9 rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] px-4 text-slate-100 shadow-[0_14px_34px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.055)] hover:bg-[linear-gradient(180deg,rgba(24,38,64,0.98),rgba(12,20,34,0.98))] hover:text-white"
-                                                >
-                                                    Mark Out of Office
-                                                </Button>
-                                                {selectedTech.current_assignments[0] ? (
+                {/* 5. Technician Profile Drawer */}
+                <Sheet open={drawerOpen} onOpenChange={handleDrawerOpenChange}>
+                    <SheetContent className="w-full sm:max-w-2xl lg:max-w-3xl p-0 flex flex-col gap-0 border-white/10 bg-[linear-gradient(180deg,rgba(7,21,37,0.99),rgba(4,13,24,1))] text-slate-100">
+                        {selectedTech && techDraft && (
+                            <>
+                                <div className="bg-white/[0.03] border-b border-white/10 sticky top-0 z-10">
+                                    <div className="px-6 pt-5 pb-4 pr-14">
+                                        <div className="flex flex-col gap-4">
+                                            <div className="flex flex-col gap-1.5">
+                                                <div className="flex min-w-0 flex-wrap items-center gap-2">
+                                                    <h2 className="text-xl font-bold text-white">{selectedTech.name}</h2>
+                                                    <StatusBadge
+                                                        status={getOperationalStatus(selectedTech)}
+                                                        className="border-white/15 bg-white/[0.07] text-slate-200"
+                                                    />
+                                                </div>
+                                                <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm text-slate-400">
+                                                    <span className="font-mono">{selectedTech.tech_code}</span>
+                                                    <span className="text-slate-600">|</span>
+                                                    <span className="truncate">{selectedTech.email}</span>
+                                                    <span className="text-slate-600">|</span>
+                                                    <span className="shrink-0">{formatPhoneForDisplay(selectedTech.phone) || 'No phone on file'}</span>
+                                                </div>
+                                                {selectedTech.has_pending_email_change_request ? (
+                                                    <div className="pt-0.5">
+                                                        <Badge
+                                                            variant="outline"
+                                                            className="text-[10px] h-5 px-2 border-amber-300/20 bg-amber-300/10 text-amber-100"
+                                                        >
+                                                            Pending Email Change: {selectedTech.pending_email_change_requested_email || 'Review required'}
+                                                        </Badge>
+                                                    </div>
+                                                ) : null}
+                                            </div>
+
+                                            {/* Action buttons row: secondary actions left, save/cancel right */}
+                                            <div className="flex flex-wrap items-center justify-between gap-2">
+                                                <div className="flex flex-wrap gap-2">
                                                     <Button
                                                         variant="outline"
                                                         size="sm"
-                                                        onClick={() => navigate(`/admin/jobs/${selectedTech.current_assignments[0].id}`)}
+                                                        onClick={() => setTimeOffModalOpen(true)}
                                                         className="h-9 rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] px-4 text-slate-100 shadow-[0_14px_34px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.055)] hover:bg-[linear-gradient(180deg,rgba(24,38,64,0.98),rgba(12,20,34,0.98))] hover:text-white"
                                                     >
-                                                        View Current Job
+                                                        Mark Out of Office
                                                     </Button>
-                                                ) : null}
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    onClick={() => navigate('/admin/accounts')}
-                                                    className="h-9 rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] px-4 text-slate-100 shadow-[0_14px_34px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.055)] hover:bg-[linear-gradient(180deg,rgba(24,38,64,0.98),rgba(12,20,34,0.98))] hover:text-white"
-                                                >
-                                                    Technician Accounts
-                                                </Button>
+                                                    {selectedTech.current_assignments[0] ? (
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            onClick={() => navigate(`/admin/jobs/${selectedTech.current_assignments[0].id}`)}
+                                                            className="h-9 rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] px-4 text-slate-100 shadow-[0_14px_34px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.055)] hover:bg-[linear-gradient(180deg,rgba(24,38,64,0.98),rgba(12,20,34,0.98))] hover:text-white"
+                                                        >
+                                                            View Current Job
+                                                        </Button>
+                                                    ) : null}
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={() => navigate('/admin/accounts')}
+                                                        className="h-9 rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] px-4 text-slate-100 shadow-[0_14px_34px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.055)] hover:bg-[linear-gradient(180deg,rgba(24,38,64,0.98),rgba(12,20,34,0.98))] hover:text-white"
+                                                    >
+                                                        Technician Accounts
+                                                    </Button>
+                                                </div>
+                                                <div className="flex shrink-0 gap-2">
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        disabled={!hasDrawerChanges}
+                                                        onClick={handleCancelDrawerChanges}
+                                                        className="h-9 rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] px-4 text-slate-100 shadow-[0_14px_34px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.055)] hover:bg-[linear-gradient(180deg,rgba(24,38,64,0.98),rgba(12,20,34,0.98))] hover:text-white"
+                                                    >
+                                                        Cancel
+                                                    </Button>
+                                                    <Button
+                                                        size="sm"
+                                                        disabled={!hasDrawerChanges}
+                                                        className="h-9 rounded-2xl border border-[#7db0ff]/40 bg-[linear-gradient(135deg,#4f7cff,#22d3ee)] px-4 text-white shadow-[0_16px_34px_rgba(79,124,255,0.22)] hover:brightness-105 disabled:opacity-50"
+                                                        onClick={handleSaveDrawerChanges}
+                                                    >
+                                                        Save Changes
+                                                    </Button>
+                                                </div>
                                             </div>
-                                            <div className="flex shrink-0 gap-2">
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    disabled={!hasDrawerChanges}
-                                                    onClick={handleCancelDrawerChanges}
-                                                    className="h-9 rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] px-4 text-slate-100 shadow-[0_14px_34px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.055)] hover:bg-[linear-gradient(180deg,rgba(24,38,64,0.98),rgba(12,20,34,0.98))] hover:text-white"
-                                                >
-                                                    Cancel
-                                                </Button>
-                                                <Button
-                                                    size="sm"
-                                                    disabled={!hasDrawerChanges}
-                                                    className="h-9 rounded-2xl border border-[#7db0ff]/40 bg-[linear-gradient(135deg,#4f7cff,#22d3ee)] px-4 text-white shadow-[0_16px_34px_rgba(79,124,255,0.22)] hover:brightness-105 disabled:opacity-50"
-                                                    onClick={handleSaveDrawerChanges}
-                                                >
-                                                    Save Changes
-                                                </Button>
-                                            </div>
-                                        </div>
 
-                                        {profileSummary ? (
-                                            <div className="grid grid-cols-2 lg:grid-cols-5 gap-2">
-                                                <ProfileStat
-                                                    label="Active Jobs"
-                                                    value={String(profileSummary.activeJobs)}
-                                                    valueClassName={profileSummary.activeJobs > 0 ? 'text-amber-100' : 'text-slate-100'}
-                                                />
-                                                <ProfileStat label="Zones" value={String(profileSummary.zonesCount)} />
-                                                <ProfileStat label="Skills" value={String(profileSummary.skillsCount)} />
-                                                <ProfileStat label="Open Days" value={String(profileSummary.openDaysCount)} hint="Per week" />
-                                                <ProfileStat label="Time Off" value={String(profileSummary.timeOffCount)} hint="Upcoming entries" />
-                                            </div>
-                                        ) : null}
+                                            {profileSummary ? (
+                                                <div className="grid grid-cols-2 lg:grid-cols-5 gap-2">
+                                                    <ProfileStat
+                                                        label="Active Jobs"
+                                                        value={String(profileSummary.activeJobs)}
+                                                        valueClassName={profileSummary.activeJobs > 0 ? 'text-amber-100' : 'text-slate-100'}
+                                                    />
+                                                    <ProfileStat label="Zones" value={String(profileSummary.zonesCount)} />
+                                                    <ProfileStat label="Skills" value={String(profileSummary.skillsCount)} />
+                                                    <ProfileStat label="Open Days" value={String(profileSummary.openDaysCount)} hint="Per week" />
+                                                    <ProfileStat label="Time Off" value={String(profileSummary.timeOffCount)} hint="Upcoming entries" />
+                                                </div>
+                                            ) : null}
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            <div className="flex-1 min-h-0 overflow-y-auto">
-                                <div className="p-6 space-y-6">
+                                <div className="flex-1 min-h-0 overflow-y-auto">
+                                    <div className="p-6 space-y-6">
 
-                                    <Card className="p-4 border-white/10 bg-white/[0.03] shadow-none">
-                                        <h3 className="mb-4 flex items-center gap-2 text-sm font-bold text-white">
-                                            <Activity className="h-4 w-4" /> Technician Profile
-                                        </h3>
-                                        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-                                            <ProfileStat label="Email" value={selectedTech.email} valueClassName="text-sm text-white" />
-                                            <ProfileStat label="Phone" value={formatPhoneForDisplay(selectedTech.phone) || 'Not set'} valueClassName="text-sm text-white" />
-                                            <ProfileStat label="Availability" value={selectedTech.effective_availability ? 'Dispatch Ready' : 'Unavailable'} valueClassName={selectedTech.effective_availability ? 'text-emerald-100' : 'text-slate-300'} />
-                                            <ProfileStat label="Account Control" value="Tech Accounts" hint="Activate, deactivate, approve, and reset there" valueClassName="text-sm text-white" />
-                                        </div>
-                                    </Card>
-
-                                    <Card className="p-4 border-white/10 bg-white/[0.03] shadow-none">
-                                        <div className="mb-4 flex items-center justify-between gap-3">
-                                            <h3 className="flex items-center gap-2 text-sm font-bold text-white">
-                                                <Route className="h-4 w-4" /> Active Jobs & History Summary
+                                        <Card className="p-4 border-white/10 bg-white/[0.03] shadow-none">
+                                            <h3 className="mb-4 flex items-center gap-2 text-sm font-bold text-white">
+                                                <Activity className="h-4 w-4" /> Technician Profile
                                             </h3>
-                                            <Badge variant="outline" className="border-white/10 bg-white/[0.03] text-slate-300">
-                                                {techJobFeed.length} active
-                                            </Badge>
-                                        </div>
-                                        {detailLoading ? (
-                                            <div className="flex items-center gap-2 text-sm text-slate-400">
-                                                <Loader2 className="h-4 w-4 animate-spin" /> Loading live technician workload...
+                                            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                                                <ProfileStat label="Email" value={selectedTech.email} valueClassName="text-sm text-white" />
+                                                <ProfileStat label="Phone" value={formatPhoneForDisplay(selectedTech.phone) || 'Not set'} valueClassName="text-sm text-white" />
+                                                <ProfileStat label="Availability" value={selectedTech.effective_availability ? 'Dispatch Ready' : 'Unavailable'} valueClassName={selectedTech.effective_availability ? 'text-emerald-100' : 'text-slate-300'} />
+                                                <ProfileStat label="Account Control" value="Tech Accounts" hint="Activate, deactivate, approve, and reset there" valueClassName="text-sm text-white" />
                                             </div>
-                                        ) : techJobFeed.length === 0 ? (
-                                            <div className="rounded-xl border border-dashed border-white/10 bg-white/[0.02] px-4 py-5 text-sm text-slate-400">
-                                                No active jobs are currently assigned. This technician will appear in the dispatch queue based on zone, skill, and availability rules.
-                                            </div>
-                                        ) : (
-                                            <div className="space-y-3">
-                                                {techJobFeed.map((job) => (
-                                                    <button
-                                                        key={job.id}
-                                                        type="button"
-                                                        onClick={() => navigate(`/admin/jobs/${job.id}`)}
-                                                        className="flex w-full items-center justify-between rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-left transition hover:bg-white/[0.06]"
-                                                    >
-                                                        <div className="space-y-1">
-                                                            <div className="flex items-center gap-2">
-                                                                <span className="text-sm font-semibold text-white">{job.job_code}</span>
-                                                                <Badge variant="outline" className="border-white/10 bg-white/[0.02] text-slate-300">{job.status}</Badge>
-                                                            </div>
-                                                            <div className="text-xs text-slate-400">
-                                                                {(job.dealership_name || 'Unknown location')} · {(job.vehicle_summary || 'Vehicle not specified')}
-                                                            </div>
-                                                        </div>
-                                                        <ArrowUpRight className="h-4 w-4 text-slate-400" />
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </Card>
+                                        </Card>
 
-                                    {/* B) Skills & Zones */}
-                                    <Card className="p-4 border-white/10 bg-white/[0.03] shadow-none">
-                                        <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
-                                            <Briefcase className="w-4 h-4" /> Skills & Zones
-                                        </h3>
-                                        <div className="space-y-4">
-                                            <div>
-                                                <Label className="text-xs text-slate-400 uppercase tracking-wider mb-2 block">Assigned Zones</Label>
-                                                <div className="flex flex-wrap gap-2">
-                                                    {techDraft.zones.map(z => (
-                                                        <Badge key={z} variant="secondary" className="border border-white/10 bg-white/[0.04] text-slate-200 hover:bg-white/[0.08] pr-1">
-                                                            <span>{z}</span>
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => handleRemoveZone(z)}
-                                                                aria-label={`Remove zone ${z}`}
-                                                                className="ml-1 rounded-full p-0.5 hover:bg-white/[0.08] text-slate-500 hover:text-slate-200"
-                                                            >
-                                                                <X className="w-3 h-3" />
-                                                            </button>
-                                                        </Badge>
+                                        <Card className="p-4 border-white/10 bg-white/[0.03] shadow-none">
+                                            <div className="mb-4 flex items-center justify-between gap-3">
+                                                <h3 className="flex items-center gap-2 text-sm font-bold text-white">
+                                                    <Route className="h-4 w-4" /> Active Jobs & History Summary
+                                                </h3>
+                                                <Badge variant="outline" className="border-white/10 bg-white/[0.03] text-slate-300">
+                                                    {techJobFeed.length} active
+                                                </Badge>
+                                            </div>
+                                            {detailLoading ? (
+                                                <div className="flex items-center gap-2 text-sm text-slate-400">
+                                                    <Loader2 className="h-4 w-4 animate-spin" /> Loading live technician workload...
+                                                </div>
+                                            ) : techJobFeed.length === 0 ? (
+                                                <div className="rounded-xl border border-dashed border-white/10 bg-white/[0.02] px-4 py-5 text-sm text-slate-400">
+                                                    No active jobs are currently assigned. This technician will appear in the dispatch queue based on zone, skill, and availability rules.
+                                                </div>
+                                            ) : (
+                                                <div className="space-y-3">
+                                                    {techJobFeed.map((job) => (
+                                                        <button
+                                                            key={job.id}
+                                                            type="button"
+                                                            onClick={() => navigate(`/admin/jobs/${job.id}`)}
+                                                            className="flex w-full items-center justify-between rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-left transition hover:bg-white/[0.06]"
+                                                        >
+                                                            <div className="space-y-1">
+                                                                <div className="flex items-center gap-2">
+                                                                    <span className="text-sm font-semibold text-white">{job.job_code}</span>
+                                                                    <Badge variant="outline" className="border-white/10 bg-white/[0.02] text-slate-300">{job.status}</Badge>
+                                                                </div>
+                                                                <div className="text-xs text-slate-400">
+                                                                    {(job.dealership_name || 'Unknown location')} · {(job.vehicle_summary || 'Vehicle not specified')}
+                                                                </div>
+                                                            </div>
+                                                            <ArrowUpRight className="h-4 w-4 text-slate-400" />
+                                                        </button>
                                                     ))}
                                                 </div>
-                                                <div className="flex flex-col sm:flex-row sm:items-center gap-2 mt-2">
-                                                    <Input
-                                                        value={newZoneInput}
-                                                        onChange={(e) => setNewZoneInput(e.target.value)}
-                                                        onKeyDown={(e) => {
-                                                            if (e.key === 'Enter') {
-                                                                e.preventDefault();
-                                                                handleAddZone();
-                                                            }
-                                                        }}
-                                                        placeholder="Add zone (e.g. Quebec)"
-                                                        className="h-10 rounded-2xl text-xs border-white/10 bg-[linear-gradient(180deg,rgba(10,18,32,0.96),rgba(8,14,26,0.96))] text-white placeholder:text-slate-500"
-                                                    />
-                                                    <Button variant="outline" size="sm" className="h-10 rounded-2xl text-xs border-white/10 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] px-4 text-slate-100 shadow-[0_14px_34px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.055)] hover:bg-[linear-gradient(180deg,rgba(24,38,64,0.98),rgba(12,20,34,0.98))] hover:text-white sm:w-auto" onClick={handleAddZone}>
-                                                        + Add Zone
-                                                    </Button>
-                                                </div>
-                                            </div>
-                                            <Separator className="bg-white/10" />
-                                            <div>
-                                                <Label className="text-xs text-slate-400 uppercase tracking-wider mb-2 block">Technical Skills</Label>
-                                                <div className="flex flex-wrap gap-2">
-                                                    {techDraft.skills.map(s => (
-                                                        <Badge key={s} variant="secondary" className="border border-cyan-300/20 bg-cyan-300/10 text-cyan-100 hover:bg-cyan-300/15 pr-1">
-                                                            <span>{s}</span>
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => handleRemoveSkill(s)}
-                                                                aria-label={`Remove skill ${s}`}
-                                                                className="ml-1 rounded-full p-0.5 hover:bg-cyan-300/15 text-cyan-300 hover:text-cyan-100"
-                                                            >
-                                                                <X className="w-3 h-3" />
-                                                            </button>
-                                                        </Badge>
-                                                    ))}
-                                                </div>
-                                                <div className="flex flex-col sm:flex-row sm:items-center gap-2 mt-2">
-                                                    <Input
-                                                        value={newSkillInput}
-                                                        onChange={(e) => setNewSkillInput(e.target.value)}
-                                                        onKeyDown={(e) => {
-                                                            if (e.key === 'Enter') {
-                                                                e.preventDefault();
-                                                                handleAddSkill();
-                                                            }
-                                                        }}
-                                                        placeholder="Add skill (e.g. Towing)"
-                                                        className="h-10 rounded-2xl text-xs border-white/10 bg-[linear-gradient(180deg,rgba(10,18,32,0.96),rgba(8,14,26,0.96))] text-white placeholder:text-slate-500"
-                                                    />
-                                                    <Button variant="outline" size="sm" className="h-10 rounded-2xl text-xs border-white/10 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] px-4 text-slate-100 shadow-[0_14px_34px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.055)] hover:bg-[linear-gradient(180deg,rgba(24,38,64,0.98),rgba(12,20,34,0.98))] hover:text-white sm:w-auto" onClick={handleAddSkill}>
-                                                        + Add Skill
-                                                    </Button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </Card>
+                                            )}
+                                        </Card>
 
-                                    {/* D) Working Hours */}
-                                    <Card className="p-4 border-white/10 bg-white/[0.03] shadow-none">
-                                        <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
-                                            <Clock className="w-4 h-4" /> Weekly Schedule
-                                        </h3>
-                                        <div className="space-y-2">
-                                            {techDraft.working_hours.map((wh, idx) => (
-                                                <div key={idx} className="flex items-center justify-between text-sm py-1.5 gap-3">
-                                                    <span className={cn("w-10 font-medium", wh.is_closed ? "text-slate-500" : "text-slate-200")}>{wh.day}</span>
-                                                    <div className="flex items-center gap-2 flex-1 justify-end">
-                                                        <Switch
-                                                            checked={!wh.is_closed}
-                                                            onCheckedChange={(checked) => handleToggleWorkingDay(idx, checked)}
+                                        {/* B) Skills & Zones */}
+                                        <Card className="p-4 border-white/10 bg-white/[0.03] shadow-none">
+                                            <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
+                                                <Briefcase className="w-4 h-4" /> Skills & Zones
+                                            </h3>
+                                            <div className="space-y-4">
+                                                <div>
+                                                    <Label className="text-xs text-slate-400 uppercase tracking-wider mb-2 block">Assigned Zones</Label>
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {techDraft.zones.map(z => (
+                                                            <Badge key={z} variant="secondary" className="border border-white/10 bg-white/[0.04] text-slate-200 hover:bg-white/[0.08] pr-1">
+                                                                <span>{z}</span>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => handleRemoveZone(z)}
+                                                                    aria-label={`Remove zone ${z}`}
+                                                                    className="ml-1 rounded-full p-0.5 hover:bg-white/[0.08] text-slate-500 hover:text-slate-200"
+                                                                >
+                                                                    <X className="w-3 h-3" />
+                                                                </button>
+                                                            </Badge>
+                                                        ))}
+                                                    </div>
+                                                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 mt-2">
+                                                        <Input
+                                                            value={newZoneInput}
+                                                            onChange={(e) => setNewZoneInput(e.target.value)}
+                                                            onKeyDown={(e) => {
+                                                                if (e.key === 'Enter') {
+                                                                    e.preventDefault();
+                                                                    handleAddZone();
+                                                                }
+                                                            }}
+                                                            placeholder="Add zone (e.g. Quebec)"
+                                                            className="h-10 rounded-2xl text-xs border-white/10 bg-[linear-gradient(180deg,rgba(10,18,32,0.96),rgba(8,14,26,0.96))] text-white placeholder:text-slate-500"
                                                         />
-                                                        {!wh.is_closed ? (
-                                                            <>
-                                                                <Input
-                                                                    type="time"
-                                                                    value={wh.start}
-                                                                    onChange={(e) => handleWorkingHoursTimeChange(idx, 'start', e.target.value)}
-                                                                    className="h-9 w-[96px] rounded-2xl text-xs font-mono border-white/10 bg-[linear-gradient(180deg,rgba(10,18,32,0.96),rgba(8,14,26,0.96))] text-white [color-scheme:dark]"
-                                                                />
-                                                                <span className="text-slate-500">-</span>
-                                                                <Input
-                                                                    type="time"
-                                                                    value={wh.end}
-                                                                    onChange={(e) => handleWorkingHoursTimeChange(idx, 'end', e.target.value)}
-                                                                    className="h-9 w-[96px] rounded-2xl text-xs font-mono border-white/10 bg-[linear-gradient(180deg,rgba(10,18,32,0.96),rgba(8,14,26,0.96))] text-white [color-scheme:dark]"
-                                                                />
-                                                            </>
-                                                        ) : (
-                                                            <span className="text-slate-500 italic text-xs w-[120px] text-right">Closed</span>
-                                                        )}
+                                                        <Button variant="outline" size="sm" className="h-10 rounded-2xl text-xs border-white/10 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] px-4 text-slate-100 shadow-[0_14px_34px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.055)] hover:bg-[linear-gradient(180deg,rgba(24,38,64,0.98),rgba(12,20,34,0.98))] hover:text-white sm:w-auto" onClick={handleAddZone}>
+                                                            + Add Zone
+                                                        </Button>
                                                     </div>
                                                 </div>
-                                            ))}
-                                        </div>
-                                        <p className="text-[11px] text-slate-400 mt-3">
-                                            Overnight shifts are supported by setting end time earlier than start time.
-                                        </p>
-                                    </Card>
-
-                                    {/* E) Time Off */}
-                                    <Card className="p-4 border-white/10 bg-white/[0.03] shadow-none">
-                                        <div className="flex items-center justify-between mb-4">
-                                            <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                                                <Calendar className="w-4 h-4" /> Out of Office
-                                            </h3>
-                                            <Button variant="outline" size="sm" className="h-9 rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] px-4 text-slate-100 shadow-[0_14px_34px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.055)] hover:bg-[linear-gradient(180deg,rgba(24,38,64,0.98),rgba(12,20,34,0.98))] hover:text-white" onClick={() => setTimeOffModalOpen(true)}>+ Mark Out of Office</Button>
-                                        </div>
-                                        {techDraft.time_off.length === 0 ? (
-                                            <div className="text-center py-6 text-slate-500 text-sm italic bg-white/[0.02] rounded-lg border border-dashed border-white/10">
-                                                No upcoming time off scheduled.
+                                                <Separator className="bg-white/10" />
+                                                <div>
+                                                    <Label className="text-xs text-slate-400 uppercase tracking-wider mb-2 block">Technical Skills</Label>
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {techDraft.skills.map(s => (
+                                                            <Badge key={s} variant="secondary" className="border border-cyan-300/20 bg-cyan-300/10 text-cyan-100 hover:bg-cyan-300/15 pr-1">
+                                                                <span>{s}</span>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => handleRemoveSkill(s)}
+                                                                    aria-label={`Remove skill ${s}`}
+                                                                    className="ml-1 rounded-full p-0.5 hover:bg-cyan-300/15 text-cyan-300 hover:text-cyan-100"
+                                                                >
+                                                                    <X className="w-3 h-3" />
+                                                                </button>
+                                                            </Badge>
+                                                        ))}
+                                                    </div>
+                                                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 mt-2">
+                                                        <Input
+                                                            value={newSkillInput}
+                                                            onChange={(e) => setNewSkillInput(e.target.value)}
+                                                            onKeyDown={(e) => {
+                                                                if (e.key === 'Enter') {
+                                                                    e.preventDefault();
+                                                                    handleAddSkill();
+                                                                }
+                                                            }}
+                                                            placeholder="Add skill (e.g. Towing)"
+                                                            className="h-10 rounded-2xl text-xs border-white/10 bg-[linear-gradient(180deg,rgba(10,18,32,0.96),rgba(8,14,26,0.96))] text-white placeholder:text-slate-500"
+                                                        />
+                                                        <Button variant="outline" size="sm" className="h-10 rounded-2xl text-xs border-white/10 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] px-4 text-slate-100 shadow-[0_14px_34px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.055)] hover:bg-[linear-gradient(180deg,rgba(24,38,64,0.98),rgba(12,20,34,0.98))] hover:text-white sm:w-auto" onClick={handleAddSkill}>
+                                                            + Add Skill
+                                                        </Button>
+                                                    </div>
+                                                </div>
                                             </div>
-                                        ) : (
+                                        </Card>
+
+                                        {/* D) Working Hours */}
+                                        <Card className="p-4 border-white/10 bg-white/[0.03] shadow-none">
+                                            <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
+                                                <Clock className="w-4 h-4" /> Weekly Schedule
+                                            </h3>
                                             <div className="space-y-2">
-                                                {techDraft.time_off.map(to => (
-                                                    <div key={to.id} className="flex flex-col text-sm bg-amber-300/10 p-3 rounded-md border border-amber-300/20">
-                                                        <div className="flex justify-between font-medium text-amber-100">
-                                                            <span>{to.reason}</span>
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="sm"
-                                                                className="h-5 w-5 p-0 hover:bg-amber-300/15 text-amber-200"
-                                                                onClick={() => handleRemoveTimeOff(to.id)}
-                                                            >
-                                                                <X className="w-3 h-3" />
-                                                            </Button>
-                                                        </div>
-                                                        <div className="text-xs text-amber-200 mt-1">
-                                                            {formatDateForUi(to.start)} - {formatDateForUi(to.end)}
+                                                {techDraft.working_hours.map((wh, idx) => (
+                                                    <div key={idx} className="flex items-center justify-between text-sm py-1.5 gap-3">
+                                                        <span className={cn("w-10 font-medium", wh.is_closed ? "text-slate-500" : "text-slate-200")}>{wh.day}</span>
+                                                        <div className="flex items-center gap-2 flex-1 justify-end">
+                                                            <Switch
+                                                                checked={!wh.is_closed}
+                                                                onCheckedChange={(checked) => handleToggleWorkingDay(idx, checked)}
+                                                            />
+                                                            {!wh.is_closed ? (
+                                                                <>
+                                                                    <Input
+                                                                        type="time"
+                                                                        value={wh.start}
+                                                                        onChange={(e) => handleWorkingHoursTimeChange(idx, 'start', e.target.value)}
+                                                                        className="h-9 w-[96px] rounded-2xl text-xs font-mono border-white/10 bg-[linear-gradient(180deg,rgba(10,18,32,0.96),rgba(8,14,26,0.96))] text-white [color-scheme:dark]"
+                                                                    />
+                                                                    <span className="text-slate-500">-</span>
+                                                                    <Input
+                                                                        type="time"
+                                                                        value={wh.end}
+                                                                        onChange={(e) => handleWorkingHoursTimeChange(idx, 'end', e.target.value)}
+                                                                        className="h-9 w-[96px] rounded-2xl text-xs font-mono border-white/10 bg-[linear-gradient(180deg,rgba(10,18,32,0.96),rgba(8,14,26,0.96))] text-white [color-scheme:dark]"
+                                                                    />
+                                                                </>
+                                                            ) : (
+                                                                <span className="text-slate-500 italic text-xs w-[120px] text-right">Closed</span>
+                                                            )}
                                                         </div>
                                                     </div>
                                                 ))}
                                             </div>
-                                        )}
-                                    </Card>
+                                            <p className="text-[11px] text-slate-400 mt-3">
+                                                Overnight shifts are supported by setting end time earlier than start time.
+                                            </p>
+                                        </Card>
 
+                                        {/* E) Time Off */}
+                                        <Card className="p-4 border-white/10 bg-white/[0.03] shadow-none">
+                                            <div className="flex items-center justify-between mb-4">
+                                                <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                                                    <Calendar className="w-4 h-4" /> Out of Office
+                                                </h3>
+                                                <Button variant="outline" size="sm" className="h-9 rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] px-4 text-slate-100 shadow-[0_14px_34px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.055)] hover:bg-[linear-gradient(180deg,rgba(24,38,64,0.98),rgba(12,20,34,0.98))] hover:text-white" onClick={() => setTimeOffModalOpen(true)}>+ Mark Out of Office</Button>
+                                            </div>
+                                            {techDraft.time_off.length === 0 ? (
+                                                <div className="text-center py-6 text-slate-500 text-sm italic bg-white/[0.02] rounded-lg border border-dashed border-white/10">
+                                                    No upcoming time off scheduled.
+                                                </div>
+                                            ) : (
+                                                <div className="space-y-2">
+                                                    {techDraft.time_off.map(to => (
+                                                        <div key={to.id} className="flex flex-col text-sm bg-amber-300/10 p-3 rounded-md border border-amber-300/20">
+                                                            <div className="flex justify-between font-medium text-amber-100">
+                                                                <span>{to.reason}</span>
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="sm"
+                                                                    className="h-5 w-5 p-0 hover:bg-amber-300/15 text-amber-200"
+                                                                    onClick={() => handleRemoveTimeOff(to.id)}
+                                                                >
+                                                                    <X className="w-3 h-3" />
+                                                                </Button>
+                                                            </div>
+                                                            <div className="text-xs text-amber-200 mt-1">
+                                                                {formatDateForUi(to.start)} - {formatDateForUi(to.end)}
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </Card>
+
+                                    </div>
+                                </div>
+                            </>
+                        )}
+                    </SheetContent>
+                </Sheet>
+
+                {/* 6. Edit Technician Modal */}
+                <Dialog open={editTechModalOpen} onOpenChange={setEditTechModalOpen}>
+                    <DialogContent className="border-white/10 bg-[linear-gradient(180deg,rgba(9,24,39,0.98),rgba(6,17,29,0.98))] text-slate-100">
+                        <DialogHeader>
+                            <DialogTitle className="text-white">Edit Technician</DialogTitle>
+                            <DialogDescription className="text-slate-300">Update technician profile details.</DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-4 py-2">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label className="text-slate-200">Full Name</Label>
+                                    <Input className="border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500" value={editTechForm.name} onChange={e => setEditTechForm({ ...editTechForm, name: e.target.value })} />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label className="text-slate-200">Tech Code</Label>
+                                    <Input className="border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500" value={editTechForm.code} onChange={e => setEditTechForm({ ...editTechForm, code: e.target.value })} />
                                 </div>
                             </div>
-                        </>
-                    )}
-                </SheetContent>
-            </Sheet>
-
-            {/* 6. Edit Technician Modal */}
-            <Dialog open={editTechModalOpen} onOpenChange={setEditTechModalOpen}>
-                <DialogContent className="border-white/10 bg-[linear-gradient(180deg,rgba(9,24,39,0.98),rgba(6,17,29,0.98))] text-slate-100">
-                    <DialogHeader>
-                        <DialogTitle className="text-white">Edit Technician</DialogTitle>
-                        <DialogDescription className="text-slate-300">Update technician profile details.</DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4 py-2">
-                        <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <Label className="text-slate-200">Full Name</Label>
-                                <Input className="border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500" value={editTechForm.name} onChange={e => setEditTechForm({ ...editTechForm, name: e.target.value })} />
-                            </div>
-                            <div className="space-y-2">
-                                <Label className="text-slate-200">Tech Code</Label>
-                                <Input className="border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500" value={editTechForm.code} onChange={e => setEditTechForm({ ...editTechForm, code: e.target.value })} />
-                            </div>
-                        </div>
-                        <div className="space-y-2">
-                            <Label className="text-slate-200">Phone</Label>
-                            <Input
-                                className="border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500"
-                                placeholder={phoneExampleFormat}
-                                value={editTechForm.phone}
-                                onChange={e => setEditTechForm({ ...editTechForm, phone: formatUsPhoneInput(e.target.value) })}
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label className="text-slate-200">Zones (comma separated)</Label>
-                            <Input className="border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500" value={editTechForm.zones} onChange={e => setEditTechForm({ ...editTechForm, zones: e.target.value })} />
-                        </div>
-                        <div className="space-y-2">
-                            <Label className="text-slate-200">Skills (comma separated)</Label>
-                            <Input className="border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500" value={editTechForm.skills} onChange={e => setEditTechForm({ ...editTechForm, skills: e.target.value })} />
-                        </div>
-                    </div>
-                    <DialogFooter>
-                        <Button variant="outline" className="border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]" onClick={() => setEditTechModalOpen(false)}>Cancel</Button>
-                        <Button onClick={handleSaveTechEdit} className="bg-[#2F8E92] hover:bg-[#267276]">Save Changes</Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
-
-            {/* 7. Set Time Off Modal */}
-            <Dialog open={timeOffModalOpen} onOpenChange={setTimeOffModalOpen}>
-                <DialogContent className="border-white/10 bg-[linear-gradient(180deg,rgba(9,24,39,0.98),rgba(6,17,29,0.98))] text-slate-100">
-                    <DialogHeader>
-                        <DialogTitle className="text-white">Mark Technician Out of Office</DialogTitle>
-                        <DialogDescription className="text-slate-300">
-                            Set the out-of-office window for {selectedTech?.name}. A return date is required before they leave the dispatch queue.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4 py-2">
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label className="text-slate-200">Start Date</Label>
-                                <input
-                                  data-admin-dark-input="true"
-                                  className="h-12 w-full rounded-2xl border border-white/10 px-4 text-sm !text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] outline-none placeholder:!text-slate-500 focus:border-cyan-300/40 focus:ring-2 focus:ring-cyan-300/15"
-                                  style={adminDarkDateInputStyle}
-                                  type="date"
-                                  value={timeOffForm.start}
-                                  onChange={e => setTimeOffForm({ ...timeOffForm, start: e.target.value })}
+                                <Label className="text-slate-200">Phone</Label>
+                                <Input
+                                    className="border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500"
+                                    placeholder={phoneExampleFormat}
+                                    value={editTechForm.phone}
+                                    onChange={e => setEditTechForm({ ...editTechForm, phone: formatUsPhoneInput(e.target.value) })}
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label className="text-slate-200">Return Date</Label>
-                                <input
-                                  data-admin-dark-input="true"
-                                  className="h-12 w-full rounded-2xl border border-white/10 px-4 text-sm !text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] outline-none placeholder:!text-slate-500 focus:border-cyan-300/40 focus:ring-2 focus:ring-cyan-300/15"
-                                  style={adminDarkDateInputStyle}
-                                  type="date"
-                                  value={timeOffForm.end}
-                                  onChange={e => setTimeOffForm({ ...timeOffForm, end: e.target.value })}
-                                />
+                                <Label className="text-slate-200">Zones (comma separated)</Label>
+                                <Input className="border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500" value={editTechForm.zones} onChange={e => setEditTechForm({ ...editTechForm, zones: e.target.value })} />
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="text-slate-200">Skills (comma separated)</Label>
+                                <Input className="border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500" value={editTechForm.skills} onChange={e => setEditTechForm({ ...editTechForm, skills: e.target.value })} />
                             </div>
                         </div>
-                        <div className="space-y-2">
-                            <Label className="text-slate-200">Reason</Label>
-                            <Input data-admin-dark-input="true" style={adminDarkInputStyle} className="h-12 rounded-2xl border-white/10 !text-white placeholder:!text-slate-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] focus-visible:border-cyan-300/40 focus-visible:ring-cyan-300/15" placeholder="e.g. Vacation, Sick Leave" value={timeOffForm.reason} onChange={e => setTimeOffForm({ ...timeOffForm, reason: e.target.value })} />
+                        <DialogFooter>
+                            <Button variant="ghost" className="border border-white/10 !bg-[#0b1424] !text-slate-100 hover:!bg-[#122039] hover:!text-white" onClick={() => setEditTechModalOpen(false)}>Cancel</Button>
+                            <Button onClick={handleSaveTechEdit} className="bg-[#2F8E92] hover:bg-[#267276]">Save Changes</Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+
+                {/* 7. Set Time Off Modal */}
+                <Dialog open={timeOffModalOpen} onOpenChange={setTimeOffModalOpen}>
+                    <DialogContent className="border-white/10 bg-[linear-gradient(180deg,rgba(9,24,39,0.98),rgba(6,17,29,0.98))] text-slate-100">
+                        <DialogHeader>
+                            <DialogTitle className="text-white">Mark Technician Out of Office</DialogTitle>
+                            <DialogDescription className="text-slate-300">
+                                Set the out-of-office window for {selectedTech?.name}. A return date is required before they leave the dispatch queue.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-4 py-2">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label className="text-slate-200">Start Date</Label>
+                                    <input
+                                        data-admin-dark-input="true"
+                                        className="h-12 w-full rounded-2xl border border-white/10 px-4 text-sm !text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] outline-none placeholder:!text-slate-500 focus:border-cyan-300/40 focus:ring-2 focus:ring-cyan-300/15"
+                                        style={adminDarkDateInputStyle}
+                                        type="date"
+                                        value={timeOffForm.start}
+                                        onChange={e => setTimeOffForm({ ...timeOffForm, start: e.target.value })}
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label className="text-slate-200">Return Date</Label>
+                                    <input
+                                        data-admin-dark-input="true"
+                                        className="h-12 w-full rounded-2xl border border-white/10 px-4 text-sm !text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] outline-none placeholder:!text-slate-500 focus:border-cyan-300/40 focus:ring-2 focus:ring-cyan-300/15"
+                                        style={adminDarkDateInputStyle}
+                                        type="date"
+                                        value={timeOffForm.end}
+                                        onChange={e => setTimeOffForm({ ...timeOffForm, end: e.target.value })}
+                                    />
+                                </div>
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="text-slate-200">Reason</Label>
+                                <Input data-admin-dark-input="true" style={adminDarkInputStyle} className="h-12 rounded-2xl border-white/10 !text-white placeholder:!text-slate-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] focus-visible:border-cyan-300/40 focus-visible:ring-cyan-300/15" placeholder="e.g. Vacation, Sick Leave" value={timeOffForm.reason} onChange={e => setTimeOffForm({ ...timeOffForm, reason: e.target.value })} />
+                            </div>
                         </div>
-                    </div>
-                    <DialogFooter>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            className="h-11 rounded-2xl border-white/10 !bg-[#0b1424] px-5 !text-slate-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] hover:!bg-[#122039] hover:!text-white"
-                            onClick={() => setTimeOffModalOpen(false)}
-                        >
-                            Cancel
-                        </Button>
-                        <Button onClick={handleSaveTimeOff} className="border border-[#5d84ff]/30 bg-[linear-gradient(135deg,#4f7cff,#22d3ee)] text-white shadow-[0_18px_36px_rgba(34,211,238,0.18)] hover:brightness-105">Save Out of Office</Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+                        <DialogFooter>
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                className="h-11 rounded-2xl border border-white/10 !bg-[#0b1424] px-5 !text-slate-100 ![background-image:none] hover:!bg-[#122039] hover:!text-white"
+                                onClick={() => setTimeOffModalOpen(false)}
+                            >
+                                Cancel
+                            </Button>
+                            <Button onClick={handleSaveTimeOff} className="border border-[#5d84ff]/30 bg-[linear-gradient(135deg,#4f7cff,#22d3ee)] text-white shadow-[0_18px_36px_rgba(34,211,238,0.18)] hover:brightness-105">Save Out of Office</Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
 
-            <ColumnExportDialog
-                open={exportModalOpen}
-                onOpenChange={setExportModalOpen}
-                title="Export Technicians"
-                description="Select the technician columns you want in your CSV."
-                availableColumns={TECHNICIAN_EXPORT_COLUMNS}
-                onConfirm={handleExport}
-            />
+                <ColumnExportDialog
+                    open={exportModalOpen}
+                    onOpenChange={setExportModalOpen}
+                    title="Export Technicians"
+                    description="Select the technician columns you want in your CSV."
+                    availableColumns={TECHNICIAN_EXPORT_COLUMNS}
+                    onConfirm={handleExport}
+                />
 
-            {/* 8. Deactivate Confirmation Modal */}
-            <Dialog open={confirmDeactivateOpen} onOpenChange={setConfirmDeactivateOpen}>
-                <DialogContent className="border-white/10 bg-[linear-gradient(180deg,rgba(9,24,39,0.98),rgba(6,17,29,0.98))] text-slate-100">
-                    <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2 text-rose-200">
-                            <Shield className="w-5 h-5" /> Deactivate Technician?
-                        </DialogTitle>
-                        <DialogDescription className="text-slate-300">
-                            Are you sure you want to deactivate <strong>{selectedTech?.name}</strong>?
-                            They will no longer be eligible for dispatch assignments.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <DialogFooter>
-                        <Button variant="outline" className="border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]" onClick={() => setConfirmDeactivateOpen(false)}>Cancel</Button>
-                        <Button variant="destructive" onClick={confirmDeactivate}>Yes, Deactivate</Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+                {/* 8. Deactivate Confirmation Modal */}
+                <Dialog open={confirmDeactivateOpen} onOpenChange={setConfirmDeactivateOpen}>
+                    <DialogContent className="border-white/10 bg-[linear-gradient(180deg,rgba(9,24,39,0.98),rgba(6,17,29,0.98))] text-slate-100">
+                        <DialogHeader>
+                            <DialogTitle className="flex items-center gap-2 text-rose-200">
+                                <Shield className="w-5 h-5" /> Deactivate Technician?
+                            </DialogTitle>
+                            <DialogDescription className="text-slate-300">
+                                Are you sure you want to deactivate <strong>{selectedTech?.name}</strong>?
+                                They will no longer be eligible for dispatch assignments.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <DialogFooter>
+                            <Button variant="ghost" className="border border-white/10 !bg-[#0b1424] !text-slate-100 hover:!bg-[#122039] hover:!text-white" onClick={() => setConfirmDeactivateOpen(false)}>Cancel</Button>
+                            <Button variant="destructive" onClick={confirmDeactivate}>Yes, Deactivate</Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
 
             </div>
         </div>
