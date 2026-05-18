@@ -123,6 +123,7 @@ const formatDateSafe = (value?: string | null, pattern = 'MMM dd, yyyy') => {
 type InvoiceStatusFilter = 'all' | 'draft' | 'approved' | 'sent' | 'paid' | 'void';
 type InvoiceQuickRange = 'none' | 'today' | 'week' | 'month' | 'year';
 type InvoiceDisplayStatus = Exclude<InvoiceStatusFilter, 'all'>;
+type InvoiceActionPrompt = 'download' | 'send' | 'paid';
 
 const toNumber = (value: string | number | null | undefined): number => {
     if (typeof value === 'number') return Number.isFinite(value) ? value : 0;
@@ -261,6 +262,8 @@ export default function InvoiceHistoryPage() {
     const [voidDialogOpen, setVoidDialogOpen] = useState(false);
     const [voidReason, setVoidReason] = useState('');
     const [actionLoading, setActionLoading] = useState<'paid' | 'void' | 'send' | null>(null);
+    const [actionPrompt, setActionPrompt] = useState<InvoiceActionPrompt | null>(null);
+    const [actionNotice, setActionNotice] = useState<{ title: string; description: string } | null>(null);
 
     const fetchHistory = async () => {
         setLoading(true);
@@ -396,21 +399,22 @@ export default function InvoiceHistoryPage() {
     const handleSendInvoiceEmail = async (invoice: BackendInvoice) => {
         const adminToken = getStoredAdminToken();
         if (!adminToken) {
-            alert('Admin session is required to send invoice email.');
+            setActionNotice({ title: 'Admin session required', description: 'Please sign in again before sending invoice email.' });
             return;
         }
         const recipient = resolveInvoiceCustomerEmail(invoice, dealerships);
         if (!recipient) {
-            alert('No client contact email is available for this location yet.');
+            setActionNotice({ title: 'No email available', description: 'Add a customer or dealership email before sending this invoice.' });
             return;
         }
         setActionLoading('send');
         try {
             const updatedInvoice = await sendInvoiceEmail(adminToken, invoice.id);
             refreshSelectedInvoice(updatedInvoice);
-            alert(`Invoice email sent to ${recipient}.`);
+            setActionPrompt(null);
+            setActionNotice({ title: 'Invoice email sent', description: `The invoice was sent to ${recipient}.` });
         } catch (error) {
-            alert(error instanceof Error ? error.message : 'Unable to send invoice email.');
+            setActionNotice({ title: 'Email not sent', description: error instanceof Error ? error.message : 'Unable to send invoice email.' });
         } finally {
             setActionLoading(null);
         }
@@ -419,15 +423,17 @@ export default function InvoiceHistoryPage() {
     const handleMarkAsPaid = async (invoice: BackendInvoice) => {
         const adminToken = getStoredAdminToken();
         if (!adminToken) {
-            alert('Admin session is required to update invoice status.');
+            setActionNotice({ title: 'Admin session required', description: 'Please sign in again before updating invoice status.' });
             return;
         }
         setActionLoading('paid');
         try {
             const updatedInvoice = await markInvoicePaid(adminToken, invoice.id, new Date().toISOString());
             refreshSelectedInvoice(updatedInvoice);
+            setActionPrompt(null);
+            setActionNotice({ title: 'Invoice marked paid', description: `${invoice.invoice_number} is now recorded as paid.` });
         } catch (error) {
-            alert(error instanceof Error ? error.message : 'Unable to mark invoice as paid.');
+            setActionNotice({ title: 'Could not mark paid', description: error instanceof Error ? error.message : 'Unable to mark invoice as paid.' });
         } finally {
             setActionLoading(null);
         }
@@ -437,12 +443,12 @@ export default function InvoiceHistoryPage() {
         if (!selectedInvoice) return;
         const reason = voidReason.trim();
         if (!reason) {
-            alert('A void reason is required.');
+            setActionNotice({ title: 'Void reason required', description: 'Please enter a reason before voiding this invoice.' });
             return;
         }
         const adminToken = getStoredAdminToken();
         if (!adminToken) {
-            alert('Admin session is required to void invoices.');
+            setActionNotice({ title: 'Admin session required', description: 'Please sign in again before voiding invoices.' });
             return;
         }
         setActionLoading('void');
@@ -454,8 +460,9 @@ export default function InvoiceHistoryPage() {
             refreshSelectedInvoice(updatedInvoice);
             setVoidReason('');
             setVoidDialogOpen(false);
+            setActionNotice({ title: 'Invoice voided', description: `${selectedInvoice.invoice_number} has been marked void.` });
         } catch (error) {
-            alert(error instanceof Error ? error.message : 'Unable to void invoice.');
+            setActionNotice({ title: 'Could not void invoice', description: error instanceof Error ? error.message : 'Unable to void invoice.' });
         } finally {
             setActionLoading(null);
         }
@@ -630,7 +637,42 @@ export default function InvoiceHistoryPage() {
         }
 
         doc.save(`${invoice.invoice_number}.pdf`);
+        setActionPrompt(null);
+        setActionNotice({ title: 'PDF downloaded', description: `${invoice.invoice_number}.pdf has been generated.` });
     };
+
+    const handleConfirmActionPrompt = () => {
+        if (!selectedInvoice || !actionPrompt) return;
+        if (actionPrompt === 'download') {
+            handleDownloadPdf(selectedInvoice);
+            return;
+        }
+        if (actionPrompt === 'send') {
+            void handleSendInvoiceEmail(selectedInvoice);
+            return;
+        }
+        if (actionPrompt === 'paid') {
+            void handleMarkAsPaid(selectedInvoice);
+        }
+    };
+
+    const actionPromptCopy = selectedInvoice && actionPrompt ? {
+        download: {
+            title: 'Download invoice PDF?',
+            description: `Generate and download ${selectedInvoice.invoice_number}.pdf using the current invoice details.`,
+            confirm: 'Download PDF',
+        },
+        send: {
+            title: 'Send invoice email?',
+            description: `Send ${selectedInvoice.invoice_number} with a PDF attachment to ${resolveInvoiceCustomerEmail(selectedInvoice, dealerships) || 'the customer email on file'}.`,
+            confirm: actionLoading === 'send' ? 'Sending...' : 'Send Email',
+        },
+        paid: {
+            title: 'Mark invoice as paid?',
+            description: `Record ${selectedInvoice.invoice_number} as paid now. This updates the invoice status immediately.`,
+            confirm: actionLoading === 'paid' ? 'Marking...' : 'Mark Paid',
+        },
+    }[actionPrompt] : null;
 
     const summaryCards = [
         {
@@ -1180,7 +1222,7 @@ export default function InvoiceHistoryPage() {
                                     <Button
                                         className="h-12 min-w-0 gap-2 rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] px-3 text-sm text-slate-100 shadow-[0_14px_34px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.055)] hover:bg-[linear-gradient(180deg,rgba(24,38,64,0.98),rgba(12,20,34,0.98))] hover:text-white"
                                         variant="outline"
-                                        onClick={() => handleDownloadPdf(selectedInvoice)}
+                                        onClick={() => setActionPrompt('download')}
                                     >
                                         <Download className="h-4 w-4 shrink-0" />
                                         <span className="truncate">Download PDF</span>
@@ -1188,7 +1230,7 @@ export default function InvoiceHistoryPage() {
                                     <Button
                                         className="h-12 min-w-0 gap-2 rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] px-3 text-sm text-slate-100 shadow-[0_14px_34px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.055)] hover:bg-[linear-gradient(180deg,rgba(24,38,64,0.98),rgba(12,20,34,0.98))] hover:text-white"
                                         variant="outline"
-                                        onClick={() => void handleSendInvoiceEmail(selectedInvoice)}
+                                        onClick={() => setActionPrompt('send')}
                                         disabled={actionLoading === 'send' || !customerEmail}
                                     >
                                         <Send className="h-4 w-4 shrink-0" />
@@ -1197,7 +1239,7 @@ export default function InvoiceHistoryPage() {
                                     <Button
                                         className="h-12 min-w-0 gap-2 rounded-2xl border border-[#7db0ff]/40 bg-[linear-gradient(135deg,#4f7cff,#22d3ee)] px-3 text-sm text-white shadow-[0_16px_34px_rgba(79,124,255,0.22)] hover:brightness-105"
                                         variant="outline"
-                                        onClick={() => void handleMarkAsPaid(selectedInvoice)}
+                                        onClick={() => setActionPrompt('paid')}
                                         disabled={actionLoading === 'paid' || displayStatus.value === 'paid' || displayStatus.value === 'void'}
                                     >
                                         <CheckCircle2 className="h-4 w-4 shrink-0" />
@@ -1221,6 +1263,33 @@ export default function InvoiceHistoryPage() {
                 </SheetContent>
             </Sheet>
 
+            <Dialog open={actionPrompt !== null} onOpenChange={(open) => !open && setActionPrompt(null)}>
+                <DialogContent className="border-white/10 bg-[linear-gradient(180deg,rgba(9,24,39,0.98),rgba(6,17,29,0.98))] text-slate-100">
+                    <DialogHeader>
+                        <DialogTitle>{actionPromptCopy?.title}</DialogTitle>
+                        <DialogDescription className="text-slate-300">
+                            {actionPromptCopy?.description}
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button
+                            variant="outline"
+                            className="h-11 rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] px-5 text-slate-100 shadow-[0_14px_34px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.055)] hover:bg-[linear-gradient(180deg,rgba(24,38,64,0.98),rgba(12,20,34,0.98))] hover:text-white"
+                            onClick={() => setActionPrompt(null)}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            className="h-11 rounded-2xl border border-[#7db0ff]/40 bg-[linear-gradient(135deg,#4f7cff,#22d3ee)] px-5 text-white shadow-[0_16px_34px_rgba(79,124,255,0.22)] hover:brightness-105"
+                            onClick={handleConfirmActionPrompt}
+                            disabled={actionLoading === 'send' || actionLoading === 'paid'}
+                        >
+                            {actionPromptCopy?.confirm || 'Confirm'}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
             <Dialog open={voidDialogOpen} onOpenChange={setVoidDialogOpen}>
                 <DialogContent className="border-white/10 bg-[linear-gradient(180deg,rgba(9,24,39,0.98),rgba(6,17,29,0.98))] text-slate-100">
                     <DialogHeader>
@@ -1241,6 +1310,25 @@ export default function InvoiceHistoryPage() {
                         </Button>
                         <Button className="h-11 rounded-2xl border border-rose-400/30 bg-[linear-gradient(180deg,rgba(61,18,28,0.92),rgba(36,12,20,0.98))] px-5 text-rose-100 shadow-[0_16px_34px_rgba(127,29,29,0.22)] hover:bg-[linear-gradient(180deg,rgba(76,23,35,0.94),rgba(48,15,26,0.99))] hover:text-white" onClick={() => void handleVoidInvoice()} disabled={actionLoading === 'void'}>
                             Confirm Void
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            <Dialog open={actionNotice !== null} onOpenChange={(open) => !open && setActionNotice(null)}>
+                <DialogContent className="border-white/10 bg-[linear-gradient(180deg,rgba(9,24,39,0.98),rgba(6,17,29,0.98))] text-slate-100">
+                    <DialogHeader>
+                        <DialogTitle>{actionNotice?.title}</DialogTitle>
+                        <DialogDescription className="text-slate-300">
+                            {actionNotice?.description}
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button
+                            className="h-11 rounded-2xl border border-[#7db0ff]/40 bg-[linear-gradient(135deg,#4f7cff,#22d3ee)] px-5 text-white shadow-[0_16px_34px_rgba(79,124,255,0.22)] hover:brightness-105"
+                            onClick={() => setActionNotice(null)}
+                        >
+                            OK
                         </Button>
                     </DialogFooter>
                 </DialogContent>

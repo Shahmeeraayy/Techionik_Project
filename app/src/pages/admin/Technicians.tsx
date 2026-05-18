@@ -399,6 +399,11 @@ const adminDarkInputStyle: CSSProperties = {
     color: '#f8fbff',
 };
 
+const adminDarkDateInputStyle: CSSProperties = {
+    ...adminDarkInputStyle,
+    colorScheme: 'dark',
+};
+
 export default function TechniciansPage() {
     const navigate = useNavigate();
     const { technicianAccounts, hasBackendAdminToken } = useAuth();
@@ -2010,9 +2015,10 @@ export default function TechniciansPage() {
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <Label className="text-slate-200">Start Date</Label>
-                                <Input
-                                  className="border-white/10 bg-[#0a1220] text-white [color-scheme:dark] [::-webkit-calendar-picker-indicator:invert(1)]"
-                                  style={{ colorScheme: 'dark' }}
+                                <input
+                                  data-admin-dark-input="true"
+                                  className="h-12 w-full rounded-2xl border border-white/10 px-4 text-sm !text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] outline-none placeholder:!text-slate-500 focus:border-cyan-300/40 focus:ring-2 focus:ring-cyan-300/15"
+                                  style={adminDarkDateInputStyle}
                                   type="date"
                                   value={timeOffForm.start}
                                   onChange={e => setTimeOffForm({ ...timeOffForm, start: e.target.value })}
@@ -2020,9 +2026,10 @@ export default function TechniciansPage() {
                             </div>
                             <div className="space-y-2">
                                 <Label className="text-slate-200">Return Date</Label>
-                                <Input
-                                  className="border-white/10 bg-[#0a1220] text-white [color-scheme:dark] [::-webkit-calendar-picker-indicator:invert(1)]"
-                                  style={{ colorScheme: 'dark' }}
+                                <input
+                                  data-admin-dark-input="true"
+                                  className="h-12 w-full rounded-2xl border border-white/10 px-4 text-sm !text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] outline-none placeholder:!text-slate-500 focus:border-cyan-300/40 focus:ring-2 focus:ring-cyan-300/15"
+                                  style={adminDarkDateInputStyle}
                                   type="date"
                                   value={timeOffForm.end}
                                   onChange={e => setTimeOffForm({ ...timeOffForm, end: e.target.value })}
@@ -2031,11 +2038,18 @@ export default function TechniciansPage() {
                         </div>
                         <div className="space-y-2">
                             <Label className="text-slate-200">Reason</Label>
-                            <Input className="border-white/10 bg-[#0a1220] text-white placeholder:text-slate-500" placeholder="e.g. Vacation, Sick Leave" value={timeOffForm.reason} onChange={e => setTimeOffForm({ ...timeOffForm, reason: e.target.value })} />
+                            <Input data-admin-dark-input="true" style={adminDarkInputStyle} className="h-12 rounded-2xl border-white/10 !text-white placeholder:!text-slate-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] focus-visible:border-cyan-300/40 focus-visible:ring-cyan-300/15" placeholder="e.g. Vacation, Sick Leave" value={timeOffForm.reason} onChange={e => setTimeOffForm({ ...timeOffForm, reason: e.target.value })} />
                         </div>
                     </div>
                     <DialogFooter>
-                        <Button variant="outline" className="border-white/10 bg-[#0a1220] text-slate-100 hover:bg-white/[0.08]" onClick={() => setTimeOffModalOpen(false)}>Cancel</Button>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            className="h-11 rounded-2xl border-white/10 !bg-[#0b1424] px-5 !text-slate-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] hover:!bg-[#122039] hover:!text-white"
+                            onClick={() => setTimeOffModalOpen(false)}
+                        >
+                            Cancel
+                        </Button>
                         <Button onClick={handleSaveTimeOff} className="border border-[#5d84ff]/30 bg-[linear-gradient(135deg,#4f7cff,#22d3ee)] text-white shadow-[0_18px_36px_rgba(34,211,238,0.18)] hover:brightness-105">Save Out of Office</Button>
                     </DialogFooter>
                 </DialogContent>

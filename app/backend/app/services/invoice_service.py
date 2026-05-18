@@ -669,50 +669,150 @@ class InvoiceService:
         return value.replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)")
 
     def _build_invoice_pdf_bytes(self, invoice: Invoice) -> bytes:
-        lines = [
-            invoice.company_name,
-            f"Invoice {invoice.invoice_number}",
-            "",
-            f"Invoice date: {invoice.invoice_date}",
-            f"Due date: {invoice.due_date}",
-            f"Total: ${Decimal(str(invoice.total)):.2f}",
-            "",
-            "Bill to:",
-            invoice.bill_to_name,
-            invoice.bill_to_address,
-            " ".join(part for part in [invoice.bill_to_city, invoice.bill_to_state, invoice.bill_to_zip_code] if part),
-            "",
-            "Line items:",
-        ]
-        for item in invoice.line_items:
-            line = f"{item.product_service} | Qty {Decimal(str(item.quantity)):.2f} | Rate ${Decimal(str(item.rate)):.2f} | Total ${Decimal(str(item.amount)):.2f}"
-            lines.extend(textwrap.wrap(line, width=88) or [line])
-        lines.extend(
-            [
-                "",
-                f"Subtotal: ${Decimal(str(invoice.subtotal)):.2f}",
-                f"Sales tax: ${Decimal(str(invoice.sales_tax)):.2f}",
-                f"Shipping: ${Decimal(str(invoice.shipping)):.2f}",
-                f"Invoice total: ${Decimal(str(invoice.total)):.2f}",
-                "",
-                f"Questions? Contact {invoice.company_email}",
-            ]
-        )
+        page_width = 612
+        page_height = 792
+        left = 48
+        row_height = 22
+        commands: list[str] = []
 
-        content_lines = ["BT", "/F1 11 Tf", "50 770 Td", "14 TL"]
-        for index, line in enumerate(lines[:52]):
-            if index == 1:
-                content_lines.extend(["/F1 18 Tf", f"({self._pdf_escape(line)}) Tj", "/F1 11 Tf", "T*"])
-            else:
-                content_lines.extend([f"({self._pdf_escape(line or ' ')}) Tj", "T*"])
-        content_lines.append("ET")
-        stream = "\n".join(content_lines).encode("latin-1", "replace")
+        def y_pdf(y_top: float) -> float:
+            return page_height - y_top
+
+        def text(value: str, x: float, y_top: float, *, size: int = 10, bold: bool = False, align: str = "left") -> None:
+            raw = str(value or "")
+            clean = self._pdf_escape(raw)
+            font = "F2" if bold else "F1"
+            adjusted_x = x - (len(raw) * size * 0.5) if align == "right" else x
+            commands.append(f"BT /{font} {size} Tf 1 0 0 1 {adjusted_x:.2f} {y_pdf(y_top):.2f} Tm ({clean}) Tj ET")
+
+        def line(x1: float, y1_top: float, x2: float, y2_top: float, gray: float = 0.82) -> None:
+            commands.append(f"{gray:.2f} {gray:.2f} {gray:.2f} RG 0.8 w {x1:.2f} {y_pdf(y1_top):.2f} m {x2:.2f} {y_pdf(y2_top):.2f} l S")
+
+        def rect(x: float, y_top: float, width: float, height: float, gray: float = 0.82) -> None:
+            commands.append(f"{gray:.2f} {gray:.2f} {gray:.2f} RG 0.8 w {x:.2f} {y_pdf(y_top + height):.2f} {width:.2f} {height:.2f} re S")
+
+        def address_lines(name: Optional[str], street: Optional[str], city: Optional[str], state: Optional[str], zip_code: Optional[str]) -> list[str]:
+            result: list[str] = []
+            if name:
+                result.append(name)
+            if street:
+                result.append(street)
+            city_state_zip = ", ".join(part for part in [city, state] if part)
+            if zip_code:
+                city_state_zip = f"{city_state_zip} {zip_code}".strip()
+            if city_state_zip:
+                result.append(city_state_zip)
+            return result
+
+        def terms_label() -> str:
+            if invoice.terms == InvoiceTerms.NET_15.value:
+                return "Net 15"
+            if invoice.terms == InvoiceTerms.NET_30.value:
+                return "Net 30"
+            if invoice.terms == InvoiceTerms.CUSTOM.value:
+                return f"Custom ({invoice.custom_term_days or 0} days)"
+            return str(invoice.terms or "Net 15")
+
+        y = 52
+        company_city_line = f"{invoice.company_city}, {invoice.company_state} {invoice.company_zip_code}".strip()
+        company_contact = f"{invoice.company_phone}  |  {invoice.company_email}".strip()
+
+        text(invoice.company_name, left + 64, y, size=18, bold=True)
+        text(invoice.company_street_address, left + 64, y + 14, size=10)
+        text(company_city_line, left + 64, y + 27, size=10)
+        text(company_contact, left + 64, y + 40, size=10)
+        text(invoice.company_website, left + 64, y + 53, size=10)
+        text("INVOICE", page_width - left, y, size=20, bold=True, align="right")
+
+        y += 76
+        line(left, y, page_width - left, y)
+        y += 22
+
+        text("BILL TO", left, y, size=10, bold=True)
+        text("SHIP TO", left + 240, y, size=10, bold=True)
+        y += 14
+
+        bill_to_lines = address_lines(invoice.bill_to_name, invoice.bill_to_address, invoice.bill_to_city, invoice.bill_to_state, invoice.bill_to_zip_code)
+        ship_to_lines = address_lines(invoice.ship_to_name, invoice.ship_to_address, invoice.ship_to_city, invoice.ship_to_state, invoice.ship_to_zip_code)
+        max_address_lines = max(len(bill_to_lines), len(ship_to_lines), 1)
+        for index in range(max_address_lines):
+            text(bill_to_lines[index] if index < len(bill_to_lines) else "", left, y, size=10)
+            text(ship_to_lines[index] if index < len(ship_to_lines) else "", left + 240, y, size=10)
+            y += 14
+
+        panel_top = y - max_address_lines * 14 - 14
+        panel_x = page_width - 220
+        panel_width = 172
+        rect(panel_x, panel_top - 4, panel_width, 82)
+        text("Invoice #", panel_x + 8, panel_top + 10, size=9, bold=True)
+        text("Invoice Date", panel_x + 8, panel_top + 26, size=9, bold=True)
+        text("Terms", panel_x + 8, panel_top + 42, size=9, bold=True)
+        text("Due Date", panel_x + 8, panel_top + 58, size=9, bold=True)
+        text(invoice.invoice_number, panel_x + panel_width - 8, panel_top + 10, size=9, align="right")
+        text(str(invoice.invoice_date), panel_x + panel_width - 8, panel_top + 26, size=9, align="right")
+        text(terms_label(), panel_x + panel_width - 8, panel_top + 42, size=9, align="right")
+        text(str(invoice.due_date), panel_x + panel_width - 8, panel_top + 58, size=9, align="right")
+
+        y += 20
+        line(left, y, page_width - left, y)
+        y += 18
+
+        col_product = left
+        col_description = left + 150
+        col_qty = page_width - 230
+        col_rate = page_width - 150
+        col_amount = page_width - left
+
+        text("Product/Service", col_product, y, size=9, bold=True)
+        text("Description", col_description, y, size=9, bold=True)
+        text("Qty/Hrs", col_qty, y, size=9, bold=True, align="right")
+        text("Rate", col_rate, y, size=9, bold=True, align="right")
+        text("Amount", col_amount, y, size=9, bold=True, align="right")
+        y += 10
+        line(left, y, page_width - left, y)
+        y += 14
+
+        for item in invoice.line_items:
+            text(str(item.product_service or "Service")[:26], col_product, y, size=9)
+            text(str(item.description or "")[:32], col_description, y, size=9)
+            text(f"{Decimal(str(item.quantity)):.2f}", col_qty, y, size=9, align="right")
+            text(f"${Decimal(str(item.rate)):.2f}", col_rate, y, size=9, align="right")
+            text(f"${Decimal(str(item.amount)):.2f}", col_amount, y, size=9, align="right")
+            y += row_height
+
+        y += 4
+        line(left, y, page_width - left, y)
+        y += 18
+
+        label_x = col_rate - 40
+        text("Subtotal", label_x, y, size=10, align="right")
+        text(f"${Decimal(str(invoice.subtotal)):.2f}", col_amount, y, size=10, align="right")
+        y += 16
+        text("Sales Tax", label_x, y, size=10, align="right")
+        text(f"${Decimal(str(invoice.sales_tax)):.2f}", col_amount, y, size=10, align="right")
+        y += 16
+        text("Shipping", label_x, y, size=10, align="right")
+        text(f"${Decimal(str(invoice.shipping)):.2f}", col_amount, y, size=10, align="right")
+        y += 18
+        text("Total", label_x, y, size=12, bold=True, align="right")
+        text(f"${Decimal(str(invoice.total)):.2f}", col_amount, y, size=12, bold=True, align="right")
+
+        if invoice.customer_message and invoice.customer_message.strip():
+            y += 28
+            text("Customer Message", left, y, size=10, bold=True)
+            y += 14
+            for line_text in textwrap.wrap(invoice.customer_message.strip(), width=92)[:6]:
+                text(line_text, left, y, size=9)
+                y += 12
+
+        stream = "\n".join(commands).encode("latin-1", "replace")
 
         objects = [
             b"<< /Type /Catalog /Pages 2 0 R >>",
             b"<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
-            b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>",
+            b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R /F2 5 0 R >> >> /Contents 6 0 R >>",
             b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+            b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>",
             b"<< /Length " + str(len(stream)).encode("ascii") + b" >>\nstream\n" + stream + b"\nendstream",
         ]
         pdf = bytearray(b"%PDF-1.4\n")
