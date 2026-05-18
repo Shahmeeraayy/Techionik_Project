@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Activity,
@@ -180,11 +180,11 @@ function activityBadgeClasses(tone: ActivityRow['tone']): string {
   );
 }
 
-function activityDotClasses(tone: ActivityRow['tone']): string {
-  if (tone === 'success') return 'bg-emerald-400 shadow-[0_0_8px_3px_rgba(52,211,153,0.45)]';
-  if (tone === 'warning') return 'bg-amber-400 shadow-[0_0_8px_3px_rgba(251,191,36,0.45)]';
-  if (tone === 'critical') return 'bg-red-400 shadow-[0_0_8px_3px_rgba(248,113,113,0.45)]';
-  return 'bg-cyan-400 shadow-[0_0_8px_3px_rgba(34,211,238,0.45)]';
+function activityDotColor(tone: ActivityRow['tone']): string {
+  if (tone === 'success') return '#34d399';
+  if (tone === 'warning') return '#fbbf24';
+  if (tone === 'critical') return '#f87171';
+  return '#22d3ee';
 }
 
 function buildSnapshot(input: {
@@ -287,11 +287,32 @@ function buildSnapshot(input: {
   };
 }
 
+function AnimatedNumber({ value }: { value: number }) {
+  const [display, setDisplay] = useState(0);
+  const prev = useRef(0);
+  useEffect(() => {
+    const start = prev.current;
+    const end = value;
+    prev.current = value;
+    if (start === end) return;
+    const duration = 700;
+    const startTime = Date.now();
+    const tick = () => {
+      const p = Math.min((Date.now() - startTime) / duration, 1);
+      const eased = 1 - Math.pow(1 - p, 3);
+      setDisplay(Math.round(start + (end - start) * eased));
+      if (p < 1) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  }, [value]);
+  return <>{display}</>;
+}
+
 function DashboardSkeleton() {
   return (
     <div className="space-y-6">
       <Skeleton className="h-[280px] w-full rounded-[30px]" />
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         {Array.from({ length: 9 }).map((_, index) => (
           <Skeleton key={index} className="h-40 w-full rounded-[24px]" />
         ))}
@@ -480,7 +501,7 @@ export default function Dashboard() {
       <div className="pointer-events-none absolute right-10 top-20 h-56 w-56 rounded-full bg-slate-900/4 blur-3xl dark:bg-emerald-400/8" />
 
       <div className="relative space-y-6">
-        <section className="relative overflow-hidden rounded-[32px] border border-black/8 bg-[linear-gradient(135deg,#ffffff,#fbfbfb)] shadow-[0_34px_120px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-[linear-gradient(135deg,rgba(7,25,42,0.98),rgba(6,18,32,0.98))] dark:shadow-[0_34px_120px_rgba(0,0,0,0.34)]">
+        <section className="relative overflow-hidden rounded-[32px] border border-black/8 bg-[linear-gradient(135deg,#ffffff,#fbfbfb)] shadow-[0_34px_120px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-[linear-gradient(135deg,rgba(7,25,42,0.98),rgba(6,18,32,0.98))] dark:shadow-[0_34px_120px_rgba(0,0,0,0.34)]" style={{ animation: 'fade-in 0.6s ease both' }}>
           <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(15,23,42,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(15,23,42,0.03)_1px,transparent_1px)] bg-[size:120px_120px] opacity-20 dark:bg-[linear-gradient(rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)]" />
           <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-slate-900/20 to-transparent dark:via-cyan-200/70" />
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(15,23,42,0.04),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(15,23,42,0.03),transparent_26%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(47,142,146,0.14),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(245,158,11,0.12),transparent_26%)]" />
@@ -527,17 +548,21 @@ export default function Dashboard() {
                   Last sync {lastUpdated ? lastUpdated.toLocaleTimeString() : '--'}
                 </div>
                 <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm text-emerald-700 dark:border-emerald-300/20 dark:bg-emerald-300/10 dark:text-emerald-100">
-                  <Activity className="h-4 w-4" />
+                  <span className="relative flex h-2 w-2">
+                    <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" style={{ animation: 'live-ping 1.2s ease-out infinite' }} />
+                    <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+                  </span>
                   Live backend session
                 </div>
               </div>
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2">
-              {overviewTiles.map((tile) => (
+              {overviewTiles.map((tile, i) => (
                 <div
                   key={tile.id}
                   className="relative overflow-hidden rounded-[24px] border border-black/8 bg-[linear-gradient(180deg,#ffffff,#fafafa)] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.92)] dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(10,31,48,0.94),rgba(8,23,37,0.94))] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
+                  style={{ animation: 'fade-in-up 0.5s ease both', animationDelay: `${100 + i * 80}ms` }}
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div>
@@ -606,13 +631,14 @@ export default function Dashboard() {
             </Button>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5 gap-4">
-            {snapshot?.cards.map((card) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+            {snapshot?.cards.map((card, i) => (
               <button
                 key={card.id}
                 type="button"
                 className={metricCardClasses(card.tone)}
                 onClick={() => navigate(card.navigateTo)}
+                style={{ animation: `fade-in-up 0.5s ease both`, animationDelay: `${i * 70}ms` }}
               >
                 <div className={cn('pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent to-transparent', metricTopLineClasses(card.tone))} />
                 <div className="flex items-start justify-between gap-3">
@@ -624,7 +650,7 @@ export default function Dashboard() {
                       className={cn('mt-4 text-[2.8rem] font-semibold leading-none tracking-[-0.07em]', metricValueClasses(card.tone))}
                       style={displayFontStyle}
                     >
-                      {card.value}
+                      <AnimatedNumber value={card.value} />
                     </div>
                   </div>
                   <div className={cn('rounded-2xl p-2.5', metricIconClasses(card.tone))}>
@@ -666,17 +692,22 @@ export default function Dashboard() {
               </Button>
             </div>
 
+            <div className="relative">
             <ScrollArea className="h-[560px]">
               <div className="px-6 pb-6">
                 {snapshot?.activity.length ? (
                   <div className="space-y-4">
-                    {snapshot.activity.map((event) => (
+                    {snapshot.activity.map((event, i) => (
                       <div
                         key={event.id}
                         className="rounded-[22px] border border-black/8 bg-white px-5 py-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.92)] dark:border-white/10 dark:bg-white/[0.03] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"
+                        style={{ animation: 'slide-in-right 0.4s ease both', animationDelay: `${i * 50}ms` }}
                       >
                         <div className="flex items-start gap-4">
-                          <div className={cn('mt-1.5 h-3 w-3 shrink-0 rounded-full', activityDotClasses(event.tone))} />
+                          <span className="relative mt-1.5 flex h-4 w-4 shrink-0">
+                            <span className="absolute inline-flex h-full w-full rounded-full opacity-75" style={{ backgroundColor: activityDotColor(event.tone), animation: 'live-ping 1.4s ease-out infinite', animationDelay: `${i * 200}ms` }} />
+                            <span className="relative inline-flex h-4 w-4 rounded-full" style={{ backgroundColor: activityDotColor(event.tone), boxShadow: `0 0 8px 3px ${activityDotColor(event.tone)}99` }} />
+                          </span>
                           <div className="min-w-0 flex-1">
                             <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                               <div className="min-w-0">
@@ -702,6 +733,8 @@ export default function Dashboard() {
                 )}
               </div>
             </ScrollArea>
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 rounded-b-[28px] bg-gradient-to-t from-[rgba(7,18,31,0.95)] to-transparent" />
+            </div>
           </section>
 
           <div className="space-y-6">
@@ -791,25 +824,6 @@ export default function Dashboard() {
               </div>
             </section>
 
-            <section className="relative overflow-hidden rounded-[28px] border border-black/8 bg-[linear-gradient(180deg,#ffffff,#fafafa)] p-6 shadow-[0_28px_90px_rgba(15,23,42,0.06)] dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,23,38,0.98),rgba(7,18,31,0.98))] dark:shadow-[0_28px_90px_rgba(0,0,0,0.3)]">
-              <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-slate-900/20 to-transparent dark:via-emerald-200/60" />
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500 dark:text-slate-400">
-                    Sync status
-                  </p>
-                  <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-                    Dashboard is reading from the active admin backend session.
-                  </p>
-                </div>
-                <Badge
-                  variant="outline"
-                  className="border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-300/20 dark:bg-emerald-300/10 dark:text-emerald-100"
-                >
-                  Backend live
-                </Badge>
-              </div>
-            </section>
           </div>
         </div>
       </div>
