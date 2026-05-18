@@ -495,6 +495,7 @@ export type BackendInvoice = {
   job_code?: string | null;
   dealership_name?: string | null;
   technician_name?: string | null;
+  customer_email?: string | null;
   company_info?: BackendInvoiceBrandingSettings | null;
   bill_to?: {
     name?: string | null;
@@ -1895,6 +1896,16 @@ export async function markInvoicePaid(
     method: 'POST',
     token,
     body: { payment_recorded_at },
+  });
+}
+
+export async function sendInvoiceEmail(
+  token: string,
+  invoiceId: string,
+): Promise<BackendInvoice> {
+  return requestJson<BackendInvoice>(`/invoices/${invoiceId}/send-email`, {
+    method: 'POST',
+    token,
   });
 }
 

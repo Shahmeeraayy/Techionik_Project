@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+from html import escape
 from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal, ROUND_HALF_UP
+import textwrap
 from typing import Iterable, List, Optional
 from uuid import UUID
 
@@ -11,7 +13,9 @@ from sqlalchemy.orm import Session
 
 from ..core.enums import AuditEntityType
 from ..core.security import AuthenticatedUser
+from ..models.booking_request import BookingRequest
 from ..models.dealership import Dealership
+from ..models.email_outbox import EmailOutbox
 from ..models.invoice import Invoice, InvoiceLineItem
 from ..models.invoice_branding_settings import InvoiceBrandingSettings
 from ..models.job import Job
@@ -42,6 +46,7 @@ from .invoice_branding_settings_service import (
     get_default_invoice_branding_payload,
 )
 from .job_services_service import JobServicesService
+from .email_service import EmailAttachment, send_email_or_raise
 
 
 CENTS = Decimal("0.01")
@@ -365,6 +370,7 @@ class InvoiceService:
         first_job_code: Optional[str] = None
         dealership_name: Optional[str] = None
         technician_name: Optional[str] = None
+        customer_email: Optional[str] = None
 
         primary_job = (
             self.db.query(Job)
@@ -382,9 +388,12 @@ class InvoiceService:
                 technician = self.db.query(Technician).filter(Technician.id == primary_job.assigned_tech_id).first()
                 if technician is not None:
                     technician_name = technician.name
+            customer_email = self._resolve_customer_email(invoice, primary_job, dealership_name)
 
         if dealership_name is None:
             dealership_name = invoice.bill_to_name
+        if customer_email is None:
+            customer_email = self._resolve_customer_email(invoice, None, dealership_name)
 
         line_items = [
             {
@@ -439,6 +448,7 @@ class InvoiceService:
                 "job_code": first_job_code,
                 "dealership_name": dealership_name,
                 "technician_name": technician_name,
+                "customer_email": customer_email,
                 "company_info": {
                     "logo_url": invoice.company_logo_url,
                     "name": invoice.company_name,
@@ -490,6 +500,237 @@ class InvoiceService:
                 "line_items": line_items,
             }
         )
+
+    def _resolve_customer_email(
+        self,
+        invoice: Invoice,
+        primary_job: Optional[Job],
+        dealership_name: Optional[str],
+    ) -> Optional[str]:
+        if primary_job is not None and isinstance(primary_job.source_metadata, dict):
+            metadata_email = str(primary_job.source_metadata.get("customer_email") or "").strip()
+            if metadata_email:
+                return metadata_email
+
+            booking_request_id = primary_job.source_metadata.get("booking_request_id")
+            if booking_request_id:
+                try:
+                    booking = (
+                        self.db.query(BookingRequest)
+                        .execution_options(skip_tenant_scope=True)
+                        .filter(BookingRequest.id == UUID(str(booking_request_id)))
+                        .first()
+                    )
+                except (TypeError, ValueError):
+                    booking = None
+                if booking is not None and booking.email_address:
+                    return booking.email_address.strip()
+
+        invoice_name = (dealership_name or invoice.bill_to_name or "").strip().lower()
+        if invoice_name:
+            dealership = (
+                self.db.query(Dealership)
+                .filter(Dealership.name == dealership_name)
+                .first()
+            )
+            if dealership is None:
+                dealerships = self.db.query(Dealership).all()
+                dealership = next(
+                    (row for row in dealerships if row.name.strip().lower() == invoice_name or row.code.strip().lower() == invoice_name),
+                    None,
+                )
+            if dealership is not None and dealership.email:
+                return dealership.email.split(",")[0].strip() or None
+
+        return None
+
+    def _build_invoice_email_body(self, invoice: Invoice, recipient: str) -> str:
+        line_rows = [
+            f"- {item.product_service}: {item.quantity} x ${Decimal(str(item.rate)):.2f} = ${Decimal(str(item.amount)):.2f}"
+            for item in invoice.line_items
+        ]
+        lines = "\n".join(line_rows) if line_rows else "- No line items"
+        address_lines = [
+            invoice.bill_to_name,
+            invoice.bill_to_address,
+            " ".join(part for part in [invoice.bill_to_city, invoice.bill_to_state, invoice.bill_to_zip_code] if part),
+        ]
+        billing_address = "\n".join(part for part in address_lines if part)
+        return (
+            f"Hello,\n\n"
+            f"Invoice {invoice.invoice_number} is ready.\n\n"
+            f"Bill to:\n{billing_address or '-'}\n\n"
+            f"Invoice date: {invoice.invoice_date}\n"
+            f"Due date: {invoice.due_date}\n"
+            f"Total: ${Decimal(str(invoice.total)):.2f}\n\n"
+            f"Line items:\n{lines}\n\n"
+            f"Please contact us at {invoice.company_email} if you have any questions.\n\n"
+            f"Thank you,\n{invoice.company_name}\n\n"
+            f"Sent to: {recipient}"
+        )
+
+    def _build_invoice_email_html(self, invoice: Invoice, recipient: str) -> str:
+        item_rows = "".join(
+            (
+                "<tr>"
+                f"<td style=\"padding:12px 0;border-bottom:1px solid #e2e8f0;color:#0f172a;font-weight:600;\">{escape(item.product_service)}</td>"
+                f"<td style=\"padding:12px 0;border-bottom:1px solid #e2e8f0;color:#475569;text-align:center;\">{Decimal(str(item.quantity)):.2f}</td>"
+                f"<td style=\"padding:12px 0;border-bottom:1px solid #e2e8f0;color:#475569;text-align:right;\">${Decimal(str(item.rate)):.2f}</td>"
+                f"<td style=\"padding:12px 0;border-bottom:1px solid #e2e8f0;color:#0f172a;text-align:right;font-weight:700;\">${Decimal(str(item.amount)):.2f}</td>"
+                "</tr>"
+            )
+            for item in invoice.line_items
+        )
+        if not item_rows:
+            item_rows = "<tr><td colspan=\"4\" style=\"padding:14px 0;color:#64748b;\">No line items.</td></tr>"
+
+        bill_to = "<br>".join(
+            escape(part)
+            for part in [
+                invoice.bill_to_name,
+                invoice.bill_to_address,
+                " ".join(part for part in [invoice.bill_to_city, invoice.bill_to_state, invoice.bill_to_zip_code] if part),
+            ]
+            if part
+        )
+        company_address = ", ".join(
+            part
+            for part in [invoice.company_street_address, invoice.company_city, invoice.company_state, invoice.company_zip_code]
+            if part
+        )
+        return f"""\
+<!doctype html>
+<html>
+  <body style="margin:0;background:#f1f5f9;font-family:Inter,Arial,sans-serif;color:#0f172a;">
+    <div style="display:none;max-height:0;overflow:hidden;">Invoice {escape(invoice.invoice_number)} from {escape(invoice.company_name)} is attached as a PDF.</div>
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f1f5f9;padding:28px 0;">
+      <tr>
+        <td align="center">
+          <table role="presentation" width="640" cellspacing="0" cellpadding="0" style="width:640px;max-width:94%;background:#ffffff;border-radius:22px;overflow:hidden;box-shadow:0 22px 60px rgba(15,23,42,0.14);">
+            <tr>
+              <td style="padding:30px 34px;background:linear-gradient(135deg,#0f172a,#0e7490);color:#ffffff;">
+                <div style="font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#bae6fd;font-weight:800;">Invoice ready</div>
+                <h1 style="margin:10px 0 0;font-size:30px;line-height:1.15;">{escape(invoice.invoice_number)}</h1>
+                <p style="margin:12px 0 0;color:#dbeafe;font-size:15px;line-height:1.6;">Your invoice PDF is attached to this email for download or printing.</p>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:28px 34px;">
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+                  <tr>
+                    <td style="width:50%;padding:0 10px 18px 0;vertical-align:top;">
+                      <div style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#64748b;font-weight:800;">Bill to</div>
+                      <div style="margin-top:8px;font-size:15px;line-height:1.55;color:#0f172a;">{bill_to or "-"}</div>
+                    </td>
+                    <td style="width:50%;padding:0 0 18px 10px;vertical-align:top;">
+                      <div style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#64748b;font-weight:800;">Invoice summary</div>
+                      <div style="margin-top:8px;font-size:15px;line-height:1.75;color:#0f172a;">
+                        Date: <strong>{invoice.invoice_date}</strong><br>
+                        Due: <strong>{invoice.due_date}</strong><br>
+                        Total: <strong style="font-size:20px;color:#0e7490;">${Decimal(str(invoice.total)):.2f}</strong>
+                      </div>
+                    </td>
+                  </tr>
+                </table>
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-top:8px;border-collapse:collapse;">
+                  <thead>
+                    <tr>
+                      <th align="left" style="padding:10px 0;border-bottom:2px solid #cbd5e1;color:#475569;font-size:11px;letter-spacing:1.4px;text-transform:uppercase;">Service</th>
+                      <th align="center" style="padding:10px 0;border-bottom:2px solid #cbd5e1;color:#475569;font-size:11px;letter-spacing:1.4px;text-transform:uppercase;">Qty</th>
+                      <th align="right" style="padding:10px 0;border-bottom:2px solid #cbd5e1;color:#475569;font-size:11px;letter-spacing:1.4px;text-transform:uppercase;">Rate</th>
+                      <th align="right" style="padding:10px 0;border-bottom:2px solid #cbd5e1;color:#475569;font-size:11px;letter-spacing:1.4px;text-transform:uppercase;">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>{item_rows}</tbody>
+                </table>
+                <div style="margin-top:22px;padding:18px 20px;border-radius:16px;background:#ecfeff;border:1px solid #a5f3fc;color:#155e75;">
+                  <strong>PDF attached:</strong> {escape(invoice.invoice_number)}.pdf
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:22px 34px;background:#f8fafc;border-top:1px solid #e2e8f0;color:#475569;font-size:13px;line-height:1.65;">
+                <strong style="color:#0f172a;">{escape(invoice.company_name)}</strong><br>
+                {escape(company_address)}<br>
+                Questions? Reply to <a href="mailto:{escape(invoice.company_email)}" style="color:#0e7490;font-weight:700;">{escape(invoice.company_email)}</a>.
+                <div style="margin-top:12px;color:#94a3b8;">Sent to {escape(recipient)}</div>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
+"""
+
+    @staticmethod
+    def _pdf_escape(value: str) -> str:
+        return value.replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)")
+
+    def _build_invoice_pdf_bytes(self, invoice: Invoice) -> bytes:
+        lines = [
+            invoice.company_name,
+            f"Invoice {invoice.invoice_number}",
+            "",
+            f"Invoice date: {invoice.invoice_date}",
+            f"Due date: {invoice.due_date}",
+            f"Total: ${Decimal(str(invoice.total)):.2f}",
+            "",
+            "Bill to:",
+            invoice.bill_to_name,
+            invoice.bill_to_address,
+            " ".join(part for part in [invoice.bill_to_city, invoice.bill_to_state, invoice.bill_to_zip_code] if part),
+            "",
+            "Line items:",
+        ]
+        for item in invoice.line_items:
+            line = f"{item.product_service} | Qty {Decimal(str(item.quantity)):.2f} | Rate ${Decimal(str(item.rate)):.2f} | Total ${Decimal(str(item.amount)):.2f}"
+            lines.extend(textwrap.wrap(line, width=88) or [line])
+        lines.extend(
+            [
+                "",
+                f"Subtotal: ${Decimal(str(invoice.subtotal)):.2f}",
+                f"Sales tax: ${Decimal(str(invoice.sales_tax)):.2f}",
+                f"Shipping: ${Decimal(str(invoice.shipping)):.2f}",
+                f"Invoice total: ${Decimal(str(invoice.total)):.2f}",
+                "",
+                f"Questions? Contact {invoice.company_email}",
+            ]
+        )
+
+        content_lines = ["BT", "/F1 11 Tf", "50 770 Td", "14 TL"]
+        for index, line in enumerate(lines[:52]):
+            if index == 1:
+                content_lines.extend(["/F1 18 Tf", f"({self._pdf_escape(line)}) Tj", "/F1 11 Tf", "T*"])
+            else:
+                content_lines.extend([f"({self._pdf_escape(line or ' ')}) Tj", "T*"])
+        content_lines.append("ET")
+        stream = "\n".join(content_lines).encode("latin-1", "replace")
+
+        objects = [
+            b"<< /Type /Catalog /Pages 2 0 R >>",
+            b"<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+            b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>",
+            b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+            b"<< /Length " + str(len(stream)).encode("ascii") + b" >>\nstream\n" + stream + b"\nendstream",
+        ]
+        pdf = bytearray(b"%PDF-1.4\n")
+        offsets = [0]
+        for number, obj in enumerate(objects, start=1):
+            offsets.append(len(pdf))
+            pdf.extend(f"{number} 0 obj\n".encode("ascii"))
+            pdf.extend(obj)
+            pdf.extend(b"\nendobj\n")
+        xref_offset = len(pdf)
+        pdf.extend(f"xref\n0 {len(objects) + 1}\n".encode("ascii"))
+        pdf.extend(b"0000000000 65535 f \n")
+        for offset in offsets[1:]:
+            pdf.extend(f"{offset:010d} 00000 n \n".encode("ascii"))
+        pdf.extend(
+            f"trailer\n<< /Size {len(objects) + 1} /Root 1 0 R >>\nstartxref\n{xref_offset}\n%%EOF\n".encode("ascii")
+        )
+        return bytes(pdf)
 
     def _resolve_terms_days(self, terms: InvoiceTerms, custom_term_days: Optional[int]) -> int:
         if terms == InvoiceTerms.NET_15:
@@ -1475,6 +1716,80 @@ class InvoiceService:
             entity_type=AuditEntityType.INVOICE.value,
             entity_id=invoice.id,
             metadata={"invoice_number": invoice.invoice_number, "payment_recorded_at": payment_at.isoformat()},
+        )
+        self.db.commit()
+        self.db.refresh(invoice)
+        return self._to_response(invoice)
+
+    def send_invoice_email(self, invoice_id: UUID) -> InvoiceResponse:
+        invoice = self._require_invoice(invoice_id)
+        if invoice.status == InvoiceStatus.CANCELLED.value:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Cancelled invoices cannot be emailed",
+            )
+
+        primary_job = (
+            self.db.query(Job)
+            .filter(Job.invoice_id == invoice.id)
+            .order_by(Job.created_at.asc())
+            .first()
+        )
+        dealership_name = None
+        if primary_job is not None and primary_job.dealership_id is not None:
+            dealership = self.db.query(Dealership).filter(Dealership.id == primary_job.dealership_id).first()
+            dealership_name = dealership.name if dealership is not None else None
+        recipient = self._resolve_customer_email(invoice, primary_job, dealership_name or invoice.bill_to_name)
+        if not recipient:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="No customer email is available for this invoice",
+            )
+
+        subject = f"Invoice {invoice.invoice_number}"
+        body = self._build_invoice_email_body(invoice, recipient)
+        html_body = self._build_invoice_email_html(invoice, recipient)
+        pdf_attachment = EmailAttachment(
+            filename=f"{invoice.invoice_number}.pdf",
+            content=self._build_invoice_pdf_bytes(invoice),
+            content_type="application/pdf",
+        )
+        try:
+            send_email_or_raise(
+                to=recipient,
+                subject=subject,
+                body=body,
+                html_body=html_body,
+                attachments=[pdf_attachment],
+            )
+        except Exception as exc:
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail=f"Invoice email could not be sent: {exc}",
+            ) from exc
+
+        self.db.add(
+            EmailOutbox(
+                recipient_email=recipient,
+                subject=subject,
+                body=body,
+                message_type="invoice_email",
+                related_entity_type="invoice",
+                related_entity_id=str(invoice.id),
+                status="sent",
+            )
+        )
+        if invoice.status in {InvoiceStatus.DRAFT.value, InvoiceStatus.SENT.value, InvoiceStatus.OVERDUE.value}:
+            invoice.status = InvoiceStatus.SENT.value
+        self.repo.update(invoice)
+        AuditService.log_event(
+            self.db,
+            actor_role=self.current_user.role,
+            actor_id=self.current_user.user_id,
+            action="invoice.emailed",
+            entity_type=AuditEntityType.INVOICE.value,
+            entity_id=invoice.id,
+            metadata={"invoice_number": invoice.invoice_number, "recipient_email": recipient},
         )
         self.db.commit()
         self.db.refresh(invoice)

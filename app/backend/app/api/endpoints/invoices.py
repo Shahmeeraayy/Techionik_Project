@@ -115,3 +115,11 @@ def mark_invoice_paid(
     )
 
 
+@router.post("/{invoice_id}/send-email", response_model=InvoiceResponse)
+def send_invoice_email(
+    invoice_id: UUID,
+    db: Session = Depends(deps.get_db),
+    current_user: AuthenticatedUser = Depends(deps.require_roles(UserRole.ADMIN)),
+):
+    return InvoiceService(db, current_user).send_invoice_email(invoice_id)
+

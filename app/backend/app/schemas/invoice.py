@@ -360,6 +360,7 @@ class InvoiceResponse(BaseModel):
     job_code: Optional[str] = None
     dealership_name: Optional[str] = None
     technician_name: Optional[str] = None
+    customer_email: Optional[str] = None
 
     company_info: Optional[InvoiceCompanyPayload] = None
     company_logo_url: Optional[str] = None

@@ -54,6 +54,7 @@ import {
     fetchInvoices,
     getStoredAdminToken,
     markInvoicePaid,
+    sendInvoiceEmail,
     updateInvoice,
     voidInvoice,
     type BackendDealership,
@@ -173,6 +174,18 @@ const resolveInvoiceSentDate = (invoice: BackendInvoice): string | null => {
         return invoice.updated_at;
     }
     return invoice.voided_at || null;
+};
+
+const resolveInvoiceCustomerEmail = (invoice: BackendInvoice, dealerships: BackendDealership[] = []): string => {
+    if (invoice.customer_email?.trim()) {
+        return invoice.customer_email.trim();
+    }
+    const invoiceName = (invoice.dealership_name || invoice.bill_to?.name || '').trim().toLowerCase();
+    const matchedDealership = dealerships.find((dealer) => {
+        const names = [dealer.name, dealer.code].filter(Boolean).map((value) => value!.trim().toLowerCase());
+        return invoiceName.length > 0 && names.includes(invoiceName);
+    });
+    return matchedDealership?.email?.split(',')[0]?.trim() || '';
 };
 
 const resolveInvoiceDisplayStatus = (
@@ -381,20 +394,26 @@ export default function InvoiceHistoryPage() {
     };
 
     const handleSendInvoiceEmail = async (invoice: BackendInvoice) => {
-        const matchedDealership = dealerships.find((dealer) => {
-            const invoiceName = (invoice.dealership_name || invoice.bill_to?.name || '').trim().toLowerCase();
-            return invoiceName.length > 0 && dealer.name.trim().toLowerCase() === invoiceName;
-        });
-        const recipient = matchedDealership?.email?.split(',')[0]?.trim();
+        const adminToken = getStoredAdminToken();
+        if (!adminToken) {
+            alert('Admin session is required to send invoice email.');
+            return;
+        }
+        const recipient = resolveInvoiceCustomerEmail(invoice, dealerships);
         if (!recipient) {
             alert('No client contact email is available for this location yet.');
             return;
         }
         setActionLoading('send');
-        const subject = encodeURIComponent(`Invoice ${invoice.invoice_number}`);
-        const body = encodeURIComponent(`Hello,\n\nPlease find invoice ${invoice.invoice_number} for job ${extractJobCodeFromInvoice(invoice)}.\n\nLocation: ${resolveInvoiceLocation(invoice, dealerships)}\nTotal: $${toNumber(invoice.total).toFixed(2)}\n\nThank you.`);
-        window.location.href = `mailto:${recipient}?subject=${subject}&body=${body}`;
-        setActionLoading(null);
+        try {
+            const updatedInvoice = await sendInvoiceEmail(adminToken, invoice.id);
+            refreshSelectedInvoice(updatedInvoice);
+            alert(`Invoice email sent to ${recipient}.`);
+        } catch (error) {
+            alert(error instanceof Error ? error.message : 'Unable to send invoice email.');
+        } finally {
+            setActionLoading(null);
+        }
     };
 
     const handleMarkAsPaid = async (invoice: BackendInvoice) => {
@@ -967,10 +986,12 @@ export default function InvoiceHistoryPage() {
                     {selectedInvoice && (
                         (() => {
                             const displayStatus = resolveInvoiceDisplayStatus(selectedInvoice);
+                            const customerEmail = resolveInvoiceCustomerEmail(selectedInvoice, dealerships);
                             const summaryTiles = [
                                 { label: 'Job ID', value: extractJobCodeFromInvoice(selectedInvoice) },
                                 { label: 'Location', value: resolveInvoiceLocation(selectedInvoice, dealerships) },
                                 { label: 'Technician', value: resolveTechnician(selectedInvoice) },
+                                { label: 'Customer email', value: customerEmail || 'No email on file' },
                                 { label: 'Generated', value: formatDateTimeSafe(selectedInvoice.created_at) },
                                 { label: 'Invoice total', value: `$${toNumber(selectedInvoice.total).toFixed(2)}` },
                             ];
@@ -1168,10 +1189,10 @@ export default function InvoiceHistoryPage() {
                                         className="h-12 min-w-0 gap-2 rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] px-3 text-sm text-slate-100 shadow-[0_14px_34px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.055)] hover:bg-[linear-gradient(180deg,rgba(24,38,64,0.98),rgba(12,20,34,0.98))] hover:text-white"
                                         variant="outline"
                                         onClick={() => void handleSendInvoiceEmail(selectedInvoice)}
-                                        disabled={actionLoading === 'send'}
+                                        disabled={actionLoading === 'send' || !customerEmail}
                                     >
                                         <Send className="h-4 w-4 shrink-0" />
-                                        <span className="truncate">{actionLoading === 'send' ? 'Preparing Email' : 'Send Invoice Email'}</span>
+                                        <span className="truncate">{actionLoading === 'send' ? 'Sending Email' : 'Send Invoice Email'}</span>
                                     </Button>
                                     <Button
                                         className="h-12 min-w-0 gap-2 rounded-2xl border border-[#7db0ff]/40 bg-[linear-gradient(135deg,#4f7cff,#22d3ee)] px-3 text-sm text-white shadow-[0_16px_34px_rgba(79,124,255,0.22)] hover:brightness-105"

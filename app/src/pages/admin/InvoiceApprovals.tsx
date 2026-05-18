@@ -1407,8 +1407,8 @@ export default function InvoiceApprovalsPage() {
                                                         <div key={item.id} className="rounded-lg border border-white/10 bg-[#0d1a2d] p-3">
                                                             <div className="mb-2">
                                                                 <Label className="mb-1 block text-[11px] uppercase tracking-wide text-slate-400">Service</Label>
-                                                                <Input
-                                                                    className="h-8 border-white/10 text-slate-100 placeholder:text-slate-500"
+                                                                <input
+                                                                    className="h-8 w-full rounded-md border border-white/10 px-3 text-sm text-slate-100 placeholder:text-slate-500 outline-none focus:border-cyan-500/50"
                                                                     style={{ backgroundColor: '#0d1a2d', colorScheme: 'dark' }}
                                                                     value={item.name}
                                                                     list="invoice-service-suggestions"
@@ -1419,22 +1419,24 @@ export default function InvoiceApprovalsPage() {
                                                             <div className="grid grid-cols-2 gap-2">
                                                                 <div>
                                                                     <Label className="mb-1 block text-[11px] uppercase tracking-wide text-slate-400">Qty</Label>
-                                                                    <Input
+                                                                    <input
                                                                         type="number"
                                                                         min="0"
                                                                         step="0.01"
-                                                                        className="h-8 border-white/10 text-right text-slate-100" style={{ backgroundColor: '#0d1a2d', colorScheme: 'dark' }}
+                                                                        className="h-8 w-full rounded-md border border-white/10 px-3 text-right text-sm text-slate-100 outline-none focus:border-cyan-500/50"
+                                                                        style={{ backgroundColor: '#0d1a2d', colorScheme: 'dark' }}
                                                                         value={item.quantity}
                                                                         onChange={(e) => handleUpdateService(item.id, 'quantity', e.target.value)}
                                                                     />
                                                                 </div>
                                                                 <div>
                                                                     <Label className="mb-1 block text-[11px] uppercase tracking-wide text-slate-400">Price</Label>
-                                                                    <Input
+                                                                    <input
                                                                         type="number"
                                                                         min="0"
                                                                         step="0.01"
-                                                                        className="h-8 border-white/10 text-right text-slate-100" style={{ backgroundColor: '#0d1a2d', colorScheme: 'dark' }}
+                                                                        className="h-8 w-full rounded-md border border-white/10 px-3 text-right text-sm text-slate-100 outline-none focus:border-cyan-500/50"
+                                                                        style={{ backgroundColor: '#0d1a2d', colorScheme: 'dark' }}
                                                                         value={item.price}
                                                                         onChange={(e) => handleUpdateService(item.id, 'price', e.target.value)}
                                                                     />
