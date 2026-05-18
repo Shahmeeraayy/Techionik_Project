@@ -2412,7 +2412,7 @@ export default function JobsPage() {
                     </div>
 
                     <SheetFooter className="border-t px-5 py-4 sm:flex-row sm:justify-end gap-2">
-                        <Button variant="outline" onClick={() => setAssignSidebarOpen(false)}>Cancel</Button>
+                        <Button variant="ghost" className="h-11 rounded-2xl border border-white/10 !bg-[#0b1424] px-5 !text-slate-100 hover:!bg-[#122039] hover:!text-white" onClick={() => setAssignSidebarOpen(false)}>Cancel</Button>
                         <Button className="bg-[#2F8E92] hover:bg-[#267276]" onClick={submitTechnicianAssignment}>
                             {isBulkAssignMode ? `Apply to ${bulkAssignSelectionCount} Selected` : 'Save Assignment'}
                         </Button>
