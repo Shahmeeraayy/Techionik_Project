@@ -527,7 +527,7 @@ export default function Dashboard() {
               </h1>
 
               <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-600 dark:text-slate-300 sm:text-[15px]">
-                Monitor jobs, technician capacity, invoice approvals, and operational risk from one live dispatch workspace.
+                Monitor jobs, technician capacity, invoice approvals, and operational risk from one live operations workspace.
               </p>
 
               <div className="mt-6 flex items-start gap-3">

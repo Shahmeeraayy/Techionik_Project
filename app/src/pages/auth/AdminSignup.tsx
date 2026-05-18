@@ -111,7 +111,7 @@ export default function AdminSignupPage() {
               value={workspaceSlug}
               onChange={(event) => setWorkspaceSlug(slugifyWorkspace(event.target.value))}
               required
-              placeholder="sm2-electronics"
+              placeholder="nexusops"
               className={authInputClass}
               style={authInputStyle}
             />

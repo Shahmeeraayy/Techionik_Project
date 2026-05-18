@@ -1530,7 +1530,7 @@ export default function JobsPage() {
             ? mapBackendJobToUiJob(createdBackendJob, dealershipOptions, serviceCatalog, dispatchRankingRules)
             : ({
                 job_id: `job-local-${Date.now()}`,
-                job_code: `SM2-NEW-${String(Date.now()).slice(-6)}`,
+                job_code: `NEW-${String(Date.now()).slice(-6)}`,
                 dealership_code: dealership?.code ?? null,
                 dealership_name: dealershipName,
                 service_name: serviceName,
@@ -2102,7 +2102,7 @@ export default function JobsPage() {
                             style={displayFontStyle}
                         >
                             <Sparkles className="h-3.5 w-3.5" />
-                            Dispatch Queue
+                            Operations Queue
                         </div>
 
                         <h1
@@ -2116,7 +2116,7 @@ export default function JobsPage() {
                         </h1>
 
                         <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-600 dark:text-slate-300 sm:text-[14px]">
-                            Monitor dispatch, review queue movement, and take action on technician assignment and admin confirmation from one cleaner control view.
+                            Monitor the queue, review job movement, and take action on technician assignment and admin confirmation from one cleaner control view.
                         </p>
 
                         <div className="mt-5 flex flex-wrap items-center gap-2.5">
@@ -2174,7 +2174,7 @@ export default function JobsPage() {
                     <DialogHeader>
                         <DialogTitle className="text-white">Create New Job</DialogTitle>
                         <DialogDescription className="text-slate-300">
-                            New jobs are created in Admin Preview. Admin confirmation is required before any technician assignment or dispatch queue push.
+                            New jobs are created in Admin Preview. Admin confirmation is required before any technician assignment or queue push.
                         </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-2">
@@ -2547,14 +2547,14 @@ export default function JobsPage() {
                     <div className="space-y-3">
                         <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-[#0b1424] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-cyan-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
                             <Activity className="h-3.5 w-3.5 text-cyan-200" />
-                            Dispatch Queue
+                            Operations Queue
                         </div>
                         <div className="space-y-2">
                             <h2 className="text-[1.35rem] font-semibold tracking-[-0.03em] text-white" style={displayFontStyle}>
                                 Jobs at operational depth
                             </h2>
                             <p className="max-w-2xl text-sm leading-6 text-slate-400" style={bodyFontStyle}>
-                                Review live dispatch records, monitor assignment readiness, and move jobs through the queue without falling back to a basic spreadsheet surface.
+                                Review live job records, monitor assignment readiness, and move jobs through the queue without falling back to a basic spreadsheet surface.
                             </p>
                         </div>
                     </div>
@@ -2594,7 +2594,7 @@ export default function JobsPage() {
                             No jobs match this view
                         </h3>
                         <p className="mt-3 max-w-md text-sm leading-6 text-slate-400" style={bodyFontStyle}>
-                            The dispatch board is clear for the current filter set. Adjust the queue filters or reset search criteria to widen the visible range.
+                            No jobs match the current filter set. Adjust the queue filters or reset search criteria to widen the visible range.
                         </p>
                         <Button
                             variant="outline"
@@ -2686,7 +2686,7 @@ export default function JobsPage() {
                                                 <div className="min-w-0 border-l border-white/10 pl-3">
                                                     <OverflowText text={job.service_name} className="max-w-full text-sm font-semibold text-white" />
                                                     <div className="mt-1 text-xs text-slate-500">
-                                                        {job.service_names.length > 1 ? `${job.service_names.length} catalog services linked` : 'Primary dispatch service'}
+                                                        {job.service_names.length > 1 ? `${job.service_names.length} catalog services linked` : 'Primary service'}
                                                     </div>
                                                 </div>
                                             </TableCell>
@@ -2707,7 +2707,7 @@ export default function JobsPage() {
                                             <TableCell className="py-4 align-middle">
                                                 <div className="min-w-0">
                                                     <OverflowText text={job.vehicle_summary} className="max-w-full text-sm font-semibold text-slate-100" />
-                                                    <div className="mt-1 text-xs text-slate-500">Dispatch-ready vehicle profile</div>
+                                                    <div className="mt-1 text-xs text-slate-500">Vehicle profile</div>
                                                 </div>
                                             </TableCell>
                                             <TableCell className="py-4 align-middle">

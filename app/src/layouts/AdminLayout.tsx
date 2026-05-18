@@ -464,7 +464,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
               </Button>
 
               <div className="flex flex-col">
-                <p className="hidden sm:block text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">Dispatch Workspace</p>
+                <p className="hidden sm:block text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">NexusOps</p>
                 <h1 className="text-xl font-bold text-foreground tracking-[-0.04em]">{headerTitle}</h1>
               </div>
             </div>

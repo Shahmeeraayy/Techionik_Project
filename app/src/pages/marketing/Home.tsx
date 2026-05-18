@@ -102,7 +102,7 @@ export default function MarketingHome() {
               </span>
             </h1>
             <p className="mt-6 max-w-2xl text-base leading-8 text-slate-300 sm:text-lg">
-              SM2 brings jobs, technicians, dealership coverage, invoice approvals, and live operational decisions into one cinematic control workspace.
+              NexusOps brings jobs, technicians, dealership coverage, invoice approvals, and live operational decisions into one cinematic control workspace.
             </p>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -163,9 +163,9 @@ export default function MarketingHome() {
 
                 <div className="mt-4 space-y-3">
                   {[
-                    ['SM2-2048', 'Windshield calibration', 'High', 'text-amber-100 border-amber-300/20 bg-amber-300/10'],
-                    ['SM2-2049', 'Camera service', 'Ready', 'text-emerald-100 border-emerald-300/20 bg-emerald-300/10'],
-                    ['SM2-2050', 'Diagnostic intake', 'Review', 'text-cyan-100 border-cyan-300/20 bg-cyan-300/10'],
+                    ['NXS-2048', 'Windshield calibration', 'High', 'text-amber-100 border-amber-300/20 bg-amber-300/10'],
+                    ['NXS-2049', 'Camera service', 'Ready', 'text-emerald-100 border-emerald-300/20 bg-emerald-300/10'],
+                    ['NXS-2050', 'Diagnostic intake', 'Review', 'text-cyan-100 border-cyan-300/20 bg-cyan-300/10'],
                   ].map(([code, name, status, tone]) => (
                     <div key={code} className="flex items-center justify-between gap-4 rounded-[20px] border border-white/10 bg-white/[0.035] px-4 py-3">
                       <div className="min-w-0">
