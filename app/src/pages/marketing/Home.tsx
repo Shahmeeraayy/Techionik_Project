@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ArrowRight,
   BarChart3,
+  Bot,
   CalendarCheck,
   CheckCircle2,
   ClipboardList,
@@ -9,10 +11,12 @@ import {
   LayoutDashboard,
   MapPin,
   MessageSquare,
+  Send,
   ShieldCheck,
   Smartphone,
   Users,
   Wrench,
+  X,
 } from 'lucide-react';
 
 const features = [
@@ -90,6 +94,163 @@ const planGuarantees = [
   'Booking-to-invoice workflow',
   'Customer booking portal',
 ];
+
+type ChatMessage = {
+  role: 'assistant' | 'user';
+  text: string;
+};
+
+const starterPrompts = [
+  'What does ServiceOps do?',
+  'Show pricing',
+  'Book a demo',
+];
+
+const getAssistantReply = (message: string) => {
+  const normalized = message.toLowerCase();
+
+  if (normalized.includes('price') || normalized.includes('pricing') || normalized.includes('plan')) {
+    return 'ServiceOps starts with Starter at $49/month, Professional at $149/month, and Enterprise for custom workflows. You can compare the plans in the pricing section.';
+  }
+
+  if (normalized.includes('demo') || normalized.includes('book') || normalized.includes('start')) {
+    return 'You can book a demo from the top button or the contact section. The demo flow opens the admin signup path so your team can get started.';
+  }
+
+  if (normalized.includes('technician') || normalized.includes('mobile')) {
+    return 'Technicians get a mobile-first portal for assigned jobs, status updates, history, profile management, and team communication.';
+  }
+
+  if (normalized.includes('invoice') || normalized.includes('billing')) {
+    return 'ServiceOps supports invoice approvals, invoice history, manual invoice creation, and billing workflow control from the admin portal.';
+  }
+
+  if (normalized.includes('booking') || normalized.includes('customer')) {
+    return 'Customers can submit booking requests through the public booking portal, then admins can review, assign, track, and invoice the work.';
+  }
+
+  return 'ServiceOps brings booking, dispatch, technician work, invoices, chat, and reporting into one SaaS platform. Ask me about pricing, demo booking, technician tools, or invoices.';
+};
+
+function LandingChatbot() {
+  const [open, setOpen] = useState(false);
+  const [draft, setDraft] = useState('');
+  const [messages, setMessages] = useState<ChatMessage[]>([
+    {
+      role: 'assistant',
+      text: 'Hi, I can help you explore ServiceOps, pricing, demos, technician tools, and invoice workflows.',
+    },
+  ]);
+
+  const sendMessage = (text: string) => {
+    const trimmed = text.trim();
+    if (!trimmed) return;
+
+    setMessages((current) => [
+      ...current,
+      { role: 'user', text: trimmed },
+      { role: 'assistant', text: getAssistantReply(trimmed) },
+    ]);
+    setDraft('');
+    setOpen(true);
+  };
+
+  return (
+    <div className="fixed bottom-5 right-5 z-[60] flex max-w-[calc(100vw-2.5rem)] flex-col items-end gap-3">
+      {open ? (
+        <div className="w-[min(380px,calc(100vw-2.5rem))] overflow-hidden rounded-3xl border border-white/10 bg-slate-950 shadow-2xl shadow-blue-950/40">
+          <div className="flex items-center justify-between border-b border-white/10 bg-gradient-to-r from-blue-600 to-cyan-500 px-4 py-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/15 text-white">
+                <Bot className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="font-semibold text-white">ServiceOps Assistant</p>
+                <p className="text-xs text-blue-50">Online for product questions</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              aria-label="Close chat"
+              className="flex h-9 w-9 items-center justify-center rounded-full text-white transition hover:bg-white/15"
+              onClick={() => setOpen(false)}
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+
+          <div className="max-h-[360px] space-y-3 overflow-y-auto bg-slate-950 px-4 py-4">
+            {messages.map((message, index) => (
+              <div
+                key={`${message.role}-${index}`}
+                className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+              >
+                <div
+                  className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-6 ${
+                    message.role === 'user'
+                      ? 'bg-white text-slate-950'
+                      : 'border border-white/10 bg-white/5 text-slate-200'
+                  }`}
+                >
+                  {message.text}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="border-t border-white/10 bg-slate-900/90 px-4 py-4">
+            <div className="mb-3 flex flex-wrap gap-2">
+              {starterPrompts.map((prompt) => (
+                <button
+                  key={prompt}
+                  type="button"
+                  className="rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1.5 text-xs font-semibold text-cyan-100 transition hover:bg-cyan-300/20"
+                  onClick={() => sendMessage(prompt)}
+                >
+                  {prompt}
+                </button>
+              ))}
+            </div>
+
+            <form
+              className="flex items-center gap-2"
+              onSubmit={(event) => {
+                event.preventDefault();
+                sendMessage(draft);
+              }}
+            >
+              <input
+                value={draft}
+                onChange={(event) => setDraft(event.target.value)}
+                className="min-w-0 flex-1 rounded-2xl border border-white/10 bg-slate-950 px-4 py-3 text-sm text-white outline-none placeholder:text-slate-500 focus:border-cyan-300/40"
+                placeholder="Ask about ServiceOps..."
+              />
+              <button
+                type="submit"
+                aria-label="Send chat message"
+                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-r from-blue-500 to-cyan-400 text-white shadow-lg shadow-blue-500/20 transition hover:-translate-y-0.5"
+              >
+                <Send className="h-4 w-4" />
+              </button>
+            </form>
+          </div>
+        </div>
+      ) : null}
+
+      <button
+        type="button"
+        aria-label="Open ServiceOps chat"
+        className="group flex items-center gap-3 rounded-full border border-white/10 bg-white px-4 py-3 text-slate-950 shadow-2xl shadow-blue-950/30 transition hover:-translate-y-0.5 hover:bg-slate-100"
+        onClick={() => setOpen(true)}
+      >
+        <span className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-r from-blue-500 to-cyan-400 text-white">
+          <MessageSquare className="h-5 w-5" />
+        </span>
+        <span className="hidden pr-1 text-sm font-semibold sm:block">Chat with us</span>
+      </button>
+    </div>
+  );
+}
 
 export default function MarketingHome() {
   return (
@@ -426,6 +587,8 @@ export default function MarketingHome() {
           </div>
         </div>
       </footer>
+
+      <LandingChatbot />
     </div>
   );
 }
