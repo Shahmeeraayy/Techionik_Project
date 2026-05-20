@@ -23,6 +23,9 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   CalendarClock,
+  Bell,
+  KeyRound,
+  BellDot,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -350,6 +353,99 @@ function UserMenu() {
   );
 }
 
+function NotificationMenu({
+  unreadChatCount,
+  pendingPasswordResetCount,
+}: {
+  unreadChatCount: number;
+  pendingPasswordResetCount: number;
+}) {
+  const notificationItems = [
+    {
+      title: unreadChatCount > 0 ? `${unreadChatCount} unread message${unreadChatCount === 1 ? '' : 's'}` : 'No unread messages',
+      description: unreadChatCount > 0 ? 'Technician chat needs review' : 'All conversations are up to date',
+      href: '/admin/chat',
+      icon: MessageSquareText,
+      active: unreadChatCount > 0,
+    },
+    {
+      title: pendingPasswordResetCount > 0 ? `${pendingPasswordResetCount} password reset request${pendingPasswordResetCount === 1 ? '' : 's'}` : 'No password reset requests',
+      description: pendingPasswordResetCount > 0 ? 'Technician account action pending' : 'Technician accounts are clear',
+      href: '/admin/accounts',
+      icon: KeyRound,
+      active: pendingPasswordResetCount > 0,
+    },
+    {
+      title: 'Review intake queue',
+      description: 'Check new customer booking requests',
+      href: '/admin/intake',
+      icon: Inbox,
+      active: true,
+    },
+    {
+      title: 'Invoice approvals',
+      description: 'Open invoices waiting for admin approval',
+      href: '/admin/approvals',
+      icon: FileCheck,
+      active: true,
+    },
+  ];
+  const activeCount = notificationItems.filter((item) => item.active).length;
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          type="button"
+          aria-label={`Open notifications${activeCount > 0 ? `, ${activeCount} active` : ''}`}
+          className="relative flex h-11 w-11 items-center justify-center rounded-full border border-black/10 bg-white text-slate-700 shadow-[0_14px_34px_rgba(15,23,42,0.08)] transition-all hover:-translate-y-0.5 hover:bg-[#f9fafb] hover:text-slate-950 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-200 dark:shadow-[0_14px_34px_rgba(2,6,23,0.18)] dark:hover:bg-white/[0.08] dark:hover:text-white"
+        >
+          {activeCount > 0 ? <BellDot className="h-5 w-5" /> : <Bell className="h-5 w-5" />}
+          {activeCount > 0 ? (
+            <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full border-2 border-background bg-blue-500 px-1 text-[10px] font-bold text-white">
+              {activeCount}
+            </span>
+          ) : null}
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="mt-2 w-80 overflow-hidden p-0">
+        <div className="border-b border-border bg-muted/50 px-4 py-3">
+          <p className="text-sm font-semibold text-foreground">Notifications</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {activeCount > 0 ? `${activeCount} item${activeCount === 1 ? '' : 's'} need attention` : 'Everything is up to date'}
+          </p>
+        </div>
+
+        <div className="p-2">
+          {notificationItems.map((item) => {
+            const Icon = item.icon;
+
+            return (
+              <DropdownMenuItem key={item.title} asChild>
+                <Link to={item.href} className="flex cursor-pointer items-start gap-3 rounded-xl px-3 py-3">
+                  <span className={cn(
+                    'mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border',
+                    item.active
+                      ? 'border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-cyan-200'
+                      : 'border-border bg-muted text-muted-foreground',
+                  )}>
+                    <Icon className="h-4 w-4" />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm font-semibold text-foreground">{item.title}</span>
+                    <span className="mt-0.5 block text-xs leading-5 text-muted-foreground">{item.description}</span>
+                  </span>
+                  {item.active ? <span className="mt-1.5 h-2 w-2 rounded-full bg-blue-500" /> : null}
+                </Link>
+              </DropdownMenuItem>
+            );
+          })}
+        </div>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
 export function AdminLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const { pendingTechnicianPasswordResetRequests } = useAuth();
@@ -490,6 +586,10 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
                 </>
               )}
 
+              <NotificationMenu
+                unreadChatCount={unreadChatCount}
+                pendingPasswordResetCount={pendingTechnicianPasswordResetRequests.length}
+              />
               <UserMenu />
             </div>
           </header>
@@ -503,4 +603,3 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
-
