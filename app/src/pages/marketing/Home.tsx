@@ -101,7 +101,7 @@ type ChatMessage = {
 };
 
 const starterPrompts = [
-  'What does ServiceOps do?',
+  'What does NexusOps do?',
   'Show pricing',
   'Book a demo',
 ];
@@ -110,7 +110,7 @@ const getAssistantReply = (message: string) => {
   const normalized = message.toLowerCase();
 
   if (normalized.includes('price') || normalized.includes('pricing') || normalized.includes('plan')) {
-    return 'ServiceOps starts with Starter at $49/month, Professional at $149/month, and Enterprise for custom workflows. You can compare the plans in the pricing section.';
+    return 'NexusOps starts with Starter at $49/month, Professional at $149/month, and Enterprise for custom workflows. You can compare the plans in the pricing section.';
   }
 
   if (normalized.includes('demo') || normalized.includes('book') || normalized.includes('start')) {
@@ -122,14 +122,14 @@ const getAssistantReply = (message: string) => {
   }
 
   if (normalized.includes('invoice') || normalized.includes('billing')) {
-    return 'ServiceOps supports invoice approvals, invoice history, manual invoice creation, and billing workflow control from the admin portal.';
+    return 'NexusOps supports invoice approvals, invoice history, manual invoice creation, and billing workflow control from the admin portal.';
   }
 
   if (normalized.includes('booking') || normalized.includes('customer')) {
     return 'Customers can submit booking requests through the public booking portal, then admins can review, assign, track, and invoice the work.';
   }
 
-  return 'ServiceOps brings booking, dispatch, technician work, invoices, chat, and reporting into one SaaS platform. Ask me about pricing, demo booking, technician tools, or invoices.';
+  return 'NexusOps brings booking, dispatch, technician work, invoices, chat, and reporting into one SaaS platform. Ask me about pricing, demo booking, technician tools, or invoices.';
 };
 
 function LandingChatbot() {
@@ -138,7 +138,7 @@ function LandingChatbot() {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: 'assistant',
-      text: 'Hi, I can help you explore ServiceOps, pricing, demos, technician tools, and invoice workflows.',
+      text: 'Hi, I can help you explore NexusOps, pricing, demos, technician tools, and invoice workflows.',
     },
   ]);
 
@@ -165,7 +165,7 @@ function LandingChatbot() {
                 <Bot className="h-5 w-5" />
               </div>
               <div>
-                <p className="font-semibold text-white">ServiceOps Assistant</p>
+                <p className="font-semibold text-white">NexusOps Assistant</p>
                 <p className="text-xs text-blue-50">Online for product questions</p>
               </div>
             </div>
@@ -223,7 +223,7 @@ function LandingChatbot() {
                 value={draft}
                 onChange={(event) => setDraft(event.target.value)}
                 className="min-w-0 flex-1 rounded-2xl border border-white/10 bg-slate-950 px-4 py-3 text-sm text-white outline-none placeholder:text-slate-500 focus:border-cyan-300/40"
-                placeholder="Ask about ServiceOps..."
+                placeholder="Ask about NexusOps..."
               />
               <button
                 type="submit"
@@ -239,7 +239,7 @@ function LandingChatbot() {
 
       <button
         type="button"
-        aria-label="Open ServiceOps chat"
+        aria-label="Open NexusOps chat"
         className="group flex items-center gap-3 rounded-full border border-white/10 bg-white px-4 py-3 text-slate-950 shadow-2xl shadow-blue-950/30 transition hover:-translate-y-0.5 hover:bg-slate-100"
         onClick={() => setOpen(true)}
       >
@@ -262,7 +262,7 @@ export default function MarketingHome() {
               <Wrench className="h-5 w-5 text-white" />
             </div>
             <div>
-              <p className="text-lg font-bold tracking-tight">ServiceOps</p>
+              <p className="text-lg font-bold tracking-tight">NexusOps</p>
               <p className="text-xs text-slate-400">Smart Service Management</p>
             </div>
           </div>
@@ -566,7 +566,7 @@ export default function MarketingHome() {
                 Book a Demo
               </Link>
               <a
-                href="mailto:sales@serviceops.com"
+                href="mailto:sales@nexusops.com"
                 className="inline-flex items-center justify-center rounded-2xl border border-white/30 px-7 py-4 font-semibold text-white transition hover:-translate-y-0.5 hover:bg-white/10"
               >
                 Contact Us
@@ -578,7 +578,7 @@ export default function MarketingHome() {
 
       <footer className="border-t border-white/10 px-6 py-10">
         <div className="mx-auto flex max-w-7xl flex-col justify-between gap-6 text-sm text-slate-400 md:flex-row">
-          <p>&copy; 2026 ServiceOps. All rights reserved.</p>
+          <p>&copy; 2026 NexusOps. All rights reserved.</p>
           <div className="flex gap-6">
             <a href="#features" className="hover:text-white">Features</a>
             <a href="#pricing" className="hover:text-white">Pricing</a>
