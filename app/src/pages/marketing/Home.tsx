@@ -2,13 +2,17 @@ import { Link } from 'react-router-dom';
 import {
   ArrowRight,
   BarChart3,
+  CalendarCheck,
   CheckCircle2,
   ClipboardList,
   FileCheck2,
   Gauge,
+  LayoutDashboard,
   MapPin,
+  MessageSquare,
   RadioTower,
   ShieldCheck,
+  Smartphone,
   Sparkles,
   Users,
   Wrench,
@@ -40,13 +44,111 @@ const workflowCards = [
   },
 ];
 
-const features = [
+const workflowFeatures = [
   'Live technician capacity',
   'Dealership coverage control',
   'Priority and urgency signals',
   'Admin approval queues',
   'Field-ready mobile experience',
   'Operational reporting',
+];
+
+const platformFeatures = [
+  {
+    icon: LayoutDashboard,
+    title: 'Admin Dashboard',
+    description:
+      'Control bookings, jobs, technicians, invoices, dealerships, services, reports, and settings from one clean dashboard.',
+  },
+  {
+    icon: Smartphone,
+    title: 'Technician Portal',
+    description:
+      'Technicians can view assigned jobs, update status, manage profiles, and communicate from a mobile-first portal.',
+  },
+  {
+    icon: CalendarCheck,
+    title: 'Online Booking Portal',
+    description:
+      'Customers can submit service requests online without manual calls, messages, or repeated follow-ups.',
+  },
+  {
+    icon: ClipboardList,
+    title: 'Job Management',
+    description:
+      'Track every job from intake to assignment, active work, completion, invoice approval, and full history.',
+  },
+  {
+    icon: FileCheck2,
+    title: 'Invoice Approvals',
+    description:
+      'Review invoices, approve charges, maintain invoice records, and keep the billing workflow organized.',
+  },
+  {
+    icon: BarChart3,
+    title: 'Reports & Insights',
+    description:
+      'Monitor technician productivity, job completion time, booking trends, and business performance.',
+  },
+];
+
+const operatingGaps = [
+  'Missed appointments',
+  'No live technician visibility',
+  'Manual job assignment',
+  'Scattered communication',
+];
+
+const workflowSteps = [
+  'Customer submits a booking request',
+  'Admin reviews and assigns the job',
+  'Technician receives the job in portal',
+  'Technician updates job status live',
+  'Admin reviews invoice and reports',
+];
+
+const portalCards = [
+  {
+    icon: LayoutDashboard,
+    title: 'Admin Portal',
+    description:
+      'Manage operations, jobs, users, technicians, invoices, services, reports, and system settings from one central place.',
+    featured: true,
+  },
+  {
+    icon: Smartphone,
+    title: 'Technician Portal',
+    description:
+      'Give technicians a mobile-first portal to view jobs, update progress, manage profiles, and stay connected.',
+  },
+  {
+    icon: CalendarCheck,
+    title: 'Customer Booking',
+    description:
+      'Let customers request services through a simple public booking form connected directly to your admin workflow.',
+  },
+];
+
+const pricingPlans = [
+  {
+    name: 'Starter',
+    price: '$49',
+    description: 'For small service teams starting with digital operations.',
+    features: ['Booking portal', 'Admin dashboard', 'Basic job tracking', 'Technician access'],
+  },
+  {
+    name: 'Professional',
+    price: '$149',
+    description: 'For growing businesses that need full operational control.',
+    features: ['Advanced job tracking', 'Invoice approvals', 'Reports', 'Team communication'],
+    highlighted: true,
+  },
+  {
+    name: 'Enterprise',
+    price: 'Custom',
+    description: 'For larger teams, multi-location businesses, and custom workflows.',
+    features: ['Custom workflows', 'Multi-location support', 'Priority support', 'Advanced reporting'],
+  },
 ];
 
 export default function MarketingHome() {
@@ -70,6 +172,8 @@ export default function MarketingHome() {
             <a href="#platform" className="rounded-full px-4 py-2 transition-colors hover:bg-white/[0.08] hover:text-white">Platform</a>
             <a href="#workflow" className="rounded-full px-4 py-2 transition-colors hover:bg-white/[0.08] hover:text-white">Workflow</a>
             <a href="#proof" className="rounded-full px-4 py-2 transition-colors hover:bg-white/[0.08] hover:text-white">Results</a>
+            <a href="#pricing" className="rounded-full px-4 py-2 transition-colors hover:bg-white/[0.08] hover:text-white">Pricing</a>
+            <a href="#contact" className="rounded-full px-4 py-2 transition-colors hover:bg-white/[0.08] hover:text-white">Contact</a>
           </div>
 
           <div className="flex items-center gap-2">
@@ -205,6 +309,61 @@ export default function MarketingHome() {
         </div>
       </section>
 
+      <section className="relative bg-[#05070b] px-5 py-20 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          <div className="mx-auto max-w-3xl text-center">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-100/70">The Problem</p>
+            <h2 className="mt-4 text-[clamp(2.1rem,4.5vw,4rem)] font-semibold leading-[0.96] tracking-[-0.05em] text-white">
+              Manual service operations slow your business down.
+            </h2>
+            <p className="mt-5 text-base leading-8 text-slate-400">
+              Service businesses lose time when requests, technician updates, job status, invoices, and communication live in separate places.
+            </p>
+          </div>
+
+          <div className="mt-10 grid gap-4 md:grid-cols-4">
+            {operatingGaps.map((item) => (
+              <div key={item} className="rounded-[24px] border border-white/10 bg-white/[0.04] p-5 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                <div className="mx-auto mb-5 flex h-11 w-11 items-center justify-center rounded-2xl border border-rose-300/20 bg-rose-300/10 font-semibold text-rose-100">
+                  !
+                </div>
+                <h3 className="text-sm font-semibold text-white">{item}</h3>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="relative border-y border-white/10 bg-white px-5 py-20 text-slate-950 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          <div className="max-w-3xl">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#315bda]">Product Features</p>
+            <h2 className="mt-4 text-[clamp(2.1rem,4.5vw,4.35rem)] font-semibold leading-[0.94] tracking-[-0.05em] text-slate-950">
+              Everything your service team needs in one SaaS platform.
+            </h2>
+            <p className="mt-5 text-base leading-8 text-slate-600">
+              Built for admins, technicians, and customers so the full service workflow stays connected from request to completion.
+            </p>
+          </div>
+
+          <div className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {platformFeatures.map((feature) => {
+              const Icon = feature.icon;
+
+              return (
+                <article key={feature.title} className="rounded-[24px] border border-slate-200 bg-white p-6 shadow-sm transition-all hover:-translate-y-1 hover:border-slate-300 hover:shadow-xl">
+                  <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#eaf0ff] text-[#315bda]">
+                    <Icon className="h-6 w-6" />
+                  </div>
+                  <h3 className="text-xl font-semibold tracking-[-0.03em] text-slate-950">{feature.title}</h3>
+                  <p className="mt-3 text-sm leading-7 text-slate-600">{feature.description}</p>
+                </article>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
       <section id="workflow" className="relative bg-[#05070b] px-5 py-20 sm:px-6 lg:px-8">
         <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:items-center">
           <div>
@@ -218,7 +377,7 @@ export default function MarketingHome() {
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2">
-            {features.map((feature, index) => (
+            {workflowFeatures.map((feature, index) => (
               <div key={feature} className="flex items-center gap-3 rounded-[22px] border border-white/10 bg-white/[0.04] px-4 py-4">
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-slate-950">
                   {index % 3 === 0 ? <Zap className="h-4 w-4" /> : index % 3 === 1 ? <Gauge className="h-4 w-4" /> : <CheckCircle2 className="h-4 w-4" />}
@@ -226,6 +385,126 @@ export default function MarketingHome() {
                 <span className="text-sm font-semibold text-slate-100">{feature}</span>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="relative border-y border-white/10 bg-[#080c14] px-5 py-20 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          <div className="mx-auto max-w-3xl text-center">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-100/70">How It Works</p>
+            <h2 className="mt-4 text-[clamp(2.1rem,4.5vw,4rem)] font-semibold leading-[0.96] tracking-[-0.05em] text-white">
+              Simple workflow from booking to completion.
+            </h2>
+          </div>
+
+          <div className="mt-10 grid gap-4 md:grid-cols-5">
+            {workflowSteps.map((step, index) => (
+              <div key={step} className="rounded-[24px] border border-white/10 bg-white/[0.04] p-5">
+                <div className="mb-5 flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-r from-[#4f7cff] to-[#22d3ee] text-base font-semibold text-white">
+                  {index + 1}
+                </div>
+                <p className="text-sm font-semibold leading-6 text-white">{step}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-slate-100 px-5 py-20 text-slate-950 sm:px-6 lg:px-8">
+        <div className="mx-auto grid max-w-7xl gap-5 lg:grid-cols-3">
+          {portalCards.map((card) => {
+            const Icon = card.icon;
+
+            return (
+              <article
+                key={card.title}
+                className={`rounded-[24px] p-7 shadow-xl ${
+                  card.featured
+                    ? 'bg-slate-950 text-white'
+                    : 'border border-slate-200 bg-white text-slate-950'
+                }`}
+              >
+                <Icon className={`mb-6 h-10 w-10 ${card.featured ? 'text-cyan-200' : 'text-[#315bda]'}`} />
+                <h3 className="text-2xl font-semibold tracking-[-0.04em]">{card.title}</h3>
+                <p className={`mt-4 text-sm leading-7 ${card.featured ? 'text-slate-300' : 'text-slate-600'}`}>{card.description}</p>
+              </article>
+            );
+          })}
+        </div>
+      </section>
+
+      <section id="pricing" className="bg-white px-5 py-20 text-slate-950 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          <div className="mx-auto max-w-3xl text-center">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#315bda]">Pricing</p>
+            <h2 className="mt-4 text-[clamp(2.1rem,4.5vw,4.35rem)] font-semibold leading-[0.94] tracking-[-0.05em] text-slate-950">
+              Flexible plans for every service business.
+            </h2>
+            <p className="mt-5 text-base leading-8 text-slate-600">
+              Start small, then scale your platform as your operations grow.
+            </p>
+          </div>
+
+          <div className="mt-12 grid gap-5 lg:grid-cols-3">
+            {pricingPlans.map((plan) => (
+              <article
+                key={plan.name}
+                className={`rounded-[24px] border p-7 shadow-sm ${
+                  plan.highlighted
+                    ? 'border-[#4f7cff] bg-slate-950 text-white shadow-2xl shadow-blue-500/20'
+                    : 'border-slate-200 bg-white text-slate-950'
+                }`}
+              >
+                {plan.highlighted && (
+                  <div className="mb-5 inline-flex rounded-full border border-cyan-300/20 bg-cyan-300/10 px-4 py-2 text-sm font-semibold text-cyan-100">
+                    Most Popular
+                  </div>
+                )}
+                <h3 className="text-2xl font-semibold tracking-[-0.04em]">{plan.name}</h3>
+                <div className="mt-5 flex items-end gap-2">
+                  <p className="text-5xl font-semibold tracking-[-0.05em]">{plan.price}</p>
+                  {plan.price !== 'Custom' && <span className={`mb-2 text-sm ${plan.highlighted ? 'text-slate-400' : 'text-slate-500'}`}>/month</span>}
+                </div>
+                <p className={`mt-4 text-sm leading-7 ${plan.highlighted ? 'text-slate-300' : 'text-slate-600'}`}>{plan.description}</p>
+                <div className="mt-8 space-y-4">
+                  {plan.features.map((item) => (
+                    <div key={item} className="flex items-center gap-3">
+                      <CheckCircle2 className={`h-5 w-5 shrink-0 ${plan.highlighted ? 'text-cyan-200' : 'text-[#315bda]'}`} />
+                      <span className="text-sm font-medium">{item}</span>
+                    </div>
+                  ))}
+                </div>
+                <Link
+                  to="/admin/signup"
+                  className={`mt-8 inline-flex h-12 w-full items-center justify-center rounded-2xl px-5 text-sm font-semibold transition-all hover:-translate-y-0.5 ${
+                    plan.highlighted ? 'bg-white text-slate-950' : 'bg-slate-950 text-white'
+                  }`}
+                >
+                  Contact Sales
+                </Link>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section id="contact" className="relative bg-[#05070b] px-5 py-20 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-5xl rounded-[28px] border border-white/10 bg-gradient-to-r from-[#4f7cff] to-[#22d3ee] p-8 text-center shadow-2xl shadow-blue-500/20 md:p-14">
+          <MessageSquare className="mx-auto mb-6 h-11 w-11 text-white" />
+          <h2 className="text-[clamp(2rem,4.5vw,4rem)] font-semibold leading-[0.96] tracking-[-0.05em] text-white">
+            Ready to manage your service operations smarter?
+          </h2>
+          <p className="mx-auto mt-5 max-w-2xl text-base leading-8 text-blue-50">
+            Launch a professional platform for bookings, technicians, jobs, invoices, communication, and reporting.
+          </p>
+          <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+            <Link to="/admin/signup" className="inline-flex h-14 items-center justify-center rounded-2xl bg-white px-7 py-4 font-semibold text-slate-950 hover:bg-slate-100">
+              Book a Demo
+            </Link>
+            <Link to="/book" className="inline-flex h-14 items-center justify-center rounded-2xl border border-white/30 px-7 py-4 font-semibold text-white hover:bg-white/10">
+              Open Booking
+            </Link>
           </div>
         </div>
       </section>
@@ -252,4 +531,3 @@ export default function MarketingHome() {
     </main>
   );
 }
-
