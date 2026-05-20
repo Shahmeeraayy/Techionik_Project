@@ -20,6 +20,7 @@ import {
     Clock3,
     MapPin,
     Calendar,
+    Mail,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { exportArrayData, selectColumnsForExport, type ExportFormat } from '@/lib/export';
@@ -134,6 +135,7 @@ type BillToDraft = {
     state: string;
     zip_code: string;
 };
+type ManualInvoiceTerms = 'NET_15' | 'NET_30';
 type ServiceCatalogOption = {
     name: string;
     default_price: number;
@@ -176,6 +178,15 @@ const getBlockedLocationLabel = (
 
 const BILL_TO_NAME_BLOCKER = 'Missing customer/dealership bill-to name';
 const BILL_TO_ADDRESS_BLOCKER = 'Missing customer/dealership bill-to address';
+
+const createManualInvoiceLine = (): EditableServiceLine => ({
+    id: `manual-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    name: '',
+    quantity: 1,
+    price: 0,
+    tax_code: 'EXEMPT',
+    tax_rate: 0,
+});
 
 const toLocalDateValue = (value?: string | null) => {
     if (!value) return '';
@@ -252,6 +263,19 @@ export default function InvoiceApprovalsPage() {
     });
     const [serviceSuggestions, setServiceSuggestions] = useState<string[]>([]);
     const [serviceCatalogOptions, setServiceCatalogOptions] = useState<ServiceCatalogOption[]>([]);
+    const [manualInvoiceOpen, setManualInvoiceOpen] = useState(false);
+    const [manualBillToDraft, setManualBillToDraft] = useState<BillToDraft>({
+        name: '',
+        street: '',
+        city: '',
+        state: '',
+        zip_code: '',
+    });
+    const [manualRecipientEmail, setManualRecipientEmail] = useState('');
+    const [manualCustomerMessage, setManualCustomerMessage] = useState('');
+    const [manualTerms, setManualTerms] = useState<ManualInvoiceTerms>('NET_15');
+    const [manualServices, setManualServices] = useState<EditableServiceLine[]>(() => [createManualInvoiceLine()]);
+    const [isCreatingManualInvoice, setIsCreatingManualInvoice] = useState(false);
 
     const fetchInvoicesData = async () => {
         setLoading(true);
@@ -460,6 +484,22 @@ export default function InvoiceApprovalsPage() {
         };
     }, [editableServices, selectedInvoice]);
 
+    const manualTotals = useMemo(() => {
+        const subtotal = manualServices.reduce(
+            (acc, service) => acc + Math.max(0, service.quantity) * Math.max(0, service.price),
+            0,
+        );
+        const tax = manualServices.reduce((acc, service) => {
+            const lineSubtotal = Math.max(0, service.quantity) * Math.max(0, service.price);
+            return acc + lineSubtotal * Math.max(0, service.tax_rate);
+        }, 0);
+        return {
+            subtotal,
+            tax,
+            total: subtotal + tax,
+        };
+    }, [manualServices]);
+
     const billToHasName = billToDraft.name.trim().length > 0;
     const billToHasStreet = billToDraft.street.trim().length > 0;
     const unresolvedBlockingReasons = selectedInvoice
@@ -527,6 +567,128 @@ export default function InvoiceApprovalsPage() {
 
     const handleDeleteService = (serviceId: string) => {
         setEditableServices((prev) => prev.filter((service) => service.id !== serviceId));
+    };
+
+    const resetManualInvoiceForm = () => {
+        setManualBillToDraft({
+            name: '',
+            street: '',
+            city: '',
+            state: '',
+            zip_code: '',
+        });
+        setManualRecipientEmail('');
+        setManualCustomerMessage('');
+        setManualTerms('NET_15');
+        setManualServices([createManualInvoiceLine()]);
+    };
+
+    const openManualInvoiceDialog = () => {
+        resetManualInvoiceForm();
+        setManualInvoiceOpen(true);
+    };
+
+    const handleUpdateManualService = (
+        serviceId: string,
+        field: 'name' | 'quantity' | 'price' | 'tax_rate',
+        rawValue: string,
+    ) => {
+        setManualServices((prev) => prev.map((service) => {
+            if (service.id !== serviceId) return service;
+            if (field === 'name') {
+                const resolved = resolveCatalogOption(rawValue);
+                if (!resolved) return { ...service, name: rawValue };
+                return {
+                    ...service,
+                    name: resolved.name,
+                    price: service.price <= 0 ? resolved.default_price : service.price,
+                };
+            }
+            const parsedValue = Number(rawValue);
+            const nextValue = Number.isFinite(parsedValue) && parsedValue >= 0 ? parsedValue : 0;
+            if (field === 'tax_rate') {
+                return { ...service, tax_rate: nextValue, tax_code: nextValue > 0 ? 'CUSTOM' : 'EXEMPT' };
+            }
+            return { ...service, [field]: nextValue };
+        }));
+    };
+
+    const handleAddManualService = () => {
+        setManualServices((prev) => [...prev, createManualInvoiceLine()]);
+    };
+
+    const handleDeleteManualService = (serviceId: string) => {
+        setManualServices((prev) => (prev.length > 1 ? prev.filter((service) => service.id !== serviceId) : prev));
+    };
+
+    const handleCreateManualInvoice = async () => {
+        const adminToken = getStoredAdminToken();
+        if (!adminToken) {
+            alert('Admin session missing. Please login again.');
+            return;
+        }
+        const recipientEmail = manualRecipientEmail.trim();
+        if (!recipientEmail) {
+            alert('Add a recipient email before creating and sending this invoice.');
+            return;
+        }
+        if (!manualBillToDraft.name.trim() || !manualBillToDraft.street.trim()) {
+            alert('Bill-to name and street address are required.');
+            return;
+        }
+        const hasInvalidLines = manualServices.some((service) => (
+            service.name.trim().length === 0 || service.quantity <= 0 || service.price <= 0
+        ));
+        if (hasInvalidLines) {
+            alert('Every manual invoice line needs a service name, quantity, and price greater than 0.');
+            return;
+        }
+
+        setIsCreatingManualInvoice(true);
+        try {
+            const createdInvoice = await createInvoice(adminToken, {
+                line_items: manualServices.map((service) => ({
+                    product_service: service.name.trim(),
+                    quantity: service.quantity,
+                    qty: service.quantity,
+                    rate: service.price,
+                    tax_code: service.tax_code,
+                    tax_rate: service.tax_rate,
+                })),
+                terms: manualTerms,
+                status: 'sent',
+                shipping: 0,
+                customer_message: manualCustomerMessage.trim() || undefined,
+                approval_note: `Manual invoice created by admin for ${recipientEmail}.`,
+                bill_to: {
+                    name: manualBillToDraft.name.trim(),
+                    street: manualBillToDraft.street.trim(),
+                    city: manualBillToDraft.city.trim() || null,
+                    state: manualBillToDraft.state.trim() || null,
+                    zip_code: manualBillToDraft.zip_code.trim() || null,
+                },
+            });
+
+            const subject = encodeURIComponent(`Invoice ${createdInvoice.invoice_number} from ServiceOps`);
+            const body = encodeURIComponent(
+                [
+                    `Hello ${manualBillToDraft.name.trim()},`,
+                    '',
+                    `Invoice ${createdInvoice.invoice_number} has been created for $${toNumber(createdInvoice.total).toFixed(2)}.`,
+                    manualCustomerMessage.trim() ? `\n${manualCustomerMessage.trim()}` : '',
+                    '',
+                    'Please reply to this email if you need anything adjusted.',
+                ].filter(Boolean).join('\n'),
+            );
+            window.location.href = `mailto:${encodeURIComponent(recipientEmail)}?subject=${subject}&body=${body}`;
+            setManualInvoiceOpen(false);
+            resetManualInvoiceForm();
+        } catch (error) {
+            const detail = error instanceof Error ? error.message : 'Unable to create manual invoice.';
+            alert(`Manual invoice failed: ${detail}`);
+        } finally {
+            setIsCreatingManualInvoice(false);
+        }
     };
 
     const handleSaveDraftEdits = () => {
@@ -755,6 +917,15 @@ export default function InvoiceApprovalsPage() {
                             Last updated: {new Date().toLocaleTimeString()}
                         </div>
                         <Button
+                            type="button"
+                            size="sm"
+                            className="h-11 gap-2 rounded-2xl bg-[linear-gradient(135deg,#4f7cff,#22d3ee)] px-4 font-semibold text-white shadow-[0_18px_42px_rgba(79,124,255,0.24)] hover:brightness-105"
+                            onClick={openManualInvoiceDialog}
+                        >
+                            <Plus className="h-4 w-4" />
+                            Create Invoice
+                        </Button>
+                        <Button
                             variant="outline"
                             size="sm"
                             className="h-11 gap-2 rounded-2xl border-white/10 bg-[#0b1424] px-4 text-slate-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] hover:bg-[#122039] hover:text-white"
@@ -784,6 +955,234 @@ export default function InvoiceApprovalsPage() {
                 availableColumns={INVOICE_APPROVAL_EXPORT_COLUMNS}
                 onConfirm={handleExport}
             />
+
+            <Dialog open={manualInvoiceOpen} onOpenChange={setManualInvoiceOpen}>
+                <DialogContent className="max-h-[92vh] max-w-5xl overflow-hidden border-white/10 bg-[#07121f] p-0 text-white">
+                    <DialogHeader className="border-b border-white/10 px-6 py-5">
+                        <DialogTitle className="flex items-center gap-2 text-2xl tracking-[-0.04em]" style={displayFontStyle}>
+                            <Mail className="h-5 w-5 text-cyan-200" />
+                            Create manual invoice
+                        </DialogTitle>
+                        <DialogDescription className="text-slate-400">
+                            Create an invoice without a queued job, then open an email draft for any recipient.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <ScrollArea className="max-h-[68vh]">
+                        <div className="space-y-6 px-6 py-5">
+                            <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
+                                <div className="rounded-3xl border border-white/10 bg-white/[0.035] p-5">
+                                    <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Bill To</div>
+                                    <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                                        <div className="space-y-1.5 sm:col-span-2">
+                                            <Label htmlFor="manual-bill-name" className="text-slate-200">Customer or company name</Label>
+                                            <Input
+                                                id="manual-bill-name"
+                                                value={manualBillToDraft.name}
+                                                onChange={(event) => setManualBillToDraft((prev) => ({ ...prev, name: event.target.value }))}
+                                                className="border-white/10 bg-[#0b1424] text-white placeholder:text-slate-500"
+                                                placeholder="Acme Motors"
+                                            />
+                                        </div>
+                                        <div className="space-y-1.5 sm:col-span-2">
+                                            <Label htmlFor="manual-bill-street" className="text-slate-200">Street address</Label>
+                                            <Input
+                                                id="manual-bill-street"
+                                                value={manualBillToDraft.street}
+                                                onChange={(event) => setManualBillToDraft((prev) => ({ ...prev, street: event.target.value }))}
+                                                className="border-white/10 bg-[#0b1424] text-white placeholder:text-slate-500"
+                                                placeholder="123 Service Avenue"
+                                            />
+                                        </div>
+                                        <Input
+                                            value={manualBillToDraft.city}
+                                            onChange={(event) => setManualBillToDraft((prev) => ({ ...prev, city: event.target.value }))}
+                                            className="border-white/10 bg-[#0b1424] text-white placeholder:text-slate-500"
+                                            placeholder="City"
+                                            aria-label="Bill-to city"
+                                        />
+                                        <Input
+                                            value={manualBillToDraft.state}
+                                            onChange={(event) => setManualBillToDraft((prev) => ({ ...prev, state: event.target.value }))}
+                                            className="border-white/10 bg-[#0b1424] text-white placeholder:text-slate-500"
+                                            placeholder="State / Province"
+                                            aria-label="Bill-to state"
+                                        />
+                                        <Input
+                                            value={manualBillToDraft.zip_code}
+                                            onChange={(event) => setManualBillToDraft((prev) => ({ ...prev, zip_code: event.target.value }))}
+                                            className="border-white/10 bg-[#0b1424] text-white placeholder:text-slate-500"
+                                            placeholder="Postal code"
+                                            aria-label="Bill-to postal code"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="rounded-3xl border border-white/10 bg-white/[0.035] p-5">
+                                    <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Send Details</div>
+                                    <div className="mt-4 space-y-3">
+                                        <div className="space-y-1.5">
+                                            <Label htmlFor="manual-recipient-email" className="text-slate-200">Recipient email</Label>
+                                            <Input
+                                                id="manual-recipient-email"
+                                                type="email"
+                                                value={manualRecipientEmail}
+                                                onChange={(event) => setManualRecipientEmail(event.target.value)}
+                                                className="border-white/10 bg-[#0b1424] text-white placeholder:text-slate-500"
+                                                placeholder="billing@example.com"
+                                            />
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <Label className="text-slate-200">Terms</Label>
+                                            <Select value={manualTerms} onValueChange={(value) => setManualTerms(value as ManualInvoiceTerms)}>
+                                                <SelectTrigger className="border-white/10 bg-[#0b1424] text-white">
+                                                    <SelectValue placeholder="Terms" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="NET_15">Net 15</SelectItem>
+                                                    <SelectItem value="NET_30">Net 30</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <Label htmlFor="manual-message" className="text-slate-200">Customer message</Label>
+                                            <textarea
+                                                id="manual-message"
+                                                value={manualCustomerMessage}
+                                                onChange={(event) => setManualCustomerMessage(event.target.value)}
+                                                className="min-h-24 w-full rounded-md border border-white/10 bg-[#0b1424] px-3 py-2 text-sm text-white placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/25"
+                                                placeholder="Optional note for the customer..."
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="rounded-3xl border border-white/10 bg-white/[0.035] p-5">
+                                <div className="flex flex-wrap items-center justify-between gap-3">
+                                    <div>
+                                        <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Line Items</div>
+                                        <p className="mt-1 text-sm text-slate-400">Add the services, quantities, rates, and tax rate for this manual invoice.</p>
+                                    </div>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        className="h-10 gap-2 rounded-2xl border-white/10 bg-[#0b1424] text-slate-100 hover:bg-[#122039] hover:text-white"
+                                        onClick={handleAddManualService}
+                                    >
+                                        <Plus className="h-4 w-4" />
+                                        Add line
+                                    </Button>
+                                </div>
+
+                                <datalist id="manual-service-options">
+                                    {serviceNameOptions.map((serviceName) => (
+                                        <option key={serviceName} value={serviceName} />
+                                    ))}
+                                </datalist>
+
+                                <div className="mt-4 space-y-3">
+                                    <div className="hidden grid-cols-[1.5fr_0.55fr_0.7fr_0.6fr_auto] gap-3 px-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 md:grid">
+                                        <span>Service</span>
+                                        <span>Qty</span>
+                                        <span>Rate</span>
+                                        <span>Tax rate</span>
+                                        <span />
+                                    </div>
+                                    {manualServices.map((service) => (
+                                        <div key={service.id} className="grid gap-3 rounded-2xl border border-white/10 bg-[#0b1424] p-3 md:grid-cols-[1.5fr_0.55fr_0.7fr_0.6fr_auto] md:items-center">
+                                            <Input
+                                                value={service.name}
+                                                list="manual-service-options"
+                                                onChange={(event) => handleUpdateManualService(service.id, 'name', event.target.value)}
+                                                className="border-white/10 bg-white/[0.035] text-white placeholder:text-slate-500"
+                                                placeholder="Service name"
+                                                aria-label="Manual invoice service name"
+                                            />
+                                            <Input
+                                                type="number"
+                                                min="0"
+                                                step="0.01"
+                                                value={service.quantity}
+                                                onChange={(event) => handleUpdateManualService(service.id, 'quantity', event.target.value)}
+                                                className="border-white/10 bg-white/[0.035] text-white"
+                                                aria-label="Manual invoice quantity"
+                                            />
+                                            <Input
+                                                type="number"
+                                                min="0"
+                                                step="0.01"
+                                                value={service.price}
+                                                onChange={(event) => handleUpdateManualService(service.id, 'price', event.target.value)}
+                                                className="border-white/10 bg-white/[0.035] text-white"
+                                                placeholder="0.00"
+                                                aria-label="Manual invoice rate"
+                                            />
+                                            <Input
+                                                type="number"
+                                                min="0"
+                                                step="0.001"
+                                                value={service.tax_rate}
+                                                onChange={(event) => handleUpdateManualService(service.id, 'tax_rate', event.target.value)}
+                                                className="border-white/10 bg-white/[0.035] text-white"
+                                                placeholder="0.14975"
+                                                aria-label="Manual invoice tax rate"
+                                            />
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-10 w-10 rounded-xl text-rose-200 hover:bg-rose-400/10 hover:text-rose-100"
+                                                onClick={() => handleDeleteManualService(service.id)}
+                                                disabled={manualServices.length <= 1}
+                                                title="Remove line"
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="grid gap-4 rounded-3xl border border-cyan-300/15 bg-cyan-300/8 p-5 text-sm text-slate-200 sm:grid-cols-3">
+                                <div>
+                                    <div className="text-xs uppercase tracking-[0.22em] text-slate-400">Subtotal</div>
+                                    <div className="mt-2 text-2xl font-semibold text-white">${manualTotals.subtotal.toFixed(2)}</div>
+                                </div>
+                                <div>
+                                    <div className="text-xs uppercase tracking-[0.22em] text-slate-400">Tax</div>
+                                    <div className="mt-2 text-2xl font-semibold text-white">${manualTotals.tax.toFixed(2)}</div>
+                                </div>
+                                <div>
+                                    <div className="text-xs uppercase tracking-[0.22em] text-slate-400">Total</div>
+                                    <div className="mt-2 text-2xl font-semibold text-cyan-100">${manualTotals.total.toFixed(2)}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </ScrollArea>
+
+                    <DialogFooter className="border-t border-white/10 px-6 py-4">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            className="rounded-2xl border-white/10 bg-[#0b1424] text-slate-100 hover:bg-[#122039] hover:text-white"
+                            onClick={() => setManualInvoiceOpen(false)}
+                            disabled={isCreatingManualInvoice}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            type="button"
+                            className="gap-2 rounded-2xl bg-[linear-gradient(135deg,#4f7cff,#22d3ee)] px-5 font-semibold text-white hover:brightness-105"
+                            onClick={() => void handleCreateManualInvoice()}
+                            disabled={isCreatingManualInvoice}
+                        >
+                            <Mail className="h-4 w-4" />
+                            {isCreatingManualInvoice ? 'Creating...' : 'Create & Send'}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
                 {summaryCards.map((card) => {
