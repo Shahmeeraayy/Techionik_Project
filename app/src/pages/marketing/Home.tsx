@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import {
   ArrowRight,
   BarChart3,
@@ -83,6 +84,13 @@ const pricing = [
   },
 ];
 
+const planGuarantees = [
+  'Secure admin access',
+  'Mobile technician workspace',
+  'Booking-to-invoice workflow',
+  'Customer booking portal',
+];
+
 export default function MarketingHome() {
   return (
     <div className="min-h-screen bg-slate-950 text-white">
@@ -106,12 +114,18 @@ export default function MarketingHome() {
           </div>
 
           <div className="flex items-center gap-3">
-            <button className="hidden rounded-xl px-4 py-2 text-sm font-medium text-slate-300 hover:bg-white/10 hover:text-white md:block">
+            <Link
+              to="/admin/login"
+              className="hidden rounded-xl px-4 py-2 text-sm font-medium text-slate-300 transition hover:bg-white/10 hover:text-white md:block"
+            >
               Login
-            </button>
-            <button className="rounded-xl bg-white px-4 py-2 text-sm font-semibold text-slate-950 shadow-lg hover:bg-slate-100">
+            </Link>
+            <Link
+              to="/admin/signup"
+              className="rounded-xl bg-white px-4 py-2 text-sm font-semibold text-slate-950 shadow-lg transition hover:-translate-y-0.5 hover:bg-slate-100"
+            >
               Book Demo
-            </button>
+            </Link>
           </div>
         </nav>
       </header>
@@ -135,12 +149,18 @@ export default function MarketingHome() {
               </p>
 
               <div className="mt-8 flex flex-col gap-4 sm:flex-row">
-                <button className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-500 to-cyan-400 px-6 py-4 font-semibold text-white shadow-xl shadow-blue-500/20 hover:opacity-95">
+                <Link
+                  to="/admin/signup"
+                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-500 to-cyan-400 px-6 py-4 font-semibold text-white shadow-xl shadow-blue-500/20 transition hover:-translate-y-0.5 hover:opacity-95"
+                >
                   Get Started <ArrowRight className="h-4 w-4" />
-                </button>
-                <button className="rounded-2xl border border-white/15 bg-white/5 px-6 py-4 font-semibold text-white hover:bg-white/10">
+                </Link>
+                <Link
+                  to="/book"
+                  className="inline-flex items-center justify-center rounded-2xl border border-white/15 bg-white/5 px-6 py-4 font-semibold text-white transition hover:-translate-y-0.5 hover:bg-white/10"
+                >
                   View Live Demo
-                </button>
+                </Link>
               </div>
 
               <div className="mt-10 grid max-w-xl grid-cols-3 gap-4 text-center">
@@ -347,11 +367,25 @@ export default function MarketingHome() {
                       </div>
                     ))}
                   </div>
-                  <button className={`mt-8 w-full rounded-2xl px-5 py-4 font-semibold ${plan.highlighted ? 'bg-white text-slate-950' : 'bg-slate-950 text-white'}`}>
+                  <Link
+                    to="/admin/signup"
+                    className={`mt-8 inline-flex w-full items-center justify-center rounded-2xl px-5 py-4 font-semibold transition hover:-translate-y-0.5 ${plan.highlighted ? 'bg-white text-slate-950' : 'bg-slate-950 text-white'}`}
+                  >
                     Contact Sales
-                  </button>
+                  </Link>
                 </div>
               ))}
+            </div>
+
+            <div className="mt-10 rounded-3xl border border-slate-200 bg-slate-50 p-6">
+              <div className="grid gap-4 md:grid-cols-4">
+                {planGuarantees.map((item) => (
+                  <div key={item} className="flex items-center gap-3 text-sm font-semibold text-slate-700">
+                    <CheckCircle2 className="h-5 w-5 shrink-0 text-blue-600" />
+                    <span>{item}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </section>
@@ -364,12 +398,18 @@ export default function MarketingHome() {
               Launch a professional platform for bookings, technicians, jobs, invoices, communication, and reporting.
             </p>
             <div className="mt-8 flex flex-col justify-center gap-4 sm:flex-row">
-              <button className="rounded-2xl bg-white px-7 py-4 font-semibold text-slate-950 hover:bg-slate-100">
+              <Link
+                to="/admin/signup"
+                className="inline-flex items-center justify-center rounded-2xl bg-white px-7 py-4 font-semibold text-slate-950 transition hover:-translate-y-0.5 hover:bg-slate-100"
+              >
                 Book a Demo
-              </button>
-              <button className="rounded-2xl border border-white/30 px-7 py-4 font-semibold text-white hover:bg-white/10">
+              </Link>
+              <a
+                href="mailto:sales@serviceops.com"
+                className="inline-flex items-center justify-center rounded-2xl border border-white/30 px-7 py-4 font-semibold text-white transition hover:-translate-y-0.5 hover:bg-white/10"
+              >
                 Contact Us
-              </button>
+              </a>
             </div>
           </div>
         </section>
@@ -382,7 +422,7 @@ export default function MarketingHome() {
             <a href="#features" className="hover:text-white">Features</a>
             <a href="#pricing" className="hover:text-white">Pricing</a>
             <a href="#contact" className="hover:text-white">Contact</a>
-            <a href="#" className="hover:text-white">Login</a>
+            <Link to="/admin/login" className="hover:text-white">Login</Link>
           </div>
         </div>
       </footer>
