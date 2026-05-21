@@ -5,6 +5,8 @@ import {
   BarChart3,
   Bot,
   CalendarCheck,
+  ChevronLeft,
+  ChevronRight,
   CheckCircle2,
   ClipboardList,
   FileCheck,
@@ -95,6 +97,64 @@ const planGuarantees = [
   'Customer booking portal',
 ];
 
+const demoSteps = [
+  {
+    eyebrow: 'Step 01',
+    title: 'Capture every service request',
+    description:
+      'Customers submit booking requests from the public portal, giving admins clean intake data without phone calls or scattered messages.',
+    metric: '24/7',
+    metricLabel: 'booking access',
+    icon: CalendarCheck,
+    highlights: ['Customer details', 'Vehicle/service need', 'Requested timing'],
+    rows: ['New windshield calibration request', 'Dealer location attached', 'Ready for admin review'],
+  },
+  {
+    eyebrow: 'Step 02',
+    title: 'Dispatch from one control center',
+    description:
+      'Admins review jobs, assign technicians, prioritize urgent work, and monitor live operational status from the dashboard.',
+    metric: '42',
+    metricLabel: 'jobs visible',
+    icon: LayoutDashboard,
+    highlights: ['Job queue', 'Technician assignment', 'Urgency tracking'],
+    rows: ['High priority job routed', 'Technician assigned', 'ETA and status visible'],
+  },
+  {
+    eyebrow: 'Step 03',
+    title: 'Give technicians a mobile workspace',
+    description:
+      'Technicians can see assignments, update job progress, communicate with admin, and keep the work history complete.',
+    metric: 'Live',
+    metricLabel: 'field updates',
+    icon: Smartphone,
+    highlights: ['Mobile job list', 'Status updates', 'Team chat'],
+    rows: ['Technician accepted job', 'On-site status updated', 'Completion note captured'],
+  },
+  {
+    eyebrow: 'Step 04',
+    title: 'Approve and create invoices',
+    description:
+      'Completed jobs move into approval, where admins can review service lines, fix blockers, create invoices, and send them.',
+    metric: '$8.4k',
+    metricLabel: 'queue value',
+    icon: FileCheck,
+    highlights: ['Approval queue', 'Manual invoice creation', 'Send to customer'],
+    rows: ['Invoice reviewed', 'Line items confirmed', 'Email draft prepared'],
+  },
+  {
+    eyebrow: 'Step 05',
+    title: 'Measure performance and scale',
+    description:
+      'Reports show job volume, technician productivity, booking trends, invoice performance, and operational bottlenecks.',
+    metric: 'Smart',
+    metricLabel: 'reporting',
+    icon: BarChart3,
+    highlights: ['Operational reports', 'Invoice trends', 'Team performance'],
+    rows: ['Weekly performance ready', 'Blocked reasons surfaced', 'Growth decisions clearer'],
+  },
+];
+
 type ChatMessage = {
   role: 'assistant' | 'user';
   text: string;
@@ -114,7 +174,7 @@ const getAssistantReply = (message: string) => {
   }
 
   if (normalized.includes('demo') || normalized.includes('book') || normalized.includes('start')) {
-    return 'You can book a demo from the top button or the contact section. The demo flow opens the admin signup path so your team can get started.';
+    return 'Click Book Demo or View Live Demo to open a guided NexusOps walkthrough. It shows the full flow from booking to invoice and reporting.';
   }
 
   if (normalized.includes('technician') || normalized.includes('mobile')) {
@@ -252,7 +312,164 @@ function LandingChatbot() {
   );
 }
 
+function DemoWalkthrough({
+  open,
+  onClose,
+}: {
+  open: boolean;
+  onClose: () => void;
+}) {
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  if (!open) return null;
+
+  const activeStep = demoSteps[activeIndex];
+  const Icon = activeStep.icon;
+  const isLastStep = activeIndex === demoSteps.length - 1;
+
+  return (
+    <div className="fixed inset-0 z-[80] overflow-y-auto bg-slate-950/85 px-4 py-6 backdrop-blur-xl">
+      <div className="mx-auto flex min-h-full max-w-6xl items-center justify-center">
+        <div className="relative w-full overflow-hidden rounded-[2rem] border border-white/10 bg-slate-950 text-white shadow-2xl shadow-blue-950/50">
+          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/70 to-transparent" />
+          <div className="grid lg:grid-cols-[0.92fr_1.08fr]">
+            <div className="border-b border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.18),transparent_34%),linear-gradient(180deg,#0f172a,#020617)] p-6 lg:border-b-0 lg:border-r">
+              <div className="flex items-center justify-between gap-4">
+                <div className="inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1.5 text-xs font-semibold text-cyan-100">
+                  <Icon className="h-4 w-4" />
+                  Product demo
+                </div>
+                <button
+                  type="button"
+                  aria-label="Close demo walkthrough"
+                  className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 text-slate-300 transition hover:bg-white/10 hover:text-white"
+                  onClick={onClose}
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+
+              <div className="mt-10">
+                <p className="text-sm font-semibold uppercase tracking-[0.24em] text-cyan-200">{activeStep.eyebrow}</p>
+                <h2 className="mt-4 text-4xl font-bold tracking-tight md:text-5xl">{activeStep.title}</h2>
+                <p className="mt-5 text-base leading-8 text-slate-300">{activeStep.description}</p>
+              </div>
+
+              <div className="mt-8 grid gap-3">
+                {activeStep.highlights.map((highlight) => (
+                  <div key={highlight} className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-slate-100">
+                    <CheckCircle2 className="h-5 w-5 text-cyan-300" />
+                    {highlight}
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-8 flex flex-wrap items-center gap-3">
+                {demoSteps.map((step, index) => (
+                  <button
+                    key={step.title}
+                    type="button"
+                    aria-label={`Show demo step ${index + 1}`}
+                    className={`h-2.5 rounded-full transition-all ${index === activeIndex ? 'w-10 bg-cyan-300' : 'w-2.5 bg-white/20 hover:bg-white/40'}`}
+                    onClick={() => setActiveIndex(index)}
+                  />
+                ))}
+              </div>
+            </div>
+
+            <div className="bg-slate-900 p-6">
+              <div className="rounded-[1.5rem] border border-white/10 bg-slate-950 p-5 shadow-2xl">
+                <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-5">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">NexusOps demo workspace</p>
+                    <h3 className="mt-2 text-2xl font-bold">Operational command view</h3>
+                  </div>
+                  <div className="rounded-2xl border border-cyan-300/20 bg-cyan-300/10 px-4 py-3 text-right">
+                    <p className="text-2xl font-bold text-cyan-100">{activeStep.metric}</p>
+                    <p className="text-xs text-cyan-200">{activeStep.metricLabel}</p>
+                  </div>
+                </div>
+
+                <div className="mt-5 grid gap-4 sm:grid-cols-3">
+                  {['Requests', 'Technicians', 'Invoices'].map((label, index) => (
+                    <div key={label} className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                      <p className="text-xs text-slate-500">{label}</p>
+                      <p className="mt-3 text-2xl font-bold">{index === activeIndex % 3 ? 'Live' : `${18 + index * 7}`}</p>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-5 space-y-3">
+                  {activeStep.rows.map((row, index) => (
+                    <div key={row} className="flex items-center justify-between gap-4 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-slate-950">
+                          {index + 1}
+                        </div>
+                        <span className="text-sm font-semibold text-slate-100">{row}</span>
+                      </div>
+                      <span className="rounded-full bg-emerald-400/10 px-3 py-1 text-xs font-semibold text-emerald-200">
+                        Ready
+                      </span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-6 rounded-2xl border border-white/10 bg-gradient-to-r from-blue-600/20 to-cyan-400/15 p-5">
+                  <p className="text-sm font-semibold text-white">Demo outcome</p>
+                  <p className="mt-2 text-sm leading-6 text-slate-300">
+                    This walkthrough shows how a service request moves through the SaaS from customer intake to admin control, technician execution, invoice creation, and reporting.
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <button
+                  type="button"
+                  className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-5 font-semibold text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
+                  onClick={() => setActiveIndex((current) => Math.max(0, current - 1))}
+                  disabled={activeIndex === 0}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  Back
+                </button>
+
+                <div className="flex flex-col gap-3 sm:flex-row">
+                  {isLastStep ? (
+                    <Link
+                      to="/admin/signup"
+                      className="inline-flex h-12 items-center justify-center rounded-2xl bg-white px-5 font-semibold text-slate-950 transition hover:-translate-y-0.5 hover:bg-slate-100"
+                    >
+                      Start setup
+                    </Link>
+                  ) : null}
+                  <button
+                    type="button"
+                    className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-500 to-cyan-400 px-5 font-semibold text-white shadow-xl shadow-blue-500/20 transition hover:-translate-y-0.5"
+                    onClick={() => {
+                      if (isLastStep) {
+                        onClose();
+                        return;
+                      }
+                      setActiveIndex((current) => Math.min(demoSteps.length - 1, current + 1));
+                    }}
+                  >
+                    {isLastStep ? 'Finish demo' : 'Next step'}
+                    {!isLastStep ? <ChevronRight className="h-4 w-4" /> : null}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function MarketingHome() {
+  const [demoOpen, setDemoOpen] = useState(false);
+
   return (
     <div className="min-h-screen bg-slate-950 text-white">
       <header className="sticky top-0 z-50 border-b border-white/10 bg-slate-950/80 backdrop-blur-xl">
@@ -281,12 +498,13 @@ export default function MarketingHome() {
             >
               Login
             </Link>
-            <Link
-              to="/admin/signup"
+            <button
+              type="button"
               className="rounded-xl bg-white px-4 py-2 text-sm font-semibold text-slate-950 shadow-lg transition hover:-translate-y-0.5 hover:bg-slate-100"
+              onClick={() => setDemoOpen(true)}
             >
               Book Demo
-            </Link>
+            </button>
           </div>
         </nav>
       </header>
@@ -316,12 +534,13 @@ export default function MarketingHome() {
                 >
                   Get Started <ArrowRight className="h-4 w-4" />
                 </Link>
-                <Link
-                  to="/book"
+                <button
+                  type="button"
                   className="inline-flex items-center justify-center rounded-2xl border border-white/15 bg-white/5 px-6 py-4 font-semibold text-white transition hover:-translate-y-0.5 hover:bg-white/10"
+                  onClick={() => setDemoOpen(true)}
                 >
                   View Live Demo
-                </Link>
+                </button>
               </div>
 
               <div className="mt-10 grid max-w-xl grid-cols-3 gap-4 text-center">
@@ -559,12 +778,13 @@ export default function MarketingHome() {
               Launch a professional platform for bookings, technicians, jobs, invoices, communication, and reporting.
             </p>
             <div className="mt-8 flex flex-col justify-center gap-4 sm:flex-row">
-              <Link
-                to="/admin/signup"
+              <button
+                type="button"
                 className="inline-flex items-center justify-center rounded-2xl bg-white px-7 py-4 font-semibold text-slate-950 transition hover:-translate-y-0.5 hover:bg-slate-100"
+                onClick={() => setDemoOpen(true)}
               >
                 Book a Demo
-              </Link>
+              </button>
               <a
                 href="mailto:sales@nexusops.com"
                 className="inline-flex items-center justify-center rounded-2xl border border-white/30 px-7 py-4 font-semibold text-white transition hover:-translate-y-0.5 hover:bg-white/10"
@@ -589,6 +809,7 @@ export default function MarketingHome() {
       </footer>
 
       <LandingChatbot />
+      <DemoWalkthrough open={demoOpen} onClose={() => setDemoOpen(false)} />
     </div>
   );
 }
