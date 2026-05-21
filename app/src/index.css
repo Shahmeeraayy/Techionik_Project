@@ -4150,6 +4150,121 @@
   filter: none !important;
 }
 
+/* Final light-theme control visibility pass for admin pages and floating menus. */
+.light .admin-content :is(button, [data-slot="button"], a[role="button"]):not([class*="bg-[#2F8E92"]):not([class*="from-[#4f7cff"]):not([class*="from-[#0ca6a6"]):not([class*="from-[#36d6dd"]):not([class*="bg-[linear-gradient(135deg,#4f7cff"]):not([class*="bg-[linear-gradient(135deg,#2F8E92"]):not([class*="bg-gradient-to-r"]):not([class*="bg-primary"]):not([class*="bg-destructive"]):not([class*="bg-red"]):not([class*="bg-rose"]):not([class*="bg-green"]):not([class*="bg-emerald"]):not([class*="bg-blue"]) {
+  background: #ffffff !important;
+  background-image: none !important;
+  border: 1px solid rgba(148, 163, 184, 0.42) !important;
+  color: #1e293b !important;
+  -webkit-text-fill-color: #1e293b !important;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06) !important;
+  opacity: 1 !important;
+}
+
+.light .admin-content :is(button, [data-slot="button"], a[role="button"]):not([class*="bg-[#2F8E92"]):not([class*="from-[#4f7cff"]):not([class*="from-[#0ca6a6"]):not([class*="from-[#36d6dd"]):not([class*="bg-[linear-gradient(135deg,#4f7cff"]):not([class*="bg-[linear-gradient(135deg,#2F8E92"]):not([class*="bg-gradient-to-r"]):not([class*="bg-primary"]):not([class*="bg-destructive"]):not([class*="bg-red"]):not([class*="bg-rose"]):not([class*="bg-green"]):not([class*="bg-emerald"]):not([class*="bg-blue"]):hover:not(:disabled) {
+  background: #f8fafc !important;
+  border-color: rgba(100, 116, 139, 0.48) !important;
+  color: #0f172a !important;
+  -webkit-text-fill-color: #0f172a !important;
+}
+
+.light .admin-content :is(button, [data-slot="button"], a[role="button"]):not([class*="bg-[#2F8E92"]):not([class*="from-[#4f7cff"]):not([class*="from-[#0ca6a6"]):not([class*="from-[#36d6dd"]):not([class*="bg-[linear-gradient(135deg,#4f7cff"]):not([class*="bg-[linear-gradient(135deg,#2F8E92"]):not([class*="bg-gradient-to-r"]):not([class*="bg-primary"]):not([class*="bg-destructive"]):not([class*="bg-red"]):not([class*="bg-rose"]):not([class*="bg-green"]):not([class*="bg-emerald"]):not([class*="bg-blue"]) :is(svg, span) {
+  color: #334155 !important;
+  -webkit-text-fill-color: #334155 !important;
+  opacity: 1 !important;
+}
+
+.light .admin-content :is(button, [data-slot="button"], a[role="button"])[class*="bg-white"],
+.light .admin-content :is(button, [data-slot="button"], a[role="button"])[class*="bg-transparent"],
+.light .admin-content :is(button, [data-slot="button"], a[role="button"])[class*="bg-white/"] {
+  background: #ffffff !important;
+  background-image: none !important;
+  border-color: rgba(148, 163, 184, 0.42) !important;
+  color: #1e293b !important;
+  -webkit-text-fill-color: #1e293b !important;
+}
+
+.light .admin-content :is(button, [data-slot="button"], a[role="button"])[class*="bg-white"] :is(svg, span),
+.light .admin-content :is(button, [data-slot="button"], a[role="button"])[class*="bg-transparent"] :is(svg, span),
+.light .admin-content :is(button, [data-slot="button"], a[role="button"])[class*="bg-white/"] :is(svg, span) {
+  color: #334155 !important;
+  -webkit-text-fill-color: #334155 !important;
+}
+
+.light .admin-content :is(button, [data-slot="button"], a[role="button"])[class*="bg-[#2F8E92"],
+.light .admin-content :is(button, [data-slot="button"], a[role="button"])[class*="from-[#4f7cff"],
+.light .admin-content :is(button, [data-slot="button"], a[role="button"])[class*="from-[#0ca6a6"],
+.light .admin-content :is(button, [data-slot="button"], a[role="button"])[class*="from-[#36d6dd"],
+.light .admin-content :is(button, [data-slot="button"], a[role="button"])[class*="bg-[linear-gradient(135deg,#4f7cff"],
+.light .admin-content :is(button, [data-slot="button"], a[role="button"])[class*="bg-[linear-gradient(135deg,#2F8E92"],
+.light .admin-content :is(button, [data-slot="button"], a[role="button"])[class*="bg-gradient-to-r"],
+.light .admin-content :is(button, [data-slot="button"], a[role="button"])[class*="bg-primary"] {
+  background: linear-gradient(135deg, #2563eb, #06b6d4) !important;
+  border-color: rgba(37, 99, 235, 0.38) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  box-shadow: 0 14px 30px rgba(37, 99, 235, 0.20) !important;
+  opacity: 1 !important;
+}
+
+.light .admin-content :is(button, [data-slot="button"], a[role="button"])[class*="bg-[#2F8E92"] *,
+.light .admin-content :is(button, [data-slot="button"], a[role="button"])[class*="from-[#4f7cff"] *,
+.light .admin-content :is(button, [data-slot="button"], a[role="button"])[class*="from-[#0ca6a6"] *,
+.light .admin-content :is(button, [data-slot="button"], a[role="button"])[class*="from-[#36d6dd"] *,
+.light .admin-content :is(button, [data-slot="button"], a[role="button"])[class*="bg-[linear-gradient(135deg,#4f7cff"] *,
+.light .admin-content :is(button, [data-slot="button"], a[role="button"])[class*="bg-[linear-gradient(135deg,#2F8E92"] *,
+.light .admin-content :is(button, [data-slot="button"], a[role="button"])[class*="bg-gradient-to-r"] *,
+.light .admin-content :is(button, [data-slot="button"], a[role="button"])[class*="bg-primary"] * {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  opacity: 1 !important;
+}
+
+.light .admin-content :is(button, [data-slot="button"]):disabled,
+.light .admin-content :is(button, [data-slot="button"])[aria-disabled="true"],
+.light .admin-content :is(button, [data-slot="button"])[data-disabled] {
+  background: #f1f5f9 !important;
+  background-image: none !important;
+  border-color: rgba(148, 163, 184, 0.30) !important;
+  color: #64748b !important;
+  -webkit-text-fill-color: #64748b !important;
+  opacity: 1 !important;
+  box-shadow: none !important;
+}
+
+.light .admin-content :is(button, [data-slot="button"]):disabled *,
+.light .admin-content :is(button, [data-slot="button"])[aria-disabled="true"] *,
+.light .admin-content :is(button, [data-slot="button"])[data-disabled] * {
+  color: #64748b !important;
+  -webkit-text-fill-color: #64748b !important;
+  opacity: 1 !important;
+}
+
+.light .admin-content :is(button, [data-slot="button"])[class*="text-red"],
+.light .admin-content :is(button, [data-slot="button"])[class*="text-rose"],
+.light .admin-content :is(button, [data-slot="button"])[class*="bg-destructive"],
+.light .admin-content :is(button, [data-slot="button"])[class*="bg-red"],
+.light .admin-content :is(button, [data-slot="button"])[class*="bg-rose"] {
+  background: #fff1f2 !important;
+  background-image: none !important;
+  border-color: rgba(244, 63, 94, 0.34) !important;
+  color: #be123c !important;
+  -webkit-text-fill-color: #be123c !important;
+}
+
+.light .admin-content :is(button, [data-slot="button"])[class*="text-red"] *,
+.light .admin-content :is(button, [data-slot="button"])[class*="text-rose"] *,
+.light .admin-content :is(button, [data-slot="button"])[class*="bg-destructive"] *,
+.light .admin-content :is(button, [data-slot="button"])[class*="bg-red"] *,
+.light .admin-content :is(button, [data-slot="button"])[class*="bg-rose"] * {
+  color: #be123c !important;
+  -webkit-text-fill-color: #be123c !important;
+}
+
+.light :is([data-slot="dropdown-menu-content"], [data-slot="popover-content"], [data-slot="sheet-content"], [data-slot="dialog-content"]) :is(button, [data-slot="button"], [data-slot="dropdown-menu-item"]) :is(svg, span) {
+  opacity: 1 !important;
+}
+
 /* Print Styles */
 @media print {
   .no-print {
