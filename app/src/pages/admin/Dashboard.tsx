@@ -5,13 +5,16 @@ import {
   AlertCircle,
   AlertTriangle,
   ArrowRight,
+  Briefcase,
   Building2,
   CheckCircle2,
   ClipboardList,
   FileCheck,
   FileClock,
+  FileText,
   PlayCircle,
   Plus,
+  RefreshCw,
   ShieldAlert,
   Sparkles,
   Users,
@@ -143,6 +146,13 @@ function metricValueClasses(tone: DashboardCardTone): string {
   if (tone === 'orange') return 'text-amber-950 dark:text-amber-50';
   if (tone === 'red') return 'text-rose-950 dark:text-rose-50';
   return 'text-slate-900 dark:text-white';
+}
+
+function metricQueueClasses(tone: DashboardCardTone): string {
+  if (tone === 'green') return 'text-emerald-700 dark:text-emerald-200/80';
+  if (tone === 'orange') return 'text-amber-700 dark:text-amber-200/80';
+  if (tone === 'red') return 'text-rose-700 dark:text-rose-200/80';
+  return 'text-slate-600 dark:text-cyan-200/80';
 }
 
 function alertPanelClasses(tone: DashboardAlert['tone']): string {
@@ -402,37 +412,48 @@ export default function Dashboard() {
     }
 
     const lookup = new Map(snapshot.cards.map((card) => [card.id, card]));
-    const openJobs = lookup.get('jobs-in-progress');
-    const pendingInvoices = lookup.get('pending-invoice-approvals');
-    const techniciansOnline = lookup.get('technicians-online');
-    const jobsAttention = lookup.get('jobs-attention');
-    const blockedInvoices = lookup.get('blocked-invoices');
-    const blockedValue = (jobsAttention?.value ?? 0) + (blockedInvoices?.value ?? 0);
-
     return [
-      openJobs ? { ...openJobs, label: 'Open Jobs', navigateTo: '/admin/jobs' } : null,
-      techniciansOnline ? { ...techniciansOnline, label: 'Technicians Online' } : null,
-      pendingInvoices ? { ...pendingInvoices, label: 'Pending Invoices' } : null,
-      {
-        id: 'blocked-items',
-        label: 'Blocked Items',
-        value: blockedValue,
-        icon: AlertTriangle,
-        tone: blockedValue > 0 ? 'red' : 'blue',
-        navigateTo: blockedValue > 0 ? '/admin/jobs?status=attention_required' : '/admin/invoice-history',
-      } satisfies DashboardCard,
+      lookup.get('jobs-completed-today'),
+      lookup.get('pending-invoice-approvals'),
+      lookup.get('technicians-online'),
     ].filter((item): item is DashboardCard => Boolean(item));
   }, [snapshot]);
 
-  const technicianSummary = useMemo(() => {
+  const overviewTiles = useMemo(() => {
     if (!snapshot) {
-      return { total: 0, available: 0, busy: 0, offline: 0 };
+      return [];
     }
 
-    const available = snapshot.technicians.filter((tech) => tech.effective_availability && !tech.on_leave_now && tech.current_jobs_count === 0).length;
-    const busy = snapshot.technicians.filter((tech) => tech.current_jobs_count > 0 && !tech.on_leave_now).length;
-    const offline = Math.max(0, snapshot.technicians.length - available - busy);
-    return { total: snapshot.technicians.length, available, busy, offline };
+    return [
+      {
+        id: 'jobs',
+        label: 'Jobs in System',
+        value: snapshot.stats.jobs,
+        description: 'Live job records across the backend.',
+        icon: Briefcase,
+      },
+      {
+        id: 'technicians',
+        label: 'Technician Roster',
+        value: snapshot.stats.technicians,
+        description: 'Active field operators currently on file.',
+        icon: Users,
+      },
+      {
+        id: 'dealerships',
+        label: 'Dealership Coverage',
+        value: snapshot.stats.dealerships,
+        description: 'Partner locations wired into operations.',
+        icon: Building2,
+      },
+      {
+        id: 'invoices',
+        label: 'Invoice Ledger',
+        value: snapshot.stats.invoices,
+        description: 'Tracked invoices available in the backend.',
+        icon: FileText,
+      },
+    ];
   }, [snapshot]);
 
   const quickActions = useMemo(() => ([
@@ -459,8 +480,8 @@ export default function Dashboard() {
     },
     {
       id: 'technicians',
-      label: 'View Team',
-      description: 'Review technician coverage and availability.',
+      label: 'Technician Roster',
+      description: 'Manage field staff coverage, status, and account readiness.',
       icon: Users,
       onClick: () => navigate('/admin/technicians'),
     },
@@ -477,12 +498,12 @@ export default function Dashboard() {
       <div className="pointer-events-none absolute right-10 top-20 h-56 w-56 rounded-full bg-slate-900/4 blur-3xl dark:bg-emerald-400/8" />
 
       <div className="relative space-y-6">
-        <section className="relative overflow-hidden rounded-[28px] border border-black/8 bg-[linear-gradient(135deg,#ffffff,#fbfbfb)] shadow-[0_24px_80px_rgba(15,23,42,0.07)] dark:border-white/10 dark:bg-[linear-gradient(135deg,rgba(7,25,42,0.98),rgba(6,18,32,0.98))] dark:shadow-[0_28px_90px_rgba(0,0,0,0.28)]" style={{ animation: 'fade-in 0.6s ease both' }}>
+        <section className="relative overflow-hidden rounded-[32px] border border-black/8 bg-[linear-gradient(135deg,#ffffff,#fbfbfb)] shadow-[0_34px_120px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-[linear-gradient(135deg,rgba(7,25,42,0.98),rgba(6,18,32,0.98))] dark:shadow-[0_34px_120px_rgba(0,0,0,0.34)]" style={{ animation: 'fade-in 0.6s ease both' }}>
           <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(15,23,42,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(15,23,42,0.03)_1px,transparent_1px)] bg-[size:120px_120px] opacity-20 dark:bg-[linear-gradient(rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)]" />
           <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-slate-900/20 to-transparent dark:via-cyan-200/70" />
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(15,23,42,0.04),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(15,23,42,0.03),transparent_26%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(47,142,146,0.14),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(245,158,11,0.12),transparent_26%)]" />
 
-          <div className="relative grid gap-6 p-5 xl:grid-cols-[0.85fr_1.15fr] xl:p-6">
+          <div className="relative grid gap-6 p-6 xl:grid-cols-[1.2fr_0.85fr] xl:p-8">
             <div>
               <div
                 className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-slate-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-700 dark:border-cyan-300/20 dark:bg-cyan-300/10 dark:text-cyan-100"
@@ -493,47 +514,66 @@ export default function Dashboard() {
               </div>
 
               <h1
-                className="mt-4 text-[clamp(1.85rem,3vw,3rem)] font-semibold leading-[0.96] tracking-[-0.055em] text-slate-900 dark:text-white"
+                className="mt-5 text-[clamp(2.1rem,4vw,4.2rem)] font-semibold leading-[0.92] tracking-[-0.07em] text-slate-900 dark:text-white"
                 style={displayFontStyle}
               >
-                Operations
+                NexusOps
                 <span className="block bg-gradient-to-r from-slate-900 via-slate-700 to-slate-500 bg-clip-text text-transparent dark:from-white dark:via-cyan-100 dark:to-emerald-100">
-                  overview
+                  command dashboard
                 </span>
               </h1>
 
-              <p className="mt-3 max-w-xl text-sm leading-6 text-slate-600 dark:text-slate-300">
-                Executive status for jobs, technician coverage, invoice readiness, and urgent blockers.
+              <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-600 dark:text-slate-300 sm:text-[15px]">
+                Monitor jobs, technician capacity, invoice approvals, and operational risk from one live operations workspace.
               </p>
+
+              <div className="mt-6 grid max-w-2xl grid-cols-1 gap-2.5 sm:grid-cols-3">
+                {leadMetrics.map((metric) => (
+                  <div
+                    key={metric.id}
+                    className="group rounded-2xl border border-black/8 bg-white/90 px-4 py-3 text-sm text-slate-700 shadow-[0_12px_28px_rgba(15,23,42,0.06),inset_0_1px_0_rgba(255,255,255,0.9)] transition-transform hover:-translate-y-0.5 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-200 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
+                  >
+                    <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">
+                      {metric.label}
+                    </div>
+                    <div className="mt-2 flex items-end justify-between gap-3">
+                      <span className="text-2xl font-semibold leading-none tracking-[-0.04em] text-slate-950 dark:text-white">
+                        {metric.value}
+                      </span>
+                      <span className="h-1.5 w-8 rounded-full bg-gradient-to-r from-cyan-400 to-blue-500 opacity-70 transition-opacity group-hover:opacity-100" />
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2">
-              {leadMetrics.map((metric, i) => (
-                <button
-                  key={metric.id}
-                  type="button"
-                  className={cn(metricCardClasses(metric.tone), 'px-4 py-4')}
-                  onClick={() => navigate(metric.navigateTo)}
-                  style={{ animation: 'fade-in-up 0.5s ease both', animationDelay: `${100 + i * 70}ms` }}
+              {overviewTiles.map((tile, i) => (
+                <div
+                  key={tile.id}
+                  className="relative overflow-hidden rounded-[24px] border border-black/8 bg-[linear-gradient(180deg,#ffffff,#fafafa)] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.92)] dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(10,31,48,0.94),rgba(8,23,37,0.94))] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
+                  style={{ animation: 'fade-in-up 0.5s ease both', animationDelay: `${100 + i * 80}ms` }}
                 >
-                  <div className={cn('pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent to-transparent', metricTopLineClasses(metric.tone))} />
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">{metric.label}</p>
-                      <div className={cn('mt-3 text-[2.4rem] font-semibold leading-none tracking-[-0.07em]', metricValueClasses(metric.tone))} style={displayFontStyle}>
-                        <AnimatedNumber value={metric.value} />
+                      <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500 dark:text-slate-400">
+                        {tile.label}
+                      </p>
+                      <div className="mt-3 text-[2.15rem] font-semibold leading-none tracking-[-0.06em] text-slate-900 dark:text-white" style={displayFontStyle}>
+                        {tile.value}
                       </div>
                     </div>
-                    <div className={cn('rounded-2xl p-2.5', metricIconClasses(metric.tone))}>
-                      <metric.icon className="h-4 w-4" />
+                    <div className="rounded-2xl border border-black/8 bg-slate-100 p-2.5 text-slate-700 dark:border-cyan-300/15 dark:bg-cyan-300/10 dark:text-cyan-100">
+                      <tile.icon className="h-4 w-4" />
                     </div>
                   </div>
-                </button>
+                  <p className="mt-4 text-sm leading-6 text-slate-500 dark:text-slate-400">{tile.description}</p>
+                </div>
               ))}
             </div>
           </div>
 
-          <div className="relative border-t border-black/8 px-5 py-4 dark:border-white/10 xl:px-6">
+          <div className="relative border-t border-white/10 px-6 py-5 xl:px-8">
             {error ? (
               <div className="rounded-[22px] border border-rose-400/20 bg-rose-400/10 px-4 py-4 text-sm text-rose-100">
                 {error}
@@ -547,8 +587,8 @@ export default function Dashboard() {
                       {alert.tone === 'warning' ? <AlertTriangle className={cn('mt-0.5 h-5 w-5', alertIconClasses(alert.tone))} /> : null}
                       {alert.tone === 'info' ? <CheckCircle2 className={cn('mt-0.5 h-5 w-5', alertIconClasses(alert.tone))} /> : null}
                       <div>
-                        <p className="text-sm font-semibold text-slate-900 dark:text-white">{alert.title}</p>
-                        <p className="mt-1 text-sm leading-6 text-slate-600 dark:text-slate-300">{alert.description}</p>
+                        <p className="text-sm font-semibold text-white">{alert.title}</p>
+                        <p className="mt-1 text-sm leading-6 text-slate-300">{alert.description}</p>
                       </div>
                     </div>
                   </div>
@@ -558,16 +598,77 @@ export default function Dashboard() {
           </div>
         </section>
 
-        <div className="grid grid-cols-1 2xl:grid-cols-[1.5fr_0.9fr] gap-6">
-          <section className="relative overflow-hidden rounded-[24px] border border-black/8 bg-[linear-gradient(180deg,#ffffff,#fafafa)] shadow-[0_20px_70px_rgba(15,23,42,0.05)] dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,23,38,0.98),rgba(7,18,31,0.98))] dark:shadow-[0_24px_70px_rgba(0,0,0,0.24)]">
+        <section>
+          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="text-xl font-semibold tracking-tight text-slate-900 dark:text-white" style={displayFontStyle}>
+                Live queue
+              </h2>
+              <p className="text-sm text-slate-500 dark:text-slate-400">
+                Fast entry points into the operational states that matter most right now.
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-10 gap-2 rounded-full border-black/8 bg-white px-4 text-slate-700 hover:bg-slate-50 hover:text-slate-900 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-200 dark:hover:bg-white/[0.08] dark:hover:text-white"
+              onClick={() => void loadDashboard({ background: true })}
+              title="Refresh dashboard"
+              disabled={refreshing}
+            >
+              <RefreshCw className={cn('h-4 w-4', refreshing && 'animate-spin')} />
+              Refresh dashboard
+            </Button>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+            {snapshot?.cards.map((card, i) => (
+              <button
+                key={card.id}
+                type="button"
+                className={metricCardClasses(card.tone)}
+                onClick={() => navigate(card.navigateTo)}
+                style={{ animation: `fade-in-up 0.5s ease both`, animationDelay: `${i * 70}ms` }}
+              >
+                <div className={cn('pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent to-transparent', metricTopLineClasses(card.tone))} />
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
+                      {card.label}
+                    </p>
+                    <div
+                      className={cn('mt-4 text-[2.8rem] font-semibold leading-none tracking-[-0.07em]', metricValueClasses(card.tone))}
+                      style={displayFontStyle}
+                    >
+                      <AnimatedNumber value={card.value} />
+                    </div>
+                  </div>
+                  <div className={cn('rounded-2xl p-2.5', metricIconClasses(card.tone))}>
+                    <card.icon className="h-4 w-4" />
+                  </div>
+                </div>
+
+                <div className="mt-6 flex items-center justify-between">
+                  <span className={cn('text-sm font-medium', metricQueueClasses(card.tone))}>
+                    Open queue
+                  </span>
+                  <ArrowRight className="h-4 w-4 text-white/55 transition-transform duration-200 group-hover:translate-x-1 group-hover:text-white" />
+                </div>
+              </button>
+            ))}
+          </div>
+        </section>
+
+        <div className="grid grid-cols-1 2xl:grid-cols-[1.6fr_1fr] gap-6">
+          <section className="relative overflow-hidden rounded-[28px] border border-black/8 bg-[linear-gradient(180deg,#ffffff,#fafafa)] shadow-[0_28px_90px_rgba(15,23,42,0.06)] dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,23,38,0.98),rgba(7,18,31,0.98))] dark:shadow-[0_28px_90px_rgba(0,0,0,0.3)]">
             <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-slate-900/20 to-transparent dark:via-cyan-200/60" />
-            <div className="flex items-center justify-between px-5 pb-3 pt-5">
+            <div className="flex items-center justify-between px-6 pb-4 pt-6">
               <div>
-                <h2 className="text-lg font-semibold text-slate-900 dark:text-white" style={displayFontStyle}>
+                <h2 className="text-xl font-semibold text-slate-900 dark:text-white" style={displayFontStyle}>
                   Recent activity
                 </h2>
                 <p className="text-sm text-slate-500 dark:text-slate-400">
-                  Latest job movement.
+                  Latest job movement coming in from the backend session.
                 </p>
               </div>
               <Button
@@ -582,32 +683,32 @@ export default function Dashboard() {
             </div>
 
             <div className="relative">
-            <ScrollArea className="h-[360px]">
-              <div className="px-5 pb-5">
+            <ScrollArea className="h-[560px]">
+              <div className="px-6 pb-6">
                 {snapshot?.activity.length ? (
-                  <div className="space-y-3">
-                    {snapshot.activity.slice(0, 5).map((event, i) => (
+                  <div className="space-y-4">
+                    {snapshot.activity.map((event, i) => (
                       <div
                         key={event.id}
-                        className="rounded-[18px] border border-black/8 bg-white px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.92)] dark:border-white/10 dark:bg-white/[0.03] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"
+                        className="rounded-[22px] border border-black/8 bg-white px-5 py-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.92)] dark:border-white/10 dark:bg-white/[0.03] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"
                         style={{ animation: 'slide-in-right 0.4s ease both', animationDelay: `${i * 50}ms` }}
                       >
-                        <div className="flex items-start gap-3">
-                          <span className="relative mt-1.5 flex h-3 w-3 shrink-0">
+                        <div className="flex items-start gap-4">
+                          <span className="relative mt-1.5 flex h-4 w-4 shrink-0">
                             <span className="absolute inline-flex h-full w-full rounded-full opacity-75" style={{ backgroundColor: activityDotColor(event.tone), animation: 'live-ping 1.4s ease-out infinite', animationDelay: `${i * 200}ms` }} />
-                            <span className="relative inline-flex h-3 w-3 rounded-full" style={{ backgroundColor: activityDotColor(event.tone), boxShadow: `0 0 8px 2px ${activityDotColor(event.tone)}66` }} />
+                            <span className="relative inline-flex h-4 w-4 rounded-full" style={{ backgroundColor: activityDotColor(event.tone), boxShadow: `0 0 8px 3px ${activityDotColor(event.tone)}99` }} />
                           </span>
                           <div className="min-w-0 flex-1">
-                            <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                               <div className="min-w-0">
                                 <p className="truncate text-sm font-semibold text-slate-900 dark:text-white">{event.title}</p>
-                                <p className="mt-1 line-clamp-1 text-sm text-slate-500 dark:text-slate-400">{event.description}</p>
+                                <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">{event.description}</p>
                               </div>
                               <Badge variant="outline" className={activityBadgeClasses(event.tone)}>
                                 {event.badge}
                               </Badge>
                             </div>
-                            <div className="mt-2 text-[11px] font-medium uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">
+                            <div className="mt-4 text-xs font-medium uppercase tracking-[0.22em] text-slate-400 dark:text-slate-500">
                               {event.timestamp}
                             </div>
                           </div>
@@ -622,31 +723,31 @@ export default function Dashboard() {
                 )}
               </div>
             </ScrollArea>
-            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-10 rounded-b-[24px] bg-gradient-to-t from-white to-transparent dark:from-[rgba(7,18,31,0.88)]" />
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 rounded-b-[28px] bg-gradient-to-t from-[rgba(7,18,31,0.95)] to-transparent" />
             </div>
           </section>
 
-          <div className="space-y-4">
-            <section className="relative overflow-hidden rounded-[24px] border border-black/8 bg-[linear-gradient(180deg,#ffffff,#fafafa)] p-5 shadow-[0_20px_70px_rgba(15,23,42,0.05)] dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,23,38,0.98),rgba(7,18,31,0.98))] dark:shadow-[0_24px_70px_rgba(0,0,0,0.24)]">
+          <div className="space-y-6">
+            <section className="relative overflow-hidden rounded-[28px] border border-black/8 bg-[linear-gradient(180deg,#ffffff,#fafafa)] p-6 shadow-[0_28px_90px_rgba(15,23,42,0.06)] dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,23,38,0.98),rgba(7,18,31,0.98))] dark:shadow-[0_28px_90px_rgba(0,0,0,0.3)]">
               <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-slate-900/20 to-transparent dark:via-cyan-200/60" />
               <div>
-                <h2 className="text-lg font-semibold text-slate-900 dark:text-white" style={displayFontStyle}>
+                <h2 className="text-xl font-semibold text-slate-900 dark:text-white" style={displayFontStyle}>
                   Quick actions
                 </h2>
                 <p className="text-sm text-slate-500 dark:text-slate-400">
-                  Common operational shortcuts.
+                  Jump directly into the operational screens you use the most.
                 </p>
               </div>
 
-              <div className="mt-4 space-y-2.5">
+              <div className="mt-5 space-y-3">
                 {quickActions.map((action) => (
                   <button
                     key={action.id}
                     type="button"
                     onClick={action.onClick}
-                    className="group flex w-full items-center gap-3 rounded-[18px] border border-black/8 bg-white px-3.5 py-3 text-left transition-all duration-200 hover:border-black/12 hover:bg-slate-50 dark:border-white/10 dark:bg-white/[0.03] dark:hover:border-cyan-300/25 dark:hover:bg-white/[0.06]"
+                    className="group flex w-full items-start gap-4 rounded-[22px] border border-black/8 bg-white px-4 py-4 text-left transition-all duration-200 hover:border-black/12 hover:bg-slate-50 dark:border-white/10 dark:bg-white/[0.03] dark:hover:border-cyan-300/25 dark:hover:bg-white/[0.06]"
                   >
-                    <div className="rounded-2xl border border-black/8 bg-slate-100 p-2 text-slate-700 dark:border-cyan-300/15 dark:bg-cyan-300/10 dark:text-cyan-100">
+                    <div className="rounded-2xl border border-black/8 bg-slate-100 p-2.5 text-slate-700 dark:border-cyan-300/15 dark:bg-cyan-300/10 dark:text-cyan-100">
                       <action.icon className="h-4 w-4" />
                     </div>
                     <div className="min-w-0 flex-1">
@@ -654,54 +755,61 @@ export default function Dashboard() {
                         <p className="text-sm font-semibold text-slate-900 dark:text-white">{action.label}</p>
                         <ArrowRight className="h-4 w-4 text-slate-400 transition-transform duration-200 group-hover:translate-x-1 group-hover:text-slate-900 dark:text-white/45 dark:group-hover:text-white" />
                       </div>
-                      <p className="mt-1 line-clamp-1 text-sm text-slate-500 dark:text-slate-400">{action.description}</p>
+                      <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">{action.description}</p>
                     </div>
                   </button>
                 ))}
               </div>
             </section>
 
-            <section className="relative overflow-hidden rounded-[24px] border border-black/8 bg-[linear-gradient(180deg,#ffffff,#fafafa)] p-5 shadow-[0_20px_70px_rgba(15,23,42,0.05)] dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,23,38,0.98),rgba(7,18,31,0.98))] dark:shadow-[0_24px_70px_rgba(0,0,0,0.24)]">
+            <section className="relative overflow-hidden rounded-[28px] border border-black/8 bg-[linear-gradient(180deg,#ffffff,#fafafa)] p-6 shadow-[0_28px_90px_rgba(15,23,42,0.06)] dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,23,38,0.98),rgba(7,18,31,0.98))] dark:shadow-[0_28px_90px_rgba(0,0,0,0.3)]">
               <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-slate-900/20 to-transparent dark:via-cyan-200/60" />
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <h2 className="text-lg font-semibold text-slate-900 dark:text-white" style={displayFontStyle}>
-                    Team summary
-                  </h2>
-                  <p className="text-sm text-slate-500 dark:text-slate-400">
-                    Field capacity at a glance.
-                  </p>
-                </div>
-                <div className="rounded-2xl border border-slate-200 bg-slate-100 p-2 text-slate-700 dark:border-cyan-300/15 dark:bg-cyan-300/10 dark:text-cyan-100">
-                  <Users className="h-4 w-4" />
-                </div>
+              <div>
+                <h2 className="text-xl font-semibold text-slate-900 dark:text-white" style={displayFontStyle}>
+                  Technician status board
+                </h2>
+                <p className="text-sm text-slate-500 dark:text-slate-400">
+                  Current field status for every technician on the roster.
+                </p>
               </div>
 
-              <div className="mt-4 grid grid-cols-2 gap-3">
-                {[
-                  { label: 'Available', value: technicianSummary.available, tone: 'text-emerald-700 dark:text-emerald-100' },
-                  { label: 'Busy', value: technicianSummary.busy, tone: 'text-blue-700 dark:text-cyan-100' },
-                  { label: 'Offline', value: technicianSummary.offline, tone: 'text-slate-700 dark:text-slate-200' },
-                  { label: 'Total', value: technicianSummary.total, tone: 'text-slate-900 dark:text-white' },
-                ].map((item) => (
-                  <div key={item.label} className="rounded-[18px] border border-black/8 bg-white px-4 py-3 dark:border-white/10 dark:bg-white/[0.03]">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">{item.label}</p>
-                    <p className={cn('mt-2 text-2xl font-semibold tracking-[-0.04em]', item.tone)} style={displayFontStyle}>
-                      {item.value}
-                    </p>
-                  </div>
-                ))}
+              <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {(snapshot?.technicians ?? []).slice(0, 6).map((tech) => {
+                  const statusLabel = tech.on_leave_now
+                    ? 'Out of Office'
+                    : tech.current_jobs_count > 0
+                      ? 'In Progress'
+                      : tech.effective_availability
+                        ? 'Available'
+                        : 'Offline';
+                  const statusClasses = tech.on_leave_now
+                    ? 'border-slate-200 bg-slate-100 text-slate-700 dark:border-slate-600/30 dark:bg-slate-800 dark:text-slate-200'
+                    : tech.current_jobs_count > 0
+                      ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-300/20 dark:bg-emerald-400/10 dark:text-emerald-100'
+                      : tech.effective_availability
+                        ? 'border-blue-200 bg-blue-50 text-blue-700 dark:border-cyan-300/20 dark:bg-cyan-400/10 dark:text-cyan-100'
+                        : 'border-slate-200 bg-slate-100 text-slate-700 dark:border-slate-600/30 dark:bg-slate-700 dark:text-slate-300';
+
+                  return (
+                    <div key={tech.id} className="rounded-[22px] border border-black/8 bg-white p-4 dark:border-white/10 dark:bg-white/[0.03]">
+                      <div className="flex flex-col gap-3 min-[420px]:flex-row min-[420px]:items-center min-[420px]:justify-between">
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold text-slate-900 dark:text-white">{tech.name}</p>
+                          <p className="mt-1 truncate text-xs uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">{tech.email}</p>
+                        </div>
+                        <span className={cn('inline-flex shrink-0 items-center justify-center rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em]', statusClasses)}>
+                          {statusLabel}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
 
-              <div className="mt-4 flex items-center justify-between gap-3 rounded-[18px] border border-black/8 bg-white px-4 py-3 text-sm text-slate-500 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-400">
-                <span>Review assignments and coverage from the team module.</span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="shrink-0 rounded-full text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:text-cyan-100 dark:hover:bg-white/[0.06] dark:hover:text-white"
-                  onClick={() => navigate('/admin/technicians')}
-                >
-                  View team
+              <div className="mt-4 flex items-center justify-between rounded-[22px] border border-black/8 bg-white px-4 py-4 text-sm text-slate-500 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-400">
+                <span>{snapshot?.technicians.length ?? 0} technicians total</span>
+                <Button variant="ghost" size="sm" onClick={() => navigate('/admin/technicians')}>
+                  View all technicians
                 </Button>
               </div>
             </section>
