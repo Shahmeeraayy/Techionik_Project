@@ -201,14 +201,27 @@ class InvoiceCreateRequest(BaseModel):
     dispatch_job_ids: List[UUID] = Field(default_factory=list)
     line_items: List[InvoiceLineItemPayload] = Field(default_factory=list)
     replace_dispatch_line_items: bool = False
+    send_email_to: Optional[str] = None
 
-    @field_validator("invoice_number", "customer_message", "approval_note")
+    @field_validator("invoice_number", "customer_message", "approval_note", "send_email_to")
     @classmethod
     def _normalize_optional_text(cls, value: Optional[str]) -> Optional[str]:
         if value is None:
             return None
         normalized = value.strip()
         return normalized or None
+
+    @field_validator("send_email_to")
+    @classmethod
+    def _validate_send_email_to(cls, value: Optional[str]) -> Optional[str]:
+        if value is None:
+            return None
+        normalized = value.strip().lower()
+        if not normalized:
+            return None
+        if "@" not in normalized:
+            raise ValueError("send_email_to must be valid")
+        return normalized
 
     @field_validator("dispatch_job_ids")
     @classmethod

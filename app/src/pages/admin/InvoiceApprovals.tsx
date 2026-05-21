@@ -62,7 +62,6 @@ import {
     createInvoice,
     fetchPendingInvoiceApprovalDetail,
     fetchServicesCatalog,
-    sendInvoiceEmail,
     savePendingInvoiceApprovalDraft,
     fetchPendingInvoiceApprovalIssues,
     fetchPendingInvoiceApprovals,
@@ -667,6 +666,7 @@ export default function InvoiceApprovalsPage() {
                 shipping: 0,
                 customer_message: manualCustomerMessage.trim() || undefined,
                 approval_note: `Manual invoice created by admin for ${recipientEmail}.`,
+                send_email_to: recipientEmail,
                 bill_to: {
                     name: manualBillToDraft.name.trim(),
                     street: manualBillToDraft.street.trim(),
@@ -676,13 +676,6 @@ export default function InvoiceApprovalsPage() {
                 },
             });
 
-            try {
-                await sendInvoiceEmail(adminToken, createdInvoice.id, recipientEmail);
-            } catch (sendError) {
-                const detail = sendError instanceof Error ? sendError.message : 'Unable to send invoice email.';
-                alert(`Invoice ${createdInvoice.invoice_number} was created, but the email was not sent: ${detail}`);
-                return;
-            }
             alert(`Invoice ${createdInvoice.invoice_number} was sent to ${recipientEmail} directly from your NexusOps workspace email identity.`);
             setManualInvoiceOpen(false);
             resetManualInvoiceForm();

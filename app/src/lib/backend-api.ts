@@ -1812,6 +1812,7 @@ export async function createInvoice(
     customer_message?: string;
     approval_note?: string;
     status?: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
+    send_email_to?: string;
     bill_to?: {
       name?: string | null;
       street?: string | null;

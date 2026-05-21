@@ -1637,6 +1637,8 @@ class InvoiceService:
         )
         self.db.commit()
         self.db.refresh(created)
+        if payload.send_email_to:
+            return self.send_invoice_email(created.id, recipient_email=payload.send_email_to)
         return self._to_response(created)
 
     def update_invoice(self, invoice_id: UUID, payload: InvoiceUpdateRequest) -> InvoiceResponse:
