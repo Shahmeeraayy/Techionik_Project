@@ -2308,6 +2308,297 @@
   color: transparent !important;
 }
 
+/* Final light-mode contrast sweep.
+   This stays strictly under `.light` so the existing dark theme remains untouched. */
+.light .admin-shell {
+  --admin-light-bg: #f8fafc;
+  --admin-light-panel: #ffffff;
+  --admin-light-panel-soft: #f8fafc;
+  --admin-light-border: rgba(148, 163, 184, 0.28);
+  --admin-light-text: #0f172a;
+  --admin-light-muted: #64748b;
+  background:
+    radial-gradient(900px 460px at 16% -140px, rgba(79, 124, 255, 0.08), transparent 54%),
+    linear-gradient(180deg, #f8fafc 0%, #ffffff 100%) !important;
+  color: var(--admin-light-text) !important;
+}
+
+.light .admin-shell .admin-content,
+.light .admin-shell .admin-page-frame {
+  background:
+    radial-gradient(circle at 18% 0%, rgba(79, 124, 255, 0.04), transparent 28%),
+    linear-gradient(180deg, #f8fafc 0%, #ffffff 100%) !important;
+  color: var(--admin-light-text) !important;
+}
+
+.light .admin-shell .admin-topbar,
+.light .admin-shell .admin-sidebar {
+  background: rgba(255, 255, 255, 0.96) !important;
+  border-color: rgba(148, 163, 184, 0.22) !important;
+  color: var(--admin-light-text) !important;
+  box-shadow: 0 18px 48px rgba(15, 23, 42, 0.06) !important;
+}
+
+.light .admin-content :is(section, article, div)[class*="rounded-"][class*="border"]:not([class*="bg-blue"]):not([class*="bg-cyan"]):not([class*="bg-emerald"]):not([class*="bg-amber"]):not([class*="bg-rose"]):not([class*="bg-red"]):not([class*="bg-gradient-to-r"]),
+.light .admin-content [data-slot="card"],
+.light .admin-content [class*="shadow-[0_"][class*="rounded-"]:not([class*="bg-blue"]):not([class*="bg-cyan"]):not([class*="bg-emerald"]):not([class*="bg-amber"]):not([class*="bg-rose"]):not([class*="bg-red"]):not([class*="bg-gradient-to-r"]),
+.light .admin-content [class*="shadow-sm"][class*="rounded-"]:not([class*="bg-blue"]):not([class*="bg-cyan"]):not([class*="bg-emerald"]):not([class*="bg-amber"]):not([class*="bg-rose"]):not([class*="bg-red"]):not([class*="bg-gradient-to-r"]) {
+  background: var(--admin-light-panel) !important;
+  background-image: none !important;
+  border-color: var(--admin-light-border) !important;
+  color: var(--admin-light-text) !important;
+  box-shadow:
+    0 18px 52px rgba(15, 23, 42, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+}
+
+.light .admin-content :is(section, article, div)[class*="rounded-"][class*="border"] :is(section, article, div)[class*="rounded-"][class*="border"]:not([class*="bg-blue"]):not([class*="bg-cyan"]):not([class*="bg-emerald"]):not([class*="bg-amber"]):not([class*="bg-rose"]):not([class*="bg-red"]):not([class*="bg-gradient-to-r"]) {
+  background: var(--admin-light-panel-soft) !important;
+  border-color: rgba(148, 163, 184, 0.22) !important;
+  color: var(--admin-light-text) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.78) !important;
+}
+
+.light .admin-shell [class*="bg-[linear-gradient(180deg,rgba(8,"],
+.light .admin-shell [class*="bg-[linear-gradient(180deg,rgba(9,"],
+.light .admin-shell [class*="bg-[linear-gradient(180deg,rgba(10,"],
+.light .admin-shell [class*="bg-[linear-gradient(180deg,rgba(11,"],
+.light .admin-shell [class*="bg-[linear-gradient(180deg,rgba(12,"],
+.light .admin-shell [class*="bg-[linear-gradient(135deg,rgba(7,"],
+.light .admin-shell [class*="bg-[linear-gradient(135deg,rgba(8,"],
+.light .admin-shell [class*="bg-[linear-gradient(135deg,rgba(9,"],
+.light .admin-shell [class*="bg-[linear-gradient(135deg,rgba(10,"],
+.light .admin-shell [class*="bg-[linear-gradient(135deg,rgba(11,"],
+.light .admin-shell [class*="bg-[linear-gradient(135deg,rgba(12,"],
+.light .admin-shell [class*="bg-[#050505]"],
+.light .admin-shell [class*="bg-[#05070b]"],
+.light .admin-shell [class*="bg-[#060913]"],
+.light .admin-shell [class*="bg-[#07101d]"],
+.light .admin-shell [class*="bg-[#080c14]"],
+.light .admin-shell [class*="bg-[#0a1220]"],
+.light .admin-shell [class*="bg-[#0b1220]"],
+.light .admin-shell [class*="bg-[#0b1424]"],
+.light .admin-shell [class*="bg-[#0d1829]"],
+.light .admin-shell [class*="bg-[#091827]"],
+.light .admin-shell [class*="bg-black/"],
+.light .admin-shell [class*="bg-slate-950"],
+.light .admin-shell [class*="bg-slate-900"],
+.light .admin-shell [class*="bg-zinc-950"] {
+  background: var(--admin-light-panel) !important;
+  background-image: none !important;
+  border-color: var(--admin-light-border) !important;
+  color: var(--admin-light-text) !important;
+}
+
+.light .admin-content :is(thead, tfoot),
+.light .admin-content [class*="TableHeader"],
+.light .admin-content [class*="table-header"],
+.light .admin-content [class*="sticky"][class*="top-0"][class*="border-b"],
+.light .admin-shell .admin-jobs-table thead,
+.light .admin-shell .admin-jobs-table [data-slot="table-header"] {
+  background: #f8fafc !important;
+  background-image: none !important;
+  border-color: rgba(148, 163, 184, 0.24) !important;
+  color: var(--admin-light-muted) !important;
+}
+
+.light .admin-content table,
+.light .admin-content tbody,
+.light .admin-content tr,
+.light .admin-content td,
+.light .admin-content th {
+  border-color: rgba(148, 163, 184, 0.22) !important;
+  color: var(--admin-light-text) !important;
+}
+
+.light .admin-content th,
+.light .admin-content th *,
+.light .admin-content [class*="tracking-[0.18em]"],
+.light .admin-content [class*="tracking-[0.22em]"],
+.light .admin-content [class*="tracking-[0.24em]"] {
+  color: var(--admin-light-muted) !important;
+}
+
+.light .admin-content tbody tr:hover {
+  background: #f8fafc !important;
+}
+
+.light .admin-shell :is(input, textarea, select),
+.light .admin-shell [role="combobox"],
+.light .admin-shell [data-slot="select-trigger"],
+.light .admin-shell [data-slot="input"] {
+  background: #ffffff !important;
+  background-image: none !important;
+  border-color: rgba(148, 163, 184, 0.34) !important;
+  color: var(--admin-light-text) !important;
+  -webkit-text-fill-color: var(--admin-light-text) !important;
+  box-shadow: inset 0 1px 0 rgba(15, 23, 42, 0.02) !important;
+  color-scheme: light !important;
+}
+
+.light .admin-shell :is(input, textarea)::placeholder {
+  color: #94a3b8 !important;
+  -webkit-text-fill-color: #94a3b8 !important;
+}
+
+.light .admin-shell input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: none !important;
+  opacity: 0.72 !important;
+}
+
+.light .admin-shell :is(button, [data-slot="button"]):not([class*="from-[#4f7cff"]):not([class*="from-[#0ca6a6"]):not([class*="from-[#36d6dd"]):not([class*="bg-[#4f7cff"]):not([class*="bg-blue"]):not([class*="bg-cyan"]):not([class*="bg-emerald"]):not([class*="bg-primary"]):not([class*="bg-gradient-to-r"]):not([class*="bg-[linear-gradient(135deg,#4f7cff"]) {
+  background: #ffffff !important;
+  background-image: none !important;
+  border-color: rgba(148, 163, 184, 0.30) !important;
+  color: #334155 !important;
+  box-shadow: none !important;
+}
+
+.light .admin-shell :is(button, [data-slot="button"]):not([class*="from-[#4f7cff"]):not([class*="from-[#0ca6a6"]):not([class*="from-[#36d6dd"]):not([class*="bg-[#4f7cff"]):not([class*="bg-blue"]):not([class*="bg-cyan"]):not([class*="bg-emerald"]):not([class*="bg-primary"]):not([class*="bg-gradient-to-r"]):not([class*="bg-[linear-gradient(135deg,#4f7cff"]):hover:not(:disabled) {
+  background: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+.light .admin-shell :is(button, [data-slot="button"]):disabled,
+.light .admin-shell [aria-disabled="true"],
+.light .admin-shell [data-disabled] {
+  background: #f1f5f9 !important;
+  border-color: rgba(148, 163, 184, 0.22) !important;
+  color: #64748b !important;
+  opacity: 1 !important;
+  -webkit-text-fill-color: #64748b !important;
+}
+
+.light .admin-shell [data-slot="button"][data-variant="default"],
+.light .admin-shell .admin-primary-action,
+.light .admin-shell button[class*="from-[#4f7cff"],
+.light .admin-shell a[class*="from-[#4f7cff"],
+.light .admin-shell button[class*="bg-[linear-gradient(135deg,#4f7cff"],
+.light .admin-shell a[class*="bg-[linear-gradient(135deg,#4f7cff"] {
+  background: linear-gradient(135deg, #4f7cff, #22d3ee) !important;
+  border-color: rgba(79, 124, 255, 0.42) !important;
+  color: #ffffff !important;
+  box-shadow: 0 16px 34px rgba(79, 124, 255, 0.20) !important;
+}
+
+.light .admin-shell [data-slot="button"][data-variant="default"] *,
+.light .admin-shell .admin-primary-action *,
+.light .admin-shell button[class*="from-[#4f7cff"] *,
+.light .admin-shell a[class*="from-[#4f7cff"] *,
+.light .admin-shell button[class*="bg-[linear-gradient(135deg,#4f7cff"] *,
+.light .admin-shell a[class*="bg-[linear-gradient(135deg,#4f7cff"] * {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+.light .admin-shell [data-slot="badge"],
+.light .admin-shell .badge,
+.light .admin-shell [class*="rounded-full"][class*="border"] {
+  border-color: rgba(148, 163, 184, 0.28) !important;
+  color: #334155 !important;
+}
+
+.light .admin-shell [class*="text-white"],
+.light .admin-shell [class*="text-slate-50"],
+.light .admin-shell [class*="text-slate-100"],
+.light .admin-shell [class*="text-slate-200"],
+.light .admin-shell [class*="text-gray-50"],
+.light .admin-shell [class*="text-gray-100"],
+.light .admin-shell [class*="text-gray-200"] {
+  color: var(--admin-light-text) !important;
+  -webkit-text-fill-color: var(--admin-light-text) !important;
+}
+
+.light .admin-shell [class*="text-slate-300"],
+.light .admin-shell [class*="text-slate-400"],
+.light .admin-shell [class*="text-slate-500"],
+.light .admin-shell [class*="text-gray-300"],
+.light .admin-shell [class*="text-gray-400"],
+.light .admin-shell [class*="text-gray-500"] {
+  color: var(--admin-light-muted) !important;
+  -webkit-text-fill-color: var(--admin-light-muted) !important;
+}
+
+.light .admin-shell [class*="text-cyan-50"],
+.light .admin-shell [class*="text-cyan-100"],
+.light .admin-shell [class*="text-cyan-200"] {
+  color: #0369a1 !important;
+  -webkit-text-fill-color: #0369a1 !important;
+}
+
+.light .admin-shell [class*="text-emerald-50"],
+.light .admin-shell [class*="text-emerald-100"],
+.light .admin-shell [class*="text-emerald-200"] {
+  color: #047857 !important;
+  -webkit-text-fill-color: #047857 !important;
+}
+
+.light .admin-shell [class*="text-amber-50"],
+.light .admin-shell [class*="text-amber-100"],
+.light .admin-shell [class*="text-amber-200"] {
+  color: #b45309 !important;
+  -webkit-text-fill-color: #b45309 !important;
+}
+
+.light .admin-shell [class*="text-rose-50"],
+.light .admin-shell [class*="text-rose-100"],
+.light .admin-shell [class*="text-rose-200"],
+.light .admin-shell [class*="text-red-50"],
+.light .admin-shell [class*="text-red-100"],
+.light .admin-shell [class*="text-red-200"] {
+  color: #be123c !important;
+  -webkit-text-fill-color: #be123c !important;
+}
+
+.light .admin-shell [class*="bg-cyan-300/"],
+.light .admin-shell [class*="bg-sky-300/"],
+.light .admin-shell [class*="bg-blue-300/"] {
+  background: #e0f2fe !important;
+  border-color: rgba(2, 132, 199, 0.24) !important;
+}
+
+.light .admin-shell [class*="bg-emerald-300/"] {
+  background: #dcfce7 !important;
+  border-color: rgba(5, 150, 105, 0.24) !important;
+}
+
+.light .admin-shell [class*="bg-amber-300/"] {
+  background: #fef3c7 !important;
+  border-color: rgba(217, 119, 6, 0.24) !important;
+}
+
+.light .admin-shell [class*="bg-rose-400/"],
+.light .admin-shell [class*="bg-red-400/"],
+.light .admin-shell [class*="bg-red-500/"] {
+  background: #ffe4e6 !important;
+  border-color: rgba(225, 29, 72, 0.24) !important;
+}
+
+.light .admin-shell [class*="bg-clip-text"][class*="text-transparent"],
+.light .admin-shell [class*="text-transparent"][class*="bg-gradient"] {
+  background: linear-gradient(90deg, #0f172a 0%, #1d4ed8 54%, #0891b2 100%) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  color: transparent !important;
+  -webkit-text-fill-color: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+.light .admin-sidebar a[class*="bg-[#111827]"],
+.light .admin-sidebar a[class*="bg-[#111827]"] > span,
+.light .admin-sidebar a[class*="bg-[#111827]"] svg {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+.light .admin-sidebar a[class*="bg-[#111827]"] > div,
+.light .admin-sidebar a[class*="bg-[#111827]"] > div svg {
+  background: #ffffff !important;
+  color: #111827 !important;
+  -webkit-text-fill-color: #111827 !important;
+}
+
 /* Print Styles */
 @media print {
   .no-print {
