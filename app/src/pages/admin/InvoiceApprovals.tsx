@@ -1063,7 +1063,7 @@ export default function InvoiceApprovalsPage() {
                                     <Button
                                         type="button"
                                         variant="outline"
-                                        className="h-10 shrink-0 gap-2 rounded-2xl !border-white/10 !bg-[#0b1424] !text-slate-100 hover:!bg-[#122039] hover:!text-white disabled:!border-white/10 disabled:!bg-[#0b1424] disabled:!text-slate-500 disabled:!opacity-60"
+                                        className="h-10 shrink-0 gap-2 rounded-2xl border-slate-300 bg-white text-slate-900 hover:bg-slate-50 hover:text-slate-950 disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400 dark:!border-slate-700 dark:!bg-[#0b1424] dark:!text-slate-100 dark:hover:!border-slate-600 dark:hover:!bg-[#122039] dark:hover:!text-white dark:disabled:!border-slate-800 dark:disabled:!bg-[#0b1424] dark:disabled:!text-slate-500 dark:disabled:!opacity-60"
                                         onClick={handleAddManualService}
                                     >
                                         <Plus className="h-4 w-4" />
@@ -1161,7 +1161,7 @@ export default function InvoiceApprovalsPage() {
                         <Button
                             type="button"
                             variant="outline"
-                            className="min-h-11 rounded-2xl !border-white/10 !bg-[#0b1424] px-5 !text-slate-100 hover:!bg-[#122039] hover:!text-white disabled:!border-white/10 disabled:!bg-[#0b1424] disabled:!text-slate-500 disabled:!opacity-60"
+                            className="min-h-11 rounded-2xl border-slate-300 bg-white px-5 text-slate-900 hover:bg-slate-50 hover:text-slate-950 disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400 dark:!border-slate-700 dark:!bg-[#0b1424] dark:!text-slate-100 dark:hover:!border-slate-600 dark:hover:!bg-[#122039] dark:hover:!text-white dark:disabled:!border-slate-800 dark:disabled:!bg-[#0b1424] dark:disabled:!text-slate-500 dark:disabled:!opacity-60"
                             onClick={() => setManualInvoiceOpen(false)}
                             disabled={isCreatingManualInvoice}
                         >
