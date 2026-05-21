@@ -953,7 +953,7 @@ export default function InvoiceApprovalsPage() {
             />
 
             <Dialog open={manualInvoiceOpen} onOpenChange={setManualInvoiceOpen}>
-                <DialogContent className="max-h-[92vh] w-[96vw] max-w-[980px] overflow-hidden border-white/10 bg-[#07121f] p-0 text-white shadow-[0_30px_90px_rgba(0,0,0,0.55)]">
+                <DialogContent className="max-h-[92vh] w-[calc(100vw-2rem)] !max-w-[calc(100vw-2rem)] overflow-hidden border-white/10 bg-[#07121f] p-0 text-white shadow-[0_30px_90px_rgba(0,0,0,0.55)] xl:!max-w-[980px]">
                     <DialogHeader className="border-b border-white/10 px-6 py-5">
                         <DialogTitle className="flex items-center gap-2 text-xl tracking-[-0.03em] sm:text-2xl" style={displayFontStyle}>
                             <Mail className="h-5 w-5 text-cyan-200" />
