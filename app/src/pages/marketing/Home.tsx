@@ -97,61 +97,104 @@ const planGuarantees = [
   'Customer booking portal',
 ];
 
-const demoSteps = [
+const demoScreens = [
   {
-    eyebrow: 'Step 01',
-    title: 'Capture every service request',
+    label: 'Overview',
+    title: 'Overview command center',
     description:
-      'Customers submit booking requests from the public portal, giving admins clean intake data without phone calls or scattered messages.',
-    metric: '24/7',
-    metricLabel: 'booking access',
-    icon: CalendarCheck,
-    highlights: ['Customer details', 'Vehicle/service need', 'Requested timing'],
-    rows: ['New windshield calibration request', 'Dealer location attached', 'Ready for admin review'],
-  },
-  {
-    eyebrow: 'Step 02',
-    title: 'Dispatch from one control center',
-    description:
-      'Admins review jobs, assign technicians, prioritize urgent work, and monitor live operational status from the dashboard.',
-    metric: '42',
-    metricLabel: 'jobs visible',
+      'The first screen gives leadership a live pulse of bookings, jobs, active technicians, approvals, and revenue without jumping between tools.',
     icon: LayoutDashboard,
-    highlights: ['Job queue', 'Technician assignment', 'Urgency tracking'],
-    rows: ['High priority job routed', 'Technician assigned', 'ETA and status visible'],
+    cards: [
+      ['Open jobs', '48', '12 high priority'],
+      ['Active techs', '18', '6 currently on site'],
+      ['Pending invoices', '12', '$8.4k queue value'],
+    ],
+    rows: ['Morning dispatch summary ready', 'Technician capacity updated', 'Approval queue needs review'],
+    action: 'Admin checks the day, sees blockers, and decides what needs attention first.',
   },
   {
-    eyebrow: 'Step 03',
-    title: 'Give technicians a mobile workspace',
+    label: 'Operations',
+    title: 'Operations job board',
     description:
-      'Technicians can see assignments, update job progress, communicate with admin, and keep the work history complete.',
-    metric: 'Live',
-    metricLabel: 'field updates',
-    icon: Smartphone,
-    highlights: ['Mobile job list', 'Status updates', 'Team chat'],
-    rows: ['Technician accepted job', 'On-site status updated', 'Completion note captured'],
+      'Operations is where dispatch happens. Admins review requests, assign technicians, track urgency, and move jobs through the workflow.',
+    icon: ClipboardList,
+    cards: [
+      ['Ready to assign', '14', '4 urgent'],
+      ['In progress', '31', 'live status'],
+      ['Completed today', '22', 'ready for billing'],
+    ],
+    rows: ['NXS-2048 windshield calibration assigned', 'NXS-2049 camera service in progress', 'NXS-2050 diagnostic intake ready'],
+    action: 'Admin clicks a job, assigns a technician, and watches the status update live.',
   },
   {
-    eyebrow: 'Step 04',
-    title: 'Approve and create invoices',
+    label: 'Team',
+    title: 'Team and technician control',
     description:
-      'Completed jobs move into approval, where admins can review service lines, fix blockers, create invoices, and send them.',
-    metric: '$8.4k',
-    metricLabel: 'queue value',
-    icon: FileCheck,
-    highlights: ['Approval queue', 'Manual invoice creation', 'Send to customer'],
-    rows: ['Invoice reviewed', 'Line items confirmed', 'Email draft prepared'],
+      'Team shows technician availability, skills, zones, active assignments, and field status so work can be routed to the right person.',
+    icon: Users,
+    cards: [
+      ['Available', '9', 'ready for jobs'],
+      ['On site', '6', 'live work'],
+      ['Off duty', '3', 'scheduled'],
+    ],
+    rows: ['Alex Morgan available in North zone', 'Priya Shah on site for NXS-2048', 'Jordan Lee finished last job'],
+    action: 'Admin filters by zone or skill, previews a technician, and assigns the best match.',
   },
   {
-    eyebrow: 'Step 05',
-    title: 'Measure performance and scale',
+    label: 'Accounts',
+    title: 'Account and access management',
     description:
-      'Reports show job volume, technician productivity, booking trends, invoice performance, and operational bottlenecks.',
-    metric: 'Smart',
-    metricLabel: 'reporting',
+      'Accounts lets admins create technician logins, send invite emails, reset passwords, and control access from one secure screen.',
+    icon: ShieldCheck,
+    cards: [
+      ['Active accounts', '18', 'all verified'],
+      ['Pending invites', '3', 'email ready'],
+      ['Reset requests', '2', 'needs admin'],
+    ],
+    rows: ['Create technician account', 'Send temporary password email', 'Approve password reset request'],
+    action: 'Admin creates or updates accounts without leaving the operations portal.',
+  },
+  {
+    label: 'Services',
+    title: 'Service catalog and pricing',
+    description:
+      'Services keeps the catalog, pricing, approval rules, and billable items organized so invoices stay consistent.',
+    icon: Wrench,
+    cards: [
+      ['Catalog items', '96', 'active'],
+      ['Approval rules', '8', 'controlled'],
+      ['Avg service', '$320', 'tracked'],
+    ],
+    rows: ['Windshield calibration updated', 'Camera service price reviewed', 'PPF package marked active'],
+    action: 'Admin edits service pricing once, then uses those values throughout jobs and invoices.',
+  },
+  {
+    label: 'Attendance',
+    title: 'Attendance and field schedule',
+    description:
+      'Attendance gives managers a daily view of technician check-ins, availability, absences, and field coverage.',
+    icon: CalendarCheck,
+    cards: [
+      ['Checked in', '15', 'today'],
+      ['Late', '1', 'needs review'],
+      ['Time off', '2', 'approved'],
+    ],
+    rows: ['Morning check-in complete', 'North zone coverage confirmed', 'Time-off request approved'],
+    action: 'Admin confirms who is available before assigning jobs for the day.',
+  },
+  {
+    label: 'Reports',
+    title: 'Reports and business insight',
+    description:
+      'Reports turn job volume, technician productivity, invoice performance, and blocker trends into clear business decisions.',
     icon: BarChart3,
-    highlights: ['Operational reports', 'Invoice trends', 'Team performance'],
-    rows: ['Weekly performance ready', 'Blocked reasons surfaced', 'Growth decisions clearer'],
+    cards: [
+      ['Completion rate', '94%', 'this week'],
+      ['Invoice value', '$42k', 'month to date'],
+      ['Avg turnaround', '2.1h', 'improving'],
+    ],
+    rows: ['Technician productivity report', 'Invoice performance report', 'Blocked reason analysis'],
+    action: 'Leadership can see what is working, where jobs slow down, and which teams need support.',
   },
 ];
 
@@ -323,84 +366,92 @@ function DemoWalkthrough({
 
   if (!open) return null;
 
-  const activeStep = demoSteps[activeIndex];
-  const Icon = activeStep.icon;
-  const isLastStep = activeIndex === demoSteps.length - 1;
+  const activeScreen = demoScreens[activeIndex];
+  const Icon = activeScreen.icon;
+  const isLastScreen = activeIndex === demoScreens.length - 1;
 
   return (
     <div className="fixed inset-0 z-[80] overflow-y-auto bg-slate-950/85 px-4 py-6 backdrop-blur-xl">
-      <div className="mx-auto flex min-h-full max-w-6xl items-center justify-center">
+      <div className="mx-auto flex min-h-full max-w-7xl items-center justify-center">
         <div className="relative w-full overflow-hidden rounded-[2rem] border border-white/10 bg-slate-950 text-white shadow-2xl shadow-blue-950/50">
           <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/70 to-transparent" />
-          <div className="grid lg:grid-cols-[0.92fr_1.08fr]">
-            <div className="border-b border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.18),transparent_34%),linear-gradient(180deg,#0f172a,#020617)] p-6 lg:border-b-0 lg:border-r">
-              <div className="flex items-center justify-between gap-4">
-                <div className="inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1.5 text-xs font-semibold text-cyan-100">
-                  <Icon className="h-4 w-4" />
-                  Product demo
-                </div>
-                <button
-                  type="button"
-                  aria-label="Close demo walkthrough"
-                  className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 text-slate-300 transition hover:bg-white/10 hover:text-white"
-                  onClick={onClose}
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-
-              <div className="mt-10">
-                <p className="text-sm font-semibold uppercase tracking-[0.24em] text-cyan-200">{activeStep.eyebrow}</p>
-                <h2 className="mt-4 text-4xl font-bold tracking-tight md:text-5xl">{activeStep.title}</h2>
-                <p className="mt-5 text-base leading-8 text-slate-300">{activeStep.description}</p>
-              </div>
-
-              <div className="mt-8 grid gap-3">
-                {activeStep.highlights.map((highlight) => (
-                  <div key={highlight} className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-slate-100">
-                    <CheckCircle2 className="h-5 w-5 text-cyan-300" />
-                    {highlight}
-                  </div>
-                ))}
-              </div>
-
-              <div className="mt-8 flex flex-wrap items-center gap-3">
-                {demoSteps.map((step, index) => (
-                  <button
-                    key={step.title}
-                    type="button"
-                    aria-label={`Show demo step ${index + 1}`}
-                    className={`h-2.5 rounded-full transition-all ${index === activeIndex ? 'w-10 bg-cyan-300' : 'w-2.5 bg-white/20 hover:bg-white/40'}`}
-                    onClick={() => setActiveIndex(index)}
-                  />
-                ))}
-              </div>
+          <div className="flex items-center justify-between gap-4 border-b border-white/10 bg-slate-950 px-5 py-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-200">Interactive SaaS demo</p>
+              <h2 className="text-2xl font-bold tracking-tight">Click each module to see how NexusOps works</h2>
             </div>
+            <button
+              type="button"
+              aria-label="Close demo walkthrough"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 text-slate-300 transition hover:bg-white/10 hover:text-white"
+              onClick={onClose}
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
 
-            <div className="bg-slate-900 p-6">
+          <div className="grid min-h-[680px] lg:grid-cols-[260px_1fr_340px]">
+            <aside className="border-b border-white/10 bg-black/40 p-4 lg:border-b-0 lg:border-r">
+              <div className="mb-5 flex items-center gap-3 px-2">
+                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-slate-950">
+                  <ShieldCheck className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="font-bold">NexusOps</p>
+                  <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Demo Center</p>
+                </div>
+              </div>
+
+              <div className="grid gap-2">
+                {demoScreens.map((screen, index) => {
+                  const ScreenIcon = screen.icon;
+                  const active = index === activeIndex;
+                  return (
+                  <button
+                    key={screen.label}
+                    type="button"
+                    className={`flex items-center gap-3 rounded-2xl px-3 py-3 text-left text-sm font-semibold transition ${
+                      active
+                        ? 'bg-white text-slate-950 shadow-xl shadow-white/10'
+                        : 'text-slate-300 hover:bg-white/10 hover:text-white'
+                    }`}
+                    onClick={() => setActiveIndex(index)}
+                  >
+                    <span className={`flex h-9 w-9 items-center justify-center rounded-xl ${active ? 'bg-slate-950 text-white' : 'bg-white/5 text-cyan-200'}`}>
+                      <ScreenIcon className="h-4 w-4" />
+                    </span>
+                    {screen.label}
+                  </button>
+                  );
+                })}
+              </div>
+            </aside>
+
+            <section className="bg-slate-900 p-5">
               <div className="rounded-[1.5rem] border border-white/10 bg-slate-950 p-5 shadow-2xl">
                 <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-5">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">NexusOps demo workspace</p>
-                    <h3 className="mt-2 text-2xl font-bold">Operational command view</h3>
+                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Admin workspace</p>
+                    <h3 className="mt-2 text-2xl font-bold">{activeScreen.label}</h3>
                   </div>
                   <div className="rounded-2xl border border-cyan-300/20 bg-cyan-300/10 px-4 py-3 text-right">
-                    <p className="text-2xl font-bold text-cyan-100">{activeStep.metric}</p>
-                    <p className="text-xs text-cyan-200">{activeStep.metricLabel}</p>
+                    <Icon className="ml-auto h-5 w-5 text-cyan-100" />
+                    <p className="mt-1 text-xs text-cyan-200">Live module preview</p>
                   </div>
                 </div>
 
                 <div className="mt-5 grid gap-4 sm:grid-cols-3">
-                  {['Requests', 'Technicians', 'Invoices'].map((label, index) => (
+                  {activeScreen.cards.map(([label, value, note]) => (
                     <div key={label} className="rounded-2xl border border-white/10 bg-white/5 p-4">
                       <p className="text-xs text-slate-500">{label}</p>
-                      <p className="mt-3 text-2xl font-bold">{index === activeIndex % 3 ? 'Live' : `${18 + index * 7}`}</p>
+                      <p className="mt-3 text-2xl font-bold">{value}</p>
+                      <p className="mt-1 text-xs text-slate-400">{note}</p>
                     </div>
                   ))}
                 </div>
 
                 <div className="mt-5 space-y-3">
-                  {activeStep.rows.map((row, index) => (
+                  {activeScreen.rows.map((row, index) => (
                     <div key={row} className="flex items-center justify-between gap-4 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-4">
                       <div className="flex items-center gap-3">
                         <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-slate-950">
@@ -416,50 +467,64 @@ function DemoWalkthrough({
                 </div>
 
                 <div className="mt-6 rounded-2xl border border-white/10 bg-gradient-to-r from-blue-600/20 to-cyan-400/15 p-5">
-                  <p className="text-sm font-semibold text-white">Demo outcome</p>
-                  <p className="mt-2 text-sm leading-6 text-slate-300">
-                    This walkthrough shows how a service request moves through the SaaS from customer intake to admin control, technician execution, invoice creation, and reporting.
-                  </p>
+                  <p className="text-sm font-semibold text-white">What happens when admin clicks this screen</p>
+                  <p className="mt-2 text-sm leading-6 text-slate-300">{activeScreen.action}</p>
+                </div>
+              </div>
+            </section>
+
+            <aside className="border-t border-white/10 bg-[radial-gradient(circle_at_top,rgba(34,211,238,0.14),transparent_30%),#020617] p-5 lg:border-l lg:border-t-0">
+              <div className="inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1.5 text-xs font-semibold text-cyan-100">
+                <Icon className="h-4 w-4" />
+                {activeScreen.label} demo
+              </div>
+              <h3 className="mt-5 text-3xl font-bold tracking-tight">{activeScreen.title}</h3>
+              <p className="mt-4 text-sm leading-7 text-slate-300">{activeScreen.description}</p>
+
+              <div className="mt-6 rounded-3xl border border-white/10 bg-white/5 p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Guided click path</p>
+                <div className="mt-4 space-y-3">
+                  {demoScreens.map((screen, index) => (
+                    <button
+                      key={screen.label}
+                      type="button"
+                      className={`flex w-full items-center justify-between rounded-2xl px-3 py-3 text-left text-sm transition ${
+                        index === activeIndex ? 'bg-cyan-300/10 text-cyan-100' : 'text-slate-400 hover:bg-white/5 hover:text-white'
+                      }`}
+                      onClick={() => setActiveIndex(index)}
+                    >
+                      <span>{index + 1}. {screen.label}</span>
+                      {index === activeIndex ? <CheckCircle2 className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                    </button>
+                  ))}
                 </div>
               </div>
 
-              <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="mt-5 flex flex-col gap-3">
+                {isLastScreen ? (
+                  <Link
+                    to="/admin/signup"
+                    className="inline-flex h-12 items-center justify-center rounded-2xl bg-white px-5 font-semibold text-slate-950 transition hover:-translate-y-0.5 hover:bg-slate-100"
+                  >
+                    Start setup
+                  </Link>
+                ) : null}
                 <button
                   type="button"
-                  className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-5 font-semibold text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
-                  onClick={() => setActiveIndex((current) => Math.max(0, current - 1))}
-                  disabled={activeIndex === 0}
+                  className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-500 to-cyan-400 px-5 font-semibold text-white shadow-xl shadow-blue-500/20 transition hover:-translate-y-0.5"
+                  onClick={() => {
+                    if (isLastScreen) {
+                      onClose();
+                      return;
+                    }
+                    setActiveIndex((current) => Math.min(demoScreens.length - 1, current + 1));
+                  }}
                 >
-                  <ChevronLeft className="h-4 w-4" />
-                  Back
+                  {isLastScreen ? 'Finish demo' : 'Next screen'}
+                  {!isLastScreen ? <ChevronRight className="h-4 w-4" /> : null}
                 </button>
-
-                <div className="flex flex-col gap-3 sm:flex-row">
-                  {isLastStep ? (
-                    <Link
-                      to="/admin/signup"
-                      className="inline-flex h-12 items-center justify-center rounded-2xl bg-white px-5 font-semibold text-slate-950 transition hover:-translate-y-0.5 hover:bg-slate-100"
-                    >
-                      Start setup
-                    </Link>
-                  ) : null}
-                  <button
-                    type="button"
-                    className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-500 to-cyan-400 px-5 font-semibold text-white shadow-xl shadow-blue-500/20 transition hover:-translate-y-0.5"
-                    onClick={() => {
-                      if (isLastStep) {
-                        onClose();
-                        return;
-                      }
-                      setActiveIndex((current) => Math.min(demoSteps.length - 1, current + 1));
-                    }}
-                  >
-                    {isLastStep ? 'Finish demo' : 'Next step'}
-                    {!isLastStep ? <ChevronRight className="h-4 w-4" /> : null}
-                  </button>
-                </div>
               </div>
-            </div>
+            </aside>
           </div>
         </div>
       </div>
