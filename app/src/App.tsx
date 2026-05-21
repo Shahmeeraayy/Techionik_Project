@@ -55,6 +55,8 @@ function App() {
           <Route path="/" element={<MarketingHome />} />
           <Route path="/book" element={<BookingPortalPage />} />
           <Route path="/book/status" element={<BookingPortalPage />} />
+          <Route path="/book/:tenantSlug" element={<BookingPortalPage />} />
+          <Route path="/book/:tenantSlug/status" element={<BookingPortalPage />} />
 
           {/* Login Portals */}
           <Route path="/login" element={<PublicOnly><AdminLoginPage /></PublicOnly>} />

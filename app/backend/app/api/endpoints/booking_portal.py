@@ -51,8 +51,7 @@ def get_admin_booking_portal_settings(
     db: Session = Depends(deps.get_db),
     current_user: AuthenticatedUser = Depends(deps.require_roles(UserRole.ADMIN)),
 ):
-    _ = current_user
-    return BookingPortalService(db).get_admin_settings()
+    return BookingPortalService(db, current_user).get_admin_settings()
 
 
 @admin_router.put("/settings", response_model=BookingPortalSettingsResponse)
@@ -61,8 +60,7 @@ def update_admin_booking_portal_settings(
     db: Session = Depends(deps.get_db),
     current_user: AuthenticatedUser = Depends(deps.require_roles(UserRole.ADMIN)),
 ):
-    _ = current_user
-    return BookingPortalService(db).update_admin_settings(payload)
+    return BookingPortalService(db, current_user).update_admin_settings(payload)
 
 
 @admin_router.get("/requests", response_model=list[BookingRequestAdminResponse])
@@ -70,8 +68,7 @@ def list_admin_booking_requests(
     db: Session = Depends(deps.get_db),
     current_user: AuthenticatedUser = Depends(deps.require_roles(UserRole.ADMIN)),
 ):
-    _ = current_user
-    return BookingPortalService(db).list_admin_bookings()
+    return BookingPortalService(db, current_user).list_admin_bookings()
 
 
 @admin_router.patch("/requests/{booking_id}", response_model=BookingRequestAdminResponse)
@@ -81,5 +78,4 @@ def update_admin_booking_request(
     db: Session = Depends(deps.get_db),
     current_user: AuthenticatedUser = Depends(deps.require_roles(UserRole.ADMIN)),
 ):
-    _ = current_user
-    return BookingPortalService(db).update_admin_booking(booking_id, payload)
+    return BookingPortalService(db, current_user).update_admin_booking(booking_id, payload)

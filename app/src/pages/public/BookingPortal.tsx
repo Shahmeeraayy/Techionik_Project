@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useParams } from 'react-router-dom';
 import {
   ArrowRight, Bell, CalendarDays, CheckCircle2, ChevronDown,
   Clock3, Mail, Phone, Search, Settings, Wrench,
@@ -58,8 +58,20 @@ const selectContentCls = 'border-white/10 bg-[rgba(11,25,42,0.98)] text-white';
 const primaryBtnCls = 'h-[52px] w-full rounded-xl bg-gradient-to-r from-[#4f7cff] to-[#22d3ee] text-base font-semibold text-white shadow-[0_8px_24px_rgba(79,124,255,0.28)] hover:brightness-110 transition-all';
 const secondaryBtnCls = 'border-white/10 bg-[linear-gradient(180deg,rgba(12,20,34,0.95),rgba(8,14,26,0.95))] text-slate-200 hover:bg-[linear-gradient(180deg,rgba(23,37,64,0.98),rgba(15,24,44,0.98))] hover:text-white rounded-xl';
 
+function inferTenantSlugFromHost(): string | null {
+  if (typeof window === 'undefined') return null;
+  const hostname = window.location.hostname.toLowerCase();
+  const parts = hostname.split('.').filter(Boolean);
+  if (parts.length < 3) return null;
+  const [subdomain] = parts;
+  if (['www', 'app', 'admin', 'api', 'book'].includes(subdomain)) return null;
+  if (hostname.endsWith('.nexusops.app')) return subdomain;
+  return null;
+}
+
 export default function BookingPortalPage() {
   const location = useLocation();
+  const { tenantSlug } = useParams<{ tenantSlug?: string }>();
   const isStatusMode = location.pathname.endsWith('/status');
   const [config, setConfig] = useState<BackendBookingPortalPublicConfig | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -73,6 +85,9 @@ export default function BookingPortalPage() {
   const [lookupError, setLookupError] = useState<string | null>(null);
   const [lookupResult, setLookupResult] = useState<BackendBookingPortalStatusLookupResponse | null>(null);
   const [isLookingUp, setIsLookingUp] = useState(false);
+  const normalizedTenantSlug = tenantSlug?.trim().toLowerCase() || inferTenantSlugFromHost();
+  const bookingPath = normalizedTenantSlug ? `/book/${normalizedTenantSlug}` : '/book';
+  const statusPath = normalizedTenantSlug ? `/book/${normalizedTenantSlug}/status` : '/book/status';
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -88,7 +103,7 @@ export default function BookingPortalPage() {
       setIsLoading(true);
       setErrorMessage(null);
       try {
-        const next = await fetchBookingPortalPublicConfig();
+        const next = await fetchBookingPortalPublicConfig(normalizedTenantSlug);
         if (!isMounted) return;
         setConfig(next);
         setForm((prev) => ({
@@ -102,7 +117,7 @@ export default function BookingPortalPage() {
       }
     })();
     return () => { isMounted = false; };
-  }, []);
+  }, [normalizedTenantSlug]);
 
   const detailsLabel = config?.details_field_label ?? 'Vehicle details';
   const selectedServiceNames = useMemo(() => {
@@ -144,6 +159,7 @@ export default function BookingPortalPage() {
     setIsSubmitting(true);
     try {
       const response = await submitBookingPortalRequest({
+        tenant_slug: normalizedTenantSlug,
         customer_full_name: form.customerName.trim(),
         phone_number: form.phoneNumber.trim(),
         email_address: form.emailAddress.trim().toLowerCase(),
@@ -156,6 +172,7 @@ export default function BookingPortalPage() {
         preferred_date: form.preferredDate || null,
         preferred_time_of_day: form.preferredTimeOfDay,
         additional_notes: form.additionalNotes.trim() || undefined,
+        website: null,
       });
       setSuccessReference(response.reference_number);
       setForm(initialFormState);
@@ -184,6 +201,7 @@ export default function BookingPortalPage() {
     setIsLookingUp(true);
     try {
       const response = await lookupBookingPortalStatus({
+        tenant_slug: normalizedTenantSlug,
         reference_number: lookupReference.trim().toUpperCase(),
         email_address: lookupEmail.trim().toLowerCase(),
       });
@@ -224,7 +242,7 @@ export default function BookingPortalPage() {
               <Settings className="h-4.5 w-4.5" />
             </button>
             <Button asChild className="h-9 rounded-lg bg-gradient-to-r from-[#4f7cff] to-[#22d3ee] px-4 text-sm font-semibold text-white shadow-[0_4px_14px_rgba(79,124,255,0.35)] hover:brightness-110 transition-all">
-              <a href="mailto:admin@nexusops.com">Contact Us</a>
+              <a href={`mailto:${config?.admin_contact_email || 'support@nexusops.app'}`}>Contact Us</a>
             </Button>
           </div>
         </div>
@@ -310,7 +328,7 @@ export default function BookingPortalPage() {
                   </Button>
                   {config.status_lookup_enabled ? (
                     <Button asChild variant="outline" className={secondaryBtnCls} style={{ height: '44px', padding: '0 16px' }}>
-                      <Link to="/book/status">
+                      <Link to={statusPath}>
                         Check booking status
                         <ArrowRight className="ml-2 h-4 w-4" />
                       </Link>
@@ -629,7 +647,7 @@ export default function BookingPortalPage() {
             </p>
             {config?.status_lookup_enabled ? (
               <Button asChild variant="outline" className={`mt-4 w-full justify-center ${secondaryBtnCls}`} style={{ height: '44px' }}>
-                <Link to={isStatusMode ? '/book' : '/book/status'}>
+                <Link to={isStatusMode ? bookingPath : statusPath}>
                   {isStatusMode ? 'Back to booking form' : 'Open status lookup'}
                   {isStatusMode
                     ? <ArrowRight className="ml-2 h-4 w-4 rotate-180" />

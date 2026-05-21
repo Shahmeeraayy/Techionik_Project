@@ -3,6 +3,7 @@ import {
     BarChart2,
     Bell,
     Building2,
+    Copy,
     CreditCard,
     ExternalLink,
     History,
@@ -14,6 +15,7 @@ import {
     Monitor,
     Pencil,
     PlusCircle,
+    QrCode,
     RefreshCw,
     RotateCcw,
     ShieldCheck,
@@ -293,6 +295,23 @@ export default function SettingsPage() {
     const filteredBookingServiceOptions = serviceOptions.filter((service) =>
         service.name.toLowerCase().includes(bookingServiceSearch.trim().toLowerCase())
     );
+    const bookingTenantSlug = tenantEmailIdentity?.tenant_slug || 'workspace';
+    const bookingPortalUrl = typeof window !== 'undefined'
+        ? `${window.location.origin}/book/${bookingTenantSlug}`
+        : `/book/${bookingTenantSlug}`;
+    const bookingStatusLookupUrl = `${bookingPortalUrl}/status`;
+    const selectedBookingServiceNames = serviceOptions
+        .filter((service) => bookingPortalSettings.visibleServiceIds.includes(service.id))
+        .map((service) => service.name);
+
+    const copyText = async (value: string, label: string) => {
+        try {
+            await navigator.clipboard.writeText(value);
+            alert(`${label} copied.`);
+        } catch {
+            alert(value);
+        }
+    };
 
     const { theme, setTheme } = useTheme();
     useEffect(() => {
@@ -919,9 +938,19 @@ export default function SettingsPage() {
                             <Monitor className="h-4 w-4 text-cyan-300" />
                             <span className="text-xs font-bold uppercase tracking-[0.22em] text-white">Customer Booking Portal</span>
                         </div>
-                        <div className="flex gap-2">
-                            <Button asChild size="sm" variant="outline" className="h-8 rounded-lg border-white/15 bg-transparent px-3 text-xs font-semibold text-slate-200 hover:bg-white/[0.06]">
-                                <Link to="/book" target="_blank" rel="noreferrer">Open Booking Form</Link>
+                        <div className="flex flex-wrap gap-2">
+                            <Badge className={cn('w-fit rounded-full px-3 py-1 text-xs font-semibold', bookingPortalSettings.isEnabled ? 'bg-emerald-500/15 text-emerald-200' : 'bg-red-500/15 text-red-200')}>
+                                {bookingPortalSettings.isEnabled ? 'Online' : 'Offline'}
+                            </Badge>
+                            <Button type="button" size="sm" variant="outline" className="h-8 gap-1.5 rounded-lg border-white/15 bg-transparent px-3 text-xs font-semibold text-slate-200 hover:bg-white/[0.06]" onClick={() => void copyText(bookingPortalUrl, 'Booking link')}>
+                                <Copy className="h-3.5 w-3.5" />
+                                Copy link
+                            </Button>
+                            <Button asChild size="sm" variant="outline" className="h-8 gap-1.5 rounded-lg border-white/15 bg-transparent px-3 text-xs font-semibold text-slate-200 hover:bg-white/[0.06]">
+                                <Link to={`/book/${bookingTenantSlug}`} target="_blank" rel="noreferrer">
+                                    <ExternalLink className="h-3.5 w-3.5" />
+                                    Open booking form
+                                </Link>
                             </Button>
                         </div>
                     </div>
@@ -929,6 +958,30 @@ export default function SettingsPage() {
                     <div className="grid gap-6 p-6 xl:grid-cols-2">
                         {/* Left */}
                         <div className="space-y-5">
+                            <div className="grid gap-3">
+                                <div className="rounded-xl border border-white/8 bg-white/[0.025] p-4">
+                                    <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">Public booking URL</p>
+                                    <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                                        <p className="break-all text-sm font-semibold text-cyan-100">{bookingPortalUrl}</p>
+                                        <Button type="button" size="sm" variant="outline" className="shrink-0 border-white/10 bg-transparent text-slate-200 hover:bg-white/[0.06]" onClick={() => void copyText(bookingPortalUrl, 'Booking link')}>
+                                            Copy
+                                        </Button>
+                                    </div>
+                                </div>
+                                <div className="grid gap-3 md:grid-cols-2">
+                                    <div className="rounded-xl border border-white/8 bg-white/[0.025] p-4">
+                                        <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">Status lookup URL</p>
+                                        <p className="mt-2 break-all text-sm text-slate-200">{bookingStatusLookupUrl}</p>
+                                    </div>
+                                    <div className="rounded-xl border border-dashed border-white/12 bg-white/[0.02] p-4">
+                                        <div className="flex items-center gap-2 text-slate-200">
+                                            <QrCode className="h-4 w-4 text-cyan-300" />
+                                            <p className="text-sm font-semibold">QR code ready</p>
+                                        </div>
+                                        <p className="mt-2 text-xs leading-5 text-slate-500">Use the public URL to generate a QR code for reception desks, invoices, or customer messages.</p>
+                                    </div>
+                                </div>
+                            </div>
                             <div className={cn('flex items-center justify-between rounded-xl border p-4 transition-colors', bookingPortalSettings.isEnabled ? 'border-emerald-400/20 bg-emerald-400/[0.05]' : 'border-red-400/20 bg-red-400/[0.05]')}>
                                 <div>
                                     <p className="font-semibold text-white">Enable Booking Portal</p>
@@ -952,6 +1005,9 @@ export default function SettingsPage() {
                             </div>
                             <div className="space-y-2">
                                 <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">Service Type Filter</p>
+                                <p className="text-xs leading-5 text-slate-500">
+                                    Selected service types shown publicly: {selectedBookingServiceNames.length ? selectedBookingServiceNames.join(', ') : 'All active services'}
+                                </p>
                                 <Input style={settingsDarkInputStyle} className="border-white/10 text-white placeholder:text-slate-500" placeholder="Search services..." value={bookingServiceSearch} onChange={(e) => setBookingServiceSearch(e.target.value)} />
                                 <div className="flex flex-wrap gap-1.5 pt-1">
                                     {serviceOptions.filter((s) => bookingPortalSettings.visibleServiceIds.includes(s.id)).slice(0, 5).map((s) => (
@@ -1005,7 +1061,7 @@ export default function SettingsPage() {
                             </div>
                             <Textarea style={settingsDarkInputStyle} className="min-h-[240px] rounded-t-none border-t-0 border-white/10 text-white placeholder:text-slate-500" value={bookingPortalSettings.confirmationEmailBody} onChange={(e) => setBookingPortalSettings((prev) => ({ ...prev, confirmationEmailBody: e.target.value }))} />
                             <p className="mt-2 text-xs leading-5 text-slate-600">
-                                Available dynamic tags: <code className="text-slate-400">${'{customer_name}'}</code>, <code className="text-slate-400">${'{booking_id}'}</code>, <code className="text-slate-400">${'{technician_name}'}</code>, <code className="text-slate-400">${'{arrival_window}'}</code>
+                                Available dynamic tags: <code className="text-slate-400">${'{customer_name}'}</code>, <code className="text-slate-400">${'{company_name}'}</code>, <code className="text-slate-400">${'{reference_number}'}</code>, <code className="text-slate-400">${'{service_location}'}</code>, <code className="text-slate-400">${'{estimated_response_time_message}'}</code>, <code className="text-slate-400">${'{booking_portal_url}'}</code>, <code className="text-slate-400">${'{booking_status_url}'}</code>, <code className="text-slate-400">${'{admin_contact_email}'}</code>
                             </p>
                         </div>
                     </div>

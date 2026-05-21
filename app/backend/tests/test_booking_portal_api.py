@@ -112,6 +112,10 @@ class BookingPortalApiTests(unittest.TestCase):
                 "customer_full_name": "Alex Client",
                 "phone_number": "+1(586) 556-0113",
                 "email_address": "alex@example.com",
+                "service_location_address": "123 Customer Road",
+                "service_location_city": "Detroit",
+                "service_location_state": "MI",
+                "service_location_zip_code": "48201",
                 "service_catalog_ids": service_ids,
                 "asset_details": "2024 Ford F-150 with front window damage.",
                 "preferred_date": "2026-05-12",
@@ -121,7 +125,7 @@ class BookingPortalApiTests(unittest.TestCase):
         )
         self.assertEqual(submit_response.status_code, 201, submit_response.text)
         reference_number = submit_response.json()["reference_number"]
-        self.assertTrue(reference_number.startswith("BK"))
+        self.assertTrue(reference_number.startswith("NXS"))
 
         lookup_response = self.client.post(
             "/booking-portal/status-lookup",
@@ -141,7 +145,7 @@ class BookingPortalApiTests(unittest.TestCase):
             self.assertEqual(len(email_rows), 2)
             customer_email = next(row for row in email_rows if row.recipient_email == "alex@example.com")
             self.assertIn("/book", customer_email.body)
-            self.assertIn("/book/status?reference=", customer_email.body)
+            self.assertIn("/book/default/status?reference=", customer_email.body)
             self.assertIn("email=alex%40example.com", customer_email.body)
 
     def test_admin_can_update_booking_status(self):
@@ -169,6 +173,7 @@ class BookingPortalApiTests(unittest.TestCase):
                 "customer_full_name": "Alex Client",
                 "phone_number": "+1(586) 556-0113",
                 "email_address": "alex@example.com",
+                "service_location_address": "123 Customer Road",
                 "service_catalog_ids": [service_ids[0]],
                 "asset_details": "Vehicle details here",
                 "preferred_time_of_day": "afternoon",

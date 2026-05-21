@@ -192,18 +192,24 @@ export type BackendBookingPortalSettings = {
   status_lookup_enabled: boolean;
   industry_type: 'automotive' | 'property' | 'general';
   details_field_label?: string | null;
+  tenant_slug: string;
   company_name: string;
   company_logo_url?: string | null;
   admin_contact_email: string;
   admin_contact_phone: string;
+  public_booking_url: string;
+  status_lookup_url: string;
 };
 
 export type BackendBookingPortalPublicConfig = {
   is_enabled: boolean;
+  tenant_slug: string;
   company_name: string;
   company_logo_url?: string | null;
   admin_contact_email: string;
   admin_contact_phone: string;
+  public_booking_url: string;
+  status_lookup_url: string;
   estimated_response_time_message: string;
   status_lookup_enabled: boolean;
   industry_type: 'automotive' | 'property' | 'general';
@@ -1487,8 +1493,15 @@ export async function completeTechnicianPasswordReset(
   });
 }
 
-export async function fetchBookingPortalPublicConfig(): Promise<BackendBookingPortalPublicConfig> {
-  return requestJson<BackendBookingPortalPublicConfig>('/booking-portal/config');
+function bookingPortalTenantHeaders(tenantSlug?: string | null): Record<string, string> {
+  const normalized = tenantSlug?.trim().toLowerCase();
+  return normalized ? { 'x-tenant-slug': normalized } : {};
+}
+
+export async function fetchBookingPortalPublicConfig(tenantSlug?: string | null): Promise<BackendBookingPortalPublicConfig> {
+  return requestJson<BackendBookingPortalPublicConfig>('/booking-portal/config', {
+    headers: bookingPortalTenantHeaders(tenantSlug),
+  });
 }
 
 export async function submitBookingPortalRequest(payload: {
@@ -1504,19 +1517,25 @@ export async function submitBookingPortalRequest(payload: {
   preferred_date?: string | null;
   preferred_time_of_day: 'morning' | 'afternoon' | 'evening' | 'no_preference';
   additional_notes?: string;
+  tenant_slug?: string | null;
+  website?: string | null;
 }): Promise<BackendBookingPortalSubmissionResponse> {
   return requestJson<BackendBookingPortalSubmissionResponse>('/booking-portal/submit', {
     method: 'POST',
+    headers: bookingPortalTenantHeaders(payload.tenant_slug),
     body: payload,
   });
 }
 
 export async function lookupBookingPortalStatus(payload: {
   reference_number: string;
-  email_address: string;
+  email_address?: string | null;
+  phone_number?: string | null;
+  tenant_slug?: string | null;
 }): Promise<BackendBookingPortalStatusLookupResponse> {
   return requestJson<BackendBookingPortalStatusLookupResponse>('/booking-portal/status-lookup', {
     method: 'POST',
+    headers: bookingPortalTenantHeaders(payload.tenant_slug),
     body: payload,
   });
 }

@@ -2,7 +2,7 @@ from datetime import date, datetime
 from typing import Literal, Optional
 from uuid import UUID
 
-from pydantic import BaseModel, EmailStr, Field, TypeAdapter, field_validator
+from pydantic import BaseModel, EmailStr, Field, TypeAdapter, field_validator, model_validator
 
 
 _EMAIL_ADAPTER = TypeAdapter(EmailStr)
@@ -35,10 +35,13 @@ class BookingPortalSettingsPayload(BaseModel):
 
 
 class BookingPortalSettingsResponse(BookingPortalSettingsPayload):
+    tenant_slug: str
     company_name: str
     company_logo_url: Optional[str] = None
     admin_contact_email: str
     admin_contact_phone: str
+    public_booking_url: str
+    status_lookup_url: str
 
 
 class BookingPortalServiceOption(BaseModel):
@@ -49,10 +52,13 @@ class BookingPortalServiceOption(BaseModel):
 
 class BookingPortalPublicConfigResponse(BaseModel):
     is_enabled: bool
+    tenant_slug: str
     company_name: str
     company_logo_url: Optional[str] = None
     admin_contact_email: str
     admin_contact_phone: str
+    public_booking_url: str
+    status_lookup_url: str
     estimated_response_time_message: str
     status_lookup_enabled: bool
     industry_type: Literal["automotive", "property", "general"]
@@ -73,6 +79,7 @@ class BookingPortalSubmissionRequest(BaseModel):
     preferred_date: Optional[date] = None
     preferred_time_of_day: Literal["morning", "afternoon", "evening", "no_preference"] = "no_preference"
     additional_notes: Optional[str] = Field(default=None, max_length=5000)
+    website: Optional[str] = Field(default=None, max_length=255)
 
     @field_validator("customer_full_name", "asset_details", "service_location_address")
     @classmethod
@@ -135,7 +142,14 @@ class BookingPortalSubmissionResponse(BaseModel):
 
 class BookingPortalStatusLookupRequest(BaseModel):
     reference_number: str = Field(..., min_length=3, max_length=32)
-    email_address: str = Field(..., min_length=3, max_length=255)
+    email_address: Optional[str] = Field(default=None, min_length=3, max_length=255)
+    phone_number: Optional[str] = Field(default=None, min_length=7, max_length=64)
+
+    @model_validator(mode="after")
+    def _require_email_or_phone(self):
+        if not self.email_address and not self.phone_number:
+            raise ValueError("Enter the booking email address or phone number.")
+        return self
 
     @field_validator("reference_number")
     @classmethod
@@ -147,9 +161,22 @@ class BookingPortalStatusLookupRequest(BaseModel):
 
     @field_validator("email_address")
     @classmethod
-    def _normalize_email(cls, value: str) -> str:
+    def _normalize_email(cls, value: Optional[str]) -> Optional[str]:
+        if value is None:
+            return None
         normalized = value.strip().lower()
         return str(_EMAIL_ADAPTER.validate_python(normalized)).lower()
+
+    @field_validator("phone_number")
+    @classmethod
+    def _normalize_lookup_phone(cls, value: Optional[str]) -> Optional[str]:
+        if value is None:
+            return None
+        normalized = value.strip()
+        digits = "".join(ch for ch in normalized if ch.isdigit())
+        if len(digits) < 7:
+            raise ValueError("phone_number must contain at least 7 digits")
+        return normalized
 
 
 class BookingPortalStatusLookupResponse(BaseModel):
