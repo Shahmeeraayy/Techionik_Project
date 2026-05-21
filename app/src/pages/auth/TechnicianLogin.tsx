@@ -103,7 +103,7 @@ export default function TechnicianLoginPage() {
   const fieldInputStyle = { backgroundColor: '#0a1220', color: '#f8fafc', WebkitTextFillColor: '#f8fafc' } as const;
 
   return (
-    <main className="auth-shell relative min-h-[100svh] overflow-hidden bg-[#05070b] text-white">
+    <main className="auth-shell auth-lock-dark relative min-h-[100svh] overflow-hidden bg-[#05070b] text-white">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_18%,rgba(79,124,255,0.2),transparent_27%),radial-gradient(circle_at_82%_12%,rgba(34,211,238,0.14),transparent_25%),linear-gradient(180deg,#0b1220_0%,#05070b_55%,#020617_100%)]" />
       <div className="pointer-events-none absolute inset-0 opacity-30 [background-image:linear-gradient(rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] [background-size:104px_104px]" />
 
@@ -204,7 +204,7 @@ export default function TechnicianLoginPage() {
                         Forgot password?
                       </button>
                     </DialogTrigger>
-                    <DialogContent className="rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] p-0 text-white shadow-[0_30px_80px_rgba(0,0,0,0.45)] sm:max-w-[520px]">
+                    <DialogContent className="auth-lock-dark-dialog rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] p-0 text-white shadow-[0_30px_80px_rgba(0,0,0,0.45)] sm:max-w-[520px]">
                       <div className="p-6 sm:p-7">
                         <DialogHeader>
                           <DialogTitle className="text-[1.7rem] font-semibold tracking-[-0.04em] text-white">

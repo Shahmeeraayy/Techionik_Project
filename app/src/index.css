@@ -4265,6 +4265,121 @@
   opacity: 1 !important;
 }
 
+/* Login/auth screens are intentionally theme-locked to the premium dark design. */
+.light .auth-lock-dark {
+  background: #05070b !important;
+  color: #ffffff !important;
+  color-scheme: dark !important;
+}
+
+.light .auth-lock-dark > .pointer-events-none:first-child {
+  background:
+    radial-gradient(circle at 18% 18%, rgba(79, 124, 255, 0.24), transparent 27%),
+    radial-gradient(circle at 82% 12%, rgba(34, 211, 238, 0.16), transparent 25%),
+    linear-gradient(180deg, #0b1220 0%, #05070b 55%, #020617 100%) !important;
+}
+
+.light .auth-lock-dark [class*="bg-[linear-gradient(180deg"],
+.light .auth-lock-dark-dialog {
+  background: linear-gradient(180deg, rgba(14, 23, 40, 0.98), rgba(5, 10, 20, 0.99)) !important;
+  border-color: rgba(255, 255, 255, 0.10) !important;
+  color: #ffffff !important;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.45) !important;
+  color-scheme: dark !important;
+}
+
+.light .auth-lock-dark [class*="bg-white/"],
+.light .auth-lock-dark-dialog [class*="bg-white/"] {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border-color: rgba(255, 255, 255, 0.10) !important;
+  color: #e2e8f0 !important;
+}
+
+.light .auth-lock-dark [class*="bg-slate-950"],
+.light .auth-lock-dark-dialog [class*="bg-slate-950"] {
+  background: rgba(2, 6, 23, 0.70) !important;
+  border-color: rgba(255, 255, 255, 0.10) !important;
+}
+
+.light .auth-lock-dark input,
+.light .auth-lock-dark textarea,
+.light .auth-lock-dark select,
+.light .auth-lock-dark-dialog input,
+.light .auth-lock-dark-dialog textarea,
+.light .auth-lock-dark-dialog select {
+  background: #0a1220 !important;
+  background-image: none !important;
+  border-color: rgba(255, 255, 255, 0.10) !important;
+  color: #f8fafc !important;
+  -webkit-text-fill-color: #f8fafc !important;
+  color-scheme: dark !important;
+}
+
+.light .auth-lock-dark input::placeholder,
+.light .auth-lock-dark textarea::placeholder,
+.light .auth-lock-dark-dialog input::placeholder,
+.light .auth-lock-dark-dialog textarea::placeholder {
+  color: #64748b !important;
+  -webkit-text-fill-color: #64748b !important;
+}
+
+.light .auth-lock-dark :is(h1, h2, h3, h4, h5, h6),
+.light .auth-lock-dark .text-white,
+.light .auth-lock-dark .text-slate-100,
+.light .auth-lock-dark .text-slate-200,
+.light .auth-lock-dark-dialog :is(h1, h2, h3, h4, h5, h6),
+.light .auth-lock-dark-dialog .text-white,
+.light .auth-lock-dark-dialog .text-slate-100,
+.light .auth-lock-dark-dialog .text-slate-200 {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+.light .auth-lock-dark .text-slate-300,
+.light .auth-lock-dark .text-slate-400,
+.light .auth-lock-dark .text-slate-500,
+.light .auth-lock-dark-dialog .text-slate-300,
+.light .auth-lock-dark-dialog .text-slate-400,
+.light .auth-lock-dark-dialog .text-slate-500,
+.light .auth-lock-dark-dialog .text-white\/70,
+.light .auth-lock-dark-dialog .text-white\/78,
+.light .auth-lock-dark-dialog .text-white\/84 {
+  color: #94a3b8 !important;
+  -webkit-text-fill-color: #94a3b8 !important;
+}
+
+.light .auth-lock-dark [class*="text-cyan"],
+.light .auth-lock-dark-dialog [class*="text-cyan"] {
+  color: #a5f3fc !important;
+  -webkit-text-fill-color: #a5f3fc !important;
+}
+
+.light .auth-lock-dark button[class*="bg-[linear-gradient"],
+.light .auth-lock-dark a[class*="bg-[linear-gradient"],
+.light .auth-lock-dark [class*="from-[#4f7cff"],
+.light .auth-lock-dark [class*="bg-gradient-to-r"],
+.light .auth-lock-dark-dialog button[class*="bg-[linear-gradient"],
+.light .auth-lock-dark-dialog a[class*="bg-[linear-gradient"],
+.light .auth-lock-dark-dialog [class*="from-[#4f7cff"],
+.light .auth-lock-dark-dialog [class*="bg-gradient-to-r"] {
+  background: linear-gradient(135deg, #4f7cff, #22d3ee) !important;
+  border-color: rgba(79, 124, 255, 0.42) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+.light .auth-lock-dark button[class*="bg-[linear-gradient"] *,
+.light .auth-lock-dark a[class*="bg-[linear-gradient"] *,
+.light .auth-lock-dark [class*="from-[#4f7cff"] *,
+.light .auth-lock-dark [class*="bg-gradient-to-r"] *,
+.light .auth-lock-dark-dialog button[class*="bg-[linear-gradient"] *,
+.light .auth-lock-dark-dialog a[class*="bg-[linear-gradient"] *,
+.light .auth-lock-dark-dialog [class*="from-[#4f7cff"] *,
+.light .auth-lock-dark-dialog [class*="bg-gradient-to-r"] * {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
 /* Print Styles */
 @media print {
   .no-print {

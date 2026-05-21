@@ -56,7 +56,7 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <main className="auth-shell relative min-h-[100svh] overflow-hidden bg-[#05070b] text-white">
+    <main className="auth-shell auth-lock-dark relative min-h-[100svh] overflow-hidden bg-[#05070b] text-white">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_18%,rgba(79,124,255,0.24),transparent_27%),radial-gradient(circle_at_82%_12%,rgba(34,211,238,0.16),transparent_25%),linear-gradient(180deg,#0b1220_0%,#05070b_55%,#020617_100%)]" />
       <div className="pointer-events-none absolute inset-0 opacity-30 [background-image:linear-gradient(rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] [background-size:104px_104px]" />
 
