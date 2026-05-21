@@ -1,16 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
     ArrowLeft,
-    Briefcase,
     Calendar,
-    ChevronRight,
-    Clock,
     KeyRound,
     LogOut,
     Plus,
     RefreshCw,
     Save,
-    Settings,
     Sparkles,
     Trash2,
     Upload,
@@ -82,7 +78,6 @@ export default function ProfilePage() {
     const routeBase = isPreviewMode ? `/admin/tech-preview/${previewTechId}` : '/tech';
     const settingsRoute = `${routeBase}/profile/settings`;
     const isSettingsRoute = location.pathname.endsWith('/profile/settings');
-    const isSettingsView = true;
     const previewTech = useMemo(() => {
         if (!previewTechId) return null;
         return technicianAccounts.find((tech) => tech.id === previewTechId) ?? null;
@@ -208,10 +203,6 @@ export default function ProfilePage() {
         }
         logout();
         navigate('/tech/login', { replace: true });
-    };
-
-    const openSettingsView = () => {
-        navigate(settingsRoute);
     };
 
     const openProfileView = () => {
@@ -388,68 +379,32 @@ export default function ProfilePage() {
         .filter((day) => workingDays.includes(day.value))
         .map((day) => day.label)
         .join(', ');
-    const heroEyebrow = isSettingsView ? 'Profile Settings' : 'Technician Identity';
-    const heroTitle = isSettingsView ? 'Profile settings' : 'Profile';
-    const heroDescription = isSettingsView
-        ? 'Update your profile, availability, password, and session access.'
-        : 'Review your technician identity and field access.';
-    const availabilityLabel = workingDayLabels || 'Not configured';
-    const summaryCards = [
-        {
-            label: 'Account',
-            value: isPreviewMode ? 'Preview' : 'Live',
-            description: isPreviewMode ? 'Read-only technician preview mode.' : 'Signed-in technician portal account.',
-            tone: 'border-white/10 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))]',
-            iconTone: 'border-white/10 bg-white/[0.04] text-white',
-            icon: User,
-        },
-        {
-            label: 'Availability',
-            value: afterHoursEnabled ? 'Open' : 'Standard',
-            description: afterHoursEnabled ? 'After-hours assignments currently enabled.' : 'Working normal shift settings only.',
-            tone: 'border-white/10 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))]',
-            iconTone: 'border-white/10 bg-white/[0.04] text-white',
-            icon: Clock,
-        },
-        {
-            label: 'Work Days',
-            value: String(workingDays.length),
-            description: availabilityLabel,
-            tone: 'border-white/10 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))]',
-            iconTone: 'border-white/10 bg-white/[0.04] text-white',
-            icon: Calendar,
-        },
-    ] as const;
+    const heroEyebrow = 'Profile Settings';
+    const heroTitle = 'Profile';
+    const heroDescription = 'Manage profile, availability, password, and session access.';
 
     return (
         <div className="tech-shell pb-32 text-slate-950 dark:text-white">
             <div className="relative w-full pb-6">
-                <div className="pointer-events-none absolute inset-x-0 top-0 h-[240px] bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.12),rgba(34,211,238,0)_32%),radial-gradient(circle_at_top_right,rgba(16,185,129,0.1),rgba(16,185,129,0)_28%)]" />
-                <div className="relative mx-auto w-full max-w-[980px] space-y-4 px-3 pt-4 sm:px-4 sm:pt-5 lg:px-6">
-                    <section className="relative overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-sm dark:border-white/10 dark:bg-[linear-gradient(135deg,rgba(7,25,42,0.98),rgba(6,18,32,0.98))] dark:shadow-[0_34px_120px_rgba(0,0,0,0.34)]">
+                <div className="pointer-events-none absolute inset-x-0 top-0 h-[200px] bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.12),rgba(34,211,238,0)_32%),radial-gradient(circle_at_top_right,rgba(16,185,129,0.1),rgba(16,185,129,0)_28%)]" />
+                <div className="relative mx-auto w-full max-w-[820px] space-y-3 px-3 pt-3 sm:px-4 sm:pt-4 lg:px-5">
+                    <section className="relative overflow-hidden rounded-[22px] border border-slate-200 bg-white shadow-sm dark:border-white/10 dark:bg-[linear-gradient(135deg,rgba(7,25,42,0.98),rgba(6,18,32,0.98))] dark:shadow-[0_24px_80px_rgba(0,0,0,0.28)]">
                         <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] bg-[size:120px_120px] opacity-20" />
                         <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/70 to-transparent" />
                         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(79,124,255,0.12),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(148,163,184,0.1),transparent_26%)]" />
-                        <div className="relative flex flex-col gap-4 p-4 sm:p-5 lg:flex-row lg:items-end lg:justify-between">
+                        <div className="relative flex flex-col gap-3 p-4 lg:flex-row lg:items-center lg:justify-between">
                             <div className="max-w-3xl">
                                 <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-700 dark:border-white/10 dark:bg-white/[0.04] dark:text-white">
                                     <Sparkles className="h-3.5 w-3.5" />
                                     {heroEyebrow}
                                 </div>
-                                <h1
-                                    className={cn(
-                                        'mt-3 whitespace-pre-line font-semibold text-slate-950 dark:text-white',
-                                        isSettingsView
-                                            ? 'text-[clamp(1.55rem,3vw,2.1rem)] leading-tight tracking-[-0.04em]'
-                                            : 'text-[clamp(1.7rem,3.4vw,2.4rem)] leading-tight tracking-[-0.05em]',
-                                    )}
-                                >
+                                <h1 className="mt-2 text-[clamp(1.45rem,3vw,1.9rem)] font-semibold leading-tight tracking-[-0.04em] text-slate-950 dark:text-white">
                                     {heroTitle}
                                 </h1>
-                                <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600 dark:text-slate-300">
+                                <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-600 dark:text-slate-300">
                                     {heroDescription}
                                 </p>
-                                <div className="mt-4 flex flex-wrap items-center gap-2">
+                                <div className="mt-3 flex flex-wrap items-center gap-2">
                                     <Badge variant="outline" className="rounded-full border-slate-200 bg-slate-50 px-3 py-1 text-[10px] uppercase tracking-[0.16em] text-slate-700 dark:border-white/10 dark:bg-white/[0.04] dark:text-white">
                                         {userName}
                                     </Badge>
@@ -461,7 +416,7 @@ export default function ProfilePage() {
                                     </Badge>
                                 </div>
                             </div>
-                            <div className="flex items-center gap-3 self-start lg:self-end">
+                            <div className="flex items-center gap-3 self-start lg:self-center">
                                 <Button
                                     variant="ghost"
                                     size="sm"
@@ -480,8 +435,6 @@ export default function ProfilePage() {
                 {loading ? <Card className="border-white/10 bg-white/[0.03] p-6 text-slate-200">Loading profile...</Card> : null}
                 {error ? <Card className="border-red-500/25 bg-red-500/10 p-4 text-sm text-red-100">{error}</Card> : null}
 
-                {isSettingsView ? (
-                    <>
                         <div className="flex items-center justify-between gap-3 px-1">
                             {isSettingsRoute ? (
                                 <Button type="button" variant="ghost" onClick={openProfileView} className="justify-start px-1 text-slate-600 hover:text-slate-950 dark:text-slate-300 dark:hover:text-white">
@@ -778,86 +731,6 @@ export default function ProfilePage() {
                                 </Button>
                             </div>
                         </Card>
-                    </>
-                ) : (
-                    <>
-                        <Card className="overflow-hidden rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(9,24,39,0.96),rgba(6,17,29,0.96))] shadow-[0_24px_80px_rgba(0,0,0,0.28)]">
-                            <div className="border-b border-white/10 px-6 py-5">
-                                <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">
-                                    <User className="h-3.5 w-3.5 text-cyan-200" />
-                                    Identity Board
-                                </div>
-                                <div className="mt-2 text-sm text-slate-300">Review your technician identity, contact channel, and workspace access.</div>
-                            </div>
-                            <div className="p-6">
-                            <div className="flex items-center gap-4">
-                                {profilePictureUrl ? (
-                                    <img src={profilePictureUrl} alt="Profile" className="w-16 h-16 rounded-full object-cover border border-white/10" />
-                                ) : (
-                                    <div className="w-16 h-16 rounded-full bg-[#2F8E92] flex items-center justify-center text-white text-2xl font-bold">
-                                        {initials}
-                                    </div>
-                                )}
-                                <div>
-                                    <h2 className="text-lg font-bold text-white">{userName}</h2>
-                                    <p className="text-sm text-slate-400">{isPreviewMode ? 'Technician (Preview)' : 'Technician'}</p>
-                                </div>
-                            </div>
-
-                            <div className="mt-6 divide-y divide-white/10">
-                                <div className="flex items-center justify-between py-3 text-sm">
-                                    <span className="text-slate-400">Email</span>
-                                    <span className="font-medium text-white">{userEmail}</span>
-                                </div>
-                                <div className="flex items-center justify-between py-3 text-sm">
-                                    <span className="text-slate-400">Phone</span>
-                                    <span className="font-medium text-white">{userPhone}</span>
-                                </div>
-                            </div>
-                            </div>
-                        </Card>
-
-                        <Card className="overflow-hidden rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,rgba(9,24,39,0.92),rgba(6,17,29,0.94))] shadow-[0_20px_70px_rgba(0,0,0,0.22)]">
-                            <div className="border-b border-white/10 px-6 py-5">
-                                <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">
-                                    <Settings className="h-3.5 w-3.5 text-cyan-200" />
-                                    Settings Access
-                                </div>
-                                <div className="mt-2 text-sm text-slate-300">Open account settings, availability controls, and password updates.</div>
-                            </div>
-                            <button
-                                type="button"
-                                className="flex w-full items-center justify-between px-6 py-5 text-left transition hover:bg-white/[0.04]"
-                                onClick={openSettingsView}
-                            >
-                                <div>
-                                    <div className="text-sm font-semibold text-white">Open Settings Workspace</div>
-                                    <div className="mt-1 text-sm text-slate-400">Manage profile details, work days, after-hours availability, and security.</div>
-                                </div>
-                                <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04]">
-                                    <ChevronRight className="w-4 h-4 text-slate-300" />
-                                </div>
-                            </button>
-                        </Card>
-
-                        <Card className="overflow-hidden rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,rgba(9,24,39,0.92),rgba(6,17,29,0.94))] shadow-[0_20px_70px_rgba(0,0,0,0.22)]">
-                            <div className="flex items-center justify-between gap-3 px-6 py-4">
-                                <div>
-                                    <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Session Actions</div>
-                                    <div className="mt-1 text-sm text-slate-300">{isPreviewMode ? 'Exit technician preview when finished reviewing.' : 'End this technician session safely.'}</div>
-                                </div>
-                                <Button
-                                    onClick={handleLogout}
-                                    variant="ghost"
-                                    className="h-11 min-w-[150px] border border-red-400/25 bg-[linear-gradient(180deg,rgba(76,18,28,0.88),rgba(44,12,19,0.92))] text-red-100 shadow-[0_14px_34px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.04)] hover:bg-[linear-gradient(180deg,rgba(96,24,36,0.92),rgba(56,15,24,0.96))] hover:text-white"
-                                >
-                                    <LogOut className="w-5 h-5 mr-2" />
-                                    {isPreviewMode ? 'Exit Preview' : 'Logout'}
-                                </Button>
-                            </div>
-                        </Card>
-                    </>
-                )}
                     </div>
                 </div>
             </div>
