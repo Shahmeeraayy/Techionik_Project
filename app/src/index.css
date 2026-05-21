@@ -3091,6 +3091,218 @@
   -webkit-text-fill-color: #ffffff !important;
 }
 
+/* Light theme polish for low-contrast controls, icons, chat surfaces, and pills. */
+.light .admin-shell [class*="bg-[#070f11]"],
+.light .admin-shell [class*="bg-[#0b1418]"],
+.light .admin-shell [class*="bg-[#111111]"],
+.light .admin-shell [class*="bg-[#171717]"],
+.light .admin-shell [class*="bg-[#1d1d1d]"],
+.light .admin-shell [class*="bg-[#252525]"],
+.light .admin-shell [class*="bg-slate-800"] {
+  background: #ffffff !important;
+  background-image: none !important;
+  border-color: rgba(148, 163, 184, 0.28) !important;
+  color: #0f172a !important;
+}
+
+.light .admin-shell [class*="text-white/"],
+.light .admin-shell [class*="text-slate-100/"],
+.light .admin-shell [class*="text-slate-200/"],
+.light .admin-shell [class*="text-slate-300/"],
+.light .admin-shell [class*="text-slate-400/"] {
+  color: #64748b !important;
+  -webkit-text-fill-color: #64748b !important;
+}
+
+.light .admin-shell svg:not([class*="text-emerald"]):not([class*="text-amber"]):not([class*="text-rose"]):not([class*="text-red"]):not([class*="text-blue"]):not([class*="text-cyan"]) {
+  color: #475569 !important;
+  opacity: 1 !important;
+}
+
+.light .admin-shell :is(button, a, [data-slot="button"])[class*="from-[#4f7cff"],
+.light .admin-shell :is(button, a, [data-slot="button"])[class*="bg-[linear-gradient(135deg,#4f7cff"],
+.light .admin-shell :is(button, a, [data-slot="button"])[class*="bg-gradient-to-r"],
+.light .admin-shell :is(button, a, [data-slot="button"])[class*="bg-[#2F8E92"],
+.light .admin-shell :is(button, a, [data-slot="button"])[class*="hover:bg-[#267276"] {
+  background: linear-gradient(135deg, #2563eb, #06b6d4) !important;
+  border-color: rgba(37, 99, 235, 0.38) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  box-shadow: 0 14px 30px rgba(37, 99, 235, 0.20) !important;
+}
+
+.light .admin-shell :is(button, a, [data-slot="button"])[class*="from-[#4f7cff"] *,
+.light .admin-shell :is(button, a, [data-slot="button"])[class*="bg-[linear-gradient(135deg,#4f7cff"] *,
+.light .admin-shell :is(button, a, [data-slot="button"])[class*="bg-gradient-to-r"] *,
+.light .admin-shell :is(button, a, [data-slot="button"])[class*="bg-[#2F8E92"] *,
+.light .admin-shell :is(button, a, [data-slot="button"])[class*="hover:bg-[#267276"] *,
+.light .admin-shell :is(button, a, [data-slot="button"])[class*="from-[#4f7cff"] svg,
+.light .admin-shell :is(button, a, [data-slot="button"])[class*="bg-[linear-gradient(135deg,#4f7cff"] svg,
+.light .admin-shell :is(button, a, [data-slot="button"])[class*="bg-gradient-to-r"] svg,
+.light .admin-shell :is(button, a, [data-slot="button"])[class*="bg-[#2F8E92"] svg,
+.light .admin-shell :is(button, a, [data-slot="button"])[class*="hover:bg-[#267276"] svg {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+.light .admin-shell :is(button, [data-slot="button"]):has(svg):not([class*="from-[#4f7cff"]):not([class*="bg-[linear-gradient(135deg,#4f7cff"]):not([class*="bg-gradient-to-r"]):not([class*="bg-[#2F8E92"]):not([class*="hover:bg-[#267276"]) {
+  background: #ffffff !important;
+  border-color: rgba(148, 163, 184, 0.34) !important;
+  color: #334155 !important;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.05) !important;
+}
+
+.light .admin-shell :is(button, [data-slot="button"]):has(svg):not([class*="from-[#4f7cff"]):not([class*="bg-[linear-gradient(135deg,#4f7cff"]):not([class*="bg-gradient-to-r"]):not([class*="bg-[#2F8E92"]):not([class*="hover:bg-[#267276"]):hover:not(:disabled) {
+  background: #f1f5f9 !important;
+  border-color: rgba(100, 116, 139, 0.40) !important;
+  color: #0f172a !important;
+}
+
+.light .admin-shell :is(button, [data-slot="button"]):has(svg):not([class*="from-[#4f7cff"]):not([class*="bg-[linear-gradient(135deg,#4f7cff"]):not([class*="bg-gradient-to-r"]):not([class*="bg-[#2F8E92"]):not([class*="hover:bg-[#267276"]):hover:not(:disabled) svg {
+  color: #0f172a !important;
+}
+
+.light .admin-shell :is(button, [data-slot="button"]):disabled svg,
+.light .admin-shell [aria-disabled="true"] svg,
+.light .admin-shell [data-disabled] svg {
+  color: #94a3b8 !important;
+  opacity: 1 !important;
+}
+
+.light .admin-shell [data-slot="badge"],
+.light .admin-shell [class*="rounded-full"][class*="px-2"],
+.light .admin-shell [class*="rounded-full"][class*="px-3"] {
+  background: #f8fafc !important;
+  border-color: rgba(148, 163, 184, 0.34) !important;
+  color: #334155 !important;
+  -webkit-text-fill-color: #334155 !important;
+}
+
+.light .admin-shell [class*="bg-cyan-500/"],
+.light .admin-shell [class*="bg-blue-500/"] {
+  background: #dbeafe !important;
+  border-color: rgba(37, 99, 235, 0.28) !important;
+  color: #1d4ed8 !important;
+  -webkit-text-fill-color: #1d4ed8 !important;
+}
+
+.light .admin-shell [class*="bg-red-500/"],
+.light .admin-shell [class*="bg-rose-500/"] {
+  background: #ffe4e6 !important;
+  border-color: rgba(225, 29, 72, 0.28) !important;
+  color: #be123c !important;
+  -webkit-text-fill-color: #be123c !important;
+}
+
+.light .admin-shell [class*="bg-emerald-500/"] {
+  background: #dcfce7 !important;
+  border-color: rgba(5, 150, 105, 0.28) !important;
+  color: #047857 !important;
+  -webkit-text-fill-color: #047857 !important;
+}
+
+.light .admin-shell [class*="bg-amber-500/"] {
+  background: #fef3c7 !important;
+  border-color: rgba(217, 119, 6, 0.28) !important;
+  color: #b45309 !important;
+  -webkit-text-fill-color: #b45309 !important;
+}
+
+.light .admin-shell .admin-dark-scrollbar,
+.light .admin-shell .admin-dark-scrollbar * {
+  scrollbar-color: rgba(148, 163, 184, 0.72) #f8fafc;
+}
+
+.light .admin-shell .admin-dark-scrollbar::-webkit-scrollbar-track,
+.light .admin-shell .admin-dark-scrollbar *::-webkit-scrollbar-track {
+  background: #f8fafc !important;
+}
+
+.light .admin-shell .admin-dark-scrollbar::-webkit-scrollbar-thumb,
+.light .admin-shell .admin-dark-scrollbar *::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.72) !important;
+  border-color: #f8fafc !important;
+}
+
+.light :is(
+  [data-slot="sheet-content"],
+  [data-slot="dialog-content"],
+  [data-slot="dropdown-menu-content"],
+  [data-slot="popover-content"],
+  [data-slot="select-content"]
+) svg:not([class*="text-emerald"]):not([class*="text-amber"]):not([class*="text-rose"]):not([class*="text-red"]):not([class*="text-blue"]):not([class*="text-cyan"]) {
+  color: #475569 !important;
+  opacity: 1 !important;
+}
+
+.light :is(
+  [data-slot="sheet-content"],
+  [data-slot="dialog-content"],
+  [data-slot="dropdown-menu-content"],
+  [data-slot="popover-content"],
+  [data-slot="select-content"]
+) [class*="text-white/"],
+.light :is(
+  [data-slot="sheet-content"],
+  [data-slot="dialog-content"],
+  [data-slot="dropdown-menu-content"],
+  [data-slot="popover-content"],
+  [data-slot="select-content"]
+) [class*="text-slate-100/"],
+.light :is(
+  [data-slot="sheet-content"],
+  [data-slot="dialog-content"],
+  [data-slot="dropdown-menu-content"],
+  [data-slot="popover-content"],
+  [data-slot="select-content"]
+) [class*="text-slate-200/"],
+.light :is(
+  [data-slot="sheet-content"],
+  [data-slot="dialog-content"],
+  [data-slot="dropdown-menu-content"],
+  [data-slot="popover-content"],
+  [data-slot="select-content"]
+) [class*="text-slate-300/"],
+.light :is(
+  [data-slot="sheet-content"],
+  [data-slot="dialog-content"],
+  [data-slot="dropdown-menu-content"],
+  [data-slot="popover-content"],
+  [data-slot="select-content"]
+) [class*="text-slate-400/"] {
+  color: #64748b !important;
+  -webkit-text-fill-color: #64748b !important;
+}
+
+.light :is(
+  [data-slot="sheet-content"],
+  [data-slot="dialog-content"],
+  [data-slot="dropdown-menu-content"],
+  [data-slot="popover-content"],
+  [data-slot="select-content"]
+) [data-slot="dialog-close"],
+.light :is(
+  [data-slot="sheet-content"],
+  [data-slot="dialog-content"]
+) [data-slot="sheet-close"] {
+  background: #ffffff !important;
+  border: 1px solid rgba(148, 163, 184, 0.34) !important;
+  color: #334155 !important;
+  opacity: 1 !important;
+}
+
+.light :is(
+  [data-slot="sheet-content"],
+  [data-slot="dialog-content"]
+) [data-slot="dialog-close"]:hover,
+.light :is(
+  [data-slot="sheet-content"],
+  [data-slot="dialog-content"]
+) [data-slot="sheet-close"]:hover {
+  background: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+
 /* Print Styles */
 @media print {
   .no-print {
