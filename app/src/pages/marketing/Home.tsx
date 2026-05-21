@@ -495,11 +495,16 @@ function DemoModulePreview({ screen }: { screen: typeof demoScreens[number] }) {
               <p className="font-semibold">Revenue and job trend</p>
               <button className="rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-slate-950">Export PDF</button>
             </div>
-            <div className="mt-6 flex h-52 items-end gap-3">
-              {[42, 58, 49, 72, 66, 88, 94].map((height, index) => (
-                <div key={height} className="flex flex-1 flex-col items-center gap-2">
-                  <div className="w-full rounded-t-2xl bg-gradient-to-t from-blue-600 to-cyan-300" style={{ height: `${height}%` }} />
-                  <span className="text-[10px] text-slate-500">D{index + 1}</span>
+            <div className="mt-6 flex h-52 items-end gap-3 rounded-2xl border border-white/10 bg-slate-950/70 p-4">
+              {[72, 104, 88, 132, 118, 154, 168].map((height, index) => (
+                <div key={`${height}-${index}`} className="flex h-full flex-1 flex-col justify-end gap-2">
+                  <div className="relative flex flex-1 items-end">
+                    <div
+                      className="w-full rounded-t-2xl bg-gradient-to-t from-blue-600 via-cyan-500 to-cyan-200 shadow-[0_0_22px_rgba(34,211,238,0.22)]"
+                      style={{ height: `${height}px` }}
+                    />
+                  </div>
+                  <span className="text-center text-[10px] text-slate-500">D{index + 1}</span>
                 </div>
               ))}
             </div>
@@ -533,10 +538,15 @@ function DemoModulePreview({ screen }: { screen: typeof demoScreens[number] }) {
             </div>
             <div className="mt-6 grid gap-5 md:grid-cols-[1fr_0.8fr]">
               <div className="flex h-40 items-end gap-3 rounded-2xl border border-white/10 bg-slate-950/70 p-4">
-                {[48, 62, 54, 76, 68, 84, 92].map((height, index) => (
-                  <div key={height} className="flex flex-1 flex-col items-center gap-2">
-                    <div className="w-full rounded-t-xl bg-gradient-to-t from-blue-600 to-cyan-300" style={{ height: `${height}%` }} />
-                    <span className="text-[10px] text-slate-500">{['7a', '9a', '11a', '1p', '3p', '5p', '7p'][index]}</span>
+                {[42, 58, 50, 76, 66, 92, 108].map((height, index) => (
+                  <div key={`${height}-${index}`} className="flex h-full flex-1 flex-col justify-end gap-2">
+                    <div className="relative flex flex-1 items-end">
+                      <div
+                        className="w-full rounded-t-xl bg-gradient-to-t from-blue-600 via-cyan-500 to-cyan-200 shadow-[0_0_18px_rgba(34,211,238,0.2)]"
+                        style={{ height: `${height}px` }}
+                      />
+                    </div>
+                    <span className="text-center text-[10px] text-slate-500">{['7a', '9a', '11a', '1p', '3p', '5p', '7p'][index]}</span>
                   </div>
                 ))}
               </div>
