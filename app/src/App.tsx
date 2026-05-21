@@ -99,6 +99,14 @@ function App() {
               </RequireRole>
             }
           />
+          <Route
+            path="/admin/tech-preview/:techId/attendance"
+            element={
+              <RequireRole role="admin">
+                <TechnicianAttendancePage />
+              </RequireRole>
+            }
+          />
           {/* Backward compatibility aliases */}
           <Route
             path="/admin/tech-preview/:techId/available-jobs"

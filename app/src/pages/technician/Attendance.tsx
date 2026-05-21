@@ -66,6 +66,7 @@ export default function TechnicianAttendancePage() {
   const techId = useTechId();
   const techName = useTechName();
   const isPreview = !!useParams<{ techId?: string }>().techId && !!getStoredAdminToken();
+  const routeBase = isPreview && techId ? `/admin/tech-preview/${techId}` : '/tech';
   useLiveTick();
 
   const [session, setSession] = useState<AttendanceSession | null>(null);
@@ -336,7 +337,7 @@ export default function TechnicianAttendancePage() {
         )}
       </div>
 
-      <TechnicianBottomNav activeTab="attendance" routeBase="/tech" />
+      <TechnicianBottomNav activeTab="attendance" routeBase={routeBase} />
     </div>
   );
 }
