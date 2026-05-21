@@ -86,7 +86,6 @@ function Sidebar({
   unreadChatCount: number;
 }) {
   const location = useLocation();
-  const { logout } = useAuth();
   const activeItem = location.pathname;
   const settingsActive = activeItem === '/admin/settings' || activeItem.startsWith('/admin/settings');
 
@@ -192,7 +191,7 @@ function Sidebar({
           })}
         </nav>
 
-        <div className={cn('mt-auto border-t border-border p-4 space-y-2', isCollapsed ? 'lg:p-3 lg:space-y-2' : '')}>
+        <div className={cn('mt-auto border-t border-border p-4', isCollapsed ? 'lg:p-3' : '')}>
           <Link
             to="/admin/settings"
             onClick={onClose}
@@ -208,18 +207,6 @@ function Sidebar({
             <Settings className="h-4.5 w-4.5" />
             <span className={cn(isCollapsed && 'lg:hidden')}>Settings</span>
           </Link>
-
-          <button
-            onClick={logout}
-            className={cn(
-              'flex items-center rounded-2xl text-sm font-semibold text-slate-500 transition-all hover:bg-rose-50 hover:text-rose-700 dark:text-zinc-300 dark:hover:bg-[#1d1d1d] dark:hover:text-white',
-              isCollapsed ? 'w-full gap-3 px-4 py-3 lg:h-10 lg:w-10 lg:justify-center lg:gap-0 lg:rounded-full lg:px-0' : 'w-full gap-3 px-4 py-3',
-            )}
-            title="Log out"
-          >
-            <LogOut className="h-4.5 w-4.5" />
-            <span className={cn(isCollapsed && 'lg:hidden')}>Log out</span>
-          </button>
         </div>
 
       </aside>
