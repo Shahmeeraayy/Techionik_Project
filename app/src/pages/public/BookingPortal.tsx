@@ -214,7 +214,7 @@ export default function BookingPortalPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#07101d] text-white">
+    <div className="booking-portal-shell min-h-screen bg-[#07101d] text-white">
 
       {/* ── Top Navigation ── */}
       <header className="border-b border-white/[0.06] bg-[rgba(7,16,29,0.95)] backdrop-blur-md">

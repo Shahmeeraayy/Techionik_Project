@@ -103,7 +103,7 @@ export default function TechnicianLoginPage() {
   const fieldInputStyle = { backgroundColor: '#0a1220', color: '#f8fafc', WebkitTextFillColor: '#f8fafc' } as const;
 
   return (
-    <main className="relative min-h-[100svh] overflow-hidden bg-[#05070b] text-white">
+    <main className="auth-shell relative min-h-[100svh] overflow-hidden bg-[#05070b] text-white">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_18%,rgba(79,124,255,0.2),transparent_27%),radial-gradient(circle_at_82%_12%,rgba(34,211,238,0.14),transparent_25%),linear-gradient(180deg,#0b1220_0%,#05070b_55%,#020617_100%)]" />
       <div className="pointer-events-none absolute inset-0 opacity-30 [background-image:linear-gradient(rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] [background-size:104px_104px]" />
 

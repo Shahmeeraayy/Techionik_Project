@@ -2094,7 +2094,7 @@
   }
 }
 
-.admin-shell [data-admin-dark-input="true"] {
+.dark .admin-shell [data-admin-dark-input="true"] {
   background: #0b1424 !important;
   background-image: none !important;
   border-color: rgba(148, 163, 184, 0.18) !important;
@@ -2102,8 +2102,8 @@
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
 }
 
-.admin-shell [data-admin-dark-input="true"]:focus,
-.admin-shell [data-admin-dark-input="true"]:focus-visible {
+.dark .admin-shell [data-admin-dark-input="true"]:focus,
+.dark .admin-shell [data-admin-dark-input="true"]:focus-visible {
   background: #0b1424 !important;
   background-image: none !important;
   border-color: rgba(103, 232, 249, 0.5) !important;
@@ -2112,18 +2112,200 @@
     0 0 0 3px rgba(103, 232, 249, 0.14) !important;
 }
 
-.admin-shell [data-admin-dark-input="true"]::placeholder {
+.dark .admin-shell [data-admin-dark-input="true"]::placeholder {
   color: #8ea3c5 !important;
 }
 
-.admin-shell .intake-queue-grid-header {
+.dark .admin-shell .intake-queue-grid-header {
   background: linear-gradient(180deg, rgb(0, 16, 37), rgba(1, 12, 29, 0.92)) !important;
   border-color: rgba(255, 255, 255, 0.1) !important;
   box-shadow: none !important;
 }
 
-.admin-shell .intake-queue-grid-header > div {
+.dark .admin-shell .intake-queue-grid-header > div {
   color: #8ea3c5 !important;
+}
+
+.light .admin-shell [data-admin-dark-input="true"],
+.light .admin-shell input,
+.light .admin-shell textarea,
+.light .admin-shell select,
+.light .admin-shell [data-slot="select-trigger"] {
+  background: #ffffff !important;
+  background-image: none !important;
+  border-color: rgba(148, 163, 184, 0.32) !important;
+  color: #0f172a !important;
+  box-shadow: inset 0 1px 0 rgba(15, 23, 42, 0.02) !important;
+  -webkit-text-fill-color: #0f172a !important;
+  color-scheme: light !important;
+}
+
+.light .admin-shell input::placeholder,
+.light .admin-shell textarea::placeholder,
+.light .admin-shell [data-admin-dark-input="true"]::placeholder {
+  color: #94a3b8 !important;
+  -webkit-text-fill-color: #94a3b8 !important;
+}
+
+.light .admin-shell .intake-queue-grid-header {
+  background: #f8fafc !important;
+  border-color: rgba(148, 163, 184, 0.24) !important;
+  box-shadow: none !important;
+}
+
+.light .admin-shell .intake-queue-grid-header > div {
+  color: #64748b !important;
+}
+
+.light .admin-shell [class*="bg-[#0d1829]"],
+.light .admin-shell [class*="bg-[#0b1424]"],
+.light .admin-shell [class*="bg-[#091827]"],
+.light .admin-shell [class*="bg-[#07101d]"],
+.light .admin-shell [class*="bg-[#020617]"],
+.light .admin-shell [class*="bg-slate-950"],
+.light .admin-shell [class*="bg-slate-900"],
+.light .admin-shell [class*="bg-zinc-950"] {
+  background: #ffffff !important;
+  background-image: none !important;
+  border-color: rgba(148, 163, 184, 0.24) !important;
+  color: #0f172a !important;
+}
+
+.light .admin-shell [class*="text-white"],
+.light .admin-shell [class*="text-slate-100"],
+.light .admin-shell [class*="text-slate-200"] {
+  color: #0f172a !important;
+}
+
+.light .admin-shell [class*="text-slate-300"],
+.light .admin-shell [class*="text-slate-400"],
+.light .admin-shell [class*="text-slate-500"] {
+  color: #64748b !important;
+}
+
+.light .admin-shell button[class*="bg-[linear-gradient"],
+.light .admin-shell a[class*="bg-[linear-gradient"],
+.light .admin-shell [class*="from-[#4f7cff"],
+.light .admin-shell [class*="from-[#0ca6a6"],
+.light .admin-shell [class*="bg-gradient-to-r"] {
+  color: #ffffff !important;
+}
+
+.light .admin-shell button[class*="bg-[linear-gradient"] *,
+.light .admin-shell a[class*="bg-[linear-gradient"] *,
+.light .admin-shell [class*="from-[#4f7cff"] *,
+.light .admin-shell [class*="from-[#0ca6a6"] *,
+.light .admin-shell [class*="bg-gradient-to-r"] * {
+  color: #ffffff !important;
+}
+
+.light .admin-sidebar a[class*="bg-[#111827]"],
+.light .admin-sidebar a[class*="bg-[#111827]"] > span {
+  color: #ffffff !important;
+}
+
+.light .admin-sidebar a[class*="bg-[#111827]"] > div {
+  background: #ffffff !important;
+  color: #111827 !important;
+}
+
+.light .auth-shell,
+.light .booking-portal-shell {
+  background: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+.light .auth-shell > .pointer-events-none:first-child,
+.light .booking-portal-shell {
+  background-image:
+    radial-gradient(circle at 18% 18%, rgba(79, 124, 255, 0.12), transparent 28%),
+    radial-gradient(circle at 82% 12%, rgba(34, 211, 238, 0.10), transparent 24%),
+    linear-gradient(180deg, #f8fafc 0%, #ffffff 54%, #eef2f7 100%) !important;
+}
+
+.light .auth-shell [class*="bg-[linear-gradient(180deg"],
+.light .auth-shell [class*="bg-white/["],
+.light .auth-shell [class*="bg-[#0a1220]"],
+.light .auth-shell [class*="bg-black"],
+.light .booking-portal-shell header,
+.light .booking-portal-shell section,
+.light .booking-portal-shell [class*="bg-[rgba(10,18,32"],
+.light .booking-portal-shell [class*="bg-[rgba(11,25,42"],
+.light .booking-portal-shell [class*="bg-white/["],
+.light .booking-portal-shell [class*="bg-black"] {
+  background: rgba(255, 255, 255, 0.96) !important;
+  background-image: none !important;
+  border-color: rgba(148, 163, 184, 0.22) !important;
+  color: #0f172a !important;
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.08) !important;
+}
+
+.light .auth-shell input,
+.light .auth-shell textarea,
+.light .auth-shell select,
+.light .booking-portal-shell input,
+.light .booking-portal-shell textarea,
+.light .booking-portal-shell select,
+.light .booking-portal-shell [data-slot="select-trigger"] {
+  background: #ffffff !important;
+  background-image: none !important;
+  border-color: rgba(148, 163, 184, 0.32) !important;
+  color: #0f172a !important;
+  -webkit-text-fill-color: #0f172a !important;
+  color-scheme: light !important;
+}
+
+.light .auth-shell input::placeholder,
+.light .auth-shell textarea::placeholder,
+.light .booking-portal-shell input::placeholder,
+.light .booking-portal-shell textarea::placeholder {
+  color: #94a3b8 !important;
+  -webkit-text-fill-color: #94a3b8 !important;
+}
+
+.light .auth-shell .text-white,
+.light .auth-shell .text-slate-100,
+.light .auth-shell .text-slate-200,
+.light .booking-portal-shell .text-white,
+.light .booking-portal-shell .text-slate-100,
+.light .booking-portal-shell .text-slate-200 {
+  color: #0f172a !important;
+}
+
+.light .auth-shell .text-slate-300,
+.light .auth-shell .text-slate-400,
+.light .auth-shell .text-slate-500,
+.light .booking-portal-shell .text-slate-300,
+.light .booking-portal-shell .text-slate-400,
+.light .booking-portal-shell .text-slate-500 {
+  color: #64748b !important;
+}
+
+.light .auth-shell button[class*="bg-[linear-gradient"],
+.light .auth-shell a[class*="bg-[linear-gradient"],
+.light .auth-shell [class*="from-[#4f7cff"],
+.light .auth-shell [class*="bg-gradient-to-r"],
+.light .booking-portal-shell button[class*="bg-[linear-gradient"],
+.light .booking-portal-shell a[class*="bg-[linear-gradient"],
+.light .booking-portal-shell [class*="from-[#4f7cff"],
+.light .booking-portal-shell [class*="bg-gradient-to-r"] {
+  color: #ffffff !important;
+}
+
+.light .auth-shell button[class*="bg-[linear-gradient"] *,
+.light .auth-shell a[class*="bg-[linear-gradient"] *,
+.light .auth-shell [class*="from-[#4f7cff"] *,
+.light .auth-shell [class*="bg-gradient-to-r"] *,
+.light .booking-portal-shell button[class*="bg-[linear-gradient"] *,
+.light .booking-portal-shell a[class*="bg-[linear-gradient"] *,
+.light .booking-portal-shell [class*="from-[#4f7cff"] *,
+.light .booking-portal-shell [class*="bg-gradient-to-r"] * {
+  color: #ffffff !important;
+}
+
+.light .auth-shell .bg-clip-text,
+.light .booking-portal-shell .bg-clip-text {
+  color: transparent !important;
 }
 
 /* Print Styles */

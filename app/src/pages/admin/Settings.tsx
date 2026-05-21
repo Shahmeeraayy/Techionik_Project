@@ -314,11 +314,6 @@ export default function SettingsPage() {
     };
 
     const { theme, setTheme } = useTheme();
-    useEffect(() => {
-        if (theme !== 'dark') {
-            setTheme('dark');
-        }
-    }, [theme, setTheme]);
 
     const refreshSettingsData = useCallback(async () => {
         const localProfile = loadInvoiceCompanyProfile();
@@ -716,8 +711,24 @@ export default function SettingsPage() {
                         <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">CRM Theme</p>
                         <p className="mt-2 text-[2rem] font-bold leading-none text-white">{theme === 'dark' ? 'Dark' : theme === 'light' ? 'Light' : 'System'}</p>
                         <div className="mt-3 flex items-center justify-between">
-                            <p className="text-sm text-cyan-300">High-performance mode active</p>
+                            <p className="text-sm text-cyan-300">Workspace appearance</p>
                             <Monitor className="h-5 w-5 text-cyan-400" />
+                        </div>
+                        <div className="mt-4 grid grid-cols-3 gap-2">
+                            {(['dark', 'light', 'system'] as const).map((option) => (
+                                <button
+                                    key={option}
+                                    type="button"
+                                    onClick={() => setTheme(option)}
+                                    className={`rounded-xl border px-3 py-2 text-xs font-semibold capitalize transition-colors ${
+                                        theme === option
+                                            ? 'border-cyan-300/40 bg-cyan-300/15 text-cyan-200'
+                                            : 'border-white/10 bg-white/[0.03] text-slate-400 hover:bg-white/[0.06] hover:text-slate-100'
+                                    }`}
+                                >
+                                    {option}
+                                </button>
+                            ))}
                         </div>
                     </div>
                 </div>
