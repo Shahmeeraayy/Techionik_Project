@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { AuthSplitShell, authInputClass, authInputStyle, authLabelClass, authPanelClass, authPrimaryButtonClass } from './AuthSplitShell';
+import { AuthSplitShell, authInputClass, authInputStyle, authLabelClass, authPrimaryButtonClass } from './AuthSplitShell';
 
 function slugifyWorkspace(value: string) {
   return value
@@ -66,26 +66,12 @@ export default function AdminSignupPage() {
     <AuthSplitShell
       accent="signup"
       badge="NexusOps Signup"
-      eyebrow="Welcome"
-      title={<>Create account</>}
-      description=""
+      title={<>Create your workspace</>}
+      description="Set up your company workspace and start managing service operations from one secure dashboard."
       chips={[]}
-      footer={
-        <div className="rounded-[22px] border border-[rgba(148,163,184,0.18)] bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] px-4 py-4 text-white shadow-[0_18px_54px_rgba(2,6,23,0.24),inset_0_1px_0_rgba(255,255,255,0.045)] sm:flex sm:min-h-[112px] sm:items-center sm:justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-white/70">Already have a workspace?</p>
-            <p className="mt-2 text-sm leading-6 text-white/84">
-              Sign back in to continue running dispatch.
-            </p>
-          </div>
-          <Link to="/admin/login" className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-white hover:text-white/80 sm:mt-0">
-            Go to admin login
-            <ArrowRight className="h-4 w-4" />
-          </Link>
-        </div>
-      }
+      contentFrame={false}
     >
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="mx-auto max-w-md space-y-4 text-left">
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2 sm:col-span-2">
             <Label htmlFor="company-name" className={authLabelClass}>
@@ -115,9 +101,9 @@ export default function AdminSignupPage() {
               className={authInputClass}
               style={authInputStyle}
             />
-            <div className={`${authPanelClass} flex items-center gap-2 py-3 text-xs text-white/88`}>
-              <Building2 className="h-3.5 w-3.5 text-white" />
-              <span>{workspacePreview}</span>
+            <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.035] px-3 py-2 text-xs font-medium text-white/72">
+              <Building2 className="h-3.5 w-3.5 text-cyan-100" />
+              <span className="break-all">{workspacePreview}</span>
             </div>
           </div>
 
@@ -186,7 +172,7 @@ export default function AdminSignupPage() {
           </div>
         </div>
 
-        <div className={`${authPanelClass} flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between`}>
+        <div className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-white/[0.035] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
           <label className="flex items-center">
             <input
               type="checkbox"
@@ -218,6 +204,13 @@ export default function AdminSignupPage() {
             {!isSubmitting ? <ArrowRight className="ml-2 h-4 w-4" /> : null}
           </span>
         </Button>
+
+        <div className="text-center text-sm text-white/62">
+          Already have an account?{' '}
+          <Link to="/admin/login" className="font-semibold text-cyan-100 hover:text-white">
+            Sign in
+          </Link>
+        </div>
       </form>
     </AuthSplitShell>
   );
