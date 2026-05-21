@@ -581,7 +581,7 @@ export default function ReportsPage() {
           <p className="mt-1 text-sm text-slate-400">Live dispatch, intake, and capacity indicators for the selected range.</p>
         </div>
 
-        <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
+        <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
           <Card className={sectionCardClass}>
             <div className={sectionHeaderClass}>
               <h2 className="text-base font-semibold text-slate-950 dark:text-white">Dispatch Overview</h2>
@@ -621,12 +621,7 @@ export default function ReportsPage() {
             </div>
           </Card>
 
-          <div className="pt-2 xl:col-span-2">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-100">Financial Performance</p>
-            <p className="mt-1 text-sm text-slate-400">Invoice lifecycle and billing value from real invoice records.</p>
-          </div>
-
-          <Card className={cn(sectionCardClass, 'xl:col-span-2')}>
+          <Card className={sectionCardClass}>
             <div className={sectionHeaderClass}>
               <h2 className="text-base font-semibold text-slate-950 dark:text-white">Intake Analytics</h2>
               <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Source channels, conversion, dismissed reasons, and intake-to-job timing.</p>
@@ -669,7 +664,7 @@ export default function ReportsPage() {
             </div>
           </Card>
 
-          <Card className={sectionCardClass}>
+          <Card className={cn(sectionCardClass, 'xl:col-span-2')}>
             <div className={sectionHeaderClass}>
               <h2 className="text-base font-semibold text-slate-950 dark:text-white">Capacity Planning</h2>
               <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Utilization by weekday, peak demand windows, and understaffed periods.</p>
