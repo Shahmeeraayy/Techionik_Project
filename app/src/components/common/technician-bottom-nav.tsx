@@ -77,7 +77,7 @@ export default function TechnicianBottomNav({
             <div className="mx-auto flex w-full max-w-[760px] justify-end px-2 pb-2">
                 <TechnicianThemeToggle />
             </div>
-            <div className="tech-nav-dock pointer-events-auto mx-auto w-full max-w-[760px] rounded-[28px] px-2 py-2">
+            <div className="tech-nav-dock pointer-events-auto mx-auto w-full max-w-[760px] rounded-[28px] border border-slate-200 bg-white px-2 py-2 shadow-[0_18px_42px_rgba(15,23,42,0.14)] dark:border-white/10 dark:bg-[#111111] dark:shadow-[0_20px_70px_rgba(0,0,0,0.34)]">
                 <div className="flex items-center justify-around gap-1">
                     {tabs.map((tab) => {
                         const Icon = tab.icon;
@@ -86,12 +86,13 @@ export default function TechnicianBottomNav({
                         return (
                             <button
                                 key={tab.id}
+                                data-active={isActive ? 'true' : 'false'}
                                 onClick={() => navigate(tab.path)}
                                 className={cn(
                                     'group relative flex min-h-[60px] flex-1 flex-col items-center justify-center gap-1 overflow-hidden rounded-2xl px-2 py-2.5 transition-all duration-200',
                                     isActive
-                                        ? 'border border-white/10 bg-[#252525] text-white shadow-[0_18px_34px_rgba(0,0,0,0.28),inset_0_0_0_1px_rgba(255,255,255,0.05)]'
-                                        : 'border border-transparent text-slate-500 hover:border-white/8 hover:bg-[#171717] hover:text-slate-200',
+                                        ? 'border border-blue-700 bg-blue-600 text-white shadow-[0_14px_28px_rgba(37,99,235,0.22)] dark:border-white/10 dark:bg-[#252525] dark:shadow-[0_18px_34px_rgba(0,0,0,0.28),inset_0_0_0_1px_rgba(255,255,255,0.05)]'
+                                        : 'border border-transparent text-slate-600 hover:border-slate-200 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-500 dark:hover:border-white/8 dark:hover:bg-[#171717] dark:hover:text-slate-200',
                                 )}
                             >
                                 {isActive ? (

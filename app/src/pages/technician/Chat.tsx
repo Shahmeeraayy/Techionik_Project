@@ -368,17 +368,17 @@ export default function TechnicianChatPage() {
                 </div>
               </ScrollArea>
 
-              <div className="border-t border-white/8 bg-[rgba(6,17,29,0.9)] p-5">
+              <div className="border-t border-slate-200 bg-white p-5 dark:border-white/8 dark:bg-[rgba(6,17,29,0.9)]">
                 {pendingAttachments.length > 0 ? (
                   <div className="mb-3 flex flex-wrap gap-2">
                     {pendingAttachments.map((attachment) => (
-                      <div key={attachment.id} className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-slate-200">
+                      <div key={attachment.id} className="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-slate-50 px-3 py-1.5 text-xs text-slate-700 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-200">
                         {attachment.mime_type.startsWith('image/') ? <ImageIcon className="h-3.5 w-3.5" /> : <File className="h-3.5 w-3.5" />}
                         <span>{attachment.name}</span>
                         <button
                           type="button"
                           onClick={() => setPendingAttachments((prev) => prev.filter((item) => item.id !== attachment.id))}
-                          className="rounded-full p-0.5 text-slate-400 hover:bg-white/[0.08] hover:text-white"
+                          className="rounded-full p-0.5 text-slate-600 hover:bg-slate-200 hover:text-slate-950 dark:text-slate-400 dark:hover:bg-white/[0.08] dark:hover:text-white"
                         >
                           <X className="h-3 w-3" />
                         </button>
@@ -393,7 +393,7 @@ export default function TechnicianChatPage() {
                     variant="ghost"
                     size="icon"
                     onClick={() => fileInputRef.current?.click()}
-                    className="h-12 w-12 shrink-0 rounded-full border border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.98),rgba(8,12,20,0.98))] text-slate-100 shadow-[0_12px_30px_rgba(0,0,0,0.24)] hover:bg-[linear-gradient(180deg,rgba(24,38,64,0.98),rgba(12,20,34,0.98))] hover:text-white"
+                    className="tech-chat-attach-button h-12 w-12 shrink-0 rounded-full border border-slate-300 bg-white text-slate-700 shadow-sm hover:bg-slate-100 hover:text-slate-950 disabled:bg-slate-100 disabled:text-slate-400 dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(15,23,42,0.98),rgba(8,12,20,0.98))] dark:text-slate-100 dark:shadow-[0_12px_30px_rgba(0,0,0,0.24)] dark:hover:bg-[linear-gradient(180deg,rgba(24,38,64,0.98),rgba(12,20,34,0.98))] dark:hover:text-white"
                     disabled={isPreviewMode}
                   >
                     <Paperclip className="h-4 w-4" />
@@ -411,13 +411,13 @@ export default function TechnicianChatPage() {
                     onChange={(event) => setDraftMessage(event.target.value)}
                     onKeyDown={handleKeyDown}
                     placeholder={isPreviewMode ? 'Preview mode is read-only' : 'Write a message'}
-                    className="min-h-[56px] resize-none rounded-[28px] border-white/10 bg-white/[0.04] px-5 py-4 text-white placeholder:text-slate-500"
+                    className="min-h-[56px] resize-none rounded-[28px] border border-slate-300 bg-white px-5 py-4 text-slate-900 placeholder:text-slate-400 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-slate-500"
                     disabled={isPreviewMode}
                   />
                   <Button
                     type="button"
                     onClick={() => void handleSend()}
-                    className="tech-chat-send-button h-12 w-12 shrink-0 rounded-full bg-[linear-gradient(135deg,#4f7cff,#7aa2ff)] text-white shadow-[0_18px_40px_rgba(79,124,255,0.24)] hover:bg-[linear-gradient(135deg,#5d88ff,#89adff)]"
+                    className="tech-chat-send-button h-12 w-12 shrink-0 rounded-full border border-blue-700 bg-blue-600 text-white shadow-[0_16px_34px_rgba(37,99,235,0.22)] hover:bg-blue-700 disabled:border-blue-200 disabled:bg-blue-100 disabled:text-blue-500 dark:border-transparent dark:bg-[linear-gradient(135deg,#4f7cff,#7aa2ff)] dark:shadow-[0_18px_40px_rgba(79,124,255,0.24)] dark:hover:bg-[linear-gradient(135deg,#5d88ff,#89adff)]"
                     disabled={isPreviewMode}
                     aria-label="Send message"
                   >
