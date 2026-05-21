@@ -640,11 +640,11 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
                   <Button
                     variant="outline"
                     size="icon"
-                    className="h-9 w-9 rounded-full border-border text-muted-foreground hover:text-primary hover:border-primary hover:bg-muted transition-all"
+                    className="h-9 w-9 rounded-full border-slate-300 bg-white text-slate-700 transition-all hover:border-blue-500 hover:bg-blue-50 hover:text-blue-700 dark:border-border dark:bg-white/[0.03] dark:text-muted-foreground dark:hover:border-primary dark:hover:bg-muted dark:hover:text-primary"
                     onClick={handleRefresh}
                     title="Refresh Data"
                   >
-                    <RefreshCw className="w-4 h-4" />
+                    <RefreshCw className="h-4 w-4 text-current" />
                   </Button>
 
                   <div className="h-6 w-px bg-border/60 hidden sm:block"></div>

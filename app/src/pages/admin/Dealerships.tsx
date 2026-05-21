@@ -939,8 +939,8 @@ export default function DealershipsPage() {
                             <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-slate-300">
                                 Last updated: {lastSuccessfulFetchAt ? lastSuccessfulFetchAt.toLocaleTimeString() : 'Never'}
                             </span>
-                            <Button variant="outline" size="sm" onClick={fetchDealerships} disabled={loading} className="h-10 gap-2 rounded-full border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]">
-                                <RefreshCw className={cn("w-4 h-4 text-cyan-200", loading && "animate-spin")} />
+                            <Button variant="outline" size="sm" onClick={fetchDealerships} disabled={loading} className="h-10 gap-2 rounded-full border-slate-300 bg-white text-slate-900 hover:bg-slate-50 hover:text-slate-950 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-100 dark:hover:bg-white/[0.08] dark:hover:text-white">
+                                <RefreshCw className={cn("w-4 h-4 text-blue-600 dark:text-cyan-200", loading && "animate-spin")} />
                                 Refresh
                             </Button>
                             <Button variant="outline" size="sm" onClick={() => setExportModalOpen(true)} className="h-10 gap-2 rounded-full border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]">

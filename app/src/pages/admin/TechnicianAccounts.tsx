@@ -388,9 +388,9 @@ export default function TechnicianAccountsPage() {
                 size="sm"
                 onClick={() => { void runSync(); }}
                 disabled={isRefreshing}
-                className="h-10 gap-2 rounded-full border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
+                className="h-10 gap-2 rounded-full border-slate-300 bg-white text-slate-900 hover:bg-slate-50 hover:text-slate-950 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-100 dark:hover:bg-white/[0.08] dark:hover:text-white"
               >
-                <RefreshCw className={cn('w-4 h-4 text-cyan-200', isRefreshing && 'animate-spin')} />
+                <RefreshCw className={cn('w-4 h-4 text-blue-600 dark:text-cyan-200', isRefreshing && 'animate-spin')} />
                 Refresh
               </Button>
             </div>

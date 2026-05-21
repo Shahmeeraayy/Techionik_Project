@@ -1302,8 +1302,8 @@ export default function TechniciansPage() {
                             </div>
                         </div>
                         <div className="flex flex-wrap items-center justify-end gap-3">
-                            <Button variant="outline" size="sm" onClick={() => void fetchTechs()} className="h-10 gap-2 rounded-full border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]" disabled={loading}>
-                                <RefreshCw className={cn('w-4 h-4 text-cyan-200', loading && 'animate-spin')} /> Refresh
+                            <Button variant="outline" size="sm" onClick={() => void fetchTechs()} className="h-10 gap-2 rounded-full border-slate-300 bg-white text-slate-900 hover:bg-slate-50 hover:text-slate-950 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-100 dark:hover:bg-white/[0.08] dark:hover:text-white" disabled={loading}>
+                                <RefreshCw className={cn('w-4 h-4 text-blue-600 dark:text-cyan-200', loading && 'animate-spin')} /> Refresh
                             </Button>
                             <Button variant="outline" size="sm" onClick={() => setExportModalOpen(true)} className="h-10 gap-2 rounded-full border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]">
                                 <FileDown className="w-4 h-4" /> Export
