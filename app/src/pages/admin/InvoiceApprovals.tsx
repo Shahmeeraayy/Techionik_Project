@@ -953,20 +953,20 @@ export default function InvoiceApprovalsPage() {
             />
 
             <Dialog open={manualInvoiceOpen} onOpenChange={setManualInvoiceOpen}>
-                <DialogContent className="max-h-[92vh] max-w-5xl overflow-hidden border-white/10 bg-[#07121f] p-0 text-white">
+                <DialogContent className="max-h-[92vh] w-[96vw] max-w-[980px] overflow-hidden border-white/10 bg-[#07121f] p-0 text-white shadow-[0_30px_90px_rgba(0,0,0,0.55)]">
                     <DialogHeader className="border-b border-white/10 px-6 py-5">
-                        <DialogTitle className="flex items-center gap-2 text-2xl tracking-[-0.04em]" style={displayFontStyle}>
+                        <DialogTitle className="flex items-center gap-2 text-xl tracking-[-0.03em] sm:text-2xl" style={displayFontStyle}>
                             <Mail className="h-5 w-5 text-cyan-200" />
                             Create manual invoice
                         </DialogTitle>
-                        <DialogDescription className="text-slate-400">
-                            Create an invoice without a queued job, then open an email draft for any recipient.
+                        <DialogDescription className="max-w-2xl text-sm leading-6 text-slate-400">
+                            Create an invoice without a queued job, then send it directly from your NexusOps workspace email identity.
                         </DialogDescription>
                     </DialogHeader>
 
                     <ScrollArea className="max-h-[68vh]">
                         <div className="space-y-6 px-6 py-5">
-                            <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
+                            <div className="grid gap-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)]">
                                 <div className="rounded-3xl border border-white/10 bg-white/[0.035] p-5">
                                     <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Bill To</div>
                                     <div className="mt-4 grid gap-3 sm:grid-cols-2">
@@ -976,7 +976,7 @@ export default function InvoiceApprovalsPage() {
                                                 id="manual-bill-name"
                                                 value={manualBillToDraft.name}
                                                 onChange={(event) => setManualBillToDraft((prev) => ({ ...prev, name: event.target.value }))}
-                                                className="border-white/10 bg-[#0b1424] text-white placeholder:text-slate-500"
+                                                className="h-11 rounded-2xl border-white/10 bg-[#0b1424] text-white placeholder:text-slate-500"
                                                 placeholder="Acme Motors"
                                             />
                                         </div>
@@ -986,28 +986,28 @@ export default function InvoiceApprovalsPage() {
                                                 id="manual-bill-street"
                                                 value={manualBillToDraft.street}
                                                 onChange={(event) => setManualBillToDraft((prev) => ({ ...prev, street: event.target.value }))}
-                                                className="border-white/10 bg-[#0b1424] text-white placeholder:text-slate-500"
+                                                className="h-11 rounded-2xl border-white/10 bg-[#0b1424] text-white placeholder:text-slate-500"
                                                 placeholder="123 Service Avenue"
                                             />
                                         </div>
                                         <Input
                                             value={manualBillToDraft.city}
                                             onChange={(event) => setManualBillToDraft((prev) => ({ ...prev, city: event.target.value }))}
-                                            className="border-white/10 bg-[#0b1424] text-white placeholder:text-slate-500"
+                                            className="h-11 rounded-2xl border-white/10 bg-[#0b1424] text-white placeholder:text-slate-500"
                                             placeholder="City"
                                             aria-label="Bill-to city"
                                         />
                                         <Input
                                             value={manualBillToDraft.state}
                                             onChange={(event) => setManualBillToDraft((prev) => ({ ...prev, state: event.target.value }))}
-                                            className="border-white/10 bg-[#0b1424] text-white placeholder:text-slate-500"
+                                            className="h-11 rounded-2xl border-white/10 bg-[#0b1424] text-white placeholder:text-slate-500"
                                             placeholder="State / Province"
                                             aria-label="Bill-to state"
                                         />
                                         <Input
                                             value={manualBillToDraft.zip_code}
                                             onChange={(event) => setManualBillToDraft((prev) => ({ ...prev, zip_code: event.target.value }))}
-                                            className="border-white/10 bg-[#0b1424] text-white placeholder:text-slate-500"
+                                            className="h-11 rounded-2xl border-white/10 bg-[#0b1424] text-white placeholder:text-slate-500"
                                             placeholder="Postal code"
                                             aria-label="Bill-to postal code"
                                         />
@@ -1024,14 +1024,14 @@ export default function InvoiceApprovalsPage() {
                                                 type="email"
                                                 value={manualRecipientEmail}
                                                 onChange={(event) => setManualRecipientEmail(event.target.value)}
-                                                className="border-white/10 bg-[#0b1424] text-white placeholder:text-slate-500"
+                                                className="h-11 rounded-2xl border-white/10 bg-[#0b1424] text-white placeholder:text-slate-500"
                                                 placeholder="billing@example.com"
                                             />
                                         </div>
                                         <div className="space-y-1.5">
                                             <Label className="text-slate-200">Terms</Label>
                                             <Select value={manualTerms} onValueChange={(value) => setManualTerms(value as ManualInvoiceTerms)}>
-                                                <SelectTrigger className="border-white/10 bg-[#0b1424] text-white">
+                                                <SelectTrigger className="h-11 rounded-2xl border-white/10 bg-[#0b1424] text-white">
                                                     <SelectValue placeholder="Terms" />
                                                 </SelectTrigger>
                                                 <SelectContent>
@@ -1046,7 +1046,7 @@ export default function InvoiceApprovalsPage() {
                                                 id="manual-message"
                                                 value={manualCustomerMessage}
                                                 onChange={(event) => setManualCustomerMessage(event.target.value)}
-                                                className="min-h-24 w-full rounded-md border border-white/10 bg-[#0b1424] px-3 py-2 text-sm text-white placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/25"
+                                                className="min-h-28 w-full resize-none rounded-2xl border border-white/10 bg-[#0b1424] px-3 py-3 text-sm leading-5 text-white placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/25"
                                                 placeholder="Optional note for the customer..."
                                             />
                                         </div>
@@ -1063,7 +1063,7 @@ export default function InvoiceApprovalsPage() {
                                     <Button
                                         type="button"
                                         variant="outline"
-                                        className="h-10 gap-2 rounded-2xl border-white/10 bg-[#0b1424] text-slate-100 hover:bg-[#122039] hover:text-white"
+                                        className="h-10 shrink-0 gap-2 rounded-2xl border-white/10 !bg-[#0b1424] !text-slate-100 hover:!bg-[#122039] hover:!text-white"
                                         onClick={handleAddManualService}
                                     >
                                         <Plus className="h-4 w-4" />
@@ -1077,8 +1077,8 @@ export default function InvoiceApprovalsPage() {
                                     ))}
                                 </datalist>
 
-                                <div className="mt-4 space-y-3">
-                                    <div className="hidden grid-cols-[1.5fr_0.55fr_0.7fr_0.6fr_auto] gap-3 px-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 md:grid">
+                                <div className="mt-4 space-y-3 overflow-x-auto pb-1">
+                                    <div className="hidden min-w-[720px] grid-cols-[minmax(220px,1.5fr)_minmax(80px,0.55fr)_minmax(96px,0.7fr)_minmax(96px,0.6fr)_44px] gap-3 px-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 md:grid">
                                         <span>Service</span>
                                         <span>Qty</span>
                                         <span>Rate</span>
@@ -1086,12 +1086,12 @@ export default function InvoiceApprovalsPage() {
                                         <span />
                                     </div>
                                     {manualServices.map((service) => (
-                                        <div key={service.id} className="grid gap-3 rounded-2xl border border-white/10 bg-[#0b1424] p-3 md:grid-cols-[1.5fr_0.55fr_0.7fr_0.6fr_auto] md:items-center">
+                                        <div key={service.id} className="grid gap-3 rounded-2xl border border-white/10 bg-[#0b1424] p-3 md:min-w-[720px] md:grid-cols-[minmax(220px,1.5fr)_minmax(80px,0.55fr)_minmax(96px,0.7fr)_minmax(96px,0.6fr)_44px] md:items-center">
                                             <Input
                                                 value={service.name}
                                                 list="manual-service-options"
                                                 onChange={(event) => handleUpdateManualService(service.id, 'name', event.target.value)}
-                                                className="border-white/10 bg-white/[0.035] text-white placeholder:text-slate-500"
+                                                className="h-11 rounded-xl border-white/10 bg-white/[0.035] text-white placeholder:text-slate-500"
                                                 placeholder="Service name"
                                                 aria-label="Manual invoice service name"
                                             />
@@ -1101,7 +1101,7 @@ export default function InvoiceApprovalsPage() {
                                                 step="0.01"
                                                 value={service.quantity}
                                                 onChange={(event) => handleUpdateManualService(service.id, 'quantity', event.target.value)}
-                                                className="border-white/10 bg-white/[0.035] text-white"
+                                                className="h-11 rounded-xl border-white/10 bg-white/[0.035] text-white"
                                                 aria-label="Manual invoice quantity"
                                             />
                                             <Input
@@ -1110,7 +1110,7 @@ export default function InvoiceApprovalsPage() {
                                                 step="0.01"
                                                 value={service.price}
                                                 onChange={(event) => handleUpdateManualService(service.id, 'price', event.target.value)}
-                                                className="border-white/10 bg-white/[0.035] text-white"
+                                                className="h-11 rounded-xl border-white/10 bg-white/[0.035] text-white"
                                                 placeholder="0.00"
                                                 aria-label="Manual invoice rate"
                                             />
@@ -1120,7 +1120,7 @@ export default function InvoiceApprovalsPage() {
                                                 step="0.001"
                                                 value={service.tax_rate}
                                                 onChange={(event) => handleUpdateManualService(service.id, 'tax_rate', event.target.value)}
-                                                className="border-white/10 bg-white/[0.035] text-white"
+                                                className="h-11 rounded-xl border-white/10 bg-white/[0.035] text-white"
                                                 placeholder="0.14975"
                                                 aria-label="Manual invoice tax rate"
                                             />
@@ -1140,7 +1140,7 @@ export default function InvoiceApprovalsPage() {
                                 </div>
                             </div>
 
-                            <div className="grid gap-4 rounded-3xl border border-cyan-300/15 bg-cyan-300/8 p-5 text-sm text-slate-200 sm:grid-cols-3">
+                            <div className="grid gap-4 rounded-3xl border border-cyan-300/15 bg-cyan-300/10 p-5 text-sm text-slate-200 sm:grid-cols-3">
                                 <div>
                                     <div className="text-xs uppercase tracking-[0.22em] text-slate-400">Subtotal</div>
                                     <div className="mt-2 text-2xl font-semibold text-white">${manualTotals.subtotal.toFixed(2)}</div>
@@ -1157,11 +1157,11 @@ export default function InvoiceApprovalsPage() {
                         </div>
                     </ScrollArea>
 
-                    <DialogFooter className="border-t border-white/10 px-6 py-4">
+                    <DialogFooter className="border-t border-white/10 px-6 py-4 sm:items-center">
                         <Button
                             type="button"
                             variant="outline"
-                            className="rounded-2xl border-white/10 bg-[#0b1424] text-slate-100 hover:bg-[#122039] hover:text-white"
+                            className="min-h-11 rounded-2xl border-white/10 !bg-[#0b1424] px-5 !text-slate-100 hover:!bg-[#122039] hover:!text-white disabled:!bg-slate-800 disabled:!text-slate-400"
                             onClick={() => setManualInvoiceOpen(false)}
                             disabled={isCreatingManualInvoice}
                         >
@@ -1169,7 +1169,7 @@ export default function InvoiceApprovalsPage() {
                         </Button>
                         <Button
                             type="button"
-                            className="gap-2 rounded-2xl bg-[linear-gradient(135deg,#4f7cff,#22d3ee)] px-5 font-semibold text-white hover:brightness-105"
+                            className="min-h-11 gap-2 rounded-2xl bg-[linear-gradient(135deg,#4f7cff,#22d3ee)] px-5 font-semibold text-white hover:brightness-105 disabled:opacity-70"
                             onClick={() => void handleCreateManualInvoice()}
                             disabled={isCreatingManualInvoice}
                         >
