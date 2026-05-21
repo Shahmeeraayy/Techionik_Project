@@ -4,8 +4,8 @@ import {
   ArrowRight,
   BarChart3,
   Bot,
+  Building2,
   CalendarCheck,
-  ChevronLeft,
   ChevronRight,
   CheckCircle2,
   ClipboardList,
@@ -14,6 +14,7 @@ import {
   MapPin,
   MessageSquare,
   Send,
+  Settings,
   ShieldCheck,
   Smartphone,
   Users,
@@ -99,6 +100,7 @@ const planGuarantees = [
 
 const demoScreens = [
   {
+    module: 'overview',
     label: 'Overview',
     title: 'Overview command center',
     description:
@@ -113,10 +115,11 @@ const demoScreens = [
     action: 'Admin checks the day, sees blockers, and decides what needs attention first.',
   },
   {
-    label: 'Operations',
-    title: 'Operations job board',
+    module: 'jobs',
+    label: 'Jobs',
+    title: 'Jobs and dispatch board',
     description:
-      'Operations is where dispatch happens. Admins review requests, assign technicians, track urgency, and move jobs through the workflow.',
+      'Jobs is where dispatch happens. Admins review requests, assign technicians, track priority, and move work through the live workflow.',
     icon: ClipboardList,
     cards: [
       ['Ready to assign', '14', '4 urgent'],
@@ -127,10 +130,11 @@ const demoScreens = [
     action: 'Admin clicks a job, assigns a technician, and watches the status update live.',
   },
   {
-    label: 'Team',
-    title: 'Team and technician control',
+    module: 'technicians',
+    label: 'Technicians',
+    title: 'Technician workforce control',
     description:
-      'Team shows technician availability, skills, zones, active assignments, and field status so work can be routed to the right person.',
+      'Technicians shows profiles, availability, skill coverage, assigned work, performance, and real-time field status.',
     icon: Users,
     cards: [
       ['Available', '9', 'ready for jobs'],
@@ -141,6 +145,22 @@ const demoScreens = [
     action: 'Admin filters by zone or skill, previews a technician, and assigns the best match.',
   },
   {
+    module: 'chat',
+    label: 'Platform Chat',
+    title: 'Real-time team messaging',
+    description:
+      'Platform Chat gives admins and technicians a shared workspace for job questions, status context, unread messages, and fast decisions.',
+    icon: MessageSquare,
+    cards: [
+      ['Unread', '6', '2 urgent'],
+      ['Active threads', '14', 'today'],
+      ['Avg response', '3m', 'team median'],
+    ],
+    rows: ['Priya sent job photos', 'Alex needs parts approval', 'Jordan confirmed arrival'],
+    action: 'Admin opens a conversation, reviews job context, replies, and keeps the thread attached to operations.',
+  },
+  {
+    module: 'accounts',
     label: 'Accounts',
     title: 'Account and access management',
     description:
@@ -155,6 +175,22 @@ const demoScreens = [
     action: 'Admin creates or updates accounts without leaving the operations portal.',
   },
   {
+    module: 'invoices',
+    label: 'Invoices',
+    title: 'Invoice approvals and billing',
+    description:
+      'Invoices gives finance a focused surface for approval queues, payment status, manual invoice creation, and customer billing actions.',
+    icon: FileCheck,
+    cards: [
+      ['Pending approval', '12', '$8.4k value'],
+      ['Sent invoices', '31', 'awaiting payment'],
+      ['Paid this week', '$18.2k', 'collected'],
+    ],
+    rows: ['NXS-2048 ready for approval', 'Manual invoice draft created', 'Payment marked received'],
+    action: 'Admin reviews invoice details, fixes blockers, creates invoices, and sends them to customers.',
+  },
+  {
+    module: 'services',
     label: 'Services',
     title: 'Service catalog and pricing',
     description:
@@ -169,6 +205,22 @@ const demoScreens = [
     action: 'Admin edits service pricing once, then uses those values throughout jobs and invoices.',
   },
   {
+    module: 'locations',
+    label: 'Locations',
+    title: 'Location coverage network',
+    description:
+      'Locations shows partner stores, addresses, service coverage, active jobs, and contact details for each operating area.',
+    icon: Building2,
+    cards: [
+      ['Active locations', '24', 'partner stores'],
+      ['Covered zones', '8', 'service regions'],
+      ['Jobs on site', '17', 'today'],
+    ],
+    rows: ['North Ford has 4 active jobs', 'Downtown Honda coverage confirmed', 'Westside Auto contact updated'],
+    action: 'Admin checks coverage, reviews location activity, and routes jobs to the correct store or zone.',
+  },
+  {
+    module: 'attendance',
     label: 'Attendance',
     title: 'Attendance and field schedule',
     description:
@@ -183,6 +235,7 @@ const demoScreens = [
     action: 'Admin confirms who is available before assigning jobs for the day.',
   },
   {
+    module: 'reports',
     label: 'Reports',
     title: 'Reports and business insight',
     description:
@@ -195,6 +248,21 @@ const demoScreens = [
     ],
     rows: ['Technician productivity report', 'Invoice performance report', 'Blocked reason analysis'],
     action: 'Leadership can see what is working, where jobs slow down, and which teams need support.',
+  },
+  {
+    module: 'settings',
+    label: 'Settings',
+    title: 'Configuration and preferences',
+    description:
+      'Settings is where admins manage company profile, invoice branding, notifications, workflow preferences, and system controls.',
+    icon: Settings,
+    cards: [
+      ['Branding', 'Ready', 'invoice profile'],
+      ['Notifications', '7 rules', 'enabled'],
+      ['Workflow', 'Auto', 'dispatch rules'],
+    ],
+    rows: ['Invoice branding saved', 'Notification preferences updated', 'Priority rules configured'],
+    action: 'Admin changes preferences, saves settings, and keeps the platform aligned with business operations.',
   },
 ];
 
@@ -355,6 +423,277 @@ function LandingChatbot() {
   );
 }
 
+function DemoModulePreview({ screen }: { screen: typeof demoScreens[number] }) {
+  const metricCards = (
+    <div className="grid gap-4 sm:grid-cols-3">
+      {screen.cards.map(([label, value, note]) => (
+        <div key={label} className="rounded-2xl border border-white/10 bg-white/5 p-4">
+          <p className="text-xs text-slate-500">{label}</p>
+          <p className="mt-3 text-2xl font-bold">{value}</p>
+          <p className="mt-1 text-xs text-slate-400">{note}</p>
+        </div>
+      ))}
+    </div>
+  );
+
+  if (screen.module === 'reports') {
+    return (
+      <div className="space-y-5">
+        {metricCards}
+        <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
+          <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5">
+            <div className="flex items-center justify-between">
+              <p className="font-semibold">Revenue and job trend</p>
+              <button className="rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-slate-950">Export PDF</button>
+            </div>
+            <div className="mt-6 flex h-52 items-end gap-3">
+              {[42, 58, 49, 72, 66, 88, 94].map((height, index) => (
+                <div key={height} className="flex flex-1 flex-col items-center gap-2">
+                  <div className="w-full rounded-t-2xl bg-gradient-to-t from-blue-600 to-cyan-300" style={{ height: `${height}%` }} />
+                  <span className="text-[10px] text-slate-500">D{index + 1}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5">
+            <p className="font-semibold">Report summary</p>
+            {['Completion rate up 12%', 'Invoices collected faster', 'North zone has most demand'].map((item) => (
+              <div key={item} className="mt-4 flex items-center gap-3 rounded-2xl bg-white/5 p-3 text-sm text-slate-200">
+                <CheckCircle2 className="h-4 w-4 text-cyan-300" />
+                {item}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (screen.module === 'chat') {
+    return (
+      <div className="grid gap-4 lg:grid-cols-[0.78fr_1.22fr]">
+        <div className="space-y-3 rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+          {[
+            ['Priya Shah', 'Sent photos from NXS-2048', '2'],
+            ['Alex Morgan', 'Need approval for parts', '1'],
+            ['Jordan Lee', 'Arrived at Downtown Honda', ''],
+          ].map(([name, preview, unread]) => (
+            <div key={name} className="flex items-center justify-between rounded-2xl bg-white/5 p-3">
+              <div>
+                <p className="text-sm font-semibold">{name}</p>
+                <p className="text-xs text-slate-400">{preview}</p>
+              </div>
+              {unread ? <span className="rounded-full bg-cyan-400 px-2 py-1 text-xs font-bold text-slate-950">{unread}</span> : null}
+            </div>
+          ))}
+        </div>
+        <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+          <div className="border-b border-white/10 pb-3">
+            <p className="font-semibold">Priya Shah</p>
+            <p className="text-xs text-emerald-300">Online - Job NXS-2048</p>
+          </div>
+          <div className="mt-4 space-y-3">
+            <div className="max-w-[78%] rounded-2xl bg-white/10 p-3 text-sm text-slate-200">Calibration photos uploaded. Can you approve the added labor line?</div>
+            <div className="ml-auto max-w-[78%] rounded-2xl bg-white p-3 text-sm text-slate-950">Approved. Please complete the job and attach final notes.</div>
+            <div className="max-w-[78%] rounded-2xl bg-white/10 p-3 text-sm text-slate-200">Done, status changed to completed.</div>
+          </div>
+          <div className="mt-5 flex items-center gap-2 rounded-2xl border border-white/10 bg-slate-950 p-2">
+            <span className="flex-1 px-3 text-sm text-slate-500">Type a message...</span>
+            <button className="rounded-xl bg-cyan-300 px-3 py-2 text-xs font-bold text-slate-950">Send</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (screen.module === 'jobs') {
+    return (
+      <div className="space-y-5">
+        {metricCards}
+        <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.04]">
+          {[
+            ['NXS-2048', 'Windshield calibration', 'Priya Shah', 'High', 'In progress'],
+            ['NXS-2049', 'Camera service', 'Alex Morgan', 'Medium', 'Assigned'],
+            ['NXS-2050', 'Diagnostic intake', 'Unassigned', 'Critical', 'Review'],
+          ].map(([id, job, tech, priority, status]) => (
+            <div key={id} className="grid gap-3 border-b border-white/10 p-4 text-sm last:border-b-0 md:grid-cols-[0.8fr_1.4fr_1fr_0.8fr_0.9fr]">
+              <span className="font-bold text-white">{id}</span>
+              <span className="text-slate-300">{job}</span>
+              <span className="text-slate-400">{tech}</span>
+              <span className="rounded-full bg-amber-300/10 px-3 py-1 text-center text-xs font-semibold text-amber-200">{priority}</span>
+              <span className="rounded-full bg-cyan-300/10 px-3 py-1 text-center text-xs font-semibold text-cyan-100">{status}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (screen.module === 'settings') {
+    return (
+      <div className="grid gap-4 lg:grid-cols-[0.8fr_1.2fr]">
+        <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+          {['Company profile', 'Invoice branding', 'Notifications', 'Workflow rules'].map((tab, index) => (
+            <div key={tab} className={`rounded-2xl px-4 py-3 text-sm font-semibold ${index === 1 ? 'bg-white text-slate-950' : 'text-slate-300'}`}>{tab}</div>
+          ))}
+        </div>
+        <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5">
+          <p className="font-semibold">Invoice branding</p>
+          <div className="mt-4 grid gap-3">
+            {['Company name', 'Billing email', 'Default payment terms'].map((label) => (
+              <div key={label}>
+                <p className="mb-1 text-xs text-slate-500">{label}</p>
+                <div className="rounded-xl border border-white/10 bg-slate-950 px-3 py-3 text-sm text-slate-300">{label === 'Company name' ? 'NexusOps Dispatch' : label === 'Billing email' ? 'billing@nexusops.com' : 'Net 15'}</div>
+              </div>
+            ))}
+            {['Send invoice notifications', 'Auto-rank urgent jobs'].map((label) => (
+              <div key={label} className="flex items-center justify-between rounded-xl bg-white/5 px-3 py-3 text-sm">
+                {label}
+                <span className="h-6 w-11 rounded-full bg-cyan-300 p-1"><span className="block h-4 w-4 translate-x-5 rounded-full bg-slate-950" /></span>
+              </div>
+            ))}
+          </div>
+          <button className="mt-4 rounded-2xl bg-white px-4 py-3 text-sm font-bold text-slate-950">Save changes</button>
+        </div>
+      </div>
+    );
+  }
+
+  if (screen.module === 'technicians') {
+    return (
+      <div className="grid gap-4 lg:grid-cols-3">
+        {[
+          ['Priya Shah', 'On site', 'ADAS, Diagnostics', '4.9', 'NXS-2048'],
+          ['Alex Morgan', 'Available', 'Calibration, Glass', '4.8', 'Ready'],
+          ['Jordan Lee', 'Driving', 'PPF, Camera Service', '4.7', 'NXS-2051'],
+        ].map(([name, status, skills, score, job]) => (
+          <div key={name} className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-slate-950 font-bold">{name.split(' ').map((part) => part[0]).join('')}</div>
+              <div>
+                <p className="font-semibold">{name}</p>
+                <p className="text-xs text-cyan-200">{status}</p>
+              </div>
+            </div>
+            <p className="mt-4 text-sm text-slate-400">{skills}</p>
+            <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+              <div className="rounded-xl bg-white/5 p-3"><p className="text-slate-500">Rating</p><p className="font-bold">{score}</p></div>
+              <div className="rounded-xl bg-white/5 p-3"><p className="text-slate-500">Job</p><p className="font-bold">{job}</p></div>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (screen.module === 'invoices') {
+    return (
+      <div className="space-y-5">
+        {metricCards}
+        <div className="grid gap-4 lg:grid-cols-[1fr_0.8fr]">
+          <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+            {['Pending approval', 'Sent', 'Paid'].map((status, index) => (
+              <div key={status} className="mb-3 flex items-center justify-between rounded-2xl bg-white/5 p-3 last:mb-0">
+                <div><p className="font-semibold">INV-10{index + 31}</p><p className="text-xs text-slate-400">Downtown Honda - ${[840, 1260, 520][index]}.00</p></div>
+                <span className="rounded-full bg-cyan-300/10 px-3 py-1 text-xs font-semibold text-cyan-100">{status}</span>
+              </div>
+            ))}
+          </div>
+          <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5">
+            <p className="font-semibold">Billing actions</p>
+            {['Create manual invoice', 'Send email', 'Mark paid', 'Download PDF'].map((item) => <button key={item} className="mt-3 w-full rounded-xl bg-white/5 px-3 py-3 text-left text-sm text-slate-200">{item}</button>)}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (screen.module === 'services') {
+    return (
+      <div className="grid gap-4 md:grid-cols-2">
+        {[
+          ['Calibration', 'Windshield calibration', '$240', '90 min', 'Active'],
+          ['Diagnostics', 'Camera diagnostic', '$180', '60 min', 'Active'],
+          ['PPF', 'Front bumper package', '$325', '2 hr', 'Inactive'],
+          ['Glass', 'Sensor inspection', '$95', '30 min', 'Active'],
+        ].map(([cat, name, rate, duration, status]) => (
+          <div key={name} className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+            <div className="flex items-center justify-between">
+              <span className="rounded-full bg-blue-400/10 px-3 py-1 text-xs font-semibold text-blue-100">{cat}</span>
+              <span className={`rounded-full px-3 py-1 text-xs font-semibold ${status === 'Active' ? 'bg-emerald-400/10 text-emerald-200' : 'bg-slate-400/10 text-slate-300'}`}>{status}</span>
+            </div>
+            <p className="mt-4 font-semibold">{name}</p>
+            <div className="mt-4 flex gap-3 text-sm text-slate-400"><span>{rate}</span><span>{duration}</span></div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (screen.module === 'locations') {
+    return (
+      <div className="grid gap-4 lg:grid-cols-3">
+        {[
+          ['North Ford', '1420 Ridge Ave', '4 active jobs', 'North zone'],
+          ['Downtown Honda', '88 Market St', '7 active jobs', 'Central zone'],
+          ['Westside Auto', '501 Lake Road', '2 active jobs', 'West zone'],
+        ].map(([name, address, jobs, zone]) => (
+          <div key={name} className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+            <Building2 className="h-6 w-6 text-cyan-200" />
+            <p className="mt-4 font-semibold">{name}</p>
+            <p className="mt-1 text-sm text-slate-400">{address}</p>
+            <div className="mt-4 space-y-2 text-sm">
+              <div className="rounded-xl bg-white/5 p-3">{jobs}</div>
+              <div className="rounded-xl bg-white/5 p-3">{zone}</div>
+              <div className="rounded-xl bg-white/5 p-3">Service coverage confirmed</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (screen.module === 'attendance') {
+    return (
+      <div className="space-y-5">
+        {metricCards}
+        <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+          {['Priya Shah checked in 8:05 AM', 'Alex Morgan available 8:12 AM', 'Jordan Lee driving to first job', 'Mia Chen time off approved'].map((item) => (
+            <div key={item} className="mb-3 flex items-center justify-between rounded-2xl bg-white/5 p-3 last:mb-0">
+              <span className="text-sm text-slate-200">{item}</span>
+              <span className="rounded-full bg-emerald-400/10 px-3 py-1 text-xs font-semibold text-emerald-200">Logged</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-5">
+      {metricCards}
+      <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
+        <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5">
+          <p className="font-semibold">Daily operations pulse</p>
+          <div className="mt-5 grid gap-3">
+            {screen.rows.map((row, index) => (
+              <div key={row} className="flex items-center justify-between rounded-2xl bg-white/5 p-3">
+                <span className="text-sm text-slate-200">{row}</span>
+                <span className="rounded-full bg-cyan-300/10 px-3 py-1 text-xs font-semibold text-cyan-100">Priority {index + 1}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5">
+          <p className="font-semibold">Today at a glance</p>
+          <div className="mt-5 h-40 rounded-2xl bg-[linear-gradient(135deg,rgba(79,124,255,0.34),rgba(34,211,238,0.16))]" />
+          <p className="mt-4 text-sm leading-6 text-slate-400">A single executive view of jobs, field team status, invoice health, and booking demand.</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function DemoWalkthrough({
   open,
   onClose,
@@ -440,30 +779,8 @@ function DemoWalkthrough({
                   </div>
                 </div>
 
-                <div className="mt-5 grid gap-4 sm:grid-cols-3">
-                  {activeScreen.cards.map(([label, value, note]) => (
-                    <div key={label} className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                      <p className="text-xs text-slate-500">{label}</p>
-                      <p className="mt-3 text-2xl font-bold">{value}</p>
-                      <p className="mt-1 text-xs text-slate-400">{note}</p>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="mt-5 space-y-3">
-                  {activeScreen.rows.map((row, index) => (
-                    <div key={row} className="flex items-center justify-between gap-4 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-slate-950">
-                          {index + 1}
-                        </div>
-                        <span className="text-sm font-semibold text-slate-100">{row}</span>
-                      </div>
-                      <span className="rounded-full bg-emerald-400/10 px-3 py-1 text-xs font-semibold text-emerald-200">
-                        Ready
-                      </span>
-                    </div>
-                  ))}
+                <div className="mt-5">
+                  <DemoModulePreview screen={activeScreen} />
                 </div>
 
                 <div className="mt-6 rounded-2xl border border-white/10 bg-gradient-to-r from-blue-600/20 to-cyan-400/15 p-5">
