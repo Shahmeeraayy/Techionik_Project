@@ -364,9 +364,6 @@ export default function TechnicianAccountsPage() {
               )}>
                 {isRefreshing ? 'Syncing data...' : syncError ? 'Sync failed' : 'Data synced'}
               </Badge>
-              <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-slate-300">
-                Last synced: {lastSyncedAt ?? '--'}
-              </span>
               <Button
                 type="button"
                 size="sm"
@@ -486,9 +483,6 @@ export default function TechnicianAccountsPage() {
           <Badge variant="outline" className="border-white/10 bg-white/[0.04] text-slate-300">
             Showing {filteredAccounts.length} accounts | {inactiveCount} suspended | {filteredPendingPasswordResetRequests.length} reset pending
           </Badge>
-          {lastSyncedAt ? (
-            <span className="text-xs text-slate-400">Last synced at {lastSyncedAt}</span>
-          ) : null}
           {hasSearchQuery ? (
             <Button
               type="button"
@@ -829,4 +823,3 @@ export default function TechnicianAccountsPage() {
     </div>
   );
 }
-

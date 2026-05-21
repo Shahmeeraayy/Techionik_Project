@@ -9,7 +9,6 @@ import {
   Building2,
   CheckCircle2,
   ClipboardList,
-  Clock3,
   FileCheck,
   FileClock,
   FileText,
@@ -333,7 +332,6 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [snapshot, setSnapshot] = useState<DashboardSnapshot | null>(null);
 
   const todayRange = useMemo(() => {
@@ -373,7 +371,6 @@ export default function Dashboard() {
       ]);
 
       setSnapshot(buildSnapshot({ reports, jobs, invoices, technicians, dealerships }));
-      setLastUpdated(new Date());
     } catch (fetchError) {
       setError(fetchError instanceof Error ? fetchError.message : 'Failed to load dashboard data.');
       setSnapshot(null);
@@ -531,7 +528,7 @@ export default function Dashboard() {
               </p>
 
               <div className="mt-6 flex items-start gap-3">
-                {/* Left column: Jobs Completed Today + Last sync */}
+                {/* Left column: Jobs Completed Today */}
                 <div className="flex flex-col gap-3">
                   {leadMetrics[0] && (
                     <div className="rounded-full border border-black/8 bg-white px-4 py-2 text-sm text-slate-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-200 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
@@ -539,10 +536,6 @@ export default function Dashboard() {
                       <span className="ml-2 font-semibold text-slate-900 dark:text-white">{leadMetrics[0].value}</span>
                     </div>
                   )}
-                  <div className="inline-flex items-center gap-2 rounded-full border border-black/8 bg-white px-4 py-2 text-sm text-slate-600 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300">
-                    <Clock3 className="h-4 w-4 text-slate-700 dark:text-cyan-200" />
-                    Last sync {lastUpdated ? lastUpdated.toLocaleTimeString() : '--'}
-                  </div>
                 </div>
                 {/* Right column: Pending Invoice Approvals + Technicians Online */}
                 <div className="flex flex-col gap-3">

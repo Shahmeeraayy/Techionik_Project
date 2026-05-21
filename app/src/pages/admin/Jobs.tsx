@@ -2126,7 +2126,7 @@ export default function JobsPage() {
                             </Badge>
                             <Badge variant="outline" className="h-8 rounded-full border-emerald-200 bg-emerald-50 px-4 text-emerald-700 dark:border-emerald-300/14 dark:bg-emerald-300/[0.08] dark:text-emerald-100">
                                 <Activity className="mr-1.5 h-3.5 w-3.5" />
-                                Backend live
+                                Online
                             </Badge>
                             {selectedRows.size > 0 ? (
                                 <Badge variant="outline" className="h-8 rounded-full border-black/8 bg-slate-50 px-4 text-slate-700 dark:border-white/8 dark:bg-white/[0.04] dark:text-white">
