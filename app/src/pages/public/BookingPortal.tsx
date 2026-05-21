@@ -224,23 +224,71 @@ export default function BookingPortalPage() {
             NexusOps
           </span>
 
-          {/* Nav links */}
-          <nav className="hidden items-center gap-6 md:flex">
-            {['Dashboard', 'Services', 'Schedules', 'Fleet', 'Support'].map((item) => (
-              <span key={item} className="cursor-pointer text-sm text-slate-400 transition-colors hover:text-white">
-                {item}
-              </span>
-            ))}
-          </nav>
+          <div className="hidden min-w-0 flex-1 items-center justify-center gap-3 px-6 lg:flex">
+            <span className="inline-flex items-center gap-2 rounded-full border border-emerald-300/15 bg-emerald-300/10 px-3 py-1.5 text-xs font-medium text-emerald-200">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />
+              {config?.is_enabled ? 'Booking portal online' : 'Portal status loading'}
+            </span>
+            <span className="inline-flex max-w-[360px] items-center gap-2 truncate rounded-full border border-white/10 bg-white/[0.035] px-3 py-1.5 text-xs text-slate-300">
+              <Clock3 className="h-3.5 w-3.5 shrink-0 text-cyan-300" />
+              <span className="truncate">{config?.estimated_response_time_message || 'Submit a request and the team will follow up soon.'}</span>
+            </span>
+          </div>
 
           {/* Actions */}
           <div className="flex items-center gap-3">
-            <button className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-400 hover:bg-white/[0.05] hover:text-white transition-colors">
-              <Bell className="h-4.5 w-4.5" />
-            </button>
-            <button className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-400 hover:bg-white/[0.05] hover:text-white transition-colors">
-              <Settings className="h-4.5 w-4.5" />
-            </button>
+            <Popover>
+              <PopoverTrigger asChild>
+                <button type="button" className="relative flex h-9 w-9 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-white/[0.05] hover:text-white" aria-label="Booking updates">
+                  <Bell className="h-4.5 w-4.5" />
+                  <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-cyan-300" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent align="end" className="w-80 border-white/10 bg-[rgba(11,25,42,0.98)] p-0 text-white shadow-[0_18px_70px_rgba(0,0,0,0.45)]">
+                <div className="border-b border-white/10 px-4 py-3">
+                  <p className="text-sm font-semibold text-white">Booking updates</p>
+                  <p className="mt-1 text-xs leading-5 text-slate-400">Helpful information before you submit a request.</p>
+                </div>
+                <div className="space-y-2 p-3">
+                  {[
+                    ['Confirmation email', 'You will receive a reference number after submission.'],
+                    ['Response window', config?.estimated_response_time_message || 'The service team will follow up soon.'],
+                    ['Status tracking', config?.status_lookup_enabled ? 'Status lookup is available for this workspace.' : 'The team will update you directly by email or phone.'],
+                  ].map(([title, body]) => (
+                    <div key={title} className="rounded-xl border border-white/8 bg-white/[0.03] p-3">
+                      <p className="text-xs font-semibold text-slate-100">{title}</p>
+                      <p className="mt-1 text-xs leading-5 text-slate-400">{body}</p>
+                    </div>
+                  ))}
+                </div>
+              </PopoverContent>
+            </Popover>
+            <Popover>
+              <PopoverTrigger asChild>
+                <button type="button" className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-white/[0.05] hover:text-white" aria-label="Portal options">
+                  <Settings className="h-4.5 w-4.5" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent align="end" className="w-80 border-white/10 bg-[rgba(11,25,42,0.98)] p-0 text-white shadow-[0_18px_70px_rgba(0,0,0,0.45)]">
+                <div className="border-b border-white/10 px-4 py-3">
+                  <p className="text-sm font-semibold text-white">Portal options</p>
+                  <p className="mt-1 text-xs leading-5 text-slate-400">Quick actions for customers using this booking page.</p>
+                </div>
+                <div className="space-y-2 p-3">
+                  <Button asChild variant="outline" className={`w-full justify-start ${secondaryBtnCls}`} style={{ height: '42px' }}>
+                    <Link to={bookingPath}>New service request</Link>
+                  </Button>
+                  {config?.status_lookup_enabled ? (
+                    <Button asChild variant="outline" className={`w-full justify-start ${secondaryBtnCls}`} style={{ height: '42px' }}>
+                      <Link to={statusPath}>Check request status</Link>
+                    </Button>
+                  ) : null}
+                  <a href={`mailto:${config?.admin_contact_email || 'support@nexusops.app'}`} className="block rounded-xl border border-white/8 bg-white/[0.03] px-3 py-3 text-xs leading-5 text-slate-300 transition-colors hover:bg-white/[0.06] hover:text-white">
+                    Need help? Contact {config?.company_name || 'the service team'} directly.
+                  </a>
+                </div>
+              </PopoverContent>
+            </Popover>
             <Button asChild className="h-9 rounded-lg bg-gradient-to-r from-[#4f7cff] to-[#22d3ee] px-4 text-sm font-semibold text-white shadow-[0_4px_14px_rgba(79,124,255,0.35)] hover:brightness-110 transition-all">
               <a href={`mailto:${config?.admin_contact_email || 'support@nexusops.app'}`}>Contact Us</a>
             </Button>
