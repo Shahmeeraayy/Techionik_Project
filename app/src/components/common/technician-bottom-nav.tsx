@@ -1,8 +1,59 @@
-import { Briefcase, Calendar, Clock, MessageSquareText, User, CalendarClock } from 'lucide-react';
+import { Briefcase, Calendar, Clock, MessageSquareText, User, CalendarClock, Sun, Moon, Monitor, CheckCircle2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import { useTheme } from '@/components/theme-provider';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 export type TechnicianBottomNavTab = 'jobs' | 'current-job' | 'history' | 'chat' | 'profile' | 'attendance';
+
+const themeOptions = [
+    { value: 'light', label: 'Light Theme', icon: Sun },
+    { value: 'dark', label: 'Dark Theme', icon: Moon },
+    { value: 'system', label: 'System Theme', icon: Monitor },
+] as const;
+
+function TechnicianThemeToggle() {
+    const { theme, setTheme } = useTheme();
+    const activeOption = themeOptions.find((option) => option.value === theme) ?? themeOptions[1];
+    const ActiveIcon = activeOption.icon;
+
+    return (
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <button
+                    type="button"
+                    aria-label="Change technician portal theme"
+                    className="tech-theme-toggle pointer-events-auto flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-[0_18px_42px_rgba(15,23,42,0.14)] transition hover:bg-slate-50 hover:text-slate-950 dark:border-white/10 dark:bg-[#111111] dark:text-white dark:shadow-[0_18px_42px_rgba(0,0,0,0.34)] dark:hover:bg-[#1d1d1d]"
+                >
+                    <ActiveIcon className="h-5 w-5" />
+                </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" side="top" className="w-52">
+                {themeOptions.map((option) => {
+                    const Icon = option.icon;
+                    const active = theme === option.value;
+
+                    return (
+                        <DropdownMenuItem
+                            key={option.value}
+                            onClick={() => setTheme(option.value)}
+                            className="cursor-pointer"
+                        >
+                            <Icon className="mr-2 h-4 w-4" />
+                            <span className="flex-1">{option.label}</span>
+                            {active ? <CheckCircle2 className="ml-2 h-4 w-4 text-cyan-500 dark:text-cyan-300" /> : null}
+                        </DropdownMenuItem>
+                    );
+                })}
+            </DropdownMenuContent>
+        </DropdownMenu>
+    );
+}
 
 export default function TechnicianBottomNav({
     activeTab,
@@ -23,6 +74,9 @@ export default function TechnicianBottomNav({
 
     return (
         <div className="safe-area-bottom pointer-events-none fixed bottom-0 left-0 right-0 z-50 px-3 pb-3 pt-2 sm:px-4">
+            <div className="mx-auto flex w-full max-w-[760px] justify-end px-2 pb-2">
+                <TechnicianThemeToggle />
+            </div>
             <div className="tech-nav-dock pointer-events-auto mx-auto w-full max-w-[760px] rounded-[28px] px-2 py-2">
                 <div className="flex items-center justify-around gap-1">
                     {tabs.map((tab) => {
