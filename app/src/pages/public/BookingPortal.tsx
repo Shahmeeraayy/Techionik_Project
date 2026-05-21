@@ -224,7 +224,7 @@ export default function BookingPortalPage() {
               <Settings className="h-4.5 w-4.5" />
             </button>
             <Button asChild className="h-9 rounded-lg bg-gradient-to-r from-[#4f7cff] to-[#22d3ee] px-4 text-sm font-semibold text-white shadow-[0_4px_14px_rgba(79,124,255,0.35)] hover:brightness-110 transition-all">
-              <a href="mailto:admin@sm2dispatch.com">Contact Us</a>
+              <a href="mailto:admin@nexusops.com">Contact Us</a>
             </Button>
           </div>
         </div>

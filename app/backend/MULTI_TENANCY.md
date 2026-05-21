@@ -1,4 +1,4 @@
-# DispatchIQ Multi-Tenancy Foundation
+# NexusOps Multi-Tenancy Foundation
 
 This backend now includes a Supabase-ready multi-tenant foundation built around three layers:
 
@@ -15,7 +15,7 @@ This backend now includes a Supabase-ready multi-tenant foundation built around 
   - JWT tenant claims
   - `X-Tenant-Id`
   - `X-Tenant-Slug`
-  - `book.[tenant].dispatchiq.com` style hosts
+  - `book.[tenant].nexusops.com` style hosts
 - JWT decoding that accepts:
   - legacy app-issued tokens
   - Supabase HS256 JWTs when `SUPABASE_JWT_SECRET` is configured

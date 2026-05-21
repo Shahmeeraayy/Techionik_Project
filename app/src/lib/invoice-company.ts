@@ -14,7 +14,7 @@ export const INVOICE_COMPANY_PROFILE_STORAGE_KEY = 'sm_dispatch_invoice_company_
 
 export const DEFAULT_INVOICE_COMPANY_PROFILE: InvoiceCompanyProfile = {
   name: 'NexusOps',
-  street_address: '123 Dispatch Ave',
+  street_address: '123 NexusOps Ave',
   city: 'Quebec',
   state: 'QC',
   zip_code: 'G1A 1A1',

@@ -64,7 +64,7 @@ export default function AdminLoginPage() {
         <div className="mx-auto w-full max-w-xl">
           <div className="inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-cyan-100">
             <ShieldCheck className="h-4 w-4" />
-            DispatchHQ Admin
+            NexusOps Admin
           </div>
 
           <h1 className="mt-7 text-[clamp(2.45rem,5vw,4.35rem)] font-semibold leading-[0.95] tracking-[-0.055em]">
@@ -99,7 +99,7 @@ export default function AdminLoginPage() {
                 </span>
                 <span>
                   <span className="block text-lg font-bold tracking-[-0.03em]">NexusOps</span>
-                  <span className="block text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">DispatchHQ Admin</span>
+                  <span className="block text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">NexusOps Admin</span>
                 </span>
               </Link>
               <span className="hidden rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs font-semibold text-slate-300 sm:inline-flex">

@@ -31,7 +31,7 @@ export default function AdminSignupPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const workspacePreview = useMemo(
-    () => (workspaceSlug ? `book.${workspaceSlug}.dispatchiq.com` : 'book.your-company.dispatchiq.com'),
+    () => (workspaceSlug ? `book.${workspaceSlug}.nexusops.com` : 'book.your-company.nexusops.com'),
     [workspaceSlug],
   );
 
@@ -65,7 +65,7 @@ export default function AdminSignupPage() {
   return (
     <AuthSplitShell
       accent="signup"
-      badge="DispatchIQ Signup"
+      badge="NexusOps Signup"
       eyebrow="Welcome"
       title={<>Create account</>}
       description=""
@@ -222,4 +222,3 @@ export default function AdminSignupPage() {
     </AuthSplitShell>
   );
 }
-

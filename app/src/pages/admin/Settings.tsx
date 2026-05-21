@@ -196,7 +196,7 @@ const DEFAULT_NOTIFICATION_PREFERENCES: NotificationPreferences = {
 };
 
 const DEFAULT_BILLING_SUBSCRIPTION: BillingSubscriptionSettings = {
-    planName: 'DispatchIQ Growth',
+    planName: 'NexusOps Growth',
     monthlyPrice: '$149/mo',
     renewalDate: '2026-06-01',
     technicianLimit: 25,
@@ -1148,4 +1148,3 @@ export default function SettingsPage() {
         </div>
     );
 }
-

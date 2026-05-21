@@ -11,7 +11,7 @@ export default function TechnicianSignupPage() {
   return (
     <AuthSplitShell
       accent="tech-signup"
-      badge="DispatchIQ Technician"
+      badge="NexusOps Technician"
       eyebrow="Welcome"
       title={<>Invite only</>}
       description=""
