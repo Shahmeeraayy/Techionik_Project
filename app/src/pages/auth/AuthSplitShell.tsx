@@ -71,7 +71,7 @@ export function AuthSplitShell({
   const theme = accentConfig[accent];
 
   return (
-    <div className="relative min-h-[100svh] overflow-x-hidden bg-[#080c14] text-white">
+    <div className="auth-lock-dark relative min-h-[100svh] overflow-x-hidden bg-[#080c14] text-white">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_0%,rgba(79,124,255,0.08),transparent_32%),linear-gradient(180deg,#0b1220_0%,#080c14_44%,#060913_100%)]" />
       <div className="pointer-events-none absolute inset-0 opacity-20 [background-image:linear-gradient(rgba(255,255,255,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.035)_1px,transparent_1px)] [background-size:112px_112px]" />
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.02),transparent_22%,transparent_78%,rgba(255,255,255,0.02))]" />

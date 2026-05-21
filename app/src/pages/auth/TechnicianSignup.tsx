@@ -80,7 +80,7 @@ export default function TechnicianSignupPage() {
             type="button"
             asChild
             variant="outline"
-            className="h-14 rounded-[20px] border-[rgba(148,163,184,0.18)] bg-[rgba(12,20,34,0.9)] text-[#eaf1ff] hover:bg-[rgba(23,37,64,0.94)] hover:text-white"
+            className="h-14 rounded-[20px] !border-[rgba(148,163,184,0.18)] !bg-[rgba(12,20,34,0.9)] !text-[#eaf1ff] hover:!bg-[rgba(23,37,64,0.94)] hover:!text-white"
           >
             <Link to="/admin/login">
               <Mail className="mr-2 h-4 w-4" />
