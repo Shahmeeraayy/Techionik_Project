@@ -102,17 +102,17 @@ const demoScreens = [
   {
     module: 'overview',
     label: 'Overview',
-    title: 'Overview command center',
+    title: 'Daily operations command center',
     description:
       'The first screen gives leadership a live pulse of bookings, jobs, active technicians, approvals, and revenue without jumping between tools.',
     icon: LayoutDashboard,
     cards: [
-      ['Open jobs', '48', '12 high priority'],
+      ['Open jobs', '48', '+12% today'],
       ['Active techs', '18', '6 currently on site'],
       ['Pending invoices', '12', '$8.4k queue value'],
     ],
     rows: ['Morning dispatch summary ready', 'Technician capacity updated', 'Approval queue needs review'],
-    action: 'Admin checks the day, sees blockers, and decides what needs attention first.',
+    action: 'Provides managers with a single operational view of bookings, technician capacity, job progress, invoice health, and urgent actions before the workday begins.',
   },
   {
     module: 'jobs',
@@ -476,8 +476,10 @@ function DemoModulePreview({ screen }: { screen: typeof demoScreens[number] }) {
       {screen.cards.map(([label, value, note]) => (
         <div key={label} className="rounded-2xl border border-white/10 bg-white/5 p-4">
           <p className="text-xs text-slate-500">{label}</p>
-          <p className="mt-3 text-2xl font-bold">{value}</p>
-          <p className="mt-1 text-xs text-slate-400">{note}</p>
+          <div className="mt-3 flex flex-wrap items-end justify-between gap-2">
+            <p className="text-2xl font-bold">{value}</p>
+            <span className="rounded-full border border-cyan-300/15 bg-cyan-300/10 px-2.5 py-1 text-[11px] font-semibold text-cyan-100">{note}</span>
+          </div>
         </div>
       ))}
     </div>
@@ -510,6 +512,67 @@ function DemoModulePreview({ screen }: { screen: typeof demoScreens[number] }) {
                 {item}
               </div>
             ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (screen.module === 'overview') {
+    return (
+      <div className="space-y-5">
+        {metricCards}
+        <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
+          <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="font-semibold">Today at a glance</p>
+                <p className="mt-1 text-xs text-slate-500">Bookings, dispatch load, and invoice readiness</p>
+              </div>
+              <span className="rounded-full bg-emerald-400/10 px-3 py-1 text-xs font-semibold text-emerald-200">92% on track</span>
+            </div>
+            <div className="mt-6 grid gap-5 md:grid-cols-[1fr_0.8fr]">
+              <div className="flex h-40 items-end gap-3 rounded-2xl border border-white/10 bg-slate-950/70 p-4">
+                {[48, 62, 54, 76, 68, 84, 92].map((height, index) => (
+                  <div key={height} className="flex flex-1 flex-col items-center gap-2">
+                    <div className="w-full rounded-t-xl bg-gradient-to-t from-blue-600 to-cyan-300" style={{ height: `${height}%` }} />
+                    <span className="text-[10px] text-slate-500">{['7a', '9a', '11a', '1p', '3p', '5p', '7p'][index]}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="space-y-3">
+                {[
+                  ['Technician capacity', '78%'],
+                  ['Job completion', '92%'],
+                  ['Invoice readiness', '64%'],
+                ].map(([label, value]) => (
+                  <div key={label}>
+                    <div className="mb-2 flex justify-between text-xs">
+                      <span className="text-slate-400">{label}</span>
+                      <span className="font-semibold text-cyan-100">{value}</span>
+                    </div>
+                    <div className="h-2 rounded-full bg-white/10">
+                      <div className="h-2 rounded-full bg-gradient-to-r from-blue-500 to-cyan-300" style={{ width: value }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+          <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5">
+            <p className="font-semibold">Priority signals</p>
+            <div className="mt-5 space-y-3">
+              {[
+                ['3 urgent items', 'Dispatch review needed'],
+                ['2 invoice blockers', 'Missing billing details'],
+                ['6 techs on site', 'Field coverage healthy'],
+              ].map(([label, note]) => (
+                <div key={label} className="rounded-2xl border border-white/10 bg-white/5 p-3">
+                  <p className="text-sm font-semibold text-white">{label}</p>
+                  <p className="mt-1 text-xs text-slate-400">{note}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -716,29 +779,7 @@ function DemoModulePreview({ screen }: { screen: typeof demoScreens[number] }) {
     );
   }
 
-  return (
-    <div className="space-y-5">
-      {metricCards}
-      <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
-        <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5">
-          <p className="font-semibold">Daily operations pulse</p>
-          <div className="mt-5 grid gap-3">
-            {screen.rows.map((row, index) => (
-              <div key={row} className="flex items-center justify-between rounded-2xl bg-white/5 p-3">
-                <span className="text-sm text-slate-200">{row}</span>
-                <span className="rounded-full bg-cyan-300/10 px-3 py-1 text-xs font-semibold text-cyan-100">Priority {index + 1}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-        <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5">
-          <p className="font-semibold">Today at a glance</p>
-          <div className="mt-5 h-40 rounded-2xl bg-[linear-gradient(135deg,rgba(79,124,255,0.34),rgba(34,211,238,0.16))]" />
-          <p className="mt-4 text-sm leading-6 text-slate-400">A single executive view of jobs, field team status, invoice health, and booking demand.</p>
-        </div>
-      </div>
-    </div>
-  );
+  return <div className="space-y-5">{metricCards}</div>;
 }
 
 function DemoWalkthrough({
