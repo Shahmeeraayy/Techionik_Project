@@ -31,7 +31,7 @@ export default function AdminSignupPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const workspacePreview = useMemo(
-    () => (workspaceSlug ? `book.${workspaceSlug}.nexusops.com` : 'book.your-company.nexusops.com'),
+    () => (workspaceSlug ? `book.${workspaceSlug}.nexusops.app` : 'book.your-company.nexusops.app'),
     [workspaceSlug],
   );
 

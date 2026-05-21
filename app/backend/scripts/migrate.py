@@ -42,6 +42,7 @@ MIGRATIONS: list[Migration] = [
     Migration("012_admin_users.sql"),
     Migration("013_service_catalog_tenant_uniqueness.sql"),
     Migration("014_signup_requests_tenant_uniqueness.sql"),
+    Migration("015_tenant_email_identities.sql"),
 ]
 
 

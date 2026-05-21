@@ -62,6 +62,7 @@ import {
     createInvoice,
     fetchPendingInvoiceApprovalDetail,
     fetchServicesCatalog,
+    sendInvoiceEmail,
     savePendingInvoiceApprovalDraft,
     fetchPendingInvoiceApprovalIssues,
     fetchPendingInvoiceApprovals,
@@ -669,18 +670,8 @@ export default function InvoiceApprovalsPage() {
                 },
             });
 
-            const subject = encodeURIComponent(`Invoice ${createdInvoice.invoice_number} from ServiceOps`);
-            const body = encodeURIComponent(
-                [
-                    `Hello ${manualBillToDraft.name.trim()},`,
-                    '',
-                    `Invoice ${createdInvoice.invoice_number} has been created for $${toNumber(createdInvoice.total).toFixed(2)}.`,
-                    manualCustomerMessage.trim() ? `\n${manualCustomerMessage.trim()}` : '',
-                    '',
-                    'Please reply to this email if you need anything adjusted.',
-                ].filter(Boolean).join('\n'),
-            );
-            window.location.href = `mailto:${encodeURIComponent(recipientEmail)}?subject=${subject}&body=${body}`;
+            await sendInvoiceEmail(adminToken, createdInvoice.id, recipientEmail);
+            alert(`Invoice ${createdInvoice.invoice_number} was sent to ${recipientEmail} directly from your NexusOps workspace email identity.`);
             setManualInvoiceOpen(false);
             resetManualInvoiceForm();
         } catch (error) {

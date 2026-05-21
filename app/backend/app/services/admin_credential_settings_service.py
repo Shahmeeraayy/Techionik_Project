@@ -11,11 +11,16 @@ from sqlalchemy.orm import Session
 from sqlalchemy import case, text
 from uuid import UUID
 
-from ..core.config import ADMIN_DEFAULT_PASSWORD, ADMIN_EMAIL, DATABASE_URL, DEFAULT_TENANT_ID
+from ..core.config import ADMIN_DEFAULT_PASSWORD, ADMIN_EMAIL, DATABASE_URL, DEFAULT_TENANT_ID, EMAIL_ENABLED
 from ..core.security import AuthenticatedUser
 from ..models.admin_credential_settings import AdminCredentialSettings
 from ..models.admin_user import AdminUser
 from ..models.tenant import Tenant, TenantMembership
+from .tenant_email_identity import (
+    build_email_identity_for_slug,
+    ensure_tenant_email_columns,
+    get_tenant_email_identity as resolve_tenant_email_identity,
+)
 
 
 ADMIN_CREDENTIAL_SETTINGS_KEY = "default"
@@ -103,6 +108,7 @@ class AdminCredentialSettingsService:
         )
 
     def _get_tenant_by_slug(self, slug: str) -> Tenant | None:
+        ensure_tenant_email_columns(self.db)
         return (
             self.db.query(Tenant)
             .filter(Tenant.slug == slug.strip().lower())
@@ -125,6 +131,9 @@ class AdminCredentialSettingsService:
                 detail="That workspace URL is reserved",
             )
         return normalized
+
+    def _email_identity_for_slug(self, slug: str) -> dict[str, str]:
+        return build_email_identity_for_slug(slug)
 
     def _bootstrap_owner_from_legacy_settings(self) -> AdminUser:
         settings_row = self._get_or_create_settings_row()
@@ -231,6 +240,7 @@ class AdminCredentialSettingsService:
                 detail="Password must be at least 6 characters",
             )
 
+        ensure_tenant_email_columns(self.db)
         if self._get_admin_user_by_email(normalized_email) is not None:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
@@ -246,6 +256,9 @@ class AdminCredentialSettingsService:
             slug=normalized_workspace_slug,
             name=normalized_company_name,
             cache_prefix=f"tenant:{normalized_workspace_slug}",
+            **self._email_identity_for_slug(normalized_workspace_slug),
+            email_verified=False,
+            email_sending_status="enabled" if EMAIL_ENABLED else "disabled",
             estimated_response_time_message="We will contact you within 2 business hours.",
             feature_flags={
                 "booking_portal": False,
@@ -425,6 +438,14 @@ class AdminCredentialSettingsService:
             "admin_email": str(updated["admin_email"]),
             "password_changed_at": str(updated["password_changed_at"]),
         }
+
+    def get_tenant_email_identity(self, current_user: AuthenticatedUser) -> dict[str, object]:
+        if current_user.tenant_id is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tenant not found")
+        identity = resolve_tenant_email_identity(self.db, current_user.tenant_id)
+        if identity is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tenant not found")
+        return identity
 
     def update_admin_user(
         self,

@@ -417,6 +417,19 @@ export type BackendInvoiceBrandingSettings = {
   website: string;
 };
 
+export type BackendTenantEmailIdentity = {
+  tenant_id: string;
+  company_name: string;
+  tenant_slug: string;
+  support_email: string;
+  billing_email: string;
+  invoice_email: string;
+  notification_email: string;
+  email_domain: string;
+  email_sending_status: string;
+  email_verified: boolean;
+};
+
 export type BackendAdminPasswordChangeResponse = {
   status: string;
   admin_email: string;
@@ -1899,13 +1912,23 @@ export async function markInvoicePaid(
   });
 }
 
+export async function fetchAdminTenantEmailIdentity(
+  token: string,
+): Promise<BackendTenantEmailIdentity> {
+  return requestJson<BackendTenantEmailIdentity>('/admin/settings/email-identity', {
+    token,
+  });
+}
+
 export async function sendInvoiceEmail(
   token: string,
   invoiceId: string,
+  recipientEmail?: string,
 ): Promise<BackendInvoice> {
   return requestJson<BackendInvoice>(`/invoices/${invoiceId}/send-email`, {
     method: 'POST',
     token,
+    body: recipientEmail ? { recipient_email: recipientEmail } : undefined,
   });
 }
 

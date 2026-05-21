@@ -69,6 +69,19 @@ class AdminCredentialSettingsResponse(BaseModel):
     updated_at: datetime
 
 
+class TenantEmailIdentityResponse(BaseModel):
+    tenant_id: str
+    company_name: str
+    tenant_slug: str
+    support_email: str
+    billing_email: str
+    invoice_email: str
+    notification_email: str
+    email_domain: str
+    email_sending_status: str
+    email_verified: bool
+
+
 class AdminCredentialSettingsUpdatePayload(BaseModel):
     full_name: Optional[str] = Field(default=None, min_length=1, max_length=255)
     admin_email: str = Field(..., min_length=3, max_length=255)

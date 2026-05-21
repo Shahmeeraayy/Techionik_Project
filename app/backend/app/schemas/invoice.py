@@ -354,6 +354,22 @@ class InvoicePendingApprovalDetailResponse(InvoicePendingApprovalResponse):
     blocking_reasons: List[str] = Field(default_factory=list)
 
 
+class InvoiceSendEmailRequest(BaseModel):
+    recipient_email: Optional[str] = None
+
+    @field_validator("recipient_email")
+    @classmethod
+    def _normalize_recipient_email(cls, value: Optional[str]) -> Optional[str]:
+        if value is None:
+            return None
+        normalized = value.strip().lower()
+        if not normalized:
+            return None
+        if "@" not in normalized:
+            raise ValueError("recipient_email must be valid")
+        return normalized
+
+
 class InvoiceResponse(BaseModel):
     id: UUID
     invoice_number: str

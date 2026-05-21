@@ -20,6 +20,7 @@ from ...schemas.settings import (
     PriorityRuleCreatePayload,
     PriorityRuleResponse,
     PriorityRuleUpdatePayload,
+    TenantEmailIdentityResponse,
 )
 from ...services.admin_credential_settings_service import AdminCredentialSettingsService
 from ...services.email_service import send_email_or_raise, smtp_config_summary
@@ -48,6 +49,14 @@ def get_invoice_branding_settings(
 ):
     _ = current_user
     return InvoiceBrandingSettingsService(db).get_invoice_branding()
+
+
+@router.get("/email-identity", response_model=TenantEmailIdentityResponse)
+def get_tenant_email_identity(
+    db: Session = Depends(deps.get_db),
+    current_user: AuthenticatedUser = Depends(deps.require_roles(UserRole.ADMIN)),
+):
+    return AdminCredentialSettingsService(db).get_tenant_email_identity(current_user)
 
 
 @router.put("/invoice-branding", response_model=InvoiceBrandingSettingsResponse)

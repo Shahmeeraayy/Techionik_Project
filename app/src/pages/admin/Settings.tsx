@@ -8,6 +8,7 @@ import {
     History,
     Link2,
     ListFilter,
+    Mail,
     MapPin,
     Moon,
     Monitor,
@@ -75,6 +76,7 @@ import {
     fetchAdminPriorityRules,
     fetchAdminServices,
     fetchAdminInvoiceBrandingSettings,
+    fetchAdminTenantEmailIdentity,
     getStoredAdminToken,
     updateAdminBookingPortalSettings,
     updateAdminPriorityRule,
@@ -83,6 +85,7 @@ import {
     type BackendDealership,
     type BackendPriorityRule,
     type BackendServiceCatalogItem,
+    type BackendTenantEmailIdentity,
     type BackendTechnicianListItem,
 } from '@/lib/backend-api';
 import { useAuth } from '@/contexts/AuthContext';
@@ -266,6 +269,7 @@ export default function SettingsPage() {
     const [billingSubscription, setBillingSubscription] = useState<BillingSubscriptionSettings>(() => loadStoredObject(BILLING_SUBSCRIPTION_STORAGE_KEY, DEFAULT_BILLING_SUBSCRIPTION));
     const [bookingPortalSettings, setBookingPortalSettings] = useState<BookingPortalSettingsState>(DEFAULT_BOOKING_PORTAL_SETTINGS);
     const [savedBookingPortalSettings, setSavedBookingPortalSettings] = useState<BookingPortalSettingsState>(DEFAULT_BOOKING_PORTAL_SETTINGS);
+    const [tenantEmailIdentity, setTenantEmailIdentity] = useState<BackendTenantEmailIdentity | null>(null);
     const [priorityRules, setPriorityRules] = useState<PriorityRule[]>([]);
     const [dealershipOptions, setDealershipOptions] = useState<DealershipOption[]>([]);
     const [technicianCount, setTechnicianCount] = useState(0);
@@ -315,6 +319,7 @@ export default function SettingsPage() {
             setPriorityRules([]);
             setBookingPortalSettings(DEFAULT_BOOKING_PORTAL_SETTINGS);
             setSavedBookingPortalSettings(DEFAULT_BOOKING_PORTAL_SETTINGS);
+            setTenantEmailIdentity(null);
             return;
         }
 
@@ -327,6 +332,7 @@ export default function SettingsPage() {
                 servicesResult,
                 rulesResult,
                 bookingPortalResult,
+                emailIdentityResult,
             ] = await Promise.allSettled([
                 fetchAdminInvoiceBrandingSettings(adminToken),
                 fetchAdminDealerships(adminToken),
@@ -334,6 +340,7 @@ export default function SettingsPage() {
                 fetchAdminServices(adminToken, true),
                 fetchAdminPriorityRules(adminToken),
                 fetchAdminBookingPortalSettings(adminToken),
+                fetchAdminTenantEmailIdentity(adminToken),
             ]);
 
             if (brandingResult.status === 'fulfilled') {
@@ -395,6 +402,8 @@ export default function SettingsPage() {
                 setBookingPortalSettings(DEFAULT_BOOKING_PORTAL_SETTINGS);
                 setSavedBookingPortalSettings(DEFAULT_BOOKING_PORTAL_SETTINGS);
             }
+
+            setTenantEmailIdentity(emailIdentityResult.status === 'fulfilled' ? emailIdentityResult.value : null);
         } finally {
             setRefreshing(false);
         }
@@ -855,6 +864,54 @@ export default function SettingsPage() {
                 </div>
 
                 {/* ── Customer Booking Portal ── */}
+                <div className="rounded-2xl border border-white/8 bg-[#0d1829] p-6">
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                        <div>
+                            <div className="flex items-center gap-2">
+                                <Mail className="h-5 w-5 text-cyan-300" />
+                                <h2 className="text-2xl font-bold text-white">Workspace Email Identity</h2>
+                            </div>
+                            <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-400">
+                                Emails are sent directly from your NexusOps workspace using your company email identity.
+                                Customers do not need to receive invoices from a personal Gmail or Outlook account.
+                            </p>
+                        </div>
+                        <Badge className={cn(
+                            'w-fit rounded-full px-3 py-1 text-xs font-semibold',
+                            tenantEmailIdentity?.email_verified ? 'bg-emerald-500/15 text-emerald-200' : 'bg-amber-500/15 text-amber-200',
+                        )}>
+                            {tenantEmailIdentity?.email_verified ? 'Verified' : 'Demo / Unverified'}
+                        </Badge>
+                    </div>
+                    <div className="mt-6 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                        {([
+                            ['Billing emails will be sent from', tenantEmailIdentity?.billing_email],
+                            ['Support emails will be sent from', tenantEmailIdentity?.support_email],
+                            ['Invoice identity', tenantEmailIdentity?.invoice_email],
+                            ['Notifications identity', tenantEmailIdentity?.notification_email],
+                        ] as const).map(([label, value]) => (
+                            <div key={label} className="rounded-xl border border-white/8 bg-white/[0.025] p-4">
+                                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">{label}</p>
+                                <p className="mt-2 break-all text-sm font-semibold text-white">{value || 'Loading workspace identity...'}</p>
+                            </div>
+                        ))}
+                    </div>
+                    <div className="mt-4 grid gap-3 md:grid-cols-3">
+                        <div className="rounded-xl border border-white/8 bg-[#080f1c] p-4">
+                            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">Email domain</p>
+                            <p className="mt-2 break-all text-sm text-slate-200">{tenantEmailIdentity?.email_domain || 'tenant.nexusops.app'}</p>
+                        </div>
+                        <div className="rounded-xl border border-white/8 bg-[#080f1c] p-4">
+                            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">Sending status</p>
+                            <p className="mt-2 text-sm font-semibold text-cyan-200">{tenantEmailIdentity?.email_sending_status || 'demo'}</p>
+                        </div>
+                        <div className="rounded-xl border border-white/8 bg-[#080f1c] p-4">
+                            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">Workspace slug</p>
+                            <p className="mt-2 text-sm text-slate-200">{tenantEmailIdentity?.tenant_slug || 'workspace'}</p>
+                        </div>
+                    </div>
+                </div>
+
                 <div className="overflow-hidden rounded-2xl border border-white/8 bg-[#0d1829]">
                     {/* Dark header bar */}
                     <div className="flex flex-col gap-3 border-b border-white/8 bg-[#080f1c] px-6 py-4 sm:flex-row sm:items-center sm:justify-between">

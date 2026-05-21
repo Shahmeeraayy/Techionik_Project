@@ -15,6 +15,7 @@ from ...schemas.invoice import (
     InvoicePendingApprovalIssueResponse,
     InvoicePendingApprovalResponse,
     InvoiceResponse,
+    InvoiceSendEmailRequest,
     InvoiceUpdateRequest,
 )
 from ...services.invoice_service import InvoiceService
@@ -118,8 +119,11 @@ def mark_invoice_paid(
 @router.post("/{invoice_id}/send-email", response_model=InvoiceResponse)
 def send_invoice_email(
     invoice_id: UUID,
+    payload: InvoiceSendEmailRequest | None = None,
     db: Session = Depends(deps.get_db),
     current_user: AuthenticatedUser = Depends(deps.require_roles(UserRole.ADMIN)),
 ):
-    return InvoiceService(db, current_user).send_invoice_email(invoice_id)
-
+    return InvoiceService(db, current_user).send_invoice_email(
+        invoice_id,
+        recipient_email=payload.recipient_email if payload else None,
+    )

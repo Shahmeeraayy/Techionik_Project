@@ -46,7 +46,8 @@ from .invoice_branding_settings_service import (
     get_default_invoice_branding_payload,
 )
 from .job_services_service import JobServicesService
-from .email_service import EmailAttachment, send_email_or_raise
+from .email_service import EmailAttachment, send_platform_email
+from .tenant_email_identity import get_tenant_email_identity
 
 
 CENTS = Decimal("0.01")
@@ -517,7 +518,6 @@ class InvoiceService:
                 try:
                     booking = (
                         self.db.query(BookingRequest)
-                        .execution_options(skip_tenant_scope=True)
                         .filter(BookingRequest.id == UUID(str(booking_request_id)))
                         .first()
                     )
@@ -564,10 +564,25 @@ class InvoiceService:
             f"Due date: {invoice.due_date}\n"
             f"Total: ${Decimal(str(invoice.total)):.2f}\n\n"
             f"Line items:\n{lines}\n\n"
-            f"Please contact us at {invoice.company_email} if you have any questions.\n\n"
+            f"Please reply to this email if you have any questions.\n\n"
             f"Thank you,\n{invoice.company_name}\n\n"
             f"Sent to: {recipient}"
         )
+
+    def _tenant_email_identity(self) -> dict[str, str]:
+        if self.current_user.tenant_id is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tenant not found")
+        identity = get_tenant_email_identity(self.db, self.current_user.tenant_id)
+        if identity is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tenant not found")
+        return {
+            "company_name": str(identity["company_name"]),
+            "email_domain": str(identity["email_domain"]),
+            "support_email": str(identity["support_email"]),
+            "billing_email": str(identity["billing_email"]),
+            "invoice_email": str(identity["invoice_email"]),
+            "notification_email": str(identity["notification_email"]),
+        }
 
     def _build_invoice_email_html(self, invoice: Invoice, recipient: str) -> str:
         item_rows = "".join(
@@ -652,7 +667,7 @@ class InvoiceService:
               <td style="padding:22px 34px;background:#f8fafc;border-top:1px solid #e2e8f0;color:#475569;font-size:13px;line-height:1.65;">
                 <strong style="color:#0f172a;">{escape(invoice.company_name)}</strong><br>
                 {escape(company_address)}<br>
-                Questions? Reply to <a href="mailto:{escape(invoice.company_email)}" style="color:#0e7490;font-weight:700;">{escape(invoice.company_email)}</a>.
+                Questions? Reply directly to this email.
                 <div style="margin-top:12px;color:#94a3b8;">Sent to {escape(recipient)}</div>
               </td>
             </tr>
@@ -1821,7 +1836,7 @@ class InvoiceService:
         self.db.refresh(invoice)
         return self._to_response(invoice)
 
-    def send_invoice_email(self, invoice_id: UUID) -> InvoiceResponse:
+    def send_invoice_email(self, invoice_id: UUID, recipient_email: Optional[str] = None) -> InvoiceResponse:
         invoice = self._require_invoice(invoice_id)
         if invoice.status == InvoiceStatus.CANCELLED.value:
             raise HTTPException(
@@ -1839,14 +1854,17 @@ class InvoiceService:
         if primary_job is not None and primary_job.dealership_id is not None:
             dealership = self.db.query(Dealership).filter(Dealership.id == primary_job.dealership_id).first()
             dealership_name = dealership.name if dealership is not None else None
-        recipient = self._resolve_customer_email(invoice, primary_job, dealership_name or invoice.bill_to_name)
+        recipient = (recipient_email or "").strip().lower() or self._resolve_customer_email(invoice, primary_job, dealership_name or invoice.bill_to_name)
         if not recipient:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail="No customer email is available for this invoice",
             )
 
-        subject = f"Invoice {invoice.invoice_number}"
+        identity = self._tenant_email_identity()
+        sender = identity["billing_email"]
+        reply_to = identity["support_email"]
+        subject = f"Invoice {invoice.invoice_number} from {identity['company_name']}"
         body = self._build_invoice_email_body(invoice, recipient)
         html_body = self._build_invoice_email_html(invoice, recipient)
         pdf_attachment = EmailAttachment(
@@ -1854,31 +1872,41 @@ class InvoiceService:
             content=self._build_invoice_pdf_bytes(invoice),
             content_type="application/pdf",
         )
-        try:
-            send_email_or_raise(
-                to=recipient,
-                subject=subject,
-                body=body,
-                html_body=html_body,
-                attachments=[pdf_attachment],
-            )
-        except Exception as exc:
-            raise HTTPException(
-                status_code=status.HTTP_502_BAD_GATEWAY,
-                detail=f"Invoice email could not be sent: {exc}",
-            ) from exc
+        result = send_platform_email(
+            to=recipient,
+            from_email=sender,
+            from_name=identity["company_name"],
+            reply_to=reply_to,
+            subject=subject,
+            body=body,
+            html_body=html_body,
+            attachments=[pdf_attachment],
+        )
 
+        email_status = "sent" if result.status == "sent" else ("queued_demo" if result.demo_mode else "failed")
         self.db.add(
             EmailOutbox(
                 recipient_email=recipient,
+                sender_email=sender,
+                reply_to_email=reply_to,
                 subject=subject,
                 body=body,
                 message_type="invoice_email",
                 related_entity_type="invoice",
                 related_entity_id=str(invoice.id),
-                status="sent",
+                status=email_status,
+                error_message=result.error_message,
+                sent_at=datetime.now(timezone.utc) if email_status == "sent" else None,
             )
         )
+
+        if result.status == "failed":
+            self.db.commit()
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail=f"Invoice email could not be sent from {sender}: {result.error_message or 'provider failed'}",
+            )
+
         if invoice.status in {InvoiceStatus.DRAFT.value, InvoiceStatus.SENT.value, InvoiceStatus.OVERDUE.value}:
             invoice.status = InvoiceStatus.SENT.value
         self.repo.update(invoice)
@@ -1889,7 +1917,13 @@ class InvoiceService:
             action="invoice.emailed",
             entity_type=AuditEntityType.INVOICE.value,
             entity_id=invoice.id,
-            metadata={"invoice_number": invoice.invoice_number, "recipient_email": recipient},
+            metadata={
+                "invoice_number": invoice.invoice_number,
+                "recipient_email": recipient,
+                "sender_email": sender,
+                "email_status": email_status,
+                "email_provider": result.provider,
+            },
         )
         self.db.commit()
         self.db.refresh(invoice)

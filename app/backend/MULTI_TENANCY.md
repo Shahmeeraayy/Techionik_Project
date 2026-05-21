@@ -15,7 +15,7 @@ This backend now includes a Supabase-ready multi-tenant foundation built around 
   - JWT tenant claims
   - `X-Tenant-Id`
   - `X-Tenant-Slug`
-  - `book.[tenant].nexusops.com` style hosts
+  - `book.[tenant].nexusops.app` style hosts
 - JWT decoding that accepts:
   - legacy app-issued tokens
   - Supabase HS256 JWTs when `SUPABASE_JWT_SECRET` is configured

@@ -50,6 +50,31 @@ app = FastAPI(
 def ensure_runtime_schema() -> None:
     with deps.engine.begin() as conn:
         Base.metadata.create_all(bind=conn)
+        tenant_columns = {column["name"] for column in inspect(conn).get_columns("tenants")}
+        tenant_runtime_columns = {
+            "email_domain": "VARCHAR(255)",
+            "support_email": "VARCHAR(255)",
+            "billing_email": "VARCHAR(255)",
+            "invoice_email": "VARCHAR(255)",
+            "notification_email": "VARCHAR(255)",
+            "email_verified": "BOOLEAN DEFAULT false NOT NULL",
+            "email_sending_status": "VARCHAR(32) DEFAULT 'demo' NOT NULL",
+        }
+        for column_name, column_type in tenant_runtime_columns.items():
+            if tenant_columns and column_name not in tenant_columns:
+                conn.exec_driver_sql(f"ALTER TABLE tenants ADD COLUMN {column_name} {column_type}")
+
+        email_outbox_columns = {column["name"] for column in inspect(conn).get_columns("email_outbox")}
+        email_outbox_runtime_columns = {
+            "sender_email": "VARCHAR(255)",
+            "reply_to_email": "VARCHAR(255)",
+            "error_message": "TEXT",
+            "sent_at": "TIMESTAMP",
+        }
+        for column_name, column_type in email_outbox_runtime_columns.items():
+            if email_outbox_columns and column_name not in email_outbox_columns:
+                conn.exec_driver_sql(f"ALTER TABLE email_outbox ADD COLUMN {column_name} {column_type}")
+
         invoice_columns = {column["name"] for column in inspect(conn).get_columns("invoices")}
         if invoice_columns and "approval_note" not in invoice_columns:
             conn.exec_driver_sql("ALTER TABLE invoices ADD COLUMN approval_note TEXT")

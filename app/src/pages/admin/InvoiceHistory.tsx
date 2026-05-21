@@ -412,7 +412,7 @@ export default function InvoiceHistoryPage() {
             const updatedInvoice = await sendInvoiceEmail(adminToken, invoice.id);
             refreshSelectedInvoice(updatedInvoice);
             setActionPrompt(null);
-            setActionNotice({ title: 'Invoice email sent', description: `The invoice was sent to ${recipient}.` });
+            setActionNotice({ title: 'Invoice email sent', description: `The invoice was sent to ${recipient} directly from your NexusOps workspace email identity.` });
         } catch (error) {
             setActionNotice({ title: 'Email not sent', description: error instanceof Error ? error.message : 'Unable to send invoice email.' });
         } finally {
