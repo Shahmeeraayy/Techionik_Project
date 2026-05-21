@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type CSSProperties } from 'react';
+import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from 'react';
 import {
   Calendar,
   Download,
@@ -8,6 +8,7 @@ import {
   DollarSign,
   FileWarning,
   RefreshCw,
+  Search,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -143,6 +144,31 @@ function dispatchBadgeTone(row: BackendDispatchStatusRow): string {
     return 'border-red-300/20 bg-red-300/10 text-red-100';
   }
   return 'border-white/10 bg-[rgba(255,255,255,0.04)] text-slate-100';
+}
+
+function EmptyReportState({
+  title,
+  description,
+  action,
+}: {
+  title: string;
+  description: string;
+  action?: ReactNode;
+}) {
+  return (
+    <div className="rounded-2xl border border-white/8 bg-[rgba(255,255,255,0.025)] px-4 py-4">
+      <div className="flex items-start gap-3">
+        <div className="rounded-xl border border-cyan-300/15 bg-cyan-300/10 p-2 text-cyan-100">
+          <Search className="h-4 w-4" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-semibold text-white">{title}</p>
+          <p className="mt-1 text-sm leading-6 text-slate-400">{description}</p>
+          {action ? <div className="mt-3 flex flex-wrap gap-2">{action}</div> : null}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export default function ReportsPage() {
@@ -293,33 +319,24 @@ export default function ReportsPage() {
   }, [overview, dealershipFilter]);
 
   const kpis = overview?.kpis;
-  const technicianCount = overview?.technician_performance.length ?? 0;
-  const capacityUtilizationRows = useMemo(() => {
-    const rows = overview?.capacity_planning?.utilization_by_day ?? [];
-    if (rows.length || !overview) return rows;
-
-    const jobsCreated = overview.kpis.jobs_created;
-    const jobsCompleted = overview.kpis.jobs_completed;
-    const utilization = overview.kpis.technician_utilization;
-    const perTech = (value: number) => (technicianCount ? Number((value / technicianCount).toFixed(1)) : 0);
-
-    return [
-      {
-        day_of_week: 'Current range',
-        jobs_count: jobsCreated,
-        technician_utilization: utilization,
-        jobs_per_technician: perTech(jobsCreated),
-      },
-      {
-        day_of_week: 'Completed workload',
-        jobs_count: jobsCompleted,
-        technician_utilization: utilization,
-        jobs_per_technician: perTech(jobsCompleted),
-      },
-    ];
-  }, [overview, technicianCount]);
+  const capacityUtilizationRows = overview?.capacity_planning?.utilization_by_day ?? [];
   const peakDemandRows = overview?.capacity_planning?.peak_demand_windows ?? [];
   const understaffedRows = overview?.capacity_planning?.understaffed_periods ?? [];
+  const invoicePaidTotal = overview?.invoice_performance
+    .filter((row) => row.state.toLowerCase() === 'paid')
+    .reduce((sum, row) => sum + Number(row.total_amount || 0), 0) ?? 0;
+  const invoiceSentTotal = overview?.invoice_performance
+    .filter((row) => row.state.toLowerCase() === 'sent')
+    .reduce((sum, row) => sum + Number(row.total_amount || 0), 0) ?? 0;
+  const invoicePendingCount = overview?.invoice_performance
+    .filter((row) => ['draft', 'pending', 'pending approval', 'overdue'].includes(row.state.toLowerCase()))
+    .reduce((sum, row) => sum + Number(row.count || 0), 0) ?? 0;
+  const hasReportActivity = Boolean(
+    (kpis?.jobs_created ?? 0) ||
+    (kpis?.jobs_completed ?? 0) ||
+    (kpis?.invoice_total ?? 0) ||
+    (kpis?.pending_approvals ?? 0)
+  );
 
   return (
     <div className="relative w-full pb-10">
@@ -341,7 +358,7 @@ export default function ReportsPage() {
               <h1 className="mt-5 text-[2.35rem] font-semibold leading-none tracking-[-0.06em] text-white md:text-[2.8rem]">
                 Reports
                 <span className="block bg-gradient-to-r from-slate-950 via-blue-700 to-cyan-500 bg-clip-text text-transparent dark:from-white dark:via-cyan-100 dark:to-emerald-100">
-                  command deck
+                  live dashboard
                 </span>
               </h1>
               <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-300 sm:text-[15px]">
@@ -453,6 +470,31 @@ export default function ReportsPage() {
           </Card>
         ) : null}
 
+        {overview && !loading ? (
+          <Card className="rounded-[24px] border border-white/10 bg-[rgba(255,255,255,0.035)] p-5">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-cyan-100">Report Summary</p>
+                <p className="mt-2 text-sm leading-7 text-slate-300">
+                  {hasReportActivity
+                    ? `For the selected range, the platform recorded ${numberFmt.format(kpis?.jobs_created ?? 0)} jobs, ${numberFmt.format(kpis?.jobs_completed ?? 0)} completed jobs, ${currencyFmt.format(kpis?.invoice_total ?? 0)} invoice total, and ${numberFmt.format(kpis?.pending_approvals ?? 0)} pending approvals.`
+                    : 'No report activity was recorded in the selected range. Try viewing this month, widening the date range, or creating jobs and invoices to populate live reporting.'}
+                </p>
+              </div>
+              {!hasReportActivity ? (
+                <div className="flex flex-wrap gap-2">
+                  <Button size="sm" variant="outline" className="rounded-full border-white/10 bg-white/[0.04] text-slate-100 hover:bg-white/[0.08]" onClick={() => handleQuickRangeChange('this_month')}>
+                    View This Month
+                  </Button>
+                  <Button size="sm" variant="outline" className="rounded-full border-white/10 bg-white/[0.04] text-slate-100 hover:bg-white/[0.08]" onClick={handleRefresh}>
+                    Refresh Data
+                  </Button>
+                </div>
+              ) : null}
+            </div>
+          </Card>
+        ) : null}
+
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
           <Card className={metricCardClass('cyan')}>
             <div className="p-5">
@@ -460,7 +502,7 @@ export default function ReportsPage() {
                 <div className="space-y-2">
                   <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Jobs Created</p>
                   {loading ? <Skeleton className="mt-3 h-8 w-20 bg-white/10" /> : <div className="mt-3 text-[2.15rem] font-semibold leading-none tracking-[-0.06em] text-white">{numberFmt.format(kpis?.jobs_created ?? 0)}</div>}
-                  <p className="text-sm text-slate-300">New work orders in range</p>
+                  <p className="text-sm text-slate-300">{(kpis?.jobs_created ?? 0) > 0 ? 'New work orders in range' : 'No jobs created in selected range'}</p>
                 </div>
                 <div className={metricIconClass('cyan')}>
                   <Briefcase className="w-5 h-5" />
@@ -475,7 +517,7 @@ export default function ReportsPage() {
                 <div className="space-y-2">
                   <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Jobs Completed</p>
                   {loading ? <Skeleton className="mt-3 h-8 w-20 bg-white/10" /> : <div className="mt-3 text-[2.15rem] font-semibold leading-none tracking-[-0.06em] text-white">{numberFmt.format(kpis?.jobs_completed ?? 0)}</div>}
-                  <p className="text-sm text-slate-300">Closed successfully in range</p>
+                  <p className="text-sm text-slate-300">{(kpis?.jobs_completed ?? 0) > 0 ? 'Closed successfully in range' : 'No completed jobs in selected range'}</p>
                 </div>
                 <div className={metricIconClass('emerald')}>
                   <CheckCircle2 className="w-5 h-5" />
@@ -490,7 +532,7 @@ export default function ReportsPage() {
                 <div className="space-y-2">
                   <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Technician Utilization</p>
                   {loading ? <Skeleton className="mt-3 h-8 w-20 bg-white/10" /> : <div className="mt-3 text-[2.15rem] font-semibold leading-none tracking-[-0.06em] text-white">{percentFmt.format(kpis?.technician_utilization ?? 0)}%</div>}
-                  <p className="text-sm text-slate-300">Field capacity actively used</p>
+                  <p className="text-sm text-slate-300">{(kpis?.technician_utilization ?? 0) > 0 ? 'Field capacity actively used' : 'No utilization recorded yet'}</p>
                 </div>
                 <div className={metricIconClass('violet')}>
                   <Users className="w-5 h-5" />
@@ -505,7 +547,11 @@ export default function ReportsPage() {
                 <div className="space-y-2">
                   <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Invoice Total</p>
                   {loading ? <Skeleton className="mt-3 h-8 w-20 bg-white/10" /> : <div className="mt-3 text-[2.15rem] font-semibold leading-none tracking-[-0.06em] text-white">{currencyFmt.format(kpis?.invoice_total ?? 0)}</div>}
-                  <p className="text-sm text-slate-300">Gross invoiced in selected range</p>
+                  <p className="text-sm text-slate-300">
+                    {(kpis?.invoice_total ?? 0) > 0
+                      ? `${currencyFmt.format(invoicePaidTotal)} paid, ${currencyFmt.format(invoiceSentTotal)} sent`
+                      : 'No invoice value in selected range'}
+                  </p>
                 </div>
                 <div className={metricIconClass('amber')}>
                   <DollarSign className="w-5 h-5" />
@@ -520,7 +566,7 @@ export default function ReportsPage() {
                 <div className="space-y-2">
                   <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Pending Approvals</p>
                   {loading ? <Skeleton className="mt-3 h-8 w-20 bg-white/10" /> : <div className="mt-3 text-[2.15rem] font-semibold leading-none tracking-[-0.06em] text-white">{numberFmt.format(kpis?.pending_approvals ?? 0)}</div>}
-                  <p className="text-sm text-slate-300">Invoices still requiring action</p>
+                  <p className="text-sm text-slate-300">{(kpis?.pending_approvals ?? 0) > 0 ? `${invoicePendingCount} invoice records pending action` : 'No invoices need approval'}</p>
                 </div>
                 <div className={metricIconClass('rose')}>
                   <FileWarning className="w-5 h-5" />
@@ -528,6 +574,11 @@ export default function ReportsPage() {
               </div>
             </div>
           </Card>
+        </div>
+
+        <div className="pt-2">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-100">Operational Performance</p>
+          <p className="mt-1 text-sm text-slate-400">Live dispatch, intake, and capacity indicators for the selected range.</p>
         </div>
 
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
@@ -560,13 +611,22 @@ export default function ReportsPage() {
                     </div>
                   ))
                 ) : (
-                  <p className="text-sm text-slate-400">No urgency records in this range.</p>
+                  <EmptyReportState
+                    title="No urgency mix yet"
+                    description="No jobs with urgency data were created in this date range. Widen the range or create jobs with priority levels to populate this breakdown."
+                    action={<Button size="sm" variant="outline" className="rounded-full border-white/10 bg-white/[0.04] text-slate-100 hover:bg-white/[0.08]" onClick={() => handleQuickRangeChange('this_month')}>View This Month</Button>}
+                  />
                 )}
               </div>
             </div>
           </Card>
 
-          <Card className={sectionCardClass}>
+          <div className="pt-2 xl:col-span-2">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-100">Financial Performance</p>
+            <p className="mt-1 text-sm text-slate-400">Invoice lifecycle and billing value from real invoice records.</p>
+          </div>
+
+          <Card className={cn(sectionCardClass, 'xl:col-span-2')}>
             <div className={sectionHeaderClass}>
               <h2 className="text-base font-semibold text-slate-950 dark:text-white">Intake Analytics</h2>
               <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Source channels, conversion, dismissed reasons, and intake-to-job timing.</p>
@@ -597,7 +657,11 @@ export default function ReportsPage() {
                   </div>
                 ))
               ) : (
-                <p className="text-sm text-slate-400">No intake source records in this range.</p>
+                <EmptyReportState
+                  title="No intake records found"
+                  description="No customer booking or intake records were captured for this period. Try a wider range or enable booking intake to see conversion analytics."
+                  action={<Button size="sm" variant="outline" className="rounded-full border-white/10 bg-white/[0.04] text-slate-100 hover:bg-white/[0.08]" onClick={handleRefresh}>Refresh Data</Button>}
+                />
               )}
               <p className="text-xs text-slate-500">
                 Dismissed reason tracking appears here when intake records are dismissed before job conversion.
@@ -621,9 +685,11 @@ export default function ReportsPage() {
                     <p className="mt-1 text-xs text-slate-500">{row.jobs_per_technician} jobs/tech - {row.technician_utilization}% utilization</p>
                   </div>
                 )) : (
-                  <p className="rounded-xl border border-white/8 bg-[rgba(255,255,255,0.03)] px-3 py-3 text-sm text-slate-400">
-                    No utilization rows yet for this range.
-                  </p>
+                  <EmptyReportState
+                    title="No capacity data yet"
+                    description="Capacity planning needs scheduled jobs and technician activity in the selected range. No synthetic utilization rows are shown."
+                    action={<Button size="sm" variant="outline" className="rounded-full border-white/10 bg-white/[0.04] text-slate-100 hover:bg-white/[0.08]" onClick={() => handleQuickRangeChange('this_month')}>View This Month</Button>}
+                  />
                 )}
               </div>
               <div>
@@ -648,6 +714,11 @@ export default function ReportsPage() {
               </div>
             </div>
           </Card>
+        </div>
+
+        <div className="pt-2">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-100">Operational Status</p>
+          <p className="mt-1 text-sm text-slate-400">Job status distribution from live dispatch records.</p>
         </div>
 
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
@@ -684,7 +755,11 @@ export default function ReportsPage() {
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-slate-400">No dispatch records in selected period.</p>
+                <EmptyReportState
+                  title="No dispatch records in this period"
+                  description="There are no jobs with dispatch status changes in the selected range. Try this month or create and progress jobs to populate this chart."
+                  action={<Button size="sm" variant="outline" className="rounded-full border-white/10 bg-white/[0.04] text-slate-100 hover:bg-white/[0.08]" onClick={() => handleQuickRangeChange('this_month')}>View This Month</Button>}
+                />
               )}
             </div>
           </Card>
@@ -746,10 +821,19 @@ export default function ReportsPage() {
                   ) : null}
                 </div>
               ) : (
-                <p className="text-sm text-slate-400">No invoice records in selected period.</p>
+                <EmptyReportState
+                  title="No invoice records in this period"
+                  description="No invoices were created, sent, paid, or overdue in the selected range. Create invoices or expand the date range to see financial performance."
+                  action={<Button size="sm" variant="outline" className="rounded-full border-white/10 bg-white/[0.04] text-slate-100 hover:bg-white/[0.08]" onClick={() => handleQuickRangeChange('this_month')}>View This Month</Button>}
+                />
               )}
             </div>
           </Card>
+        </div>
+
+        <div className="pt-2">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-100">Team Performance</p>
+          <p className="mt-1 text-sm text-slate-400">Technician assignment, completion, delay, and revenue activity.</p>
         </div>
 
         <Card className={sectionCardClass}>
@@ -818,12 +902,25 @@ export default function ReportsPage() {
                 </Table>
               </div>
             ) : overview?.technician_performance.length ? (
-              <p className="text-sm text-slate-400">No technicians match the current filter.</p>
+              <EmptyReportState
+                title="No technicians match this filter"
+                description="Clear or change the technician search to view available live performance rows."
+                action={<Button size="sm" variant="outline" className="rounded-full border-white/10 bg-white/[0.04] text-slate-100 hover:bg-white/[0.08]" onClick={() => setTechnicianFilter('')}>Clear Filter</Button>}
+              />
             ) : (
-              <p className="text-sm text-slate-400">No technician records found.</p>
+              <EmptyReportState
+                title="No technician performance yet"
+                description="Technician reporting appears after jobs are assigned, accepted, completed, delayed, or refused in the selected date range."
+                action={<Button size="sm" variant="outline" className="rounded-full border-white/10 bg-white/[0.04] text-slate-100 hover:bg-white/[0.08]" onClick={() => handleQuickRangeChange('this_month')}>View This Month</Button>}
+              />
             )}
           </div>
         </Card>
+
+        <div className="pt-2">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-100">Location Performance</p>
+          <p className="mt-1 text-sm text-slate-400">Customer and location performance based on completed work and invoices.</p>
+        </div>
 
         <Card className={sectionCardClass}>
           <div className={cn(sectionHeaderClass, 'flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between')}>
@@ -887,9 +984,17 @@ export default function ReportsPage() {
                 </Table>
               </div>
             ) : overview?.dealership_performance.length ? (
-              <p className="text-sm text-slate-400">No dealerships match the current filter.</p>
+              <EmptyReportState
+                title="No locations match this filter"
+                description="Clear or change the location search to view available live performance rows."
+                action={<Button size="sm" variant="outline" className="rounded-full border-white/10 bg-white/[0.04] text-slate-100 hover:bg-white/[0.08]" onClick={() => setDealershipFilter('')}>Clear Filter</Button>}
+              />
             ) : (
-              <p className="text-sm text-slate-400">No dealership records found.</p>
+              <EmptyReportState
+                title="No location performance yet"
+                description="Location reporting appears after jobs and invoices are associated with customer or location records in the selected range."
+                action={<Button size="sm" variant="outline" className="rounded-full border-white/10 bg-white/[0.04] text-slate-100 hover:bg-white/[0.08]" onClick={() => handleQuickRangeChange('this_month')}>View This Month</Button>}
+              />
             )}
           </div>
         </Card>
