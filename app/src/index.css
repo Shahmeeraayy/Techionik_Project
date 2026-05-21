@@ -3824,11 +3824,11 @@
 }
 
 .light .tech-nav-dock button[class*="bg-[#252525]"] {
-  background: #2563eb !important;
+  background: #0f172a !important;
   background-image: none !important;
-  border-color: rgba(37, 99, 235, 0.28) !important;
+  border-color: rgba(15, 23, 42, 0.18) !important;
   color: #ffffff !important;
-  box-shadow: 0 14px 28px rgba(37, 99, 235, 0.18) !important;
+  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.18) !important;
 }
 
 .light .tech-nav-dock button[class*="bg-[#252525]"] *,
@@ -3842,6 +3842,48 @@
   background: #f8fafc !important;
   background-image: none !important;
   color: #0f172a !important;
+}
+
+.light .tech-shell .tech-chat-send-button {
+  background: linear-gradient(135deg, #2563eb, #06b6d4) !important;
+  border: 1px solid rgba(37, 99, 235, 0.35) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  box-shadow: 0 16px 34px rgba(37, 99, 235, 0.22) !important;
+  opacity: 1 !important;
+}
+
+.light .tech-shell .tech-chat-send-button svg,
+.light .tech-shell .tech-chat-send-button * {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+.light .tech-shell .tech-chat-send-button:hover:not(:disabled) {
+  background: linear-gradient(135deg, #1d4ed8, #0891b2) !important;
+  color: #ffffff !important;
+}
+
+.light .tech-shell .tech-chat-send-button:disabled,
+.light .tech-shell .tech-chat-send-button[aria-disabled="true"],
+.light .tech-shell .tech-chat-send-button[data-disabled] {
+  background: #dbeafe !important;
+  background-image: none !important;
+  border-color: rgba(37, 99, 235, 0.28) !important;
+  color: #2563eb !important;
+  -webkit-text-fill-color: #2563eb !important;
+  opacity: 1 !important;
+  box-shadow: 0 10px 24px rgba(37, 99, 235, 0.12) !important;
+}
+
+.light .tech-shell .tech-chat-send-button:disabled svg,
+.light .tech-shell .tech-chat-send-button[aria-disabled="true"] svg,
+.light .tech-shell .tech-chat-send-button[data-disabled] svg,
+.light .tech-shell .tech-chat-send-button:disabled *,
+.light .tech-shell .tech-chat-send-button[aria-disabled="true"] *,
+.light .tech-shell .tech-chat-send-button[data-disabled] * {
+  color: #2563eb !important;
+  -webkit-text-fill-color: #2563eb !important;
 }
 
 /* Remaining shared portal components not covered by sheet/dialog/dropdown/select. */

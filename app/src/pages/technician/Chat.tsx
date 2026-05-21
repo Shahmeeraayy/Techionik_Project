@@ -417,8 +417,9 @@ export default function TechnicianChatPage() {
                   <Button
                     type="button"
                     onClick={() => void handleSend()}
-                    className="h-12 w-12 shrink-0 rounded-full bg-[linear-gradient(135deg,#4f7cff,#7aa2ff)] text-white shadow-[0_18px_40px_rgba(79,124,255,0.24)] hover:bg-[linear-gradient(135deg,#5d88ff,#89adff)]"
+                    className="tech-chat-send-button h-12 w-12 shrink-0 rounded-full bg-[linear-gradient(135deg,#4f7cff,#7aa2ff)] text-white shadow-[0_18px_40px_rgba(79,124,255,0.24)] hover:bg-[linear-gradient(135deg,#5d88ff,#89adff)]"
                     disabled={isPreviewMode}
+                    aria-label="Send message"
                   >
                     <Send className="h-4 w-4" />
                   </Button>
