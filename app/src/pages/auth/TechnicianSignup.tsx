@@ -34,12 +34,14 @@ export default function TechnicianSignupPage() {
           ))}
         </div>
 
-        <Button type="button" asChild className={`${authPrimaryButtonClass} mx-auto max-w-sm`}>
-          <Link to="/tech/login">
-            Go to sign in
-            <ArrowRight className="ml-2 h-4 w-4" />
-          </Link>
-        </Button>
+        <div className="mx-auto w-full max-w-sm">
+          <Button type="button" asChild className={authPrimaryButtonClass}>
+            <Link to="/tech/login">
+              Go to sign in
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Link>
+          </Button>
+        </div>
 
         <div className="text-center text-sm text-white/62">
           Need admin access?{' '}
