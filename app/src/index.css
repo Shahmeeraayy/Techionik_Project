@@ -2364,12 +2364,29 @@
 .light .admin-shell [class*="bg-[linear-gradient(180deg,rgba(10,"],
 .light .admin-shell [class*="bg-[linear-gradient(180deg,rgba(11,"],
 .light .admin-shell [class*="bg-[linear-gradient(180deg,rgba(12,"],
+.light .admin-shell [class*="bg-[linear-gradient(180deg,rgba(13,"],
+.light .admin-shell [class*="bg-[linear-gradient(180deg,rgba(14,"],
+.light .admin-shell [class*="bg-[linear-gradient(180deg,rgba(15,"],
+.light .admin-shell [class*="bg-[linear-gradient(180deg,rgba(16,"],
+.light .admin-shell [class*="bg-[linear-gradient(180deg,rgba(18,"],
+.light .admin-shell [class*="bg-[linear-gradient(180deg,rgba(24,"],
+.light .admin-shell [class*="bg-[linear-gradient(180deg,rgba(36,"],
+.light .admin-shell [class*="bg-[linear-gradient(180deg,rgba(44,"],
+.light .admin-shell [class*="bg-[linear-gradient(180deg,rgba(52,"],
+.light .admin-shell [class*="bg-[linear-gradient(180deg,rgba(61,"],
+.light .admin-shell [class*="bg-[linear-gradient(180deg,rgba(76,"],
 .light .admin-shell [class*="bg-[linear-gradient(135deg,rgba(7,"],
 .light .admin-shell [class*="bg-[linear-gradient(135deg,rgba(8,"],
 .light .admin-shell [class*="bg-[linear-gradient(135deg,rgba(9,"],
 .light .admin-shell [class*="bg-[linear-gradient(135deg,rgba(10,"],
 .light .admin-shell [class*="bg-[linear-gradient(135deg,rgba(11,"],
 .light .admin-shell [class*="bg-[linear-gradient(135deg,rgba(12,"],
+.light .admin-shell [class*="bg-[linear-gradient(135deg,rgba(13,"],
+.light .admin-shell [class*="bg-[linear-gradient(135deg,rgba(14,"],
+.light .admin-shell [class*="bg-[linear-gradient(135deg,rgba(15,"],
+.light .admin-shell [class*="bg-[linear-gradient(135deg,rgba(16,"],
+.light .admin-shell [class*="bg-[linear-gradient(135deg,rgba(18,"],
+.light .admin-shell [class*="bg-[linear-gradient(135deg,rgba(24,"],
 .light .admin-shell [class*="bg-[#050505]"],
 .light .admin-shell [class*="bg-[#05070b]"],
 .light .admin-shell [class*="bg-[#060913]"],
@@ -2597,6 +2614,481 @@
   background: #ffffff !important;
   color: #111827 !important;
   -webkit-text-fill-color: #111827 !important;
+}
+
+/* Radix portals live outside `.admin-shell`, so drawers/modals/menus need their
+   own light-mode guard. Dark mode is untouched because every selector is `.light`. */
+.light :is(
+  [data-slot="sheet-content"],
+  [data-slot="dialog-content"],
+  [data-slot="dropdown-menu-content"],
+  [data-slot="popover-content"],
+  [data-slot="select-content"]
+) {
+  background: #ffffff !important;
+  background-image: none !important;
+  border-color: rgba(148, 163, 184, 0.28) !important;
+  color: #0f172a !important;
+  box-shadow: 0 28px 80px rgba(15, 23, 42, 0.16) !important;
+  color-scheme: light !important;
+}
+
+.light :is(
+  [data-slot="sheet-content"],
+  [data-slot="dialog-content"],
+  [data-slot="dropdown-menu-content"],
+  [data-slot="popover-content"],
+  [data-slot="select-content"]
+) :is(h1, h2, h3, h4, h5, h6, [data-slot="dialog-title"], [data-slot="sheet-title"]) {
+  color: #0f172a !important;
+  -webkit-text-fill-color: #0f172a !important;
+}
+
+.light :is(
+  [data-slot="sheet-content"],
+  [data-slot="dialog-content"],
+  [data-slot="dropdown-menu-content"],
+  [data-slot="popover-content"],
+  [data-slot="select-content"]
+) [class*="bg-[#050505]"],
+.light :is(
+  [data-slot="sheet-content"],
+  [data-slot="dialog-content"],
+  [data-slot="dropdown-menu-content"],
+  [data-slot="popover-content"],
+  [data-slot="select-content"]
+) [class*="bg-[#05070b]"],
+.light :is(
+  [data-slot="sheet-content"],
+  [data-slot="dialog-content"],
+  [data-slot="dropdown-menu-content"],
+  [data-slot="popover-content"],
+  [data-slot="select-content"]
+) [class*="bg-[#060913]"],
+.light :is(
+  [data-slot="sheet-content"],
+  [data-slot="dialog-content"],
+  [data-slot="dropdown-menu-content"],
+  [data-slot="popover-content"],
+  [data-slot="select-content"]
+) [class*="bg-[#07101f]"],
+.light :is(
+  [data-slot="sheet-content"],
+  [data-slot="dialog-content"],
+  [data-slot="dropdown-menu-content"],
+  [data-slot="popover-content"],
+  [data-slot="select-content"]
+) [class*="bg-[#07121f]"],
+.light :is(
+  [data-slot="sheet-content"],
+  [data-slot="dialog-content"],
+  [data-slot="dropdown-menu-content"],
+  [data-slot="popover-content"],
+  [data-slot="select-content"]
+) [class*="bg-[#080c14]"],
+.light :is(
+  [data-slot="sheet-content"],
+  [data-slot="dialog-content"],
+  [data-slot="dropdown-menu-content"],
+  [data-slot="popover-content"],
+  [data-slot="select-content"]
+) [class*="bg-[#0a1220]"],
+.light :is(
+  [data-slot="sheet-content"],
+  [data-slot="dialog-content"],
+  [data-slot="dropdown-menu-content"],
+  [data-slot="popover-content"],
+  [data-slot="select-content"]
+) [class*="bg-[#0b1424]"],
+.light :is(
+  [data-slot="sheet-content"],
+  [data-slot="dialog-content"],
+  [data-slot="dropdown-menu-content"],
+  [data-slot="popover-content"],
+  [data-slot="select-content"]
+) [class*="bg-[#091827]"],
+.light :is(
+  [data-slot="sheet-content"],
+  [data-slot="dialog-content"],
+  [data-slot="dropdown-menu-content"],
+  [data-slot="popover-content"],
+  [data-slot="select-content"]
+) [class*="bg-slate-950"],
+.light :is(
+  [data-slot="sheet-content"],
+  [data-slot="dialog-content"],
+  [data-slot="dropdown-menu-content"],
+  [data-slot="popover-content"],
+  [data-slot="select-content"]
+) [class*="bg-slate-900"],
+.light :is(
+  [data-slot="sheet-content"],
+  [data-slot="dialog-content"],
+  [data-slot="dropdown-menu-content"],
+  [data-slot="popover-content"],
+  [data-slot="select-content"]
+) [class*="bg-slate-800"],
+.light :is(
+  [data-slot="sheet-content"],
+  [data-slot="dialog-content"],
+  [data-slot="dropdown-menu-content"],
+  [data-slot="popover-content"],
+  [data-slot="select-content"]
+) [class*="bg-zinc-950"],
+.light :is(
+  [data-slot="sheet-content"],
+  [data-slot="dialog-content"],
+  [data-slot="dropdown-menu-content"],
+  [data-slot="popover-content"],
+  [data-slot="select-content"]
+) [class*="bg-black/"],
+.light :is(
+  [data-slot="sheet-content"],
+  [data-slot="dialog-content"],
+  [data-slot="dropdown-menu-content"],
+  [data-slot="popover-content"],
+  [data-slot="select-content"]
+) [class*="bg-[linear-gradient(180deg,rgba(7,"],
+.light :is(
+  [data-slot="sheet-content"],
+  [data-slot="dialog-content"],
+  [data-slot="dropdown-menu-content"],
+  [data-slot="popover-content"],
+  [data-slot="select-content"]
+) [class*="bg-[linear-gradient(180deg,rgba(8,"],
+.light :is(
+  [data-slot="sheet-content"],
+  [data-slot="dialog-content"],
+  [data-slot="dropdown-menu-content"],
+  [data-slot="popover-content"],
+  [data-slot="select-content"]
+) [class*="bg-[linear-gradient(180deg,rgba(9,"],
+.light :is(
+  [data-slot="sheet-content"],
+  [data-slot="dialog-content"],
+  [data-slot="dropdown-menu-content"],
+  [data-slot="popover-content"],
+  [data-slot="select-content"]
+) [class*="bg-[linear-gradient(180deg,rgba(10,"],
+.light :is(
+  [data-slot="sheet-content"],
+  [data-slot="dialog-content"],
+  [data-slot="dropdown-menu-content"],
+  [data-slot="popover-content"],
+  [data-slot="select-content"]
+) [class*="bg-[linear-gradient(180deg,rgba(11,"],
+.light :is(
+  [data-slot="sheet-content"],
+  [data-slot="dialog-content"],
+  [data-slot="dropdown-menu-content"],
+  [data-slot="popover-content"],
+  [data-slot="select-content"]
+) [class*="bg-[linear-gradient(180deg,rgba(12,"],
+.light :is(
+  [data-slot="sheet-content"],
+  [data-slot="dialog-content"],
+  [data-slot="dropdown-menu-content"],
+  [data-slot="popover-content"],
+  [data-slot="select-content"]
+) [class*="bg-[linear-gradient(180deg,rgba(13,"],
+.light :is(
+  [data-slot="sheet-content"],
+  [data-slot="dialog-content"],
+  [data-slot="dropdown-menu-content"],
+  [data-slot="popover-content"],
+  [data-slot="select-content"]
+) [class*="bg-[linear-gradient(180deg,rgba(14,"],
+.light :is(
+  [data-slot="sheet-content"],
+  [data-slot="dialog-content"],
+  [data-slot="dropdown-menu-content"],
+  [data-slot="popover-content"],
+  [data-slot="select-content"]
+) [class*="bg-[linear-gradient(180deg,rgba(15,"],
+.light :is(
+  [data-slot="sheet-content"],
+  [data-slot="dialog-content"],
+  [data-slot="dropdown-menu-content"],
+  [data-slot="popover-content"],
+  [data-slot="select-content"]
+) [class*="bg-[linear-gradient(180deg,rgba(16,"],
+.light :is(
+  [data-slot="sheet-content"],
+  [data-slot="dialog-content"],
+  [data-slot="dropdown-menu-content"],
+  [data-slot="popover-content"],
+  [data-slot="select-content"]
+) [class*="bg-[linear-gradient(180deg,rgba(18,"],
+.light :is(
+  [data-slot="sheet-content"],
+  [data-slot="dialog-content"],
+  [data-slot="dropdown-menu-content"],
+  [data-slot="popover-content"],
+  [data-slot="select-content"]
+) [class*="bg-[linear-gradient(180deg,rgba(24,"],
+.light :is(
+  [data-slot="sheet-content"],
+  [data-slot="dialog-content"],
+  [data-slot="dropdown-menu-content"],
+  [data-slot="popover-content"],
+  [data-slot="select-content"]
+) [class*="bg-[linear-gradient(180deg,rgba(36,"],
+.light :is(
+  [data-slot="sheet-content"],
+  [data-slot="dialog-content"],
+  [data-slot="dropdown-menu-content"],
+  [data-slot="popover-content"],
+  [data-slot="select-content"]
+) [class*="bg-[linear-gradient(180deg,rgba(44,"],
+.light :is(
+  [data-slot="sheet-content"],
+  [data-slot="dialog-content"],
+  [data-slot="dropdown-menu-content"],
+  [data-slot="popover-content"],
+  [data-slot="select-content"]
+) [class*="bg-[linear-gradient(180deg,rgba(52,"],
+.light :is(
+  [data-slot="sheet-content"],
+  [data-slot="dialog-content"],
+  [data-slot="dropdown-menu-content"],
+  [data-slot="popover-content"],
+  [data-slot="select-content"]
+) [class*="bg-[linear-gradient(180deg,rgba(61,"],
+.light :is(
+  [data-slot="sheet-content"],
+  [data-slot="dialog-content"],
+  [data-slot="dropdown-menu-content"],
+  [data-slot="popover-content"],
+  [data-slot="select-content"]
+) [class*="bg-[linear-gradient(180deg,rgba(76,"] {
+  background: #ffffff !important;
+  background-image: none !important;
+  border-color: rgba(148, 163, 184, 0.24) !important;
+  color: #0f172a !important;
+  box-shadow: none !important;
+}
+
+.light :is(
+  [data-slot="sheet-content"],
+  [data-slot="dialog-content"],
+  [data-slot="dropdown-menu-content"],
+  [data-slot="popover-content"],
+  [data-slot="select-content"]
+) :is(input, textarea, select, [role="combobox"], [data-slot="select-trigger"], [data-slot="input"]) {
+  background: #ffffff !important;
+  background-image: none !important;
+  border-color: rgba(148, 163, 184, 0.34) !important;
+  color: #0f172a !important;
+  -webkit-text-fill-color: #0f172a !important;
+  box-shadow: inset 0 1px 0 rgba(15, 23, 42, 0.02) !important;
+  color-scheme: light !important;
+}
+
+.light :is(
+  [data-slot="sheet-content"],
+  [data-slot="dialog-content"],
+  [data-slot="dropdown-menu-content"],
+  [data-slot="popover-content"],
+  [data-slot="select-content"]
+) :is(input, textarea)::placeholder {
+  color: #94a3b8 !important;
+  -webkit-text-fill-color: #94a3b8 !important;
+}
+
+.light :is(
+  [data-slot="sheet-content"],
+  [data-slot="dialog-content"],
+  [data-slot="dropdown-menu-content"],
+  [data-slot="popover-content"],
+  [data-slot="select-content"]
+) :is(table, thead, tbody, tr, td, th) {
+  border-color: rgba(148, 163, 184, 0.22) !important;
+  color: #0f172a !important;
+}
+
+.light :is(
+  [data-slot="sheet-content"],
+  [data-slot="dialog-content"],
+  [data-slot="dropdown-menu-content"],
+  [data-slot="popover-content"],
+  [data-slot="select-content"]
+) :is(thead, tfoot, [class*="TableHeader"], [class*="table-header"]) {
+  background: #f8fafc !important;
+  background-image: none !important;
+  color: #64748b !important;
+}
+
+.light :is(
+  [data-slot="sheet-content"],
+  [data-slot="dialog-content"],
+  [data-slot="dropdown-menu-content"],
+  [data-slot="popover-content"],
+  [data-slot="select-content"]
+) [class*="text-white"],
+.light :is(
+  [data-slot="sheet-content"],
+  [data-slot="dialog-content"],
+  [data-slot="dropdown-menu-content"],
+  [data-slot="popover-content"],
+  [data-slot="select-content"]
+) [class*="text-slate-50"],
+.light :is(
+  [data-slot="sheet-content"],
+  [data-slot="dialog-content"],
+  [data-slot="dropdown-menu-content"],
+  [data-slot="popover-content"],
+  [data-slot="select-content"]
+) [class*="text-slate-100"],
+.light :is(
+  [data-slot="sheet-content"],
+  [data-slot="dialog-content"],
+  [data-slot="dropdown-menu-content"],
+  [data-slot="popover-content"],
+  [data-slot="select-content"]
+) [class*="text-slate-200"] {
+  color: #0f172a !important;
+  -webkit-text-fill-color: #0f172a !important;
+}
+
+.light :is(
+  [data-slot="sheet-content"],
+  [data-slot="dialog-content"],
+  [data-slot="dropdown-menu-content"],
+  [data-slot="popover-content"],
+  [data-slot="select-content"]
+) [class*="text-slate-300"],
+.light :is(
+  [data-slot="sheet-content"],
+  [data-slot="dialog-content"],
+  [data-slot="dropdown-menu-content"],
+  [data-slot="popover-content"],
+  [data-slot="select-content"]
+) [class*="text-slate-400"],
+.light :is(
+  [data-slot="sheet-content"],
+  [data-slot="dialog-content"],
+  [data-slot="dropdown-menu-content"],
+  [data-slot="popover-content"],
+  [data-slot="select-content"]
+) [class*="text-slate-500"] {
+  color: #64748b !important;
+  -webkit-text-fill-color: #64748b !important;
+}
+
+.light :is(
+  [data-slot="sheet-content"],
+  [data-slot="dialog-content"],
+  [data-slot="dropdown-menu-content"],
+  [data-slot="popover-content"],
+  [data-slot="select-content"]
+) :is(button, [data-slot="button"]):not([class*="from-[#4f7cff"]):not([class*="from-[#0ca6a6"]):not([class*="bg-[#2F8E92"]):not([class*="bg-[linear-gradient(135deg,#4f7cff"]):not([class*="bg-[linear-gradient(135deg,#2F8E92"]):not([class*="bg-gradient-to-r"]) {
+  background: #ffffff !important;
+  background-image: none !important;
+  border-color: rgba(148, 163, 184, 0.30) !important;
+  color: #334155 !important;
+  box-shadow: none !important;
+}
+
+.light :is(
+  [data-slot="sheet-content"],
+  [data-slot="dialog-content"],
+  [data-slot="dropdown-menu-content"],
+  [data-slot="popover-content"],
+  [data-slot="select-content"]
+) :is(button, [data-slot="button"]):not([class*="from-[#4f7cff"]):not([class*="from-[#0ca6a6"]):not([class*="bg-[#2F8E92"]):not([class*="bg-[linear-gradient(135deg,#4f7cff"]):not([class*="bg-[linear-gradient(135deg,#2F8E92"]):not([class*="bg-gradient-to-r"]):hover:not(:disabled) {
+  background: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+.light :is(
+  [data-slot="sheet-content"],
+  [data-slot="dialog-content"],
+  [data-slot="dropdown-menu-content"],
+  [data-slot="popover-content"],
+  [data-slot="select-content"]
+) :is(button, [data-slot="button"]):disabled,
+.light :is(
+  [data-slot="sheet-content"],
+  [data-slot="dialog-content"],
+  [data-slot="dropdown-menu-content"],
+  [data-slot="popover-content"],
+  [data-slot="select-content"]
+) [aria-disabled="true"],
+.light :is(
+  [data-slot="sheet-content"],
+  [data-slot="dialog-content"],
+  [data-slot="dropdown-menu-content"],
+  [data-slot="popover-content"],
+  [data-slot="select-content"]
+) [data-disabled] {
+  background: #f1f5f9 !important;
+  border-color: rgba(148, 163, 184, 0.22) !important;
+  color: #64748b !important;
+  opacity: 1 !important;
+}
+
+.light :is(
+  [data-slot="sheet-content"],
+  [data-slot="dialog-content"],
+  [data-slot="dropdown-menu-content"],
+  [data-slot="popover-content"],
+  [data-slot="select-content"]
+) :is(button, a, [data-slot="button"])[class*="from-[#4f7cff"],
+.light :is(
+  [data-slot="sheet-content"],
+  [data-slot="dialog-content"],
+  [data-slot="dropdown-menu-content"],
+  [data-slot="popover-content"],
+  [data-slot="select-content"]
+) :is(button, a, [data-slot="button"])[class*="bg-[linear-gradient(135deg,#4f7cff"],
+.light :is(
+  [data-slot="sheet-content"],
+  [data-slot="dialog-content"],
+  [data-slot="dropdown-menu-content"],
+  [data-slot="popover-content"],
+  [data-slot="select-content"]
+) :is(button, a, [data-slot="button"])[class*="bg-[#2F8E92"],
+.light :is(
+  [data-slot="sheet-content"],
+  [data-slot="dialog-content"],
+  [data-slot="dropdown-menu-content"],
+  [data-slot="popover-content"],
+  [data-slot="select-content"]
+) :is(button, a, [data-slot="button"])[class*="bg-gradient-to-r"] {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+.light :is(
+  [data-slot="sheet-content"],
+  [data-slot="dialog-content"],
+  [data-slot="dropdown-menu-content"],
+  [data-slot="popover-content"],
+  [data-slot="select-content"]
+) :is(button, a, [data-slot="button"])[class*="from-[#4f7cff"] *,
+.light :is(
+  [data-slot="sheet-content"],
+  [data-slot="dialog-content"],
+  [data-slot="dropdown-menu-content"],
+  [data-slot="popover-content"],
+  [data-slot="select-content"]
+) :is(button, a, [data-slot="button"])[class*="bg-[linear-gradient(135deg,#4f7cff"] *,
+.light :is(
+  [data-slot="sheet-content"],
+  [data-slot="dialog-content"],
+  [data-slot="dropdown-menu-content"],
+  [data-slot="popover-content"],
+  [data-slot="select-content"]
+) :is(button, a, [data-slot="button"])[class*="bg-[#2F8E92"] *,
+.light :is(
+  [data-slot="sheet-content"],
+  [data-slot="dialog-content"],
+  [data-slot="dropdown-menu-content"],
+  [data-slot="popover-content"],
+  [data-slot="select-content"]
+) :is(button, a, [data-slot="button"])[class*="bg-gradient-to-r"] * {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
 }
 
 /* Print Styles */
