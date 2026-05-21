@@ -527,25 +527,23 @@ export default function Dashboard() {
                 Monitor jobs, technician capacity, invoice approvals, and operational risk from one live operations workspace.
               </p>
 
-              <div className="mt-6 flex items-start gap-3">
-                {/* Left column: Jobs Completed Today */}
-                <div className="flex flex-col gap-3">
-                  {leadMetrics[0] && (
-                    <div className="rounded-full border border-black/8 bg-white px-4 py-2 text-sm text-slate-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-200 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-                      <span className="text-slate-500 dark:text-slate-400">{leadMetrics[0].label}</span>
-                      <span className="ml-2 font-semibold text-slate-900 dark:text-white">{leadMetrics[0].value}</span>
+              <div className="mt-6 grid max-w-2xl grid-cols-1 gap-2.5 sm:grid-cols-3">
+                {leadMetrics.map((metric) => (
+                  <div
+                    key={metric.id}
+                    className="group rounded-2xl border border-black/8 bg-white/90 px-4 py-3 text-sm text-slate-700 shadow-[0_12px_28px_rgba(15,23,42,0.06),inset_0_1px_0_rgba(255,255,255,0.9)] transition-transform hover:-translate-y-0.5 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-200 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
+                  >
+                    <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">
+                      {metric.label}
                     </div>
-                  )}
-                </div>
-                {/* Right column: Pending Invoice Approvals + Technicians Online */}
-                <div className="flex flex-col gap-3">
-                  {leadMetrics.slice(1).map((metric) => (
-                    <div key={metric.id} className="rounded-full border border-black/8 bg-white px-4 py-2 text-sm text-slate-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-200 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-                      <span className="text-slate-500 dark:text-slate-400">{metric.label}</span>
-                      <span className="ml-2 font-semibold text-slate-900 dark:text-white">{metric.value}</span>
+                    <div className="mt-2 flex items-end justify-between gap-3">
+                      <span className="text-2xl font-semibold leading-none tracking-[-0.04em] text-slate-950 dark:text-white">
+                        {metric.value}
+                      </span>
+                      <span className="h-1.5 w-8 rounded-full bg-gradient-to-r from-cyan-400 to-blue-500 opacity-70 transition-opacity group-hover:opacity-100" />
                     </div>
-                  ))}
-                </div>
+                  </div>
+                ))}
               </div>
             </div>
 
