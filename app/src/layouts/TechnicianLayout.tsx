@@ -10,8 +10,13 @@ import {
   LogOut,
   ChevronDown,
   Wrench,
+  Sun,
+  Moon,
+  Monitor,
+  CheckCircle2,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTheme } from '@/components/theme-provider';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,6 +34,55 @@ const navItems = [
   { path: '/tech/history', label: 'History', icon: Calendar },
   { path: '/tech/profile', label: 'Profile', icon: User },
 ];
+
+const themeOptions = [
+  { value: 'light', label: 'Light Theme', icon: Sun },
+  { value: 'dark', label: 'Dark Theme', icon: Moon },
+  { value: 'system', label: 'System Theme', icon: Monitor },
+] as const;
+
+function TechnicianThemeMenu({ compact = false }: { compact?: boolean }) {
+  const { theme, setTheme } = useTheme();
+  const activeOption = themeOptions.find((option) => option.value === theme) ?? themeOptions[1];
+  const ActiveIcon = activeOption.icon;
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className={cn(
+            'h-10 w-10 shrink-0 rounded-full border border-slate-200 bg-white text-slate-700 shadow-[0_14px_28px_rgba(15,23,42,0.08)] hover:bg-slate-50 hover:text-slate-950 dark:border-white/10 dark:bg-[#111111] dark:text-white dark:shadow-[0_14px_28px_rgba(0,0,0,0.38)] dark:hover:bg-[#1d1d1d]',
+            compact && 'h-9 w-9'
+          )}
+          aria-label="Change technician portal theme"
+        >
+          <ActiveIcon className="h-4.5 w-4.5" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-52">
+        {themeOptions.map((option) => {
+          const Icon = option.icon;
+          const active = theme === option.value;
+
+          return (
+            <DropdownMenuItem
+              key={option.value}
+              onClick={() => setTheme(option.value)}
+              className="cursor-pointer"
+            >
+              <Icon className="mr-2 h-4 w-4" />
+              <span className="flex-1">{option.label}</span>
+              {active ? <CheckCircle2 className="ml-2 h-4 w-4 text-cyan-500 dark:text-cyan-300" /> : null}
+            </DropdownMenuItem>
+          );
+        })}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
 
 function DesktopSidebar() {
   const location = useLocation();
@@ -72,31 +126,34 @@ function DesktopSidebar() {
 
       {/* User menu */}
       <div className="border-t border-white/10 p-4">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button className="flex w-full items-center gap-3 rounded-xl p-2 transition-colors hover:bg-white/[0.06]">
-              <Avatar className="w-9 h-9">
-                <AvatarImage src={user?.avatar} alt={user?.name} />
-                <AvatarFallback className="bg-[#111827] text-sm text-white">
-                  {user?.name?.split(' ').map(n => n[0]).join('')}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex-1 text-left">
-                <p className="text-sm font-medium text-white">{user?.name}</p>
-                <p className="text-xs text-slate-400">Technician</p>
-              </div>
-              <ChevronDown className="w-4 h-4 text-slate-500" />
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56 border-white/10 bg-[#0b1424] text-slate-100">
+        <div className="flex items-center gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="flex min-w-0 flex-1 items-center gap-3 rounded-xl p-2 transition-colors hover:bg-white/[0.06]">
+                <Avatar className="w-9 h-9">
+                  <AvatarImage src={user?.avatar} alt={user?.name} />
+                  <AvatarFallback className="bg-[#111827] text-sm text-white">
+                    {user?.name?.split(' ').map(n => n[0]).join('')}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="min-w-0 flex-1 text-left">
+                  <p className="truncate text-sm font-medium text-white">{user?.name}</p>
+                  <p className="text-xs text-slate-400">Technician</p>
+                </div>
+                <ChevronDown className="w-4 h-4 text-slate-500" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56 border-white/10 bg-[#0b1424] text-slate-100">
 
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={logout} className="cursor-pointer text-rose-600">
-              <LogOut className="w-4 h-4 mr-2" />
-              Log out
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={logout} className="cursor-pointer text-rose-600">
+                <LogOut className="w-4 h-4 mr-2" />
+                Log out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <TechnicianThemeMenu />
+        </div>
       </div>
     </aside>
   );
@@ -115,6 +172,7 @@ function MobileHeader({ onMenuClick }: { onMenuClick: () => void }) {
           <span className="font-semibold text-white">NexusOps</span>
         </div>
         <div className="flex items-center gap-2">
+          <TechnicianThemeMenu compact />
           <Avatar className="w-8 h-8">
             <AvatarImage src={user?.avatar} alt={user?.name} />
             <AvatarFallback className="bg-[#111827] text-xs text-white">
@@ -183,14 +241,17 @@ function MobileMenu({ isOpen, onClose }: { isOpen: boolean; onClose: () => void 
       <div className="tech-mobile-menu fixed bottom-0 right-0 top-0 z-50 w-64 border-l border-white/10 bg-[#080c14] p-4 shadow-xl">
         <div className="flex items-center justify-between mb-6">
           <h2 className="font-semibold text-white">Menu</h2>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-10 w-10 rounded-full border border-white/10 bg-[#111111] text-white shadow-[0_14px_28px_rgba(0,0,0,0.38)] hover:bg-[#1d1d1d]"
-            onClick={onClose}
-          >
-            <X className="w-5 h-5" />
-          </Button>
+          <div className="flex items-center gap-2">
+            <TechnicianThemeMenu compact />
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-10 w-10 rounded-full border border-white/10 bg-[#111111] text-white shadow-[0_14px_28px_rgba(0,0,0,0.38)] hover:bg-[#1d1d1d]"
+              onClick={onClose}
+            >
+              <X className="w-5 h-5" />
+            </Button>
+          </div>
         </div>
 
         <div className="space-y-2">
