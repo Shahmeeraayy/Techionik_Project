@@ -26,14 +26,9 @@ import {
   Bell,
   KeyRound,
   BellDot,
-  CheckCircle2,
-  Monitor,
-  Moon,
-  Sun,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
-import { useTheme } from '@/components/theme-provider';
 import {
   fetchAdminBookingRequests,
   fetchAdminChatUnreadCount,
@@ -308,14 +303,8 @@ function ProfileDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v
 
 function UserMenu() {
   const { user, logout } = useAuth();
-  const { theme, setTheme } = useTheme();
   const [previewModalOpen, setPreviewModalOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
-  const themeOptions = [
-    { value: 'dark', label: 'Dark Theme', icon: Moon },
-    { value: 'light', label: 'Light Theme', icon: Sun },
-    { value: 'system', label: 'System Theme', icon: Monitor },
-  ] as const;
 
   return (
     <>
@@ -343,18 +332,6 @@ function UserMenu() {
             <Eye className="w-4 h-4 mr-2" />
             View as Technician
           </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          {themeOptions.map((option) => {
-            const Icon = option.icon;
-            const active = theme === option.value;
-            return (
-              <DropdownMenuItem key={option.value} onClick={() => setTheme(option.value)} className="cursor-pointer">
-                <Icon className="w-4 h-4 mr-2" />
-                <span className="flex-1">{option.label}</span>
-                {active ? <CheckCircle2 className="ml-2 h-4 w-4 text-cyan-500 dark:text-cyan-300" /> : null}
-              </DropdownMenuItem>
-            );
-          })}
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={logout} className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10">
             <LogOut className="w-4 h-4 mr-2" />
