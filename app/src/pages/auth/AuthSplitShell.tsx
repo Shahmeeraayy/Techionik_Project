@@ -12,6 +12,7 @@ type AuthSplitShellProps = {
   chips: string[];
   children: ReactNode;
   footer?: ReactNode;
+  contentFrame?: boolean;
 };
 
 const accentConfig: Record<
@@ -67,6 +68,7 @@ export function AuthSplitShell({
   chips,
   children,
   footer,
+  contentFrame = true,
 }: AuthSplitShellProps) {
   const theme = accentConfig[accent];
 
@@ -111,9 +113,15 @@ export function AuthSplitShell({
           </div>
           ) : null}
 
-          <div className={`mt-5 rounded-[28px] border border-[rgba(148,163,184,0.18)] bg-[linear-gradient(180deg,rgba(8,18,32,0.98),rgba(5,10,20,0.99))] p-4 ${theme.buttonRing} sm:p-5`}>
-            {children}
-          </div>
+          {contentFrame ? (
+            <div className={`mt-5 rounded-[28px] border border-[rgba(148,163,184,0.18)] bg-[linear-gradient(180deg,rgba(8,18,32,0.98),rgba(5,10,20,0.99))] p-4 ${theme.buttonRing} sm:p-5`}>
+              {children}
+            </div>
+          ) : (
+            <div className="mt-6">
+              {children}
+            </div>
+          )}
 
           {footer ? <div className="mt-4">{footer}</div> : null}
         </section>
