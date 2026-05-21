@@ -624,41 +624,6 @@ export default function BookingPortalPage() {
         {/* ── Right: Sidebar ── */}
         <aside className="mt-6 flex flex-col gap-4 lg:mt-0">
 
-          {/* Network Status Card */}
-          <Card className="overflow-hidden rounded-2xl border border-white/[0.08] bg-[rgba(10,18,32,0.7)] p-0 shadow-[0_16px_60px_rgba(0,0,0,0.35)]">
-            {/* Decorative wave graphic */}
-            <div className="relative h-36 overflow-hidden bg-[#070e1a]">
-              <div className="absolute inset-0 bg-[radial-gradient(ellipse_120%_80%_at_50%_60%,rgba(34,211,238,0.18),transparent_70%)]" />
-              <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_30%_40%,rgba(79,124,255,0.15),transparent_60%)]" />
-              <svg viewBox="0 0 400 150" className="absolute bottom-0 left-0 w-full" preserveAspectRatio="none">
-                <defs>
-                  <linearGradient id="wave1" x1="0" y1="0" x2="1" y2="0">
-                    <stop offset="0%" stopColor="#22d3ee" stopOpacity="0.5" />
-                    <stop offset="50%" stopColor="#4f7cff" stopOpacity="0.4" />
-                    <stop offset="100%" stopColor="#22d3ee" stopOpacity="0.3" />
-                  </linearGradient>
-                  <linearGradient id="wave2" x1="0" y1="0" x2="1" y2="0">
-                    <stop offset="0%" stopColor="#4f7cff" stopOpacity="0.3" />
-                    <stop offset="100%" stopColor="#22d3ee" stopOpacity="0.2" />
-                  </linearGradient>
-                </defs>
-                <path d="M0,80 C60,50 120,110 200,75 C280,40 340,100 400,70 L400,150 L0,150 Z" fill="url(#wave1)" />
-                <path d="M0,100 C80,70 160,120 240,90 C320,60 370,110 400,85 L400,150 L0,150 Z" fill="url(#wave2)" opacity="0.6" />
-                <path d="M0,115 C100,90 180,130 280,105 C350,85 380,120 400,100 L400,150 L0,150 Z" fill="rgba(34,211,238,0.08)" />
-              </svg>
-            </div>
-            <div className="p-5">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">Network Status</p>
-              <div className="mt-2 flex items-center gap-2">
-                <span className="relative flex h-2.5 w-2.5">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
-                  <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-400" />
-                </span>
-                <span className="text-sm font-medium text-emerald-300">All nodes operational</span>
-              </div>
-            </div>
-          </Card>
-
           {/* What Happens Next */}
           <Card className="rounded-2xl border border-white/[0.08] bg-[rgba(10,18,32,0.7)] p-5 shadow-[0_16px_60px_rgba(0,0,0,0.35)]">
             <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-400">
