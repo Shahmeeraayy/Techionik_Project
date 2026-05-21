@@ -605,7 +605,7 @@ export default function JobDetailPage() {
 
     if (loading || !job) {
         return (
-            <div className="space-y-6 max-w-[1600px] mx-auto p-6">
+            <div className="admin-job-detail-page space-y-6 max-w-[1600px] mx-auto p-6">
                 {loading ? (
                     <>
                         <Skeleton className="h-20 w-full" />
@@ -828,7 +828,7 @@ export default function JobDetailPage() {
     };
 
     return (
-        <div className="space-y-6 max-w-[1600px] mx-auto pb-20">
+        <div className="admin-job-detail-page space-y-6 max-w-[1600px] mx-auto pb-20">
 
             {/* 1. Header Section */}
             <div className="bg-card border-b border-border -mx-4 px-8 py-5 sticky top-0 z-20 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">

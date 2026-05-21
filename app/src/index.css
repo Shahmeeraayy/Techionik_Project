@@ -3972,6 +3972,184 @@
   fill: #ffffff !important;
 }
 
+/* Admin job detail light theme: page-specific contrast fixes only. */
+.light .admin-job-detail-page {
+  color: #0f172a !important;
+}
+
+.light .admin-job-detail-page [data-slot="card"],
+.light .admin-job-detail-page .bg-card,
+.light .admin-job-detail-page [class*="bg-card"],
+.light .admin-job-detail-page :is(section, article, div)[class*="rounded-"][class*="border"]:not([class*="bg-[#2F8E92"]):not([class*="bg-gradient-to-r"]) {
+  background: #ffffff !important;
+  background-image: none !important;
+  border-color: rgba(148, 163, 184, 0.28) !important;
+  color: #0f172a !important;
+  box-shadow: 0 18px 44px rgba(15, 23, 42, 0.06) !important;
+}
+
+.light .admin-job-detail-page > .bg-card,
+.light .admin-job-detail-page > [class*="sticky"] {
+  background: rgba(255, 255, 255, 0.96) !important;
+  border-color: rgba(148, 163, 184, 0.28) !important;
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08) !important;
+  backdrop-filter: blur(16px);
+}
+
+.light .admin-job-detail-page :is(h1, h2, h3, h4, h5, h6),
+.light .admin-job-detail-page [class*="text-foreground"],
+.light .admin-job-detail-page [class*="font-semibold"],
+.light .admin-job-detail-page [class*="font-bold"],
+.light .admin-job-detail-page [class*="text-white"],
+.light .admin-job-detail-page [class*="text-slate-50"],
+.light .admin-job-detail-page [class*="text-slate-100"],
+.light .admin-job-detail-page [class*="text-slate-200"] {
+  color: #0f172a !important;
+  -webkit-text-fill-color: #0f172a !important;
+}
+
+.light .admin-job-detail-page [class*="text-muted-foreground"],
+.light .admin-job-detail-page [class*="text-slate-300"],
+.light .admin-job-detail-page [class*="text-slate-400"],
+.light .admin-job-detail-page [class*="text-slate-500"],
+.light .admin-job-detail-page [class*="text-gray-400"],
+.light .admin-job-detail-page [class*="text-gray-500"] {
+  color: #64748b !important;
+  -webkit-text-fill-color: #64748b !important;
+}
+
+.light .admin-job-detail-page [class*="bg-muted"],
+.light .admin-job-detail-page [class*="bg-background"],
+.light .admin-job-detail-page [class*="bg-gray-100"],
+.light .admin-job-detail-page [class*="bg-slate-100"],
+.light .admin-job-detail-page [class*="bg-white/"],
+.light .admin-job-detail-page [class*="bg-black/"],
+.light .admin-job-detail-page [class*="bg-[#020617]"],
+.light .admin-job-detail-page [class*="bg-[#0b1424]"],
+.light .admin-job-detail-page [class*="bg-slate-950"],
+.light .admin-job-detail-page [class*="bg-slate-900"],
+.light .admin-job-detail-page [class*="bg-slate-800"],
+.light .admin-job-detail-page [class*="bg-[linear-gradient(180deg"] {
+  background: #f8fafc !important;
+  background-image: none !important;
+  border-color: rgba(148, 163, 184, 0.28) !important;
+  color: #0f172a !important;
+}
+
+.light .admin-job-detail-page :is(input, textarea, select),
+.light .admin-job-detail-page [role="combobox"],
+.light .admin-job-detail-page [data-slot="select-trigger"],
+.light .admin-job-detail-page [data-slot="input"] {
+  background: #ffffff !important;
+  background-image: none !important;
+  border-color: rgba(148, 163, 184, 0.36) !important;
+  color: #0f172a !important;
+  -webkit-text-fill-color: #0f172a !important;
+  box-shadow: inset 0 1px 0 rgba(15, 23, 42, 0.02) !important;
+  color-scheme: light !important;
+}
+
+.light .admin-job-detail-page :is(input, textarea)::placeholder {
+  color: #94a3b8 !important;
+  -webkit-text-fill-color: #94a3b8 !important;
+}
+
+.light .admin-job-detail-page :is(button, [data-slot="button"]):not([class*="bg-[#2F8E92"]):not([class*="bg-destructive"]):not([class*="bg-red"]):not([class*="bg-green"]):not([class*="bg-blue"]):not([class*="bg-[linear-gradient"]) {
+  background: #ffffff !important;
+  border-color: rgba(148, 163, 184, 0.38) !important;
+  color: #334155 !important;
+  -webkit-text-fill-color: #334155 !important;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.05) !important;
+}
+
+.light .admin-job-detail-page :is(button, [data-slot="button"]):not([class*="bg-[#2F8E92"]):not([class*="bg-destructive"]):not([class*="bg-red"]):not([class*="bg-green"]):not([class*="bg-blue"]):not([class*="bg-[linear-gradient"]):hover:not(:disabled) {
+  background: #f8fafc !important;
+  border-color: rgba(100, 116, 139, 0.42) !important;
+  color: #0f172a !important;
+  -webkit-text-fill-color: #0f172a !important;
+}
+
+.light .admin-job-detail-page :is(button, [data-slot="button"])[class*="bg-[#2F8E92"] {
+  background: #0f172a !important;
+  background-image: none !important;
+  border-color: rgba(15, 23, 42, 0.18) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.16) !important;
+}
+
+.light .admin-job-detail-page :is(button, [data-slot="button"])[class*="bg-[#2F8E92"] * {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+.light .admin-job-detail-page :is(button, [data-slot="button"])[class*="text-red"],
+.light .admin-job-detail-page [data-slot="dropdown-menu-item"][class*="text-red"] {
+  background: #fff1f2 !important;
+  border-color: rgba(244, 63, 94, 0.3) !important;
+  color: #be123c !important;
+  -webkit-text-fill-color: #be123c !important;
+}
+
+.light .admin-job-detail-page [data-slot="badge"] {
+  background: #f8fafc !important;
+  border-color: rgba(148, 163, 184, 0.34) !important;
+  color: #334155 !important;
+  -webkit-text-fill-color: #334155 !important;
+}
+
+.light .admin-job-detail-page [class*="text-amber"] {
+  color: #b45309 !important;
+  -webkit-text-fill-color: #b45309 !important;
+}
+
+.light .admin-job-detail-page [class*="bg-amber"] {
+  background: #fffbeb !important;
+  border-color: #fde68a !important;
+}
+
+.light .admin-job-detail-page [class*="text-emerald"],
+.light .admin-job-detail-page [class*="text-green"] {
+  color: #047857 !important;
+  -webkit-text-fill-color: #047857 !important;
+}
+
+.light .admin-job-detail-page [class*="bg-emerald"],
+.light .admin-job-detail-page [class*="bg-green"] {
+  background: #ecfdf5 !important;
+  border-color: #a7f3d0 !important;
+}
+
+.light .admin-job-detail-page [class*="text-blue"] {
+  color: #1d4ed8 !important;
+  -webkit-text-fill-color: #1d4ed8 !important;
+}
+
+.light .admin-job-detail-page [class*="bg-blue"] {
+  background: #eff6ff !important;
+  border-color: #bfdbfe !important;
+}
+
+.light .admin-job-detail-page table,
+.light .admin-job-detail-page thead,
+.light .admin-job-detail-page tbody,
+.light .admin-job-detail-page tr,
+.light .admin-job-detail-page th,
+.light .admin-job-detail-page td {
+  border-color: rgba(148, 163, 184, 0.24) !important;
+  color: #0f172a !important;
+}
+
+.light .admin-job-detail-page th {
+  color: #64748b !important;
+}
+
+.light .admin-job-detail-page svg {
+  color: currentColor;
+  opacity: 1 !important;
+  filter: none !important;
+}
+
 /* Print Styles */
 @media print {
   .no-print {
