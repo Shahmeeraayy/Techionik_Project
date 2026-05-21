@@ -29,7 +29,13 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
-import { fetchAdminChatUnreadCount, getStoredAdminToken } from '@/lib/backend-api';
+import {
+  fetchAdminBookingRequests,
+  fetchAdminChatUnreadCount,
+  fetchPendingInvoiceApprovalIssues,
+  fetchPendingInvoiceApprovals,
+  getStoredAdminToken,
+} from '@/lib/backend-api';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -356,9 +362,13 @@ function UserMenu() {
 function NotificationMenu({
   unreadChatCount,
   pendingPasswordResetCount,
+  pendingIntakeCount,
+  pendingInvoiceApprovalCount,
 }: {
   unreadChatCount: number;
   pendingPasswordResetCount: number;
+  pendingIntakeCount: number;
+  pendingInvoiceApprovalCount: number;
 }) {
   const notificationItems = [
     {
@@ -376,18 +386,18 @@ function NotificationMenu({
       active: pendingPasswordResetCount > 0,
     },
     {
-      title: 'Review intake queue',
-      description: 'Check new customer booking requests',
+      title: pendingIntakeCount > 0 ? `${pendingIntakeCount} intake request${pendingIntakeCount === 1 ? '' : 's'}` : 'No intake requests',
+      description: pendingIntakeCount > 0 ? 'New customer booking requests need review' : 'Customer booking queue is clear',
       href: '/admin/intake',
       icon: Inbox,
-      active: true,
+      active: pendingIntakeCount > 0,
     },
     {
-      title: 'Invoice approvals',
-      description: 'Open invoices waiting for admin approval',
+      title: pendingInvoiceApprovalCount > 0 ? `${pendingInvoiceApprovalCount} invoice item${pendingInvoiceApprovalCount === 1 ? '' : 's'}` : 'No invoice approvals',
+      description: pendingInvoiceApprovalCount > 0 ? 'Invoices or blockers need admin action' : 'Invoice approval queue is clear',
       href: '/admin/approvals',
       icon: FileCheck,
-      active: true,
+      active: pendingInvoiceApprovalCount > 0,
     },
   ];
   const activeCount = notificationItems.filter((item) => item.active).length;
@@ -456,6 +466,8 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
   });
   const [lastUpdated, setLastUpdated] = useState('Updated 2 min ago');
   const [unreadChatCount, setUnreadChatCount] = useState(0);
+  const [pendingIntakeCount, setPendingIntakeCount] = useState(0);
+  const [pendingInvoiceApprovalCount, setPendingInvoiceApprovalCount] = useState(0);
   const hideHeaderRefreshControls = location.pathname.startsWith('/admin');
 
   useEffect(() => {
@@ -504,6 +516,49 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
       window.clearInterval(intervalId);
       window.removeEventListener('sm-chat-unread-count', handleUnreadEvent as EventListener);
       window.removeEventListener('focus', handleFocus);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const syncOperationalNotifications = async () => {
+      const token = getStoredAdminToken();
+      if (!token) {
+        setPendingIntakeCount(0);
+        setPendingInvoiceApprovalCount(0);
+        return;
+      }
+
+      try {
+        const [bookingRequests, pendingApprovals, approvalIssues] = await Promise.all([
+          fetchAdminBookingRequests(token),
+          fetchPendingInvoiceApprovals(token),
+          fetchPendingInvoiceApprovalIssues(token),
+        ]);
+        setPendingIntakeCount(
+          bookingRequests.filter((row) => row.status === 'RECEIVED' || row.status === 'UNDER_REVIEW').length,
+        );
+        setPendingInvoiceApprovalCount(pendingApprovals.length + approvalIssues.length);
+      } catch {
+        setPendingIntakeCount(0);
+        setPendingInvoiceApprovalCount(0);
+      }
+    };
+
+    void syncOperationalNotifications();
+
+    const handleRefresh = () => { void syncOperationalNotifications(); };
+    const intervalId = window.setInterval(() => { void syncOperationalNotifications(); }, 30000);
+    window.addEventListener('focus', handleRefresh);
+    window.addEventListener('sm-dispatch:admin-refresh', handleRefresh);
+
+    return () => {
+      window.clearInterval(intervalId);
+      window.removeEventListener('focus', handleRefresh);
+      window.removeEventListener('sm-dispatch:admin-refresh', handleRefresh);
     };
   }, []);
 
@@ -589,6 +644,8 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
               <NotificationMenu
                 unreadChatCount={unreadChatCount}
                 pendingPasswordResetCount={pendingTechnicianPasswordResetRequests.length}
+                pendingIntakeCount={pendingIntakeCount}
+                pendingInvoiceApprovalCount={pendingInvoiceApprovalCount}
               />
               <UserMenu />
             </div>
