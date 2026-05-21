@@ -84,6 +84,8 @@ const INVOICE_APPROVAL_EXPORT_COLUMNS = [
     'BlockingReasons',
 ];
 
+const isValidEmailAddress = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
+
 const displayFontStyle: CSSProperties = {
     fontFamily: '"Space Grotesk", "Sora", system-ui, sans-serif',
 };
@@ -633,6 +635,10 @@ export default function InvoiceApprovalsPage() {
             alert('Add a recipient email before creating and sending this invoice.');
             return;
         }
+        if (!isValidEmailAddress(recipientEmail)) {
+            alert('Enter a valid recipient email address, for example customer@company.com.');
+            return;
+        }
         if (!manualBillToDraft.name.trim() || !manualBillToDraft.street.trim()) {
             alert('Bill-to name and street address are required.');
             return;
@@ -670,7 +676,13 @@ export default function InvoiceApprovalsPage() {
                 },
             });
 
-            await sendInvoiceEmail(adminToken, createdInvoice.id, recipientEmail);
+            try {
+                await sendInvoiceEmail(adminToken, createdInvoice.id, recipientEmail);
+            } catch (sendError) {
+                const detail = sendError instanceof Error ? sendError.message : 'Unable to send invoice email.';
+                alert(`Invoice ${createdInvoice.invoice_number} was created, but the email was not sent: ${detail}`);
+                return;
+            }
             alert(`Invoice ${createdInvoice.invoice_number} was sent to ${recipientEmail} directly from your NexusOps workspace email identity.`);
             setManualInvoiceOpen(false);
             resetManualInvoiceForm();
