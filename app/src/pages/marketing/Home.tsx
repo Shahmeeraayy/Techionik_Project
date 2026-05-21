@@ -266,6 +266,53 @@ const demoScreens = [
   },
 ];
 
+const demoModuleDetails: Record<string, { benefits: string[]; workflow: string }> = {
+  overview: {
+    benefits: ['Executive visibility across the operation', 'Faster prioritization of urgent work', 'One place to monitor jobs, teams, and billing health'],
+    workflow: 'A manager starts the day on Overview, reviews operational health, identifies bottlenecks, then opens the module that needs action.',
+  },
+  jobs: {
+    benefits: ['Centralized dispatch queue', 'Clear ownership for every job', 'Priority and status control from intake to completion'],
+    workflow: 'A dispatcher reviews a new job, assigns the right technician, tracks live progress, and moves completed work toward billing.',
+  },
+  technicians: {
+    benefits: ['Real-time field availability', 'Skill-based technician matching', 'Performance and activity visibility'],
+    workflow: 'An admin filters technicians by zone, confirms availability and skills, then assigns the best person for the job.',
+  },
+  chat: {
+    benefits: ['Faster field decisions', 'Job conversations kept in context', 'Unread states for urgent technician updates'],
+    workflow: 'A technician sends a question with job context, the admin replies, and the decision stays attached to the operational workflow.',
+  },
+  accounts: {
+    benefits: ['Controlled technician access', 'Simplified invites and password resets', 'Cleaner onboarding for field teams'],
+    workflow: 'An admin creates a technician account, sends credentials, and handles access changes without IT handoffs.',
+  },
+  invoices: {
+    benefits: ['Faster invoice approval', 'Clear payment and sending status', 'Manual invoice creation when needed'],
+    workflow: 'Finance reviews completed work, approves or edits invoice lines, creates the invoice, and sends it to the right recipient.',
+  },
+  services: {
+    benefits: ['Consistent service pricing', 'Organized catalog management', 'Cleaner billing and approval rules'],
+    workflow: 'Operations updates service rates and categories once, then the catalog feeds job estimates and invoice line items.',
+  },
+  locations: {
+    benefits: ['Service coverage by store or zone', 'Location-specific job visibility', 'Accurate contact and address context'],
+    workflow: 'Admin checks active jobs by location, confirms coverage, and routes new requests to the right service area.',
+  },
+  attendance: {
+    benefits: ['Daily workforce readiness', 'Clear time-off and late status', 'Better dispatch planning before assignments'],
+    workflow: 'A manager confirms who is checked in, reviews exceptions, and assigns work based on real availability.',
+  },
+  reports: {
+    benefits: ['Operational performance trends', 'Invoice and revenue visibility', 'Exportable reports for leadership'],
+    workflow: 'Leadership reviews completion rates, revenue trends, and blocker patterns, then exports reports for planning.',
+  },
+  settings: {
+    benefits: ['Configurable workflow preferences', 'Consistent invoice branding', 'Notification and rule control'],
+    workflow: 'An owner updates business preferences, saves notification rules, and keeps the platform aligned with company standards.',
+  },
+};
+
 type ChatMessage = {
   role: 'assistant' | 'user';
   text: string;
@@ -708,6 +755,7 @@ function DemoWalkthrough({
   const activeScreen = demoScreens[activeIndex];
   const Icon = activeScreen.icon;
   const isLastScreen = activeIndex === demoScreens.length - 1;
+  const moduleDetails = demoModuleDetails[activeScreen.module];
 
   return (
     <div className="fixed inset-0 z-[80] overflow-y-auto bg-slate-950/85 px-4 py-6 backdrop-blur-xl">
@@ -717,7 +765,7 @@ function DemoWalkthrough({
           <div className="flex items-center justify-between gap-4 border-b border-white/10 bg-slate-950 px-5 py-4">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-200">Interactive SaaS demo</p>
-              <h2 className="text-2xl font-bold tracking-tight">Click each module to see how NexusOps works</h2>
+              <h2 className="text-2xl font-bold tracking-tight">Explore how NexusOps manages daily service operations</h2>
             </div>
             <button
               type="button"
@@ -729,7 +777,7 @@ function DemoWalkthrough({
             </button>
           </div>
 
-          <div className="grid min-h-[680px] lg:grid-cols-[260px_1fr_340px]">
+          <div className="grid min-h-[680px] lg:grid-cols-[260px_1fr_320px]">
             <aside className="border-b border-white/10 bg-black/40 p-4 lg:border-b-0 lg:border-r">
               <div className="mb-5 flex items-center gap-3 px-2">
                 <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-slate-950">
@@ -775,7 +823,7 @@ function DemoWalkthrough({
                   </div>
                   <div className="rounded-2xl border border-cyan-300/20 bg-cyan-300/10 px-4 py-3 text-right">
                     <Icon className="ml-auto h-5 w-5 text-cyan-100" />
-                    <p className="mt-1 text-xs text-cyan-200">Live module preview</p>
+                    <p className="mt-1 text-xs text-cyan-200">Interactive Workspace</p>
                   </div>
                 </div>
 
@@ -784,7 +832,7 @@ function DemoWalkthrough({
                 </div>
 
                 <div className="mt-6 rounded-2xl border border-white/10 bg-gradient-to-r from-blue-600/20 to-cyan-400/15 p-5">
-                  <p className="text-sm font-semibold text-white">What happens when admin clicks this screen</p>
+                  <p className="text-sm font-semibold text-white">Module Purpose</p>
                   <p className="mt-2 text-sm leading-6 text-slate-300">{activeScreen.action}</p>
                 </div>
               </div>
@@ -793,27 +841,28 @@ function DemoWalkthrough({
             <aside className="border-t border-white/10 bg-[radial-gradient(circle_at_top,rgba(34,211,238,0.14),transparent_30%),#020617] p-5 lg:border-l lg:border-t-0">
               <div className="inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1.5 text-xs font-semibold text-cyan-100">
                 <Icon className="h-4 w-4" />
-                {activeScreen.label} demo
+                Module overview
               </div>
-              <h3 className="mt-5 text-3xl font-bold tracking-tight">{activeScreen.title}</h3>
+              <h3 className="mt-5 text-3xl font-bold tracking-tight">{activeScreen.label}</h3>
+              <p className="mt-2 text-sm font-semibold text-cyan-100">{activeScreen.title}</p>
               <p className="mt-4 text-sm leading-7 text-slate-300">{activeScreen.description}</p>
 
-              <div className="mt-6 rounded-3xl border border-white/10 bg-white/5 p-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Guided click path</p>
-                <div className="mt-4 space-y-3">
-                  {demoScreens.map((screen, index) => (
-                    <button
-                      key={screen.label}
-                      type="button"
-                      className={`flex w-full items-center justify-between rounded-2xl px-3 py-3 text-left text-sm transition ${
-                        index === activeIndex ? 'bg-cyan-300/10 text-cyan-100' : 'text-slate-400 hover:bg-white/5 hover:text-white'
-                      }`}
-                      onClick={() => setActiveIndex(index)}
-                    >
-                      <span>{index + 1}. {screen.label}</span>
-                      {index === activeIndex ? <CheckCircle2 className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                    </button>
-                  ))}
+              <div className="mt-6 space-y-4">
+                <div className="rounded-3xl border border-white/10 bg-white/5 p-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Key Benefits</p>
+                  <div className="mt-4 space-y-3">
+                    {moduleDetails.benefits.map((benefit) => (
+                      <div key={benefit} className="flex gap-3 text-sm leading-6 text-slate-200">
+                        <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-cyan-300" />
+                        <span>{benefit}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="rounded-3xl border border-cyan-300/15 bg-cyan-300/10 p-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-100">Example Workflow</p>
+                  <p className="mt-3 text-sm leading-7 text-slate-200">{moduleDetails.workflow}</p>
                 </div>
               </div>
 
