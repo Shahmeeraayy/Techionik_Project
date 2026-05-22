@@ -357,12 +357,9 @@ export default function ReportsPage() {
               </div>
               <h1 className="mt-5 text-[2.35rem] font-semibold leading-none tracking-[-0.06em] text-white md:text-[2.8rem]">
                 Reports
-                <span className="block bg-gradient-to-r from-slate-950 via-blue-700 to-cyan-500 bg-clip-text text-transparent dark:from-white dark:via-cyan-100 dark:to-emerald-100">
-                  live dashboard
-                </span>
               </h1>
               <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-300 sm:text-[15px]">
-                Monitor dispatch throughput, technician utilization, invoicing performance, and partner activity from one centralized reporting surface.
+                Track operations and financial performance.
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-3">
@@ -434,7 +431,7 @@ export default function ReportsPage() {
                 </Button>
 
                 <Button variant="outline" size="sm" className="h-11 gap-2 rounded-full border-white/10 bg-[rgba(255,255,255,0.03)] text-slate-100 shadow-sm hover:bg-[rgba(255,255,255,0.08)]" onClick={handleExport} disabled={!overview || loading}>
-                  <Download className="w-4 h-4" /> Export Section CSVs
+                  <Download className="w-4 h-4" /> Export CSVs
                 </Button>
 
                 <Button
@@ -477,8 +474,8 @@ export default function ReportsPage() {
                 <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-cyan-100">Report Summary</p>
                 <p className="mt-2 text-sm leading-7 text-slate-300">
                   {hasReportActivity
-                    ? `For the selected range, the platform recorded ${numberFmt.format(kpis?.jobs_created ?? 0)} jobs, ${numberFmt.format(kpis?.jobs_completed ?? 0)} completed jobs, ${currencyFmt.format(kpis?.invoice_total ?? 0)} invoice total, and ${numberFmt.format(kpis?.pending_approvals ?? 0)} pending approvals.`
-                    : 'No report activity was recorded in the selected range. Try viewing this month, widening the date range, or creating jobs and invoices to populate live reporting.'}
+                    ? `Selected range: ${numberFmt.format(kpis?.jobs_created ?? 0)} jobs, ${numberFmt.format(kpis?.jobs_completed ?? 0)} completed jobs, ${currencyFmt.format(kpis?.invoice_total ?? 0)} invoice total, and ${numberFmt.format(kpis?.pending_approvals ?? 0)} pending approvals.`
+                    : 'No activity in this range.'}
                 </p>
               </div>
               {!hasReportActivity ? (
@@ -578,14 +575,14 @@ export default function ReportsPage() {
 
         <div className="pt-2">
           <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-100">Operational Performance</p>
-          <p className="mt-1 text-sm text-slate-400">Live dispatch, intake, and capacity indicators for the selected range.</p>
+          <p className="mt-1 text-sm text-slate-400">Operational metrics.</p>
         </div>
 
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
           <Card className={sectionCardClass}>
             <div className={sectionHeaderClass}>
               <h2 className="text-base font-semibold text-slate-950 dark:text-white">Dispatch Overview</h2>
-              <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Assignment speed, completion speed, acceptance rate, and urgency mix.</p>
+              <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Speed, acceptance, and urgency.</p>
             </div>
             <div className="space-y-4 p-6 pt-5">
               <div className="grid grid-cols-2 gap-3">
@@ -613,7 +610,7 @@ export default function ReportsPage() {
                 ) : (
                   <EmptyReportState
                     title="No urgency mix yet"
-                    description="No jobs with urgency data were created in this date range. Widen the range or create jobs with priority levels to populate this breakdown."
+                    description="No urgency data in this range."
                     action={<Button size="sm" variant="outline" className="rounded-full border-white/10 bg-white/[0.04] text-slate-100 hover:bg-white/[0.08]" onClick={() => handleQuickRangeChange('this_month')}>View This Month</Button>}
                   />
                 )}
@@ -624,7 +621,7 @@ export default function ReportsPage() {
           <Card className={sectionCardClass}>
             <div className={sectionHeaderClass}>
               <h2 className="text-base font-semibold text-slate-950 dark:text-white">Intake Analytics</h2>
-              <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Source channels, conversion, dismissed reasons, and intake-to-job timing.</p>
+              <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Sources, conversion, and timing.</p>
             </div>
             <div className="space-y-4 p-6 pt-5">
               <div className="grid grid-cols-3 gap-3">
@@ -654,7 +651,7 @@ export default function ReportsPage() {
               ) : (
                 <EmptyReportState
                   title="No intake records found"
-                  description="No customer booking or intake records were captured for this period. Try a wider range or enable booking intake to see conversion analytics."
+                  description="No intake records in this range."
                   action={<Button size="sm" variant="outline" className="rounded-full border-white/10 bg-white/[0.04] text-slate-100 hover:bg-white/[0.08]" onClick={handleRefresh}>Refresh Data</Button>}
                 />
               )}
@@ -667,7 +664,7 @@ export default function ReportsPage() {
           <Card className={cn(sectionCardClass, 'xl:col-span-2')}>
             <div className={sectionHeaderClass}>
               <h2 className="text-base font-semibold text-slate-950 dark:text-white">Capacity Planning</h2>
-              <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Utilization by weekday, peak demand windows, and understaffed periods.</p>
+              <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Utilization and demand windows.</p>
             </div>
             <div className="space-y-4 p-6 pt-5">
               <div className="space-y-2">
@@ -682,7 +679,7 @@ export default function ReportsPage() {
                 )) : (
                   <EmptyReportState
                     title="No capacity data yet"
-                    description="Capacity planning needs scheduled jobs and technician activity in the selected range. No synthetic utilization rows are shown."
+                    description="No capacity data in this range."
                     action={<Button size="sm" variant="outline" className="rounded-full border-white/10 bg-white/[0.04] text-slate-100 hover:bg-white/[0.08]" onClick={() => handleQuickRangeChange('this_month')}>View This Month</Button>}
                   />
                 )}
@@ -713,14 +710,14 @@ export default function ReportsPage() {
 
         <div className="pt-2">
           <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-100">Operational Status</p>
-          <p className="mt-1 text-sm text-slate-400">Job status distribution from live dispatch records.</p>
+          <p className="mt-1 text-sm text-slate-400">Job status distribution.</p>
         </div>
 
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
           <Card className={sectionCardClass}>
             <div className={sectionHeaderClass}>
               <h2 className="text-base font-semibold text-slate-950 dark:text-white">Dispatch Performance</h2>
-              <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Job status distribution for selected range</p>
+              <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Status by range.</p>
             </div>
             <div className="p-6 pt-5">
               {loading ? (
@@ -752,7 +749,7 @@ export default function ReportsPage() {
               ) : (
                 <EmptyReportState
                   title="No dispatch records in this period"
-                  description="There are no jobs with dispatch status changes in the selected range. Try this month or create and progress jobs to populate this chart."
+                  description="No dispatch changes in this range."
                   action={<Button size="sm" variant="outline" className="rounded-full border-white/10 bg-white/[0.04] text-slate-100 hover:bg-white/[0.08]" onClick={() => handleQuickRangeChange('this_month')}>View This Month</Button>}
                 />
               )}
@@ -762,7 +759,7 @@ export default function ReportsPage() {
           <Card className={sectionCardClass}>
             <div className={sectionHeaderClass}>
               <h2 className="text-base font-semibold text-slate-950 dark:text-white">Invoice Performance</h2>
-              <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Invoicing lifecycle states, approval turnaround, and blocked reason breakdown.</p>
+              <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Invoice states and blockers.</p>
             </div>
             <div className="p-6 pt-5">
               {loading ? (
@@ -818,7 +815,7 @@ export default function ReportsPage() {
               ) : (
                 <EmptyReportState
                   title="No invoice records in this period"
-                  description="No invoices were created, sent, paid, or overdue in the selected range. Create invoices or expand the date range to see financial performance."
+                  description="No invoice activity in this range."
                   action={<Button size="sm" variant="outline" className="rounded-full border-white/10 bg-white/[0.04] text-slate-100 hover:bg-white/[0.08]" onClick={() => handleQuickRangeChange('this_month')}>View This Month</Button>}
                 />
               )}
@@ -828,7 +825,7 @@ export default function ReportsPage() {
 
         <div className="pt-2">
           <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-100">Team Performance</p>
-          <p className="mt-1 text-sm text-slate-400">Technician assignment, completion, delay, and revenue activity.</p>
+          <p className="mt-1 text-sm text-slate-400">Technician activity.</p>
         </div>
 
         <Card className={sectionCardClass}>
@@ -899,13 +896,13 @@ export default function ReportsPage() {
             ) : overview?.technician_performance.length ? (
               <EmptyReportState
                 title="No technicians match this filter"
-                description="Clear or change the technician search to view available live performance rows."
+                description="Clear the search to view rows."
                 action={<Button size="sm" variant="outline" className="rounded-full border-white/10 bg-white/[0.04] text-slate-100 hover:bg-white/[0.08]" onClick={() => setTechnicianFilter('')}>Clear Filter</Button>}
               />
             ) : (
               <EmptyReportState
                 title="No technician performance yet"
-                description="Technician reporting appears after jobs are assigned, accepted, completed, delayed, or refused in the selected date range."
+                description="No technician activity in this range."
                 action={<Button size="sm" variant="outline" className="rounded-full border-white/10 bg-white/[0.04] text-slate-100 hover:bg-white/[0.08]" onClick={() => handleQuickRangeChange('this_month')}>View This Month</Button>}
               />
             )}
@@ -914,7 +911,7 @@ export default function ReportsPage() {
 
         <div className="pt-2">
           <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-100">Location Performance</p>
-          <p className="mt-1 text-sm text-slate-400">Customer and location performance based on completed work and invoices.</p>
+          <p className="mt-1 text-sm text-slate-400">Location activity.</p>
         </div>
 
         <Card className={sectionCardClass}>
@@ -981,13 +978,13 @@ export default function ReportsPage() {
             ) : overview?.dealership_performance.length ? (
               <EmptyReportState
                 title="No locations match this filter"
-                description="Clear or change the location search to view available live performance rows."
+                description="Clear the search to view rows."
                 action={<Button size="sm" variant="outline" className="rounded-full border-white/10 bg-white/[0.04] text-slate-100 hover:bg-white/[0.08]" onClick={() => setDealershipFilter('')}>Clear Filter</Button>}
               />
             ) : (
               <EmptyReportState
                 title="No location performance yet"
-                description="Location reporting appears after jobs and invoices are associated with customer or location records in the selected range."
+                description="No location activity in this range."
                 action={<Button size="sm" variant="outline" className="rounded-full border-white/10 bg-white/[0.04] text-slate-100 hover:bg-white/[0.08]" onClick={() => handleQuickRangeChange('this_month')}>View This Month</Button>}
               />
             )}

@@ -119,7 +119,7 @@ export default function TechnicianLoginPage() {
           </h1>
 
           <p className="mt-5 max-w-lg text-base leading-8 text-slate-300">
-            Sign in to view assigned jobs, coordinate with dispatch, and update field work from one secure workspace.
+            Sign in to manage field work.
           </p>
 
           <div className="mt-8 grid max-w-lg gap-3">
@@ -163,7 +163,7 @@ export default function TechnicianLoginPage() {
                 Sign in
               </h2>
               <p className="mt-4 text-sm leading-7 text-slate-400">
-                Enter your technician credentials to continue to your field workspace.
+                Enter your technician credentials.
               </p>
             </div>
 
@@ -211,7 +211,7 @@ export default function TechnicianLoginPage() {
                             Need password help?
                           </DialogTitle>
                           <DialogDescription className="text-sm leading-6 text-white/78">
-                            Send a reset request to the admin workspace connected to your technician account.
+                            Send a reset request to admin.
                           </DialogDescription>
                         </DialogHeader>
 

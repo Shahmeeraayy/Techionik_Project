@@ -647,12 +647,9 @@ export default function ServicesPage() {
                             </div>
                             <h1 className="mt-5 text-[2.35rem] font-semibold leading-none tracking-[-0.06em] text-white md:text-[2.8rem]">
                                 Services
-                                <span className="block bg-gradient-to-r from-white via-cyan-100 to-emerald-100 bg-clip-text text-transparent">
-                                    pricing source of truth
-                                </span>
                             </h1>
                             <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-300 sm:text-[15px]">
-                                Manage billable services, unit pricing, archive state, and industry presets from one operational workspace.
+                                Manage services, rates, and presets.
                             </p>
                         </div>
                         <div className="flex flex-wrap items-center justify-end gap-3">
@@ -1038,7 +1035,7 @@ export default function ServicesPage() {
                 open={exportModalOpen}
                 onOpenChange={setExportModalOpen}
                 title="Export Services"
-                description="Select the service catalogue columns you want in your CSV."
+                description="Choose columns to export."
                 availableColumns={SERVICE_EXPORT_COLUMNS}
                 onConfirm={handleExport}
             />

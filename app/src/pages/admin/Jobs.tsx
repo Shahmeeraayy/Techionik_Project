@@ -2110,13 +2110,10 @@ export default function JobsPage() {
                             style={displayFontStyle}
                         >
                             Jobs
-                            <span className="block bg-gradient-to-r from-slate-900 via-slate-700 to-slate-500 bg-clip-text text-transparent dark:from-white dark:via-cyan-100 dark:to-emerald-100">
-                                command surface
-                            </span>
                         </h1>
 
                         <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-600 dark:text-slate-300 sm:text-[14px]">
-                            Monitor the queue, review job movement, and take action on technician assignment and admin confirmation from one cleaner control view.
+                            Manage jobs and assignments.
                         </p>
 
                         <div className="mt-5 flex flex-wrap items-center gap-2.5">
@@ -2174,7 +2171,7 @@ export default function JobsPage() {
                     <DialogHeader>
                         <DialogTitle className="text-white">Create New Job</DialogTitle>
                         <DialogDescription className="text-slate-300">
-                            New jobs are created in Admin Preview. Admin confirmation is required before any technician assignment or queue push.
+                            Create a preview job for admin review.
                         </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-2">
@@ -2200,7 +2197,7 @@ export default function JobsPage() {
                                             className="h-14 rounded-[20px] border-white/10 bg-[linear-gradient(180deg,rgba(10,18,32,0.96),rgba(8,14,26,0.96))] text-white placeholder:text-slate-500"
                                         />
                                         <p className="text-xs text-muted-foreground">
-                                            No dealership records are available yet, so you can type one manually for this preview job.
+                                            Type a dealership name manually.
                                         </p>
                                     </>
                                 )}
@@ -2218,7 +2215,7 @@ export default function JobsPage() {
                                     variant="admin-dark"
                                 />
                                 <p className="text-xs text-muted-foreground">
-                                    Select a service from the backend service catalog.
+                                    Choose a service.
                                 </p>
                             </div>
                         </div>
@@ -2275,7 +2272,7 @@ export default function JobsPage() {
                             Cancel
                         </Button>
                         <Button className="h-11 rounded-2xl border border-[#7db0ff]/40 bg-[linear-gradient(135deg,#4f7cff,#22d3ee)] px-5 text-white shadow-[0_16px_34px_rgba(79,124,255,0.22)] hover:brightness-105" onClick={handleCreateJob}>
-                            Create in Preview
+                            Create Job
                         </Button>
                     </DialogFooter>
                 </DialogContent>
@@ -2424,7 +2421,7 @@ export default function JobsPage() {
                 open={exportModalOpen}
                 onOpenChange={setExportModalOpen}
                 title="Export Jobs"
-                description="Select the job columns you want in your CSV."
+                description="Choose columns to export."
                 availableColumns={JOB_EXPORT_COLUMNS}
                 onConfirm={handleExport}
             />
@@ -2554,7 +2551,7 @@ export default function JobsPage() {
                                 Jobs at operational depth
                             </h2>
                             <p className="max-w-2xl text-sm leading-6 text-slate-400" style={bodyFontStyle}>
-                                Review live job records, monitor assignment readiness, and move jobs through the queue without falling back to a basic spreadsheet surface.
+                                Review jobs and assignments.
                             </p>
                         </div>
                     </div>

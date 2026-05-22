@@ -344,7 +344,7 @@ export default function AuditLogsPage() {
                 open={exportModalOpen}
                 onOpenChange={setExportModalOpen}
                 title="Export Audit Logs"
-                description="Select the audit log columns you want in your CSV."
+                description="Choose columns to export."
                 availableColumns={AUDIT_LOG_EXPORT_COLUMNS}
                 onConfirm={handleExport}
             />

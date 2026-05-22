@@ -842,7 +842,7 @@ export default function InvoiceApprovalsPage() {
             key: 'pending',
             label: 'Pending approval',
             value: filteredInvoices.length.toString(),
-            description: 'Invoices ready for admin review and invoice creation.',
+            description: 'Ready for review.',
             icon: CheckCircle2,
             tone: 'cyan' as const,
         },
@@ -885,12 +885,10 @@ export default function InvoiceApprovalsPage() {
                         </div>
                         <div className="space-y-3">
                             <h1 className="text-[2.35rem] font-semibold leading-none tracking-[-0.06em] text-slate-900 dark:text-white md:text-[2.8rem]" style={displayFontStyle}>
-                                Invoice approvals
-                                <br />
-                                at review depth.
+                                Approvals
                             </h1>
                             <p className="max-w-2xl text-sm leading-7 text-slate-600 dark:text-slate-300 md:text-[15px]" style={bodyFontStyle}>
-                                Review pricing, catch blockers, and move completed jobs into invoice generation from one premium approval surface.
+                                Review invoices and blockers.
                             </p>
                         </div>
                         <div className="flex flex-wrap items-center gap-2">
@@ -947,7 +945,7 @@ export default function InvoiceApprovalsPage() {
                 open={exportModalOpen}
                 onOpenChange={setExportModalOpen}
                 title={queueTab === 'approval' ? 'Export Approval Queue' : 'Export Blocked Queue'}
-                description="Select the invoice approval columns you want in your export."
+                description="Choose columns to export."
                 availableColumns={INVOICE_APPROVAL_EXPORT_COLUMNS}
                 onConfirm={handleExport}
             />
@@ -960,7 +958,7 @@ export default function InvoiceApprovalsPage() {
                             Create manual invoice
                         </DialogTitle>
                         <DialogDescription className="max-w-2xl text-sm leading-6 text-slate-400">
-                            Create an invoice without a queued job, then send it directly from your NexusOps workspace email identity.
+                            Create and send a manual invoice.
                         </DialogDescription>
                     </DialogHeader>
 
@@ -1336,7 +1334,7 @@ export default function InvoiceApprovalsPage() {
                         </div>
                         <div className="mt-1 text-sm text-slate-600 dark:text-slate-300">
                             {queueTab === 'approval'
-                                ? 'Completed jobs currently staged for invoice creation.'
+                                ? 'Ready for invoice creation.'
                                 : 'Invoices with validation issues that must be fixed before approval.'}
                         </div>
                     </div>

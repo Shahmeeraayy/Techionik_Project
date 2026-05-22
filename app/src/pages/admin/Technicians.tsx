@@ -1282,12 +1282,9 @@ export default function TechniciansPage() {
                             </div>
                             <h1 className="mt-5 text-[2.35rem] font-semibold leading-none tracking-[-0.06em] text-slate-950 dark:text-white md:text-[2.8rem]">
                                 Technicians
-                                <span className="block bg-gradient-to-r from-slate-950 via-blue-700 to-cyan-500 bg-clip-text text-transparent dark:from-white dark:via-cyan-100 dark:to-emerald-100">
-                                    workforce board
-                                </span>
                             </h1>
                             <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-600 dark:text-slate-300 sm:text-[15px]">
-                                Manage technician profiles, schedules, zones, skills, and availability across the active dispatch network.
+                                Manage profiles, schedules, and availability.
                             </p>
                             <div className="mt-5 flex flex-wrap items-center gap-2">
                                 <Badge variant="outline" className="border-cyan-300/20 bg-cyan-300/10 px-3 py-1 text-cyan-100">
@@ -1317,7 +1314,7 @@ export default function TechniciansPage() {
                                 <DialogContent className="border-white/10 bg-[linear-gradient(180deg,rgba(9,24,39,0.98),rgba(6,17,29,0.98))] text-slate-100">
                                     <DialogHeader>
                                         <DialogTitle className="text-white">Add New Technician</DialogTitle>
-                                        <DialogDescription className="text-slate-300">Create a new technician profile. They will start as active.</DialogDescription>
+                                        <DialogDescription className="text-slate-300">Create a technician profile.</DialogDescription>
                                     </DialogHeader>
                                     <div className="space-y-4 py-2">
                                         <div className="grid grid-cols-2 gap-4">
@@ -1371,21 +1368,21 @@ export default function TechniciansPage() {
                         <div className="p-5">
                             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500 dark:text-slate-400">Total Technicians</p>
                             <p className="mt-3 text-[2.15rem] font-semibold leading-none tracking-[-0.06em] text-slate-950 dark:text-white">{totalTechCount}</p>
-                            <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">Visible workforce profiles</p>
+                            <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">Workforce profiles</p>
                         </div>
                     </Card>
                     <Card className="overflow-hidden rounded-[24px] border border-emerald-200 bg-emerald-50/70 shadow-[0_18px_54px_rgba(15,23,42,0.06)] dark:border-emerald-400/15 dark:bg-[linear-gradient(180deg,rgba(10,37,45,0.96),rgba(7,25,31,0.96))] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
                         <div className="p-5">
                             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700/70 dark:text-slate-400">Available</p>
                             <p className="mt-3 text-[2.15rem] font-semibold leading-none tracking-[-0.06em] text-emerald-950 dark:text-white">{availableTechCount}</p>
-                            <p className="mt-2 text-sm text-emerald-800/75 dark:text-slate-300">Ready for dispatch right now</p>
+                            <p className="mt-2 text-sm text-emerald-800/75 dark:text-slate-300">Ready for dispatch</p>
                         </div>
                     </Card>
                     <Card className="overflow-hidden rounded-[24px] border border-violet-200 bg-violet-50/60 shadow-[0_18px_54px_rgba(15,23,42,0.06)] dark:border-violet-400/15 dark:bg-[linear-gradient(180deg,rgba(30,23,49,0.96),rgba(18,16,33,0.96))] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
                         <div className="p-5">
                             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-violet-700/70 dark:text-slate-400">Out of Office</p>
                             <p className="mt-3 text-[2.15rem] font-semibold leading-none tracking-[-0.06em] text-violet-950 dark:text-white">{outOfOfficeCount}</p>
-                            <p className="mt-2 text-sm text-violet-800/75 dark:text-slate-300">Temporarily removed from dispatch</p>
+                            <p className="mt-2 text-sm text-violet-800/75 dark:text-slate-300">Out of dispatch</p>
                         </div>
                     </Card>
                     <Card className="overflow-hidden rounded-[24px] border border-amber-200 bg-amber-50/70 shadow-[0_18px_54px_rgba(15,23,42,0.06)] dark:border-amber-400/15 dark:bg-[linear-gradient(180deg,rgba(41,28,15,0.94),rgba(27,18,10,0.96))] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
@@ -1404,7 +1401,7 @@ export default function TechniciansPage() {
                             <div className="flex flex-col gap-2 lg:flex-row lg:items-end lg:justify-between">
                                 <div>
                                     <h2 className="text-base font-semibold text-slate-950 dark:text-white">Technician Filters</h2>
-                                    <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Search by name, email, or zone and narrow by readiness, coverage, and skill fit.</p>
+                                    <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Search and filter technicians.</p>
                                 </div>
                                 <Badge variant="outline" className="w-fit border-white/10 bg-white/[0.03] text-slate-300">
                                     Showing {filteredTechs.length} of {totalTechCount}
@@ -1767,7 +1764,7 @@ export default function TechniciansPage() {
                                                 </div>
                                             ) : techJobFeed.length === 0 ? (
                                                 <div className="rounded-xl border border-dashed border-white/10 bg-white/[0.02] px-4 py-5 text-sm text-slate-400">
-                                                    No active jobs are currently assigned. This technician will appear in the dispatch queue based on zone, skill, and availability rules.
+                                                    No active jobs assigned.
                                                 </div>
                                             ) : (
                                                 <div className="space-y-3">
@@ -1964,7 +1961,7 @@ export default function TechniciansPage() {
                     <DialogContent className="border-white/10 bg-[linear-gradient(180deg,rgba(9,24,39,0.98),rgba(6,17,29,0.98))] text-slate-100">
                         <DialogHeader>
                             <DialogTitle className="text-white">Edit Technician</DialogTitle>
-                            <DialogDescription className="text-slate-300">Update technician profile details.</DialogDescription>
+                            <DialogDescription className="text-slate-300">Update technician details.</DialogDescription>
                         </DialogHeader>
                         <div className="space-y-4 py-2">
                             <div className="grid grid-cols-2 gap-4">
@@ -2059,7 +2056,7 @@ export default function TechniciansPage() {
                     open={exportModalOpen}
                     onOpenChange={setExportModalOpen}
                     title="Export Technicians"
-                    description="Select the technician columns you want in your CSV."
+                    description="Choose columns to export."
                     availableColumns={TECHNICIAN_EXPORT_COLUMNS}
                     onConfirm={handleExport}
                 />

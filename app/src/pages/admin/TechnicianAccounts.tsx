@@ -344,13 +344,10 @@ export default function TechnicianAccountsPage() {
                 Access Controls
               </div>
               <h1 className="mt-5 text-[2.35rem] font-semibold leading-none tracking-[-0.06em] text-white md:text-[2.8rem]">
-                Technician Accounts
-                <span className="block bg-gradient-to-r from-white via-cyan-100 to-emerald-100 bg-clip-text text-transparent">
-                  access center
-                </span>
+                Accounts
               </h1>
               <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-300 sm:text-[15px]">
-                Create technician accounts, send invite emails, reset passwords, and control account access from one admin-only security console.
+                Manage technician access.
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-3">
@@ -418,7 +415,7 @@ export default function TechnicianAccountsPage() {
                 <div className="space-y-2">
                   <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Active</p>
                   <p className="mt-3 text-[2.15rem] font-semibold leading-none tracking-[-0.06em] text-white">{activeCount}</p>
-                  <p className="text-sm text-slate-300">Accounts currently allowed to sign in</p>
+                  <p className="text-sm text-slate-300">Can sign in</p>
                 </div>
                 <div className={metricIconClass('emerald')}>
                   <ShieldCheck className="w-5 h-5" />
@@ -432,7 +429,7 @@ export default function TechnicianAccountsPage() {
                 <div className="space-y-2">
                   <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Suspended</p>
                   <p className="mt-3 text-[2.15rem] font-semibold leading-none tracking-[-0.06em] text-white">{inactiveCount}</p>
-                  <p className="text-sm text-slate-300">Accounts currently blocked from sign in</p>
+                  <p className="text-sm text-slate-300">Blocked accounts</p>
                 </div>
                 <div className={metricIconClass('amber')}>
                   <ShieldOff className="w-5 h-5" />

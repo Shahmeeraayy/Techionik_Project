@@ -722,12 +722,10 @@ export default function InvoiceHistoryPage() {
                         </div>
                         <div className="space-y-3">
                             <h1 className="text-[2.35rem] font-semibold leading-none tracking-[-0.06em] text-slate-900 dark:text-white md:text-[2.8rem]" style={displayFontStyle}>
-                                Invoice history
-                                <br />
-                                with lifecycle control.
+                                Invoice History
                             </h1>
                             <p className="max-w-2xl text-sm leading-7 text-slate-600 dark:text-slate-300 md:text-[15px]" style={bodyFontStyle}>
-                                Search every generated invoice, review metadata, download branded PDFs, and handle resend, paid, or void actions from one admin surface.
+                                Search, resend, download, and update invoices.
                             </p>
                         </div>
                         <div className="flex flex-wrap items-center gap-2">
@@ -768,7 +766,7 @@ export default function InvoiceHistoryPage() {
                 open={exportModalOpen}
                 onOpenChange={setExportModalOpen}
                 title="Export Invoice History"
-                description="Select the invoice history columns you want in your CSV."
+                description="Choose columns to export."
                 availableColumns={INVOICE_HISTORY_EXPORT_COLUMNS}
                 onConfirm={handleExport}
             />

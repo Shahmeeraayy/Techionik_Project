@@ -927,12 +927,9 @@ export default function DealershipsPage() {
                             </div>
                             <h1 className="mt-5 text-[2.35rem] font-semibold leading-none tracking-[-0.06em] text-white md:text-[2.8rem]">
                                 Locations
-                                <span className="block bg-gradient-to-r from-white via-cyan-100 to-emerald-100 bg-clip-text text-transparent">
-                                    operations console
-                                </span>
                             </h1>
                             <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-300 sm:text-[15px]">
-                                Maintain service locations, contacts, city routing, and operational notes from one centralized control surface.
+                                Manage service locations and contacts.
                             </p>
                         </div>
                         <div className="flex flex-wrap items-center justify-end gap-3">
@@ -1345,7 +1342,7 @@ export default function DealershipsPage() {
                 open={exportModalOpen}
                 onOpenChange={setExportModalOpen}
                 title="Export Locations"
-                description="Select the location columns you want in your CSV."
+                description="Choose columns to export."
                 availableColumns={DEALERSHIP_EXPORT_COLUMNS}
                 onConfirm={handleExport}
             />

@@ -902,7 +902,7 @@ export default function SettingsPage() {
                                 <h2 className="text-2xl font-bold text-white">Workspace Email Identity</h2>
                             </div>
                             <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-400">
-                                Emails are sent directly from your NexusOps workspace using your company email identity.
+                                Emails use your NexusOps workspace identity.
                                 Customers do not need to receive invoices from a personal Gmail or Outlook account.
                             </p>
                         </div>

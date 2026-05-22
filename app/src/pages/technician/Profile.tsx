@@ -381,7 +381,7 @@ export default function ProfilePage() {
         .join(', ');
     const heroEyebrow = 'Profile Settings';
     const heroTitle = 'Profile';
-    const heroDescription = 'Manage profile, availability, password, and session access.';
+    const heroDescription = 'Update profile and access.';
 
     return (
         <div className="tech-shell pb-32 text-slate-950 dark:text-white">
@@ -483,7 +483,7 @@ export default function ProfilePage() {
                                         <span className="text-slate-500 dark:text-slate-400">Phone</span>
                                         <span className="font-medium text-slate-950 dark:text-white">{userPhone}</span>
                                     </div>
-                                    <p className="text-xs text-slate-500 dark:text-slate-400">Preview mode is read-only. Open technician portal to edit these values.</p>
+                                    <p className="text-xs text-slate-500 dark:text-slate-400">Preview is read-only.</p>
                                 </div>
                             ) : (
                                     <div className="space-y-3">
@@ -569,7 +569,7 @@ export default function ProfilePage() {
                                             </div>
                                         )}
                                     </div>
-                                    <p className="text-xs text-slate-500 dark:text-slate-400">Preview mode is read-only. Open technician portal to update availability.</p>
+                                    <p className="text-xs text-slate-500 dark:text-slate-400">Preview is read-only.</p>
                                 </div>
                             ) : (
                                 <div className="space-y-4">
@@ -607,7 +607,7 @@ export default function ProfilePage() {
                                             <Input className={TECH_INPUT_CLASS} type="time" value={workingHoursEnd} onChange={(event) => setWorkingHoursEnd(event.target.value)} />
                                         </div>
                                     </div>
-                                    <p className="text-xs text-slate-500">These hours apply to every selected working day.</p>
+                                    <p className="text-xs text-slate-500">Applies to selected days.</p>
 
                                     <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-white/10 dark:bg-white/[0.03]">
                                         <div>

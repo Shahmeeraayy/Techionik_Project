@@ -366,13 +366,10 @@ export default function PlatformChatPage() {
                 Platform Chat
               </div>
               <h1 className="mt-5 text-[2.35rem] font-semibold leading-none tracking-[-0.06em] text-white md:text-[2.8rem]">
-                Admin chat
-                <span className="block bg-gradient-to-r from-white via-cyan-100 to-emerald-100 bg-clip-text text-transparent">
-                  command channel
-                </span>
+                Messages
               </h1>
               <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-300 sm:text-[15px]">
-                Real technician messaging with persisted history, delivery state, and broadcast announcements inside the dispatch platform.
+                Message technicians and send updates.
               </p>
             </div>
             <div className="flex flex-wrap items-center justify-end gap-3">

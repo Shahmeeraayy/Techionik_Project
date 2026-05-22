@@ -67,7 +67,7 @@ export default function AdminSignupPage() {
       accent="signup"
       badge="NexusOps Signup"
       title={<>Create your workspace</>}
-      description="Set up your company workspace and start managing service operations from one secure dashboard."
+      description="Create your company workspace."
       chips={[]}
       contentFrame={false}
     >

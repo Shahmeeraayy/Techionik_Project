@@ -1127,10 +1127,10 @@ export default function MyJobsPage({
     };
 
     const heroEyebrow = isHistoryMode ? 'Field Archive' : 'Field Execution';
-    const heroTitle = isHistoryMode ? 'Job history\nwith verified field outcomes.' : 'Current jobs\nwith field-ready control.';
+    const heroTitle = isHistoryMode ? 'Job History' : 'Current Jobs';
     const heroDescription = isHistoryMode
-        ? 'Review completed work, technician-added services, and final field outcomes from one mobile archive surface.'
-        : 'Track active assignments, manage service updates, and move jobs from accepted to completed without leaving the field workspace.';
+        ? 'Review completed work.'
+        : 'Update active field work.';
     const metricCards = isHistoryMode
         ? [
             {
@@ -1144,7 +1144,7 @@ export default function MyJobsPage({
             {
                 label: 'Active Records',
                 value: jobs.length,
-                description: 'History records currently loaded in your technician archive.',
+                description: 'Completed records.',
                 tone: 'border-white/10 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] text-white',
                 iconTone: 'border-white/10 bg-white/[0.04] text-white',
                 icon: Briefcase,
@@ -1162,7 +1162,7 @@ export default function MyJobsPage({
             {
                 label: 'Current Jobs',
                 value: activeJobs.length,
-                description: 'Assignments currently active in your field queue.',
+                description: 'Active assignments.',
                 tone: 'border-white/10 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] text-white',
                 iconTone: 'border-white/10 bg-white/[0.04] text-white',
                 icon: Calendar,
@@ -1189,7 +1189,7 @@ export default function MyJobsPage({
         ? 'Offline cached job details are available on this device.'
         : isHistoryMode
         ? 'Completed technician records with service detail, technician changes, and final field actions.'
-        : 'Live assignments currently active for this technician, ready for field updates.';
+        : 'Active field work.';
     const visibleCount = isHistoryMode ? completedJobs.length : activeJobs.length;
     const historyRecordsWithServiceChanges = completedJobs.filter((job) => job.service_entries.some((entry) => entry.source === 'technician')).length;
     const selectedJob = selectedJobId ? jobs.find((job) => job.job_id === selectedJobId) ?? null : null;
@@ -1673,4 +1673,3 @@ export default function MyJobsPage({
         </div>
     );
 }
-

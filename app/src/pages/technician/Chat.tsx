@@ -242,12 +242,10 @@ export default function TechnicianChatPage() {
                   Technician Chat
                 </div>
                 <h1 className="mt-5 text-[clamp(2rem,3.4vw,3.15rem)] font-semibold leading-[0.94] tracking-[-0.07em] text-white">
-                  Direct dispatch
-                  <br />
-                  messaging with admin.
+                  Dispatch Chat
                 </h1>
                 <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-300 sm:text-[15px]">
-                  Real persisted messages between field technicians and the admin team, with delivery and read states built into the platform.
+                  Message the admin team.
                 </p>
                 {isPreviewMode ? (
                   <p className="mt-3 text-xs font-medium text-white/80">Preview mode is read-only for technician chat.</p>
@@ -285,7 +283,7 @@ export default function TechnicianChatPage() {
                     <Shield className="h-5 w-5 text-white" />
                     <h2 className="text-xl font-semibold tracking-[-0.04em] text-white">Admin Dispatch</h2>
                   </div>
-                  <p className="text-sm text-slate-400">Use this channel for updates, clarifications, and job support without leaving the technician portal.</p>
+                  <p className="text-sm text-slate-400">Message dispatch.</p>
                 </div>
                 <div className="relative min-w-[220px]">
                   <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />

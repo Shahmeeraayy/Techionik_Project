@@ -72,7 +72,7 @@ export default function AdminLoginPage() {
           </h1>
 
           <p className="mt-5 max-w-lg text-base leading-8 text-slate-300">
-            Sign in to manage jobs, technicians, invoices, and daily service operations from one workspace.
+            Sign in to manage daily operations.
           </p>
 
           <div className="mt-8 grid max-w-lg gap-3">
@@ -110,13 +110,13 @@ export default function AdminLoginPage() {
             <div className="mt-9">
               <div className="inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1.5 text-xs font-semibold text-cyan-100">
                 <LockKeyhole className="h-3.5 w-3.5" />
-                Secure workspace login
+                Secure login
               </div>
               <h2 className="mt-5 text-3xl font-semibold leading-none tracking-[-0.045em]">
                 Sign in
               </h2>
               <p className="mt-4 text-sm leading-7 text-slate-400">
-                Enter your admin credentials to continue to the NexusOps workspace.
+                Enter your admin credentials.
               </p>
             </div>
 

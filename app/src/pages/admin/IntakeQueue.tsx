@@ -172,13 +172,10 @@ export default function IntakeQueuePage() {
               Intake Queue
             </div>
             <h1 className="mt-4 text-[1.9rem] font-semibold leading-none tracking-[-0.06em] text-white sm:mt-5 sm:text-[2.35rem] md:text-[2.8rem]">
-              Booking requests
-              <span className="block bg-gradient-to-r from-white via-cyan-100 to-emerald-100 bg-clip-text text-transparent">
-                ready for review
-              </span>
+              Request Queue
             </h1>
             <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-300 sm:mt-4 sm:text-[15px]">
-              Public booking portal requests arrive here tagged with source Booking Portal, ready for admin review and customer status updates.
+              Review new customer booking requests.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
@@ -441,7 +438,7 @@ export default function IntakeQueuePage() {
           <DialogHeader>
             <DialogTitle className="text-white">Update booking request</DialogTitle>
             <DialogDescription className="text-slate-300">
-              Control the customer-facing status view for {editingRow?.reference_number}.
+              Update status for {editingRow?.reference_number}.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-2">

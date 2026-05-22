@@ -118,7 +118,7 @@ export function TechnicianPreviewModal({ open, onOpenChange }: TechnicianPreview
                                     Preview Technician Portal
                                 </DialogTitle>
                                 <DialogDescription className="max-w-xl text-sm leading-6 text-slate-300" style={bodyFontStyle}>
-                                    Open a technician-facing preview without leaving the admin workspace. This keeps your admin role intact while you inspect the field portal experience.
+                                    Preview the technician portal.
                                 </DialogDescription>
                             </DialogHeader>
                             <div className="flex flex-wrap gap-2">
@@ -156,7 +156,7 @@ export function TechnicianPreviewModal({ open, onOpenChange }: TechnicianPreview
                             <div className="space-y-1.5">
                                 <p className="text-sm font-semibold text-white">Preview Mode Notice</p>
                                 <p className="text-xs leading-6 text-slate-300" style={bodyFontStyle}>
-                                    You remain logged in as admin. This view is for monitoring, QA, and support only. Technician permissions are not elevated and your admin session does not change.
+                                    Admin session stays active.
                                 </p>
                             </div>
                         </div>
@@ -168,7 +168,7 @@ export function TechnicianPreviewModal({ open, onOpenChange }: TechnicianPreview
                                 <Label htmlFor="technician-select" className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">
                                     Select Technician
                                 </Label>
-                                <p className="mt-1 text-sm text-slate-300">Choose which portal state you want to inspect from the admin side.</p>
+                                <p className="mt-1 text-sm text-slate-300">Choose a technician.</p>
                             </div>
                             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] text-white">
                                 <UserRound className="h-4 w-4" />

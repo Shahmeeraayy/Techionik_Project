@@ -436,7 +436,7 @@ export default function Dashboard() {
         id: 'technicians',
         label: 'Technician Roster',
         value: snapshot.stats.technicians,
-        description: 'Active field operators currently on file.',
+        description: 'Field operators on file.',
         icon: Users,
       },
       {
@@ -517,14 +517,11 @@ export default function Dashboard() {
                 className="mt-5 text-[clamp(2.1rem,4vw,4.2rem)] font-semibold leading-[0.92] tracking-[-0.07em] text-slate-900 dark:text-white"
                 style={displayFontStyle}
               >
-                NexusOps
-                <span className="block bg-gradient-to-r from-slate-900 via-slate-700 to-slate-500 bg-clip-text text-transparent dark:from-white dark:via-cyan-100 dark:to-emerald-100">
-                  command dashboard
-                </span>
+                Overview
               </h1>
 
               <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-600 dark:text-slate-300 sm:text-[15px]">
-                Monitor jobs, technician capacity, invoice approvals, and operational risk from one live operations workspace.
+                Track jobs, technicians, invoices, and blockers.
               </p>
 
               <div className="mt-6 grid max-w-2xl grid-cols-1 gap-2.5 sm:grid-cols-3">
@@ -605,7 +602,7 @@ export default function Dashboard() {
                 Live queue
               </h2>
               <p className="text-sm text-slate-500 dark:text-slate-400">
-                Fast entry points into the operational states that matter most right now.
+                Open key queues.
               </p>
             </div>
             <Button
@@ -613,11 +610,11 @@ export default function Dashboard() {
               size="sm"
               className="h-10 gap-2 rounded-full border-black/8 bg-white px-4 text-slate-700 hover:bg-slate-50 hover:text-slate-900 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-200 dark:hover:bg-white/[0.08] dark:hover:text-white"
               onClick={() => void loadDashboard({ background: true })}
-              title="Refresh dashboard"
+              title="Refresh"
               disabled={refreshing}
             >
               <RefreshCw className={cn('h-4 w-4', refreshing && 'animate-spin')} />
-              Refresh dashboard
+              Refresh
             </Button>
           </div>
 
@@ -668,7 +665,7 @@ export default function Dashboard() {
                   Recent activity
                 </h2>
                 <p className="text-sm text-slate-500 dark:text-slate-400">
-                  Latest job movement coming in from the backend session.
+                  Latest job updates.
                 </p>
               </div>
               <Button
@@ -735,7 +732,7 @@ export default function Dashboard() {
                   Quick actions
                 </h2>
                 <p className="text-sm text-slate-500 dark:text-slate-400">
-                  Jump directly into the operational screens you use the most.
+                  Common shortcuts.
                 </p>
               </div>
 
@@ -766,10 +763,10 @@ export default function Dashboard() {
               <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-slate-900/20 to-transparent dark:via-cyan-200/60" />
               <div>
                 <h2 className="text-xl font-semibold text-slate-900 dark:text-white" style={displayFontStyle}>
-                  Technician status board
+                  Technicians
                 </h2>
                 <p className="text-sm text-slate-500 dark:text-slate-400">
-                  Current field status for every technician on the roster.
+                  Current field status.
                 </p>
               </div>
 

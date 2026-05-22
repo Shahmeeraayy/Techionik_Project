@@ -253,7 +253,7 @@ export default function BookingPortalPage() {
                   {[
                     ['Confirmation email', 'You will receive a reference number after submission.'],
                     ['Response window', config?.estimated_response_time_message || 'The service team will follow up soon.'],
-                    ['Status tracking', config?.status_lookup_enabled ? 'Status lookup is available for this workspace.' : 'The team will update you directly by email or phone.'],
+                    ['Status tracking', config?.status_lookup_enabled ? 'Status lookup is available.' : 'We will contact you directly.'],
                   ].map(([title, body]) => (
                     <div key={title} className="rounded-xl border border-white/8 bg-white/[0.03] p-3">
                       <p className="text-xs font-semibold text-slate-100">{title}</p>
@@ -348,7 +348,7 @@ export default function BookingPortalPage() {
             ) : !config?.is_enabled ? (
               <div className="space-y-3">
                 <div className="rounded-xl border border-amber-400/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
-                  This booking portal is currently offline.
+                  Booking portal offline.
                 </div>
                 <p className="text-sm text-slate-500">Please contact the dispatch team directly for help.</p>
               </div>

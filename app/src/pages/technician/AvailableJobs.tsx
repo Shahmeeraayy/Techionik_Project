@@ -494,12 +494,10 @@ export default function AvailableJobsPage() {
                                     Technician Queue
                                 </div>
                                 <h1 className="mt-5 text-[clamp(2rem,3.4vw,3.15rem)] font-semibold leading-[0.94] tracking-[-0.07em] text-white">
-                                    Assigned jobs
-                                    <br />
-                                    with live dispatch context.
+                                    Assigned Jobs
                                 </h1>
                                 <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-300 sm:text-[15px]">
-                                    Review incoming assignments, open your current job, and keep field work moving from one focused technician workspace.
+                                    View and update assigned field work.
                                 </p>
                                 <div className="mt-5 flex flex-wrap items-center gap-2">
                                     <Badge variant="outline" className="rounded-full border-white/10 bg-white/[0.04] px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-white">
@@ -542,7 +540,7 @@ export default function AvailableJobsPage() {
                                 <div>
                                     <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Jobs Sent</p>
                                     <p className="mt-2 text-3xl font-semibold tracking-[-0.05em] text-white">{jobsByStatus.total}</p>
-                                    <p className="mt-2 text-sm text-slate-300">Admin-confirmed assignments visible to you.</p>
+                                    <p className="mt-2 text-sm text-slate-300">Assigned jobs.</p>
                                 </div>
                                 <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] text-white">
                                     <Send className="h-5 w-5" />
@@ -554,7 +552,7 @@ export default function AvailableJobsPage() {
                                 <div>
                                     <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Pending Review</p>
                                     <p className="mt-2 text-3xl font-semibold tracking-[-0.05em] text-white">{jobsByStatus.pending}</p>
-                                    <p className="mt-2 text-sm text-slate-300">Jobs waiting for your next action.</p>
+                                    <p className="mt-2 text-sm text-slate-300">Needs action.</p>
                                 </div>
                                 <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] text-white">
                                     <RadioTower className="h-5 w-5" />
@@ -566,7 +564,7 @@ export default function AvailableJobsPage() {
                                 <div>
                                     <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Active Pipeline</p>
                                     <p className="mt-2 text-3xl font-semibold tracking-[-0.05em] text-white">{jobsByStatus.active}</p>
-                                    <p className="mt-2 text-sm text-slate-300">Scheduled or live field work in progress.</p>
+                                    <p className="mt-2 text-sm text-slate-300">Active work.</p>
                                 </div>
                                 <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] text-white">
                                     <Briefcase className="h-5 w-5" />
@@ -581,7 +579,7 @@ export default function AvailableJobsPage() {
                                 <div className="space-y-2">
                                     <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Technician Board</div>
                                     <div className="text-sm text-slate-200">
-                                        {offlineMode ? 'Offline cached assignments available on this device.' : 'Assignments sent from dispatch and ready for action in the field.'}
+                                        {offlineMode ? 'Cached assignments available.' : 'Assignments ready for action.'}
                                     </div>
                                 </div>
                                 <Badge variant="outline" className="rounded-full border-white/10 bg-white/[0.04] px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-slate-300">
