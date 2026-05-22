@@ -238,7 +238,7 @@ export default function IntakeQueuePage() {
                 const services = getBookingServices(row);
                 const serviceSummary = services.length > 1 ? `${services[0]} + ${services.length - 1} more` : services[0] || 'No service selected';
                 return (
-                <div key={row.id} className="grid items-start py-4 hover:bg-white/[0.045]" style={GRID_COLS}>
+                <div key={row.id} className="intake-queue-row grid items-start py-4 transition-colors" style={GRID_COLS}>
                   <div className="overflow-hidden pl-6">
                     <p className="truncate font-semibold text-white">{row.reference_number}</p>
                     <p className="truncate text-xs text-slate-500">{row.source}</p>
@@ -318,7 +318,7 @@ export default function IntakeQueuePage() {
               const services = getBookingServices(row);
               const serviceSummary = services.length > 1 ? `${services[0]} + ${services.length - 1} more` : services[0] || 'No service selected';
               return (
-              <div key={row.id} className="flex flex-col gap-3 p-4 hover:bg-white/[0.03]">
+              <div key={row.id} className="intake-queue-row flex flex-col gap-3 p-4 transition-colors">
                 {/* Top row: ref + badge + edit */}
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">

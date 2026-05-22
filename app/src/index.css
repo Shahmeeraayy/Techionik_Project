@@ -2150,6 +2150,16 @@
   color: #8ea3c5 !important;
 }
 
+.dark .admin-shell .intake-queue-row:hover {
+  background: rgba(255, 255, 255, 0.045) !important;
+  color: #f8fbff !important;
+}
+
+.light .admin-shell .intake-queue-row:hover {
+  background: #f8fafc !important;
+  color: #0f172a !important;
+}
+
 .light .admin-shell [data-admin-dark-input="true"],
 .light .admin-shell input,
 .light .admin-shell textarea,
