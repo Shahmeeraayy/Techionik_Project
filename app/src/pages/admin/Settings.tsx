@@ -522,7 +522,7 @@ export default function SettingsPage() {
 
     const handleSaveNotificationPreferences = () => {
         saveStoredObject(NOTIFICATION_PREFERENCES_STORAGE_KEY, notificationPreferences);
-        alert('Notification preferences saved successfully.');
+        alert('Notifications saved successfully.');
     };
 
     const handleSaveBillingSubscription = () => {
@@ -533,16 +533,16 @@ export default function SettingsPage() {
     const handleSaveBookingPortalSettings = async () => {
         const adminToken = getStoredAdminToken();
         if (!hasBackendAdminToken || !adminToken) {
-            alert('Admin session is required to save booking portal settings.');
+            alert('Admin session is required to save portal settings.');
             return;
         }
 
         if (!bookingPortalSettings.estimatedResponseTimeMessage.trim()) {
-            alert('Estimated response time message is required.');
+            alert('Response time is required.');
             return;
         }
         if (!bookingPortalSettings.confirmationEmailBody.trim()) {
-            alert('Confirmation email body is required.');
+            alert('Confirmation email is required.');
             return;
         }
 
@@ -562,7 +562,7 @@ export default function SettingsPage() {
             setSavedBookingPortalSettings(next);
             alert('Booking portal settings saved successfully.');
         } catch (error) {
-            alert(error instanceof Error ? error.message : 'Unable to save booking portal settings.');
+            alert(error instanceof Error ? error.message : 'Unable to save portal settings.');
         } finally {
             setIsSavingBookingPortalSettings(false);
         }
@@ -708,10 +708,10 @@ export default function SettingsPage() {
                         </div>
                     </div>
                     <div className="rounded-2xl border border-cyan-400/25 bg-[#0d1829] p-5 shadow-[0_0_0_1px_rgba(34,211,238,0.08)]">
-                        <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">CRM Theme</p>
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">Theme</p>
                         <p className="mt-2 text-[2rem] font-bold leading-none text-white">{theme === 'dark' ? 'Dark' : theme === 'light' ? 'Light' : 'System'}</p>
                         <div className="mt-3 flex items-center justify-between">
-                            <p className="text-sm text-cyan-300">Workspace appearance</p>
+                            <p className="text-sm text-cyan-300">Appearance</p>
                             <Monitor className="h-5 w-5 text-cyan-400" />
                         </div>
                         <div className="mt-4 grid grid-cols-3 gap-2">
@@ -739,7 +739,7 @@ export default function SettingsPage() {
                     <div className="rounded-2xl border border-white/8 bg-[#0d1829] p-6">
                         <div className="mb-6 flex items-center gap-3">
                             <Building2 className="h-7 w-7 text-cyan-300" />
-                            <h2 className="text-2xl font-bold text-white">Company Profile &amp; Branding</h2>
+                            <h2 className="text-2xl font-bold text-white">Company Profile</h2>
                         </div>
                         <div className="grid gap-6 md:grid-cols-[1fr_260px]">
                             {/* Fields */}
@@ -749,11 +749,11 @@ export default function SettingsPage() {
                                     <Input style={settingsDarkInputStyle} className="border-white/10 text-white placeholder:text-slate-500" value={invoiceCompany.name} onChange={(e) => setInvoiceCompany({ ...invoiceCompany, name: e.target.value })} />
                                 </div>
                                 <div className="space-y-1.5">
-                                    <Label className="text-sm text-slate-400">Contact Email</Label>
+                                    <Label className="text-sm text-slate-400">Email</Label>
                                     <Input style={settingsDarkInputStyle} className="border-white/10 text-white placeholder:text-slate-500" value={invoiceCompany.email} onChange={(e) => setInvoiceCompany({ ...invoiceCompany, email: e.target.value })} />
                                 </div>
                                 <div className="space-y-1.5">
-                                    <Label className="text-sm text-slate-400">Industry Type</Label>
+                                    <Label className="text-sm text-slate-400">Industry</Label>
                                     <Select value={companyProfileSettings.industryType} onValueChange={(v) => setCompanyProfileSettings((prev) => ({ ...prev, industryType: v }))}>
                                         <SelectTrigger className="border-white/10 bg-[#0b1424] text-white"><SelectValue /></SelectTrigger>
                                         <SelectContent>
@@ -766,11 +766,11 @@ export default function SettingsPage() {
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-1.5">
-                                        <Label className="text-sm text-slate-400">Contact Phone</Label>
+                                        <Label className="text-sm text-slate-400">Phone</Label>
                                         <Input style={settingsDarkInputStyle} className="border-white/10 text-white placeholder:text-slate-500" value={invoiceCompany.phone} onChange={(e) => setInvoiceCompany({ ...invoiceCompany, phone: e.target.value })} />
                                     </div>
                                     <div className="space-y-1.5">
-                                        <Label className="text-sm text-slate-400">Primary Colour</Label>
+                                        <Label className="text-sm text-slate-400">Primary color</Label>
                                         <div className="flex gap-2">
                                             <Input type="color" style={settingsDarkInputStyle} className="h-[52px] w-14 border-white/10 p-1" value={companyProfileSettings.primaryColor} onChange={(e) => setCompanyProfileSettings((prev) => ({ ...prev, primaryColor: e.target.value }))} />
                                             <Input style={settingsDarkInputStyle} className="border-white/10 text-white" value={companyProfileSettings.primaryColor} onChange={(e) => setCompanyProfileSettings((prev) => ({ ...prev, primaryColor: e.target.value }))} />
@@ -778,7 +778,7 @@ export default function SettingsPage() {
                                     </div>
                                 </div>
                                 <div className="space-y-1.5">
-                                    <Label className="text-sm text-slate-400">PDF Footer Text</Label>
+                                    <Label className="text-sm text-slate-400">PDF footer</Label>
                                     <Textarea style={settingsDarkInputStyle} className="min-h-16 border-white/10 text-white placeholder:text-slate-500" value={companyProfileSettings.customFooterText} onChange={(e) => setCompanyProfileSettings((prev) => ({ ...prev, customFooterText: e.target.value }))} />
                                 </div>
                             </div>
@@ -790,7 +790,7 @@ export default function SettingsPage() {
                                     ) : (
                                         <>
                                             <Upload className="h-8 w-8 text-slate-500" />
-                                            <p className="text-center text-sm font-medium text-slate-400">Drag and drop company logo</p>
+                                            <p className="text-center text-sm font-medium text-slate-400">Upload logo</p>
                                             <p className="text-xs text-slate-600">SVG, PNG or JPG (Max 2MB)</p>
                                         </>
                                     )}
@@ -803,7 +803,7 @@ export default function SettingsPage() {
                         </div>
                         <Button className="mt-6 h-12 w-full rounded-xl bg-gradient-to-r from-[#4f7cff] to-[#22d3ee] text-base font-semibold text-white shadow-[0_8px_24px_rgba(79,124,255,0.28)] hover:brightness-110 transition-all" onClick={handleSaveCompanyProfile} disabled={loading}>
                             {loading && <RefreshCw className="mr-2 h-4 w-4 animate-spin" />}
-                            Save Company Profile
+                            Save profile
                         </Button>
                     </div>
 
@@ -813,13 +813,13 @@ export default function SettingsPage() {
                         <div className="rounded-2xl border border-white/8 bg-[#0d1829] p-5">
                             <div className="mb-4 flex items-center gap-2">
                                 <MapPin className="h-4 w-4 text-cyan-300" />
-                                <h3 className="text-sm font-semibold text-white">Locations / Dealerships</h3>
+                                <h3 className="text-sm font-semibold text-white">Locations</h3>
                             </div>
                             <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">Active Records</p>
                             <p className="mt-1 text-4xl font-bold text-white">{dealershipOptions.length}</p>
                             <Button asChild variant="outline" className="mt-4 w-full justify-between rounded-xl border-white/10 bg-white/[0.04] text-slate-200 hover:bg-white/[0.08]">
                                 <Link to="/admin/locations">
-                                    Jump to Management
+                                    View locations
                                     <ExternalLink className="h-4 w-4" />
                                 </Link>
                             </Button>
@@ -828,7 +828,7 @@ export default function SettingsPage() {
                         <div className="rounded-2xl border border-white/8 bg-[#0d1829] p-5">
                             <div className="mb-4 flex items-center gap-2">
                                 <CreditCard className="h-4 w-4 text-cyan-300" />
-                                <h3 className="text-sm font-semibold text-white">Billing &amp; Subscription</h3>
+                                <h3 className="text-sm font-semibold text-white">Billing</h3>
                             </div>
                             <div className="space-y-2.5 text-sm">
                                 <div className="flex items-center justify-between">
@@ -857,22 +857,22 @@ export default function SettingsPage() {
                     </div>
                 </div>
 
-                {/* ── Notification Preferences ── */}
+                {/* ── Notifications ── */}
                 <div className="rounded-2xl border border-white/8 bg-[#0d1829] p-6">
                     <div className="mb-6">
-                        <h2 className="text-2xl font-bold text-white">Notification Preferences</h2>
-                        <p className="mt-1 text-sm text-slate-400">Automated alerts and communication triggers</p>
+                        <h2 className="text-2xl font-bold text-white">Notifications</h2>
+                        <p className="mt-1 text-sm text-slate-400">Choose workspace alerts.</p>
                     </div>
                     <div className="grid gap-4 md:grid-cols-4">
                         {([
-                            ['jobAssignedEmail',           'Job assigned email',    'Alert when technician is assigned'],
-                            ['jobCompletedEmail',          'Job completed alert',   'Daily summary for managers'],
-                            ['invoiceReadyEmail',          'Invoice ready SMS',     'Direct billing notification'],
-                            ['technicianSignupEmail',      'Technician signup',     'Admin alert for new signup'],
-                            ['chatDigestEmail',            'New chat digest',       'Email digest if unread 30m'],
-                            ['technicianSmsAssignments',   'SMS job assignment',    'SMS alert for assigned jobs'],
-                            ['customerBookingConfirmation','Booking confirmation',  'Customer confirmation email'],
-                            ['customerCompletionSummary',  'Completion summary',    'Customer completion email'],
+                            ['jobAssignedEmail',           'Job assigned',          'Technician alert'],
+                            ['jobCompletedEmail',          'Job completed',         'Manager summary'],
+                            ['invoiceReadyEmail',          'Invoice SMS',           'Billing alert'],
+                            ['technicianSignupEmail',      'Technician signup',     'Admin alert'],
+                            ['chatDigestEmail',            'Chat digest',           'Unread messages'],
+                            ['technicianSmsAssignments',   'SMS assignments',       'Assigned jobs'],
+                            ['customerBookingConfirmation','Booking confirmations', 'Customer email'],
+                            ['customerCompletionSummary',  'Completion summary',    'Customer email'],
                         ] as [keyof NotificationPreferences, string, string][]).map(([key, title, description]) => (
                             <div key={key} className="flex items-center justify-between gap-4 rounded-xl border border-white/8 bg-white/[0.02] p-4">
                                 <div>
@@ -888,22 +888,21 @@ export default function SettingsPage() {
                     </div>
                     <div className="mt-5 flex justify-end">
                         <Button size="sm" className="bg-[#2F8E92] text-white hover:bg-[#267276]" onClick={handleSaveNotificationPreferences}>
-                            Save Notifications
+                            Save notifications
                         </Button>
                     </div>
                 </div>
 
-                {/* ── Customer Booking Portal ── */}
+                {/* ── Booking Portal ── */}
                 <div className="rounded-2xl border border-white/8 bg-[#0d1829] p-6">
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                         <div>
                             <div className="flex items-center gap-2">
                                 <Mail className="h-5 w-5 text-cyan-300" />
-                                <h2 className="text-2xl font-bold text-white">Workspace Email Identity</h2>
+                                <h2 className="text-2xl font-bold text-white">Email Settings</h2>
                             </div>
                             <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-400">
-                                Emails use your NexusOps workspace identity.
-                                Customers do not need to receive invoices from a personal Gmail or Outlook account.
+                                Emails are sent from your workspace identity.
                             </p>
                         </div>
                         <Badge className={cn(
@@ -915,10 +914,10 @@ export default function SettingsPage() {
                     </div>
                     <div className="mt-6 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
                         {([
-                            ['Billing emails will be sent from', tenantEmailIdentity?.billing_email],
-                            ['Support emails will be sent from', tenantEmailIdentity?.support_email],
-                            ['Invoice identity', tenantEmailIdentity?.invoice_email],
-                            ['Notifications identity', tenantEmailIdentity?.notification_email],
+                            ['Billing', tenantEmailIdentity?.billing_email],
+                            ['Support', tenantEmailIdentity?.support_email],
+                            ['Invoices', tenantEmailIdentity?.invoice_email],
+                            ['Notifications', tenantEmailIdentity?.notification_email],
                         ] as const).map(([label, value]) => (
                             <div key={label} className="rounded-xl border border-white/8 bg-white/[0.025] p-4">
                                 <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">{label}</p>
@@ -947,7 +946,7 @@ export default function SettingsPage() {
                     <div className="flex flex-col gap-3 border-b border-white/8 bg-[#080f1c] px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
                         <div className="flex items-center gap-2.5">
                             <Monitor className="h-4 w-4 text-cyan-300" />
-                            <span className="text-xs font-bold uppercase tracking-[0.22em] text-white">Customer Booking Portal</span>
+                            <span className="text-xs font-bold uppercase tracking-[0.22em] text-white">Booking Portal</span>
                         </div>
                         <div className="flex flex-wrap gap-2">
                             <Badge className={cn('w-fit rounded-full px-3 py-1 text-xs font-semibold', bookingPortalSettings.isEnabled ? 'bg-emerald-500/15 text-emerald-200' : 'bg-red-500/15 text-red-200')}>
@@ -960,7 +959,7 @@ export default function SettingsPage() {
                             <Button asChild size="sm" variant="outline" className="h-8 gap-1.5 rounded-lg border-white/15 bg-transparent px-3 text-xs font-semibold text-slate-200 hover:bg-white/[0.06]">
                                 <Link to={`/book/${bookingTenantSlug}`} target="_blank" rel="noreferrer">
                                     <ExternalLink className="h-3.5 w-3.5" />
-                                    Open booking form
+                                    Open form
                                 </Link>
                             </Button>
                         </div>
@@ -971,7 +970,7 @@ export default function SettingsPage() {
                         <div className="space-y-5">
                             <div className="grid gap-3">
                                 <div className="rounded-xl border border-white/8 bg-white/[0.025] p-4">
-                                    <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">Public booking URL</p>
+                                    <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">Booking URL</p>
                                     <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                                         <p className="break-all text-sm font-semibold text-cyan-100">{bookingPortalUrl}</p>
                                         <Button type="button" size="sm" variant="outline" className="shrink-0 border-white/10 bg-transparent text-slate-200 hover:bg-white/[0.06]" onClick={() => void copyText(bookingPortalUrl, 'Booking link')}>
@@ -981,7 +980,7 @@ export default function SettingsPage() {
                                 </div>
                                 <div className="grid gap-3 md:grid-cols-2">
                                     <div className="rounded-xl border border-white/8 bg-white/[0.025] p-4">
-                                        <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">Status lookup URL</p>
+                                        <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">Status URL</p>
                                         <p className="mt-2 break-all text-sm text-slate-200">{bookingStatusLookupUrl}</p>
                                     </div>
                                     <div className="rounded-xl border border-dashed border-white/12 bg-white/[0.02] p-4">
@@ -989,15 +988,15 @@ export default function SettingsPage() {
                                             <QrCode className="h-4 w-4 text-cyan-300" />
                                             <p className="text-sm font-semibold">QR code ready</p>
                                         </div>
-                                        <p className="mt-2 text-xs leading-5 text-slate-500">Use the public URL to generate a QR code for reception desks, invoices, or customer messages.</p>
+                                        <p className="mt-2 text-xs leading-5 text-slate-500">Use the booking URL for QR codes.</p>
                                     </div>
                                 </div>
                             </div>
                             <div className={cn('flex items-center justify-between rounded-xl border p-4 transition-colors', bookingPortalSettings.isEnabled ? 'border-emerald-400/20 bg-emerald-400/[0.05]' : 'border-red-400/20 bg-red-400/[0.05]')}>
                                 <div>
-                                    <p className="font-semibold text-white">Enable Booking Portal</p>
+                                    <p className="font-semibold text-white">Booking portal</p>
                                     <p className={cn('mt-0.5 text-xs', bookingPortalSettings.isEnabled ? 'text-emerald-400' : 'text-red-400')}>
-                                        {bookingPortalSettings.isEnabled ? 'Accepting submissions — customers can book online' : 'Disabled — customer form submissions will be rejected'}
+                                        {bookingPortalSettings.isEnabled ? 'Accepting submissions' : 'Submissions disabled'}
                                     </p>
                                 </div>
                                 <div className="flex items-center gap-2.5">
@@ -1009,15 +1008,15 @@ export default function SettingsPage() {
                             </div>
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="font-semibold text-white">Status Lookup Page</p>
-                                    <p className="mt-0.5 text-xs text-slate-500">Let customers check status with reference number</p>
+                                    <p className="font-semibold text-white">Status lookup</p>
+                                    <p className="mt-0.5 text-xs text-slate-500">Reference number lookup</p>
                                 </div>
                                 <Switch checked={bookingPortalSettings.statusLookupEnabled} onCheckedChange={(c) => setBookingPortalSettings((prev) => ({ ...prev, statusLookupEnabled: c }))} />
                             </div>
                             <div className="space-y-2">
-                                <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">Service Type Filter</p>
+                                <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">Services</p>
                                 <p className="text-xs leading-5 text-slate-500">
-                                    Selected service types shown publicly: {selectedBookingServiceNames.length ? selectedBookingServiceNames.join(', ') : 'All active services'}
+                                    Public services: {selectedBookingServiceNames.length ? selectedBookingServiceNames.join(', ') : 'All active services'}
                                 </p>
                                 <Input style={settingsDarkInputStyle} className="border-white/10 text-white placeholder:text-slate-500" placeholder="Search services..." value={bookingServiceSearch} onChange={(e) => setBookingServiceSearch(e.target.value)} />
                                 <div className="flex flex-wrap gap-1.5 pt-1">
@@ -1041,7 +1040,7 @@ export default function SettingsPage() {
                                 </div>
                             </div>
                             <div className="space-y-1.5">
-                                <Label className="text-sm text-slate-400">Industry type</Label>
+                                <Label className="text-sm text-slate-400">Industry</Label>
                                 <Select value={bookingPortalSettings.industryType} onValueChange={(v) => setBookingPortalSettings((prev) => ({ ...prev, industryType: v as BookingPortalSettingsState['industryType'] }))}>
                                     <SelectTrigger className="border-white/10 bg-[#0b1424] text-white"><SelectValue /></SelectTrigger>
                                     <SelectContent>
@@ -1052,17 +1051,17 @@ export default function SettingsPage() {
                                 </Select>
                             </div>
                             <div className="space-y-1.5">
-                                <Label className="text-sm text-slate-400">Response time message</Label>
+                                <Label className="text-sm text-slate-400">Response time</Label>
                                 <Input style={settingsDarkInputStyle} className="border-white/10 text-white placeholder:text-slate-500" value={bookingPortalSettings.estimatedResponseTimeMessage} onChange={(e) => setBookingPortalSettings((prev) => ({ ...prev, estimatedResponseTimeMessage: e.target.value }))} />
                             </div>
                             <div className="space-y-1.5">
-                                <Label className="text-sm text-slate-400">Details field label override</Label>
+                                <Label className="text-sm text-slate-400">Details label</Label>
                                 <Input style={settingsDarkInputStyle} className="border-white/10 text-white placeholder:text-slate-500" placeholder="Leave blank to use industry default" value={bookingPortalSettings.detailsFieldLabel} onChange={(e) => setBookingPortalSettings((prev) => ({ ...prev, detailsFieldLabel: e.target.value }))} />
                             </div>
                         </div>
                         {/* Right — email body */}
                         <div className="space-y-0">
-                            <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">Confirmation Email Body</p>
+                            <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">Confirmation email</p>
                             <div className="flex items-center gap-0.5 rounded-t-xl border border-white/10 bg-white/[0.04] px-3 py-2">
                                 <button className="flex h-7 w-7 items-center justify-center rounded text-sm font-bold text-slate-400 hover:bg-white/[0.06] hover:text-white">B</button>
                                 <button className="flex h-7 w-7 items-center justify-center rounded text-sm italic text-slate-400 hover:bg-white/[0.06] hover:text-white">I</button>
@@ -1079,17 +1078,17 @@ export default function SettingsPage() {
                     <div className="flex items-center justify-end gap-2 border-t border-white/8 bg-[#080f1c] px-6 py-4">
                         <Button size="sm" variant="outline" className="border-white/10 bg-transparent text-slate-200 hover:bg-white/[0.05]" onClick={() => setBookingPortalSettings(savedBookingPortalSettings)} disabled={isSavingBookingPortalSettings}>Reset</Button>
                         <Button size="sm" className="bg-[#2F8E92] text-white hover:bg-[#267276]" onClick={handleSaveBookingPortalSettings} disabled={isSavingBookingPortalSettings}>
-                            {isSavingBookingPortalSettings ? 'Saving...' : 'Save Booking Portal'}
+                            {isSavingBookingPortalSettings ? 'Saving...' : 'Save portal'}
                         </Button>
                     </div>
                 </div>
 
-                {/* ── Dispatch Ranking Rules ── */}
+                {/* ── Ranking Rules ── */}
                 <div className="overflow-hidden rounded-2xl border border-white/8 bg-[#0d1829]">
                     <div className="flex flex-col gap-3 p-6 sm:flex-row sm:items-start sm:justify-between">
                         <div>
-                            <h2 className="text-2xl font-bold text-white">Dispatch Ranking Rules</h2>
-                            <p className="mt-1 text-sm text-slate-400">Manage algorithmic prioritization for inbound job requests</p>
+                            <h2 className="text-2xl font-bold text-white">Ranking Rules</h2>
+                            <p className="mt-1 text-sm text-slate-400">Prioritize inbound jobs.</p>
                         </div>
                         <Dialog open={isAddingRule} onOpenChange={setIsAddingRule}>
                             <DialogTrigger asChild>

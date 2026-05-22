@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import {
   ArrowRight, Bell, CalendarDays, CheckCircle2, ChevronDown,
-  Clock3, Mail, Phone, Search, Settings, Wrench,
+  Clock3, Search, Settings, Wrench,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -227,11 +227,11 @@ export default function BookingPortalPage() {
           <div className="hidden min-w-0 flex-1 items-center justify-center gap-3 px-6 lg:flex">
             <span className="inline-flex items-center gap-2 rounded-full border border-emerald-300/15 bg-emerald-300/10 px-3 py-1.5 text-xs font-medium text-emerald-200">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />
-              {config?.is_enabled ? 'Booking portal online' : 'Portal status loading'}
+              {config?.is_enabled ? 'Online' : 'Loading'}
             </span>
             <span className="inline-flex max-w-[360px] items-center gap-2 truncate rounded-full border border-white/10 bg-white/[0.035] px-3 py-1.5 text-xs text-slate-300">
               <Clock3 className="h-3.5 w-3.5 shrink-0 text-cyan-300" />
-              <span className="truncate">{config?.estimated_response_time_message || 'Submit a request and the team will follow up soon.'}</span>
+              <span className="truncate">{config?.estimated_response_time_message || 'We will follow up soon.'}</span>
             </span>
           </div>
 
@@ -246,14 +246,13 @@ export default function BookingPortalPage() {
               </PopoverTrigger>
               <PopoverContent align="end" className="w-80 border-white/10 bg-[rgba(11,25,42,0.98)] p-0 text-white shadow-[0_18px_70px_rgba(0,0,0,0.45)]">
                 <div className="border-b border-white/10 px-4 py-3">
-                  <p className="text-sm font-semibold text-white">Booking updates</p>
-                  <p className="mt-1 text-xs leading-5 text-slate-400">Helpful information before you submit a request.</p>
+                  <p className="text-sm font-semibold text-white">Updates</p>
                 </div>
                 <div className="space-y-2 p-3">
                   {[
-                    ['Confirmation email', 'You will receive a reference number after submission.'],
-                    ['Response window', config?.estimated_response_time_message || 'The service team will follow up soon.'],
-                    ['Status tracking', config?.status_lookup_enabled ? 'Status lookup is available.' : 'We will contact you directly.'],
+                    ['Confirmation', 'Reference number included.'],
+                    ['Response time', config?.estimated_response_time_message || 'We will follow up soon.'],
+                    ['Status', config?.status_lookup_enabled ? 'Lookup available.' : 'We will contact you.'],
                   ].map(([title, body]) => (
                     <div key={title} className="rounded-xl border border-white/8 bg-white/[0.03] p-3">
                       <p className="text-xs font-semibold text-slate-100">{title}</p>
@@ -271,20 +270,19 @@ export default function BookingPortalPage() {
               </PopoverTrigger>
               <PopoverContent align="end" className="w-80 border-white/10 bg-[rgba(11,25,42,0.98)] p-0 text-white shadow-[0_18px_70px_rgba(0,0,0,0.45)]">
                 <div className="border-b border-white/10 px-4 py-3">
-                  <p className="text-sm font-semibold text-white">Portal options</p>
-                  <p className="mt-1 text-xs leading-5 text-slate-400">Quick actions for customers using this booking page.</p>
+                  <p className="text-sm font-semibold text-white">Options</p>
                 </div>
                 <div className="space-y-2 p-3">
                   <Button asChild variant="outline" className={`w-full justify-start ${secondaryBtnCls}`} style={{ height: '42px' }}>
-                    <Link to={bookingPath}>New service request</Link>
+                    <Link to={bookingPath}>New request</Link>
                   </Button>
                   {config?.status_lookup_enabled ? (
                     <Button asChild variant="outline" className={`w-full justify-start ${secondaryBtnCls}`} style={{ height: '42px' }}>
-                      <Link to={statusPath}>Check request status</Link>
+                      <Link to={statusPath}>Check status</Link>
                     </Button>
                   ) : null}
                   <a href={`mailto:${config?.admin_contact_email || 'support@nexusops.app'}`} className="block rounded-xl border border-white/8 bg-white/[0.03] px-3 py-3 text-xs leading-5 text-slate-300 transition-colors hover:bg-white/[0.06] hover:text-white">
-                    Need help? Contact {config?.company_name || 'the service team'} directly.
+                    Contact support
                   </a>
                 </div>
               </PopoverContent>
@@ -309,29 +307,11 @@ export default function BookingPortalPage() {
 
           {/* Heading */}
           <h1 className="mt-5 text-[2.1rem] font-bold leading-[1.08] tracking-[-0.04em] text-white md:text-[2.6rem]">
-            Book service without the<br />back-and-forth
+            Request Service
           </h1>
           <p className="mt-3 max-w-xl text-sm leading-6 text-slate-400">
-            Share the job details once and let the dispatch team pick it up from intake to scheduling.
-            Efficient, automated, and secure management for your infrastructure needs.
+            Submit your details and our team will follow up.
           </p>
-
-          {/* Company info chips */}
-          {config ? (
-            <div className="mt-5 flex flex-wrap items-center gap-3 text-sm">
-              <Badge variant="outline" className="rounded-md border-white/10 bg-white/[0.04] px-3 py-1 text-slate-200">
-                {config.company_name}
-              </Badge>
-              <span className="inline-flex items-center gap-1.5 text-slate-400">
-                <Mail className="h-3.5 w-3.5 text-cyan-300" />
-                {config.admin_contact_email}
-              </span>
-              <span className="inline-flex items-center gap-1.5 text-slate-400">
-                <Phone className="h-3.5 w-3.5 text-cyan-300" />
-                {config.admin_contact_phone}
-              </span>
-            </div>
-          ) : null}
 
           {/* Form area */}
           <div className="mt-7">
@@ -362,7 +342,7 @@ export default function BookingPortalPage() {
                 <div>
                   <h2 className="text-2xl font-bold text-white">You're all set.</h2>
                   <p className="mt-2 text-sm leading-6 text-slate-400">
-                    Your booking request has been recorded. Keep this reference number handy for follow-up.
+                    Keep this reference number for follow-up.
                   </p>
                 </div>
                 <div className="rounded-xl border border-white/10 bg-black/20 p-5">
@@ -372,12 +352,12 @@ export default function BookingPortalPage() {
                 </div>
                 <div className="flex flex-wrap gap-3">
                   <Button type="button" onClick={() => setSuccessReference(null)} className={primaryBtnCls} style={{ width: 'auto', height: '44px', padding: '0 20px' }}>
-                    Submit another request
+                    New request
                   </Button>
                   {config.status_lookup_enabled ? (
                     <Button asChild variant="outline" className={secondaryBtnCls} style={{ height: '44px', padding: '0 16px' }}>
                       <Link to={statusPath}>
-                        Check booking status
+                        Check status
                         <ArrowRight className="ml-2 h-4 w-4" />
                       </Link>
                     </Button>
@@ -389,7 +369,7 @@ export default function BookingPortalPage() {
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-1.5">
-                    <Label className="text-sm text-slate-300">Customer full name</Label>
+                    <Label className="text-sm text-slate-300">Full name</Label>
                     <Input
                       value={form.customerName}
                       onChange={(e) => setForm((p) => ({ ...p, customerName: e.target.value }))}
@@ -398,7 +378,7 @@ export default function BookingPortalPage() {
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-sm text-slate-300">Phone number</Label>
+                    <Label className="text-sm text-slate-300">Phone</Label>
                     <Input
                       value={form.phoneNumber}
                       onChange={(e) => setForm((p) => ({ ...p, phoneNumber: formatUsPhoneInput(e.target.value) }))}
@@ -407,7 +387,7 @@ export default function BookingPortalPage() {
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-sm text-slate-300">Email address</Label>
+                    <Label className="text-sm text-slate-300">Email</Label>
                     <Input
                       type="email"
                       value={form.emailAddress}
@@ -417,7 +397,7 @@ export default function BookingPortalPage() {
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-sm text-slate-300">Service type</Label>
+                    <Label className="text-sm text-slate-300">Service</Label>
                     <Popover>
                       <PopoverTrigger asChild>
                         <Button
@@ -472,7 +452,7 @@ export default function BookingPortalPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label className="text-sm text-slate-300">Service location</Label>
+                  <Label className="text-sm text-slate-300">Location</Label>
                   <Input
                     value={form.serviceLocationAddress}
                     onChange={(e) => setForm((p) => ({ ...p, serviceLocationAddress: e.target.value }))}
@@ -517,7 +497,7 @@ export default function BookingPortalPage() {
                     value={form.assetDetails}
                     onChange={(e) => setForm((p) => ({ ...p, assetDetails: e.target.value }))}
                     className={`min-h-[120px] ${textareaCls}`}
-                    placeholder={`Describe the ${detailsLabel.toLowerCase()} and what needs attention.`}
+                    placeholder="Add the details we should know."
                   />
                 </div>
 
@@ -533,7 +513,7 @@ export default function BookingPortalPage() {
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-sm text-slate-300">Preferred time of day</Label>
+                    <Label className="text-sm text-slate-300">Preferred time</Label>
                     <Select value={form.preferredTimeOfDay} onValueChange={(v) => setForm((p) => ({ ...p, preferredTimeOfDay: v as BookingFormState['preferredTimeOfDay'] }))}>
                       <SelectTrigger className={inputCls}>
                         <SelectValue />
@@ -549,12 +529,12 @@ export default function BookingPortalPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label className="text-sm text-slate-300">Additional notes</Label>
+                  <Label className="text-sm text-slate-300">Notes</Label>
                   <Textarea
                     value={form.additionalNotes}
                     onChange={(e) => setForm((p) => ({ ...p, additionalNotes: e.target.value }))}
                     className={`min-h-[96px] ${textareaCls}`}
-                    placeholder="Optional access notes, urgency details, or scheduling context."
+                    placeholder="Optional notes."
                   />
                 </div>
 
@@ -628,13 +608,13 @@ export default function BookingPortalPage() {
           <Card className="rounded-2xl border border-white/[0.08] bg-[rgba(10,18,32,0.7)] p-5 shadow-[0_16px_60px_rgba(0,0,0,0.35)]">
             <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-400">
               <CalendarDays className="h-3 w-3 text-cyan-300" />
-              What happens next
+              Next steps
             </div>
             <div className="mt-4 space-y-3">
               {[
-                'Your request lands in the admin intake queue immediately.',
-                'Dispatch reviews the service details and scheduling preferences.',
-                'You receive a confirmation reference and follow-up by email.',
+                'Submit request',
+                'Team reviews',
+                'Receive confirmation',
               ].map((item, i) => (
                 <div key={i} className="flex items-start gap-3 rounded-xl border border-white/[0.06] bg-white/[0.02] p-3.5 text-sm leading-6 text-slate-400">
                   <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white/[0.06] text-[10px] font-bold text-slate-400">
@@ -650,7 +630,7 @@ export default function BookingPortalPage() {
           <Card className="rounded-2xl border border-white/[0.08] bg-[rgba(10,18,32,0.7)] p-5 shadow-[0_16px_60px_rgba(0,0,0,0.35)]">
             <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-400">
               <Clock3 className="h-3 w-3 text-cyan-300" />
-              Response window
+              Response time
             </div>
             <p className="mt-4 text-sm leading-7 text-slate-400">
               {config?.estimated_response_time_message
@@ -661,7 +641,7 @@ export default function BookingPortalPage() {
             {config?.status_lookup_enabled ? (
               <Button asChild variant="outline" className={`mt-4 w-full justify-center ${secondaryBtnCls}`} style={{ height: '44px' }}>
                 <Link to={isStatusMode ? bookingPath : statusPath}>
-                  {isStatusMode ? 'Back to booking form' : 'Open status lookup'}
+                  {isStatusMode ? 'New request' : 'Check status'}
                   {isStatusMode
                     ? <ArrowRight className="ml-2 h-4 w-4 rotate-180" />
                     : <Search className="ml-2 h-4 w-4" />
