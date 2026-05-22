@@ -11,8 +11,6 @@ import {
   Send,
   Megaphone,
   X,
-  Phone,
-  Video,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -502,12 +500,6 @@ export default function PlatformChatPage() {
                       className="h-10 rounded-full border-white/10 bg-white/[0.04] pl-9 text-white placeholder:text-slate-500"
                     />
                   </div>
-                  <Button variant="outline" size="icon" className="h-10 w-10 rounded-full border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]">
-                    <Phone className="h-4 w-4" />
-                  </Button>
-                  <Button variant="outline" size="icon" className="h-10 w-10 rounded-full border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]">
-                    <Video className="h-4 w-4" />
-                  </Button>
                 </div>
               </div>
             </div>
