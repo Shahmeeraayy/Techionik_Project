@@ -559,6 +559,9 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
     if (pathname.startsWith('/admin/tech-preview')) {
       return 'Technician Preview';
     }
+    if (pathname.startsWith('/admin/settings')) {
+      return 'Settings';
+    }
     const matched = [...navItems]
       .sort((a, b) => b.path.length - a.path.length)
       .find((item) => pathname === item.path || (item.path !== '/admin' && pathname.startsWith(item.path)));
