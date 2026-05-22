@@ -99,7 +99,7 @@ function Sidebar({
         className={cn(
           'admin-sidebar fixed left-0 top-0 z-50 h-dvh bg-background',
           'flex flex-col border border-border shadow-[24px_0_70px_rgba(15,23,42,0.14)]',
-          'rounded-r-[28px] lg:sticky lg:left-3 lg:top-3 lg:h-[calc(100vh-1.5rem)] lg:rounded-[28px]',
+          'rounded-r-[28px] lg:fixed lg:left-3 lg:top-3 lg:h-[calc(100vh-1.5rem)] lg:rounded-[28px]',
           'transition-[width,transform,box-shadow,border-radius] duration-300 ease-out will-change-transform',
           isCollapsed ? 'w-[min(18rem,calc(100vw-1.25rem))] lg:w-[92px]' : 'w-[min(18rem,calc(100vw-1.25rem))] lg:w-72',
           isCollapsed && 'lg:overflow-hidden',
@@ -628,7 +628,12 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
         />
 
         {/* Main content */}
-        <main className="flex-1 min-w-0 max-w-full flex flex-col min-h-screen overflow-x-hidden lg:p-4">
+        <main
+          className={cn(
+            'flex-1 min-w-0 max-w-full flex flex-col min-h-screen overflow-x-hidden transition-[margin] duration-300 ease-out lg:p-4',
+            sidebarCollapsed ? 'lg:ml-[calc(92px+1.5rem)]' : 'lg:ml-[calc(18rem+1.5rem)]',
+          )}
+        >
           {/* Top Header - Sticky */}
           <div className="admin-page-frame flex min-h-screen min-w-0 max-w-full flex-col overflow-hidden rounded-none lg:rounded-[32px]">
           <header className="admin-topbar sticky top-0 z-30 bg-background/80 backdrop-blur-md border-b border-border px-4 sm:px-8 py-4 flex items-center justify-between gap-3 shadow-sm">
