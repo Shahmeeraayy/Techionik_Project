@@ -6,7 +6,6 @@ import {
   CheckCircle2,
   Users,
   DollarSign,
-  FileWarning,
   RefreshCw,
   Search,
 } from 'lucide-react';
@@ -24,6 +23,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import { exportArrayData } from '@/lib/export';
 import {
@@ -35,6 +35,7 @@ import {
 } from '@/lib/backend-api';
 
 type QuickRange = 'today' | 'this_week' | 'this_month' | 'last_month' | 'this_quarter' | 'this_year';
+type ReportTab = 'overview' | 'operations' | 'invoices' | 'technicians' | 'locations';
 const ADMIN_REFRESH_EVENT = 'sm-dispatch:admin-refresh';
 
 const QUICK_RANGE_LABEL: Record<QuickRange, string> = {
@@ -172,6 +173,7 @@ function EmptyReportState({
 }
 
 export default function ReportsPage() {
+  const [activeReportTab, setActiveReportTab] = useState<ReportTab>('overview');
   const [quickRange, setQuickRange] = useState<QuickRange>('this_week');
   const [fromDate, setFromDate] = useState<string>(() => resolveQuickRange('this_week').fromDate);
   const [toDate, setToDate] = useState<string>(() => resolveQuickRange('this_week').toDate);
@@ -492,7 +494,7 @@ export default function ReportsPage() {
           </Card>
         ) : null}
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <Card className={metricCardClass('cyan')}>
             <div className="p-5">
               <div className="flex items-start justify-between gap-3">
@@ -556,26 +558,95 @@ export default function ReportsPage() {
               </div>
             </div>
           </Card>
-
-          <Card className={metricCardClass('rose')}>
-            <div className="p-5">
-              <div className="flex items-start justify-between gap-3">
-                <div className="space-y-2">
-                  <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Pending Approvals</p>
-                  {loading ? <Skeleton className="mt-3 h-8 w-20 bg-white/10" /> : <div className="mt-3 text-[2.15rem] font-semibold leading-none tracking-[-0.06em] text-white">{numberFmt.format(kpis?.pending_approvals ?? 0)}</div>}
-                  <p className="text-sm text-slate-300">{(kpis?.pending_approvals ?? 0) > 0 ? `${invoicePendingCount} invoice records pending action` : 'No invoices need approval'}</p>
-                </div>
-                <div className={metricIconClass('rose')}>
-                  <FileWarning className="w-5 h-5" />
-                </div>
-              </div>
-            </div>
-          </Card>
         </div>
 
+        <Tabs value={activeReportTab} onValueChange={(value) => setActiveReportTab(value as ReportTab)} className="gap-5">
+          <TabsList className="h-auto w-full justify-start overflow-x-auto rounded-2xl border border-slate-200 bg-white p-1 shadow-sm dark:border-white/10 dark:bg-[#0b1424] sm:w-fit">
+            {[
+              ['overview', 'Overview'],
+              ['operations', 'Operations'],
+              ['invoices', 'Invoices'],
+              ['technicians', 'Technicians'],
+              ['locations', 'Locations'],
+            ].map(([value, label]) => (
+              <TabsTrigger
+                key={value}
+                value={value}
+                className="rounded-xl px-4 py-2 text-slate-600 data-[state=active]:bg-cyan-50 data-[state=active]:text-cyan-800 dark:text-slate-300 dark:data-[state=active]:bg-cyan-500/15 dark:data-[state=active]:text-cyan-100"
+              >
+                {label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+
+          <TabsContent value="overview" className="space-y-6">
+            <Card className={sectionCardClass}>
+              <div className={sectionHeaderClass}>
+                <h2 className="text-base font-semibold text-slate-950 dark:text-white">Overview</h2>
+                <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
+                  Selected range: {numberFmt.format(kpis?.jobs_created ?? 0)} jobs created, {numberFmt.format(kpis?.jobs_completed ?? 0)} completed, {currencyFmt.format(kpis?.invoice_total ?? 0)} invoiced, and {numberFmt.format(kpis?.pending_approvals ?? 0)} pending approvals.
+                </p>
+              </div>
+              <div className="grid gap-5 p-6 pt-5 xl:grid-cols-2">
+                <div className="space-y-3">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">Job Status Breakdown</p>
+                  {loading ? (
+                    <div className="space-y-2">
+                      <Skeleton className="h-10 w-full bg-white/10" />
+                      <Skeleton className="h-10 w-full bg-white/10" />
+                    </div>
+                  ) : overview?.dispatch_performance.length ? (
+                    overview.dispatch_performance.slice(0, 5).map((row) => (
+                      <div key={row.status} className="space-y-2 rounded-2xl border border-white/8 bg-[rgba(255,255,255,0.03)] p-3">
+                        <div className="flex items-center justify-between gap-2 text-sm">
+                          <Badge variant="outline" className={cn(dispatchBadgeTone(row), 'border text-xs')}>{row.status}</Badge>
+                          <span className="font-semibold text-slate-950 dark:text-white">{numberFmt.format(row.count)} · {percentFmt.format(row.percentage)}%</span>
+                        </div>
+                        <div className="h-2 overflow-hidden rounded-full bg-white/10">
+                          <div className="h-full rounded-full bg-[#2F8E92]" style={{ width: `${Math.max(3, Math.min(100, row.percentage))}%` }} />
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <EmptyReportState title="No job status data" description="Try selecting a wider date range." />
+                  )}
+                </div>
+
+                <div className="space-y-3">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">Invoice Status</p>
+                  {loading ? (
+                    <div className="space-y-2">
+                      <Skeleton className="h-10 w-full bg-white/10" />
+                      <Skeleton className="h-10 w-full bg-white/10" />
+                    </div>
+                  ) : overview?.invoice_performance.length ? (
+                    overview.invoice_performance.slice(0, 5).map((row) => {
+                      const maxAmount = Math.max(...overview.invoice_performance.map((item) => Number(item.total_amount || 0)), 1);
+                      const width = (Number(row.total_amount || 0) / maxAmount) * 100;
+                      return (
+                        <div key={row.state} className="space-y-2 rounded-2xl border border-white/8 bg-[rgba(255,255,255,0.03)] p-3">
+                          <div className="flex items-center justify-between gap-2 text-sm">
+                            <Badge variant="outline" className={cn(statusBadgeTone(row), 'border text-xs')}>{row.state}</Badge>
+                            <span className="font-semibold text-slate-950 dark:text-white">{currencyFmt.format(row.total_amount)}</span>
+                          </div>
+                          <div className="h-2 overflow-hidden rounded-full bg-white/10">
+                            <div className="h-full rounded-full bg-amber-400" style={{ width: `${Math.max(3, Math.min(100, width))}%` }} />
+                          </div>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <EmptyReportState title="No invoice status data" description="Try selecting a wider date range." />
+                  )}
+                </div>
+              </div>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="operations" className="space-y-6">
         <div className="pt-2">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-100">Operational Performance</p>
-          <p className="mt-1 text-sm text-slate-400">Operational metrics.</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-700 dark:text-cyan-100">Operational Performance</p>
+          <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">Operational metrics.</p>
         </div>
 
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
@@ -708,54 +779,15 @@ export default function ReportsPage() {
           </Card>
         </div>
 
+          </TabsContent>
+
+          <TabsContent value="invoices" className="space-y-6">
         <div className="pt-2">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-100">Operational Status</p>
-          <p className="mt-1 text-sm text-slate-400">Job status distribution.</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-700 dark:text-cyan-100">Invoice Performance</p>
+          <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">Billing totals and invoice lifecycle.</p>
         </div>
 
-        <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-          <Card className={sectionCardClass}>
-            <div className={sectionHeaderClass}>
-              <h2 className="text-base font-semibold text-slate-950 dark:text-white">Dispatch Performance</h2>
-              <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Status by range.</p>
-            </div>
-            <div className="p-6 pt-5">
-              {loading ? (
-                <div className="space-y-2">
-                  <Skeleton className="h-10 w-full bg-white/10" />
-                  <Skeleton className="h-10 w-full bg-white/10" />
-                  <Skeleton className="h-10 w-full bg-white/10" />
-                </div>
-              ) : overview?.dispatch_performance.length ? (
-                <div className="space-y-3">
-                  {overview.dispatch_performance.map((row) => (
-                    <div key={row.status} className="space-y-2 rounded-[20px] border border-white/8 bg-[rgba(255,255,255,0.03)] p-4">
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline" className={cn(dispatchBadgeTone(row), 'border text-xs')}>{row.status}</Badge>
-                          <span className="text-sm text-slate-400">{numberFmt.format(row.count)} jobs</span>
-                        </div>
-                        <span className="text-sm font-semibold text-slate-950 dark:text-white">{percentFmt.format(row.percentage)}%</span>
-                      </div>
-                      <div className="h-2 overflow-hidden rounded-full bg-white/10">
-                        <div
-                          className="h-full rounded-full bg-[#2F8E92]"
-                          style={{ width: `${Math.max(3, Math.min(100, row.percentage))}%` }}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <EmptyReportState
-                  title="No dispatch records in this period"
-                  description="No dispatch changes in this range."
-                  action={<Button size="sm" variant="outline" className="rounded-full border-white/10 bg-white/[0.04] text-slate-100 hover:bg-white/[0.08]" onClick={() => handleQuickRangeChange('this_month')}>View This Month</Button>}
-                />
-              )}
-            </div>
-          </Card>
-
+        <div className="grid grid-cols-1 gap-6">
           <Card className={sectionCardClass}>
             <div className={sectionHeaderClass}>
               <h2 className="text-base font-semibold text-slate-950 dark:text-white">Invoice Performance</h2>
@@ -823,9 +855,12 @@ export default function ReportsPage() {
           </Card>
         </div>
 
+          </TabsContent>
+
+          <TabsContent value="technicians" className="space-y-6">
         <div className="pt-2">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-100">Team Performance</p>
-          <p className="mt-1 text-sm text-slate-400">Technician activity.</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-700 dark:text-cyan-100">Team Performance</p>
+          <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">Technician activity.</p>
         </div>
 
         <Card className={sectionCardClass}>
@@ -909,9 +944,12 @@ export default function ReportsPage() {
           </div>
         </Card>
 
+          </TabsContent>
+
+          <TabsContent value="locations" className="space-y-6">
         <div className="pt-2">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-100">Location Performance</p>
-          <p className="mt-1 text-sm text-slate-400">Location activity.</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-700 dark:text-cyan-100">Location Performance</p>
+          <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">Location activity.</p>
         </div>
 
         <Card className={sectionCardClass}>
@@ -990,6 +1028,8 @@ export default function ReportsPage() {
             )}
           </div>
         </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
