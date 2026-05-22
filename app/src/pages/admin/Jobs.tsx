@@ -1456,6 +1456,7 @@ export default function JobsPage() {
     const clearFilters = () => {
         setSearchQuery('');
         setUrgencyFilter('all');
+        setStatusFilter('all');
         setDateFilter('');
         setActiveQuickFilter(null);
         setPagination(p => ({ ...p, page: 1 }));
