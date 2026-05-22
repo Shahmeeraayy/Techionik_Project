@@ -1275,9 +1275,6 @@ export default function InvoiceApprovalsPage() {
                                     </div>
                                 </div>
                             </div>
-                            <Badge variant="outline" className="h-11 rounded-2xl border-amber-300/20 bg-amber-300/10 px-4 text-amber-100">
-                                {queueTab === 'approval' ? `Approval queue (${filteredInvoices.length})` : `Blocked queue (${filteredBlockedInvoices.length})`}
-                            </Badge>
                             {(searchQuery || filterDealership !== 'all' || filterTechnician !== 'all' || filterFromDate || filterToDate) ? (
                                 <Button
                                     variant="ghost"
