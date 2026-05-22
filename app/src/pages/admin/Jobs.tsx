@@ -2117,14 +2117,6 @@ export default function JobsPage() {
                         </p>
 
                         <div className="mt-5 flex flex-wrap items-center gap-2.5">
-                            <Badge variant="outline" className="h-8 rounded-full border-cyan-200 bg-cyan-50 px-4 text-cyan-700 dark:border-cyan-300/14 dark:bg-cyan-300/[0.08] dark:text-cyan-100">
-                                <History className="mr-1.5 h-3.5 w-3.5" />
-                                Live sync every 30s
-                            </Badge>
-                            <Badge variant="outline" className="h-8 rounded-full border-emerald-200 bg-emerald-50 px-4 text-emerald-700 dark:border-emerald-300/14 dark:bg-emerald-300/[0.08] dark:text-emerald-100">
-                                <Activity className="mr-1.5 h-3.5 w-3.5" />
-                                Online
-                            </Badge>
                             {selectedRows.size > 0 ? (
                                 <Badge variant="outline" className="h-8 rounded-full border-black/8 bg-slate-50 px-4 text-slate-700 dark:border-white/8 dark:bg-white/[0.04] dark:text-white">
                                     <Users className="mr-1.5 h-3.5 w-3.5" />
