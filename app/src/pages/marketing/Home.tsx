@@ -321,7 +321,7 @@ type ChatMessage = {
 const starterPrompts = [
   'What does NexusOps do?',
   'Show pricing',
-  'Book a demo',
+  'See Demo',
 ];
 
 const getAssistantReply = (message: string) => {
@@ -332,7 +332,7 @@ const getAssistantReply = (message: string) => {
   }
 
   if (normalized.includes('demo') || normalized.includes('book') || normalized.includes('start')) {
-    return 'Click Book Demo or View Live Demo to open a guided NexusOps walkthrough. It shows the full flow from booking to invoice and reporting.';
+    return 'Click See Demo or View Live Demo to open a guided NexusOps walkthrough. It shows the full flow from booking to invoice and reporting.';
   }
 
   if (normalized.includes('technician') || normalized.includes('mobile')) {
@@ -985,7 +985,7 @@ export default function MarketingHome() {
               className="rounded-xl bg-white px-4 py-2 text-sm font-semibold text-slate-950 shadow-lg transition hover:-translate-y-0.5 hover:bg-slate-100"
               onClick={() => setDemoOpen(true)}
             >
-              Book Demo
+              See Demo
             </button>
           </div>
         </nav>
@@ -1265,7 +1265,7 @@ export default function MarketingHome() {
                 className="inline-flex items-center justify-center rounded-2xl bg-white px-7 py-4 font-semibold text-slate-950 transition hover:-translate-y-0.5 hover:bg-slate-100"
                 onClick={() => setDemoOpen(true)}
               >
-                Book a Demo
+                See Demo
               </button>
               <a
                 href="mailto:sales@nexusops.com"
