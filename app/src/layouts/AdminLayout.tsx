@@ -203,6 +203,8 @@ function Sidebar({
             to="/admin/settings"
             onClick={onClose}
             title="Settings"
+            data-sidebar-settings="true"
+            data-active={settingsActive ? 'true' : 'false'}
             className={cn(
               'flex items-center rounded-2xl text-sm font-semibold transition-all duration-200',
               isCollapsed ? 'w-full gap-3 px-4 py-3 lg:h-10 lg:w-10 lg:justify-center lg:gap-0 lg:rounded-full lg:p-0' : 'w-full gap-3 px-4 py-3',
