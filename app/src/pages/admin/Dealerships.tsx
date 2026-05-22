@@ -1001,7 +1001,7 @@ export default function DealershipsPage() {
                     </div>
                 </section>
 
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
                     <Card className={metricCardClass('cyan')}>
                         <div className="p-5">
                             <div className="flex items-start justify-between gap-3">
