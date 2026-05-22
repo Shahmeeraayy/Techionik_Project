@@ -2119,7 +2119,7 @@ export default function JobsPage() {
 
                         <div className="mt-5 flex flex-wrap items-center gap-2.5">
                             {selectedRows.size > 0 ? (
-                                <Badge variant="outline" className="h-8 rounded-full border-black/8 bg-slate-50 px-4 text-slate-700 dark:border-white/8 dark:bg-white/[0.04] dark:text-white">
+                                <Badge variant="outline" className="h-8 rounded-full border-slate-700 bg-[#0b1424] px-4 text-slate-100 shadow-sm dark:border-white/10 dark:bg-[#0b1424] dark:text-slate-100">
                                     <Users className="mr-1.5 h-3.5 w-3.5" />
                                     {selectedRows.size} selected
                                 </Badge>
@@ -2554,7 +2554,7 @@ export default function JobsPage() {
                             {pagination.total} total jobs
                         </Badge>
                         {selectedRows.size > 0 ? (
-                            <Badge variant="outline" className="h-9 rounded-full border-cyan-200 bg-cyan-50 px-3 text-cyan-700 dark:border-cyan-300/16 dark:bg-cyan-300/[0.08] dark:text-cyan-100">
+                            <Badge variant="outline" className="h-9 rounded-full border-slate-700 bg-[#0b1424] px-3 text-slate-100 shadow-sm dark:border-white/10 dark:bg-[#0b1424] dark:text-slate-100">
                                 <Users className="mr-1.5 h-3.5 w-3.5" />
                                 {selectedRows.size} selected
                             </Badge>
@@ -2831,7 +2831,7 @@ export default function JobsPage() {
                             Showing <span className="font-medium text-slate-900 dark:text-white">{footerStart}</span> to <span className="font-medium text-slate-900 dark:text-white">{footerEnd}</span> of <span className="font-medium text-slate-900 dark:text-white">{pagination.total}</span> jobs
                         </span>
                         {selectedRows.size > 0 ? (
-                            <Badge variant="outline" className="h-8 rounded-full border-cyan-300/20 bg-cyan-300/10 px-3 text-cyan-100">
+                            <Badge variant="outline" className="h-8 rounded-full border-slate-700 bg-[#0b1424] px-3 text-slate-100 shadow-sm dark:border-white/10 dark:bg-[#0b1424] dark:text-slate-100">
                                 <Users className="mr-1.5 h-3 w-3" />
                                 {selectedRows.size} selected
                             </Badge>
