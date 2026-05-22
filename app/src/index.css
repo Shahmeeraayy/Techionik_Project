@@ -4625,6 +4625,28 @@
   -webkit-text-fill-color: #ffffff !important;
 }
 
+.light :is(.admin-content, .tech-content, .booking-portal-shell:not(.auth-lock-dark)) :is(button, [data-slot="button"], a[role="button"]):not([class*="from-[#4f7cff"]):not([class*="from-[#0ca6a6"]):not([class*="from-[#36d6dd"]):not([class*="bg-[linear-gradient(135deg,#4f7cff"]):not([class*="bg-gradient-to-r"]):not([class*="bg-primary"]):not([class*="bg-blue"]):not([class*="bg-cyan"]):not([class*="bg-[#2F8E92"]) svg {
+  color: #334155 !important;
+  stroke: #334155 !important;
+  opacity: 1 !important;
+  filter: none !important;
+}
+
+.light :is(.admin-content, .tech-content, .booking-portal-shell:not(.auth-lock-dark)) :is(button, [data-slot="button"], a[role="button"]):is([class*="from-[#4f7cff"], [class*="from-[#0ca6a6"], [class*="from-[#36d6dd"], [class*="bg-[linear-gradient(135deg,#4f7cff"], [class*="bg-gradient-to-r"], [class*="bg-primary"], [class*="bg-blue"], [class*="bg-cyan"], [class*="bg-[#2F8E92"]) svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+  opacity: 1 !important;
+  filter: none !important;
+}
+
+.light :is(.admin-content, .tech-content, .booking-portal-shell:not(.auth-lock-dark)) :is(button, [data-slot="button"], a[role="button"]):disabled svg,
+.light :is(.admin-content, .tech-content, .booking-portal-shell:not(.auth-lock-dark)) :is(button, [data-slot="button"], a[role="button"])[aria-disabled="true"] svg,
+.light :is(.admin-content, .tech-content, .booking-portal-shell:not(.auth-lock-dark)) :is(button, [data-slot="button"], a[role="button"])[data-disabled] svg {
+  color: #64748b !important;
+  stroke: #64748b !important;
+  opacity: 1 !important;
+}
+
 /* Print Styles */
 @media print {
   .no-print {
