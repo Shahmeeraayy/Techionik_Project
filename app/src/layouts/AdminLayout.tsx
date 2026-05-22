@@ -89,7 +89,7 @@ function Sidebar({
       {/* Mobile overlay */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          className="fixed inset-0 z-40 bg-slate-950/60 backdrop-blur-sm transition-opacity duration-300 lg:hidden"
           onClick={onClose}
         />
       )}
@@ -97,9 +97,11 @@ function Sidebar({
       {/* Sidebar */}
       <aside
         className={cn(
-          'admin-sidebar fixed lg:sticky top-0 left-0 z-50 h-screen bg-background border-r border-border',
-          'flex flex-col transition-[width,transform] duration-300 ease-in-out',
-          isCollapsed ? 'w-72 lg:w-[92px]' : 'w-72',
+          'admin-sidebar fixed left-0 top-0 z-50 h-dvh bg-background',
+          'flex flex-col border border-border shadow-[24px_0_70px_rgba(15,23,42,0.14)]',
+          'rounded-r-[28px] lg:sticky lg:left-3 lg:top-3 lg:h-[calc(100vh-1.5rem)] lg:rounded-[28px]',
+          'transition-[width,transform,box-shadow,border-radius] duration-300 ease-out will-change-transform',
+          isCollapsed ? 'w-[min(18rem,calc(100vw-1.25rem))] lg:w-[92px]' : 'w-[min(18rem,calc(100vw-1.25rem))] lg:w-72',
           isCollapsed && 'lg:overflow-hidden',
           'lg:translate-x-0',
           isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
@@ -117,9 +119,19 @@ function Sidebar({
             <h1 className="font-semibold text-foreground leading-tight tracking-[-0.03em]">NexusOps</h1>
             <p className="text-xs text-muted-foreground font-medium uppercase tracking-[0.22em]">Operational Center</p>
           </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="ml-auto h-9 w-9 rounded-full border border-slate-200 bg-white text-slate-700 shadow-[0_14px_28px_rgba(15,23,42,0.08)] hover:bg-slate-50 dark:border-white/10 dark:bg-[#111111] dark:text-white dark:shadow-[0_14px_28px_rgba(0,0,0,0.42)] dark:hover:bg-[#1d1d1d] lg:hidden"
+            onClick={onClose}
+            title="Close sidebar"
+            aria-label="Close sidebar"
+          >
+            <X className="h-4 w-4" />
+          </Button>
         </div>
 
-        <div className={cn('flex px-4 py-3', isCollapsed ? 'justify-end lg:justify-center lg:px-3 lg:py-2.5' : 'justify-end')}>
+        <div className={cn('hidden px-4 py-3 lg:flex', isCollapsed ? 'justify-center px-3 py-2.5' : 'justify-end')}>
           <Button
             variant="ghost"
             size="icon"
@@ -553,6 +565,32 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
     if (typeof window === 'undefined') return;
     window.localStorage.setItem('sm_admin_sidebar_collapsed', String(sidebarCollapsed));
   }, [sidebarCollapsed]);
+
+  useEffect(() => {
+    setSidebarOpen(false);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setSidebarOpen(false);
+      }
+    };
+
+    if (sidebarOpen) {
+      const previousOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      window.addEventListener('keydown', handleKeyDown);
+      return () => {
+        document.body.style.overflow = previousOverflow;
+        window.removeEventListener('keydown', handleKeyDown);
+      };
+    }
+
+    return undefined;
+  }, [sidebarOpen]);
 
   const headerTitle = (() => {
     const pathname = location.pathname;
