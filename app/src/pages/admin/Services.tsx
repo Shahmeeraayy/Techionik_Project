@@ -774,7 +774,7 @@ export default function ServicesPage() {
                             </div>
                             <div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-2 lg:flex lg:w-auto lg:items-center">
                                 <Select value={filterCategory} onValueChange={(value) => setFilterCategory(value as BusinessCategoryFilter)}>
-                                    <SelectTrigger className="h-11 w-full border-white/10 bg-white/[0.04] text-slate-100 lg:w-[180px]">
+                                    <SelectTrigger className="h-11 w-full border-white/10 bg-white/[0.04] text-slate-100 lg:w-[230px]">
                                         <SelectValue placeholder="Business Category" />
                                     </SelectTrigger>
                                     <SelectContent>
