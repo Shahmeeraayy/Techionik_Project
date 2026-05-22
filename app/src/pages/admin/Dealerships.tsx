@@ -630,21 +630,21 @@ const sectionHeaderClass = 'border-b border-white/8 bg-[linear-gradient(180deg,r
 
 function metricCardClass(tone: 'cyan' | 'emerald' | 'amber' | 'violet'): string {
     return cn(
-        'overflow-hidden rounded-[24px] border shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]',
-        tone === 'cyan' && 'border-cyan-400/15 bg-[linear-gradient(180deg,rgba(12,36,55,0.96),rgba(8,24,39,0.96))]',
-        tone === 'emerald' && 'border-emerald-400/15 bg-[linear-gradient(180deg,rgba(10,37,45,0.96),rgba(7,25,31,0.96))]',
-        tone === 'amber' && 'border-amber-400/15 bg-[linear-gradient(180deg,rgba(41,28,15,0.94),rgba(27,18,10,0.96))]',
-        tone === 'violet' && 'border-violet-400/15 bg-[linear-gradient(180deg,rgba(30,23,49,0.96),rgba(18,16,33,0.96))]',
+        'overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]',
+        tone === 'cyan' && 'dark:border-cyan-400/15 dark:bg-[linear-gradient(180deg,rgba(12,36,55,0.96),rgba(8,24,39,0.96))]',
+        tone === 'emerald' && 'dark:border-emerald-400/15 dark:bg-[linear-gradient(180deg,rgba(10,37,45,0.96),rgba(7,25,31,0.96))]',
+        tone === 'amber' && 'dark:border-amber-400/15 dark:bg-[linear-gradient(180deg,rgba(41,28,15,0.94),rgba(27,18,10,0.96))]',
+        tone === 'violet' && 'dark:border-violet-400/15 dark:bg-[linear-gradient(180deg,rgba(30,23,49,0.96),rgba(18,16,33,0.96))]',
     );
 }
 
 function metricIconClass(tone: 'cyan' | 'emerald' | 'amber' | 'violet'): string {
     return cn(
         'rounded-2xl border p-3',
-        tone === 'cyan' && 'border-cyan-300/20 bg-cyan-300/10 text-cyan-100',
-        tone === 'emerald' && 'border-emerald-300/20 bg-emerald-300/10 text-emerald-100',
-        tone === 'amber' && 'border-amber-300/20 bg-amber-300/10 text-amber-100',
-        tone === 'violet' && 'border-violet-300/20 bg-violet-300/10 text-violet-100',
+        tone === 'cyan' && 'border-cyan-200 bg-cyan-50 text-cyan-700 dark:border-cyan-300/20 dark:bg-cyan-300/10 dark:text-cyan-100',
+        tone === 'emerald' && 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-300/20 dark:bg-emerald-300/10 dark:text-emerald-100',
+        tone === 'amber' && 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-300/20 dark:bg-amber-300/10 dark:text-amber-100',
+        tone === 'violet' && 'border-violet-200 bg-violet-50 text-violet-700 dark:border-violet-300/20 dark:bg-violet-300/10 dark:text-violet-100',
     );
 }
 
@@ -940,12 +940,12 @@ export default function DealershipsPage() {
                                 <RefreshCw className={cn("w-4 h-4 text-blue-600 dark:text-cyan-200", loading && "animate-spin")} />
                                 Refresh
                             </Button>
-                            <Button variant="outline" size="sm" onClick={() => setExportModalOpen(true)} className="h-10 gap-2 rounded-full border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]">
+                            <Button variant="outline" size="sm" onClick={() => setExportModalOpen(true)} className="h-10 gap-2 rounded-full border-slate-300 bg-white text-slate-900 hover:bg-slate-50 hover:text-slate-950 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-100 dark:hover:bg-white/[0.08] dark:hover:text-white">
                                 <FileDown className="w-4 h-4" /> Export
                             </Button>
                             <Dialog open={addModalOpen} onOpenChange={setAddModalOpen}>
                                 <DialogTrigger asChild>
-                                    <Button size="sm" className="h-10 gap-2 rounded-full bg-[#2F8E92] px-5 text-white shadow-[0_12px_30px_rgba(47,142,146,0.28)] hover:bg-[#267276]">
+                                    <Button size="sm" className="h-10 gap-2 rounded-full border border-blue-600 bg-blue-600 px-5 text-white shadow-[0_12px_30px_rgba(37,99,235,0.22)] hover:bg-blue-700 hover:text-white dark:border-[#7db0ff]/40 dark:bg-[#2F8E92] dark:shadow-[0_12px_30px_rgba(47,142,146,0.28)] dark:hover:bg-[#267276]">
                                         <Plus className="w-4 h-4" /> Add Location
                                     </Button>
                                 </DialogTrigger>
