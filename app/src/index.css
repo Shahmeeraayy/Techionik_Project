@@ -4417,6 +4417,214 @@
   -webkit-text-fill-color: #ffffff !important;
 }
 
+/* App-wide light theme visibility hardening.
+   Keep this after page-specific sweeps so pale utilities cannot wash out active UI. */
+.light :is(.admin-shell, .tech-shell) {
+  background-color: #f8fafc !important;
+}
+
+.light :is(.admin-content, .tech-content) :is(
+  section,
+  article,
+  aside,
+  [data-slot="card"],
+  [data-slot="table-container"],
+  [data-slot="tabs-content"]
+) {
+  color: #0f172a !important;
+}
+
+.light :is(.admin-content, .tech-content) :is(
+  section,
+  article,
+  aside,
+  [data-slot="card"]
+)[class*="border"]:not([class*="bg-gradient-to-r"]):not([class*="from-[#4f7cff"]):not([class*="bg-[#2F8E92"]) {
+  border-color: rgba(148, 163, 184, 0.32) !important;
+}
+
+.light :is(.admin-content, .tech-content) :is(
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  strong,
+  [class*="font-bold"],
+  [class*="font-semibold"]
+):not([class*="text-white"]):not([class*="text-cyan"]):not([class*="text-blue"]):not([class*="text-emerald"]):not([class*="text-amber"]):not([class*="text-red"]):not([class*="text-rose"]) {
+  color: #0f172a !important;
+  -webkit-text-fill-color: #0f172a !important;
+}
+
+.light :is(.admin-content, .tech-content) :is(
+  p,
+  span,
+  li,
+  label,
+  small,
+  [class*="text-sm"],
+  [class*="text-xs"]
+):not([class*="text-white"]):not([class*="text-cyan"]):not([class*="text-blue"]):not([class*="text-emerald"]):not([class*="text-amber"]):not([class*="text-red"]):not([class*="text-rose"]):not([class*="bg-gradient"]) {
+  color: inherit;
+}
+
+.light :is(.admin-content, .tech-content) :is(
+  [class*="text-slate-300"],
+  [class*="text-slate-400"],
+  [class*="text-slate-500"],
+  [class*="text-gray-300"],
+  [class*="text-gray-400"],
+  [class*="text-gray-500"],
+  [class*="text-muted"]
+) {
+  color: #64748b !important;
+  -webkit-text-fill-color: #64748b !important;
+}
+
+.light :is(.admin-content, .tech-content) :is(input, textarea, select, [role="combobox"], [data-slot="select-trigger"], [data-slot="input"]) {
+  min-height: 2.25rem;
+  background: #ffffff !important;
+  background-image: none !important;
+  border-color: rgba(100, 116, 139, 0.38) !important;
+  color: #0f172a !important;
+  -webkit-text-fill-color: #0f172a !important;
+}
+
+.light :is(.admin-content, .tech-content) :is(input, textarea)::placeholder {
+  color: #94a3b8 !important;
+  -webkit-text-fill-color: #94a3b8 !important;
+}
+
+.light :is(.admin-content, .tech-content) :is(button, [data-slot="button"], a[role="button"]):not(:disabled):not([aria-disabled="true"]):not([data-disabled]):not([class*="from-[#4f7cff"]):not([class*="from-[#0ca6a6"]):not([class*="from-[#36d6dd"]):not([class*="bg-[linear-gradient(135deg,#4f7cff"]):not([class*="bg-gradient-to-r"]):not([class*="bg-primary"]):not([class*="bg-blue"]):not([class*="bg-cyan"]):not([class*="bg-emerald"]):not([class*="bg-red"]):not([class*="bg-rose"]):not([class*="bg-[#2F8E92"]) {
+  background: #ffffff !important;
+  background-image: none !important;
+  border: 1px solid rgba(100, 116, 139, 0.42) !important;
+  color: #1e293b !important;
+  -webkit-text-fill-color: #1e293b !important;
+  opacity: 1 !important;
+}
+
+.light :is(.admin-content, .tech-content) :is(button, [data-slot="button"], a[role="button"]):not(:disabled):not([aria-disabled="true"]):not([data-disabled]):not([class*="from-[#4f7cff"]):not([class*="from-[#0ca6a6"]):not([class*="from-[#36d6dd"]):not([class*="bg-[linear-gradient(135deg,#4f7cff"]):not([class*="bg-gradient-to-r"]):not([class*="bg-primary"]):not([class*="bg-blue"]):not([class*="bg-cyan"]):not([class*="bg-emerald"]):not([class*="bg-red"]):not([class*="bg-rose"]):not([class*="bg-[#2F8E92"]):hover {
+  background: #f1f5f9 !important;
+  border-color: rgba(51, 65, 85, 0.44) !important;
+  color: #0f172a !important;
+  -webkit-text-fill-color: #0f172a !important;
+}
+
+.light :is(.admin-content, .tech-content) :is(button, [data-slot="button"], a[role="button"]) :is(svg, span) {
+  opacity: 1 !important;
+}
+
+.light :is(.admin-content, .tech-content) :is(button, [data-slot="button"], a[role="button"]):not([class*="from-[#4f7cff"]):not([class*="bg-[linear-gradient(135deg,#4f7cff"]):not([class*="bg-gradient-to-r"]):not([class*="bg-primary"]) :is(svg, span) {
+  color: currentColor !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+
+.light :is(.admin-content, .tech-content) :is(button, [data-slot="button"], a[role="button"]):disabled,
+.light :is(.admin-content, .tech-content) :is(button, [data-slot="button"], a[role="button"])[aria-disabled="true"],
+.light :is(.admin-content, .tech-content) :is(button, [data-slot="button"], a[role="button"])[data-disabled] {
+  background: #f1f5f9 !important;
+  background-image: none !important;
+  border-color: rgba(148, 163, 184, 0.34) !important;
+  color: #64748b !important;
+  -webkit-text-fill-color: #64748b !important;
+  opacity: 1 !important;
+  cursor: not-allowed;
+}
+
+.light :is(.admin-content, .tech-content) :is([data-slot="badge"], .badge, [class*="rounded-full"][class*="border"]):not([class*="bg-blue"]):not([class*="bg-cyan"]):not([class*="bg-emerald"]):not([class*="bg-amber"]):not([class*="bg-red"]):not([class*="bg-rose"]) {
+  background: #f8fafc !important;
+  border-color: rgba(100, 116, 139, 0.34) !important;
+  color: #334155 !important;
+  -webkit-text-fill-color: #334155 !important;
+}
+
+.light :is(.admin-content, .tech-content) :is(table, thead, tbody, tr, th, td) {
+  border-color: rgba(148, 163, 184, 0.28) !important;
+}
+
+.light :is(.admin-content, .tech-content) :is(th, [data-slot="table-head"]) {
+  color: #475569 !important;
+  -webkit-text-fill-color: #475569 !important;
+  background: #f8fafc !important;
+}
+
+.light :is(.admin-content, .tech-content) :is(td, [data-slot="table-cell"]) {
+  color: #1e293b !important;
+  -webkit-text-fill-color: #1e293b !important;
+}
+
+.light :is(.admin-content, .tech-content) svg:not([class*="text-white"]):not([class*="text-cyan"]):not([class*="text-blue"]):not([class*="text-emerald"]):not([class*="text-amber"]):not([class*="text-red"]):not([class*="text-rose"]) {
+  color: currentColor;
+  opacity: 1 !important;
+  filter: none !important;
+}
+
+.light :is([data-slot="dropdown-menu-content"], [data-slot="popover-content"], [data-slot="select-content"], [data-slot="dialog-content"], [data-slot="sheet-content"]) {
+  background: #ffffff !important;
+  background-image: none !important;
+  border-color: rgba(100, 116, 139, 0.34) !important;
+  color: #0f172a !important;
+}
+
+.light :is([data-slot="dropdown-menu-content"], [data-slot="popover-content"], [data-slot="select-content"], [data-slot="dialog-content"], [data-slot="sheet-content"]) :is(button, [data-slot="button"], [data-slot="dropdown-menu-item"], [data-slot="select-item"]):not([class*="bg-gradient"]):not([class*="from-[#4f7cff"]) {
+  color: #334155 !important;
+  -webkit-text-fill-color: #334155 !important;
+  opacity: 1 !important;
+}
+
+.light :is([data-slot="dropdown-menu-content"], [data-slot="popover-content"], [data-slot="select-content"], [data-slot="dialog-content"], [data-slot="sheet-content"]) :is(button, [data-slot="button"], [data-slot="dropdown-menu-item"], [data-slot="select-item"]):hover {
+  background: #f1f5f9 !important;
+  color: #0f172a !important;
+  -webkit-text-fill-color: #0f172a !important;
+}
+
+.light .booking-portal-shell:not(.auth-lock-dark) {
+  background: #f8fafc !important;
+  background-image: none !important;
+  color: #0f172a !important;
+}
+
+.light .booking-portal-shell:not(.auth-lock-dark) :is(header, section, aside, footer, [data-slot="card"]):not([class*="bg-gradient-to-r"]) {
+  background: #ffffff !important;
+  background-image: none !important;
+  border-color: rgba(148, 163, 184, 0.28) !important;
+  color: #0f172a !important;
+}
+
+.light .booking-portal-shell:not(.auth-lock-dark) :is(h1, h2, h3, h4, h5, h6, [class*="text-white"], [class*="text-slate-100"], [class*="text-slate-200"]) {
+  color: #0f172a !important;
+  -webkit-text-fill-color: #0f172a !important;
+}
+
+.light .booking-portal-shell:not(.auth-lock-dark) :is([class*="text-slate-300"], [class*="text-slate-400"], [class*="text-slate-500"]) {
+  color: #64748b !important;
+  -webkit-text-fill-color: #64748b !important;
+}
+
+.light .booking-portal-shell:not(.auth-lock-dark) :is(input, textarea, select, [role="combobox"], [data-slot="select-trigger"]) {
+  background: #ffffff !important;
+  border-color: rgba(100, 116, 139, 0.38) !important;
+  color: #0f172a !important;
+  -webkit-text-fill-color: #0f172a !important;
+  color-scheme: light !important;
+}
+
+.light .booking-portal-shell:not(.auth-lock-dark) :is(button, [data-slot="button"], a[role="button"]):not([class*="bg-gradient"]):not([class*="from-[#4f7cff"]) {
+  background: #ffffff !important;
+  border: 1px solid rgba(100, 116, 139, 0.38) !important;
+  color: #1e293b !important;
+  -webkit-text-fill-color: #1e293b !important;
+}
+
+.light .booking-portal-shell:not(.auth-lock-dark) :is(button, [data-slot="button"], a[role="button"])[class*="bg-gradient"],
+.light .booking-portal-shell:not(.auth-lock-dark) :is(button, [data-slot="button"], a[role="button"])[class*="from-[#4f7cff"] {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
 /* Print Styles */
 @media print {
   .no-print {
