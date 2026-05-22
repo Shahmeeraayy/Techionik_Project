@@ -2626,8 +2626,8 @@ export default function JobsPage() {
                                     </TableHead>
                                     <TableHead className="w-[14%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Service Type</TableHead>
                                     <TableHead className="w-[16%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Dealership / Location</TableHead>
-                                    <TableHead className="w-[12%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Vehicle</TableHead>
-                                    <TableHead className="w-[12%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Assigned Tech</TableHead>
+                                    <TableHead className="w-[11%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Vehicle</TableHead>
+                                    <TableHead className="w-[13%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Assigned Tech</TableHead>
                                     <TableHead className="w-[6%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Urgency</TableHead>
                                     <TableHead className="w-[7%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Rank</TableHead>
                                     <TableHead className="w-[9%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Status</TableHead>
@@ -2709,36 +2709,36 @@ export default function JobsPage() {
                                             </TableCell>
                                             <TableCell className="py-4 align-middle">
                                                 {primaryTechnicianName ? (
-                                                    <div className="inline-flex max-w-full items-center gap-2 rounded-2xl border border-emerald-300/16 bg-emerald-300/[0.07] px-2.5 py-2">
-                                                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-300/20 text-[10px] font-semibold uppercase tracking-[0.12em] text-emerald-100">
+                                                    <div className="inline-flex w-full max-w-[190px] items-center gap-2 rounded-2xl border border-emerald-300/16 bg-emerald-300/[0.07] px-2.5 py-2">
+                                                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-300/20 text-[10px] font-semibold uppercase tracking-[0.12em] text-emerald-100">
                                                             {primaryTechnicianName.substring(0, 2)}
                                                         </div>
-                                                        <div className="min-w-0">
+                                                        <div className="min-w-0 flex-1 text-left leading-tight">
                                                             <OverflowText text={primaryTechnicianName} className="max-w-full text-sm font-medium text-emerald-50" />
-                                                            <div className="text-[11px] text-emerald-200/70">Assigned technician</div>
+                                                            <div className="truncate text-[11px] text-emerald-200/70">Assigned technician</div>
                                                         </div>
                                                     </div>
                                                 ) : pendingTechnicianName ? (
-                                                    <div className="inline-flex max-w-full items-center gap-2 rounded-2xl border border-violet-300/18 bg-violet-300/[0.09] px-2.5 py-2">
-                                                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-violet-300/20 text-[10px] font-semibold uppercase tracking-[0.12em] text-violet-100">
+                                                    <div className="inline-flex w-full max-w-[190px] items-center gap-2 rounded-2xl border border-violet-300/18 bg-violet-300/[0.09] px-2.5 py-2">
+                                                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-violet-300/20 text-[10px] font-semibold uppercase tracking-[0.12em] text-violet-100">
                                                             {pendingTechnicianName.substring(0, 2)}
                                                         </div>
-                                                        <div className="min-w-0">
+                                                        <div className="min-w-0 flex-1 text-left leading-tight">
                                                             <OverflowText text={pendingTechnicianName} className="max-w-full text-sm font-medium text-violet-50" />
-                                                            <div className="text-[11px] text-violet-200/70">Pending admin confirmation</div>
+                                                            <div className="truncate text-[11px] text-violet-200/70">Pending admin confirmation</div>
                                                         </div>
                                                     </div>
                                                 ) : needsReassignment ? (
-                                                    <div className="inline-flex max-w-full items-center gap-2 rounded-2xl border border-amber-300/18 bg-amber-300/[0.08] px-2.5 py-2">
-                                                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-300/16 text-amber-100">
+                                                    <div className="inline-flex w-full max-w-[190px] items-center gap-2 rounded-2xl border border-amber-300/18 bg-amber-300/[0.08] px-2.5 py-2">
+                                                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-amber-300/16 text-amber-100">
                                                             <AlertCircle className="h-3.5 w-3.5" />
                                                         </div>
-                                                        <div className="min-w-0">
+                                                        <div className="min-w-0 flex-1 text-left leading-tight">
                                                             <OverflowText
                                                                 text={job.last_refused_by_technician_name?.trim() ? `Refused by ${job.last_refused_by_technician_name}` : 'Technician refused'}
                                                                 className="max-w-full text-sm font-medium text-amber-50"
                                                             />
-                                                            <div className="text-[11px] text-amber-200/70">Needs reassignment</div>
+                                                            <div className="truncate text-[11px] text-amber-200/70">Needs reassignment</div>
                                                         </div>
                                                     </div>
                                                 ) : (
