@@ -2160,7 +2160,7 @@ export default function JobsPage() {
                             onClick={() => setExportModalOpen(true)}
                         >
                             <Download className="h-4 w-4 text-slate-500 dark:text-slate-300" />
-                            Export CSV / Excel
+                            Export Excel
                         </Button>
                     </div>
                 </div>

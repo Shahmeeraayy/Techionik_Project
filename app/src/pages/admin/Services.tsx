@@ -657,7 +657,7 @@ export default function ServicesPage() {
                                 <RefreshCw className={cn('w-4 h-4 text-blue-600 dark:text-cyan-200', loading && 'animate-spin')} /> Refresh
                             </Button>
                             <Button variant="outline" size="sm" onClick={() => setExportModalOpen(true)} className="h-10 gap-2 rounded-full border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]">
-                                <FileDown className="w-4 h-4" /> Export CSV / Excel
+                                <FileDown className="w-4 h-4" /> Export Excel
                             </Button>
                             <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-2 py-1">
                                 <Select value={presetIndustry} onValueChange={(value) => setPresetIndustry(value as IndustryPresetKey)}>

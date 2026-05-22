@@ -35,12 +35,11 @@ export default function ColumnExportDialog({
     }, [availableColumns, defaultSelectedColumns]);
 
     const [selectedColumns, setSelectedColumns] = useState<string[]>(normalizedDefaultSelection);
-    const [selectedFormat, setSelectedFormat] = useState<ExportFormat>('csv');
+    const selectedFormat: ExportFormat = 'excel';
 
     useEffect(() => {
         if (open) {
             setSelectedColumns(normalizedDefaultSelection);
-            setSelectedFormat('csv');
         }
     }, [open, normalizedDefaultSelection]);
 
@@ -82,7 +81,7 @@ export default function ColumnExportDialog({
                     </div>
                     <DialogTitle className="text-xl font-semibold text-white">{title}</DialogTitle>
                     <DialogDescription className="text-sm leading-6 text-slate-300">
-                        {description || 'Select the columns you want to include in the CSV export.'}
+                        {description || 'Select the columns you want to include in the Excel export.'}
                     </DialogDescription>
                 </DialogHeader>
 
@@ -140,33 +139,16 @@ export default function ColumnExportDialog({
                 </div>
 
                 <DialogFooter className="relative border-t border-white/10 px-6 py-4">
-                    <div className="mr-auto flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.04] p-1">
-                        <Button
-                            type="button"
-                            size="sm"
-                            variant={selectedFormat === 'csv' ? 'default' : 'ghost'}
-                            className="h-8 rounded-full px-3"
-                            onClick={() => setSelectedFormat('csv')}
-                        >
-                            CSV
-                        </Button>
-                        <Button
-                            type="button"
-                            size="sm"
-                            variant={selectedFormat === 'excel' ? 'default' : 'ghost'}
-                            className="h-8 rounded-full px-3"
-                            onClick={() => setSelectedFormat('excel')}
-                        >
-                            <Sheet className="mr-1.5 h-3.5 w-3.5" />
-                            Excel
-                        </Button>
+                    <div className="mr-auto inline-flex h-9 items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 text-xs font-semibold text-cyan-100">
+                        <Sheet className="h-3.5 w-3.5" />
+                        Excel export
                     </div>
                     <Button type="button" variant="ghost" className="h-10 rounded-2xl border border-white/10 !bg-[#0b1424] !text-slate-100 hover:!bg-[#122039] hover:!text-white" onClick={() => onOpenChange(false)}>
                         Cancel
                     </Button>
                     <Button type="button" className="h-10 min-w-32 rounded-2xl bg-gradient-to-r from-[#0ca6a6] to-[#149fcb] text-white shadow-[0_18px_44px_rgba(12,166,166,0.22)] hover:from-[#11b5b5] hover:to-[#1aaedf]" onClick={handleExport}>
                         <Download className="mr-2 h-4 w-4" />
-                        {selectedFormat === 'excel' ? 'Export Excel' : 'Export CSV'}
+                        Export Excel
                     </Button>
                 </DialogFooter>
             </DialogContent>
