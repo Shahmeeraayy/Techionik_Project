@@ -275,7 +275,7 @@ export default function InvoiceApprovalsPage() {
     });
     const [manualRecipientEmail, setManualRecipientEmail] = useState('');
     const [manualCustomerMessage, setManualCustomerMessage] = useState('');
-    const [manualTerms, setManualTerms] = useState<ManualInvoiceTerms>('NET_15');
+    const manualTerms: ManualInvoiceTerms = 'NET_15';
     const [manualServices, setManualServices] = useState<EditableServiceLine[]>(() => [createManualInvoiceLine()]);
     const [isCreatingManualInvoice, setIsCreatingManualInvoice] = useState(false);
 
@@ -581,7 +581,6 @@ export default function InvoiceApprovalsPage() {
         });
         setManualRecipientEmail('');
         setManualCustomerMessage('');
-        setManualTerms('NET_15');
         setManualServices([createManualInvoiceLine()]);
     };
 
@@ -1025,18 +1024,6 @@ export default function InvoiceApprovalsPage() {
                                                 className="h-11 rounded-2xl border-white/10 bg-[#0b1424] text-white placeholder:text-slate-500"
                                                 placeholder="billing@example.com"
                                             />
-                                        </div>
-                                        <div className="space-y-1.5">
-                                            <Label className="text-slate-200">Terms</Label>
-                                            <Select value={manualTerms} onValueChange={(value) => setManualTerms(value as ManualInvoiceTerms)}>
-                                                <SelectTrigger className="h-11 rounded-2xl border-white/10 bg-[#0b1424] text-white">
-                                                    <SelectValue placeholder="Terms" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="NET_15">Net 15</SelectItem>
-                                                    <SelectItem value="NET_30">Net 30</SelectItem>
-                                                </SelectContent>
-                                            </Select>
                                         </div>
                                         <div className="space-y-1.5">
                                             <Label htmlFor="manual-message" className="text-slate-200">Customer message</Label>
