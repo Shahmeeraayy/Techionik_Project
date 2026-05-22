@@ -198,14 +198,14 @@ function Sidebar({
           })}
         </nav>
 
-        <div className={cn('mt-auto border-t border-border p-4', isCollapsed ? 'lg:p-3' : '')}>
+        <div className={cn('mt-auto border-t border-border p-4', isCollapsed ? 'lg:flex lg:justify-center lg:p-2' : '')}>
           <Link
             to="/admin/settings"
             onClick={onClose}
             title="Settings"
             className={cn(
-              'flex items-center rounded-2xl text-sm font-semibold transition-all',
-              isCollapsed ? 'w-full gap-3 px-4 py-3 lg:h-10 lg:w-10 lg:justify-center lg:gap-0 lg:rounded-full lg:px-0' : 'w-full gap-3 px-4 py-3',
+              'flex items-center rounded-2xl text-sm font-semibold transition-all duration-200',
+              isCollapsed ? 'w-full gap-3 px-4 py-3 lg:h-10 lg:w-10 lg:justify-center lg:gap-0 lg:rounded-full lg:p-0' : 'w-full gap-3 px-4 py-3',
               settingsActive
                 ? 'bg-[#111827] text-white shadow-[0_18px_34px_rgba(15,23,42,0.12)] dark:bg-[#252525] dark:text-white dark:shadow-[0_18px_34px_rgba(0,0,0,0.28),inset_0_0_0_1px_rgba(255,255,255,0.06)]'
                 : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900 dark:text-zinc-300 dark:hover:bg-[#171717] dark:hover:text-white',
