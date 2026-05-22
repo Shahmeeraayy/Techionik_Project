@@ -24,6 +24,14 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import { exportArrayData } from '@/lib/export';
 import {
@@ -174,6 +182,7 @@ function EmptyReportState({
 
 export default function ReportsPage() {
   const [activeReportTab, setActiveReportTab] = useState<ReportTab>('overview');
+  const [exportConfirmOpen, setExportConfirmOpen] = useState(false);
   const [quickRange, setQuickRange] = useState<QuickRange>('this_week');
   const [fromDate, setFromDate] = useState<string>(() => resolveQuickRange('this_week').fromDate);
   const [toDate, setToDate] = useState<string>(() => resolveQuickRange('this_week').toDate);
@@ -258,7 +267,7 @@ export default function ReportsPage() {
     };
   }, [fromDate, toDate, canRunRange]);
 
-  const handleExport = () => {
+  const handleConfirmedExport = () => {
     if (!overview) return;
 
     const prefix = `reports_${fromDate}_${toDate}`;
@@ -269,20 +278,20 @@ export default function ReportsPage() {
       { metric: 'Refused rate', value: `${overview.dispatch_overview?.refused_rate ?? 0}%` },
       ...overview.dispatch_performance.map((row) => ({ metric: `Status: ${row.status}`, value: row.count, percentage: `${row.percentage}%` })),
       ...(overview.dispatch_overview?.jobs_by_urgency ?? []).map((row) => ({ metric: `Urgency: ${row.status}`, value: row.count, percentage: `${row.percentage}%` })),
-    ], `${prefix}_dispatch_overview`, 'csv');
+    ], `${prefix}_dispatch_overview`, 'excel');
     exportArrayData([
       { metric: 'Total intake records', value: overview.intake_analytics?.total_intake_records ?? 0 },
       { metric: 'Conversion rate', value: `${overview.intake_analytics?.conversion_rate ?? 0}%` },
       { metric: 'Average intake to job creation', value: overview.intake_analytics?.average_time_to_job_creation ?? '0m' },
       ...(overview.intake_analytics?.source_channels ?? []).map((row) => ({ source_channel: row.source_channel, intake_records: row.intake_records, converted_jobs: row.converted_jobs, conversion_rate: `${row.conversion_rate}%` })),
       ...(overview.intake_analytics?.dismissed_reasons ?? []).map((row) => ({ dismissed_reason: row.reason, count: row.count, percentage: `${row.percentage}%` })),
-    ], `${prefix}_intake_analytics`, 'csv');
+    ], `${prefix}_intake_analytics`, 'excel');
     exportArrayData([
       { metric: 'Total invoice value', value: overview.invoice_metrics?.total_invoice_value ?? overview.kpis.invoice_total },
       { metric: 'Average approval turnaround', value: overview.invoice_metrics?.average_approval_turnaround_time ?? '0m' },
       ...overview.invoice_performance.map((row) => ({ status: row.state, count: row.count, total_amount: row.total_amount })),
       ...(overview.invoice_metrics?.blocked_reasons ?? []).map((row) => ({ blocked_reason: row.reason, count: row.count, percentage: `${row.percentage}%` })),
-    ], `${prefix}_invoice_performance`, 'csv');
+    ], `${prefix}_invoice_performance`, 'excel');
     exportArrayData(overview.technician_performance.map((row) => ({
       technician: row.name,
       jobs_completed: row.jobs_completed,
@@ -290,7 +299,7 @@ export default function ReportsPage() {
       refusal_rate: `${row.refusal_rate ?? 0}%`,
       on_time_rate: `${row.on_time_rate ?? 0}%`,
       total_service_line_value: row.total_service_line_value ?? row.revenue_generated,
-    })), `${prefix}_technician_performance`, 'csv');
+    })), `${prefix}_technician_performance`, 'excel');
     exportArrayData(overview.dealership_performance.map((row) => ({
       location: row.name,
       job_volume: row.job_volume ?? row.jobs_created,
@@ -298,12 +307,13 @@ export default function ReportsPage() {
       most_requested_service_types: (row.most_requested_service_types ?? []).join('; '),
       average_job_completion_time: row.avg_job_completion_time ?? row.avg_resolution_time,
       sla_compliance_rate: `${row.sla_compliance_rate ?? 0}%`,
-    })), `${prefix}_location_performance`, 'csv');
+    })), `${prefix}_location_performance`, 'excel');
     exportArrayData([
       ...capacityUtilizationRows.map((row) => ({ section: 'Utilization by day', day: row.day_of_week, jobs: row.jobs_count, utilization: `${row.technician_utilization}%`, jobs_per_technician: row.jobs_per_technician })),
       ...peakDemandRows.map((row) => ({ section: 'Peak demand window', hour: row.hour, jobs: row.jobs_count })),
       ...understaffedRows.map((row) => ({ section: 'Understaffed period', period: row.period, jobs: row.jobs_count, technicians_available: row.technicians_available, gap: row.gap })),
-    ], `${prefix}_capacity_planning`, 'csv');
+    ], `${prefix}_capacity_planning`, 'excel');
+    setExportConfirmOpen(false);
   };
 
   const filteredTechnicianRows = useMemo(() => {
@@ -432,8 +442,8 @@ export default function ReportsPage() {
                   {loading ? 'Applying...' : 'Apply Filters'}
                 </Button>
 
-                <Button variant="outline" size="sm" className="h-11 gap-2 rounded-full border-white/10 bg-[rgba(255,255,255,0.03)] text-slate-100 shadow-sm hover:bg-[rgba(255,255,255,0.08)]" onClick={handleExport} disabled={!overview || loading}>
-                  <Download className="w-4 h-4" /> Export CSVs
+                <Button variant="outline" size="sm" className="h-11 gap-2 rounded-full border-white/10 bg-[rgba(255,255,255,0.03)] text-slate-100 shadow-sm hover:bg-[rgba(255,255,255,0.08)]" onClick={() => setExportConfirmOpen(true)} disabled={!overview || loading}>
+                  <Download className="w-4 h-4" /> Export Excel
                 </Button>
 
                 <Button
@@ -1031,6 +1041,36 @@ export default function ReportsPage() {
           </TabsContent>
         </Tabs>
       </div>
+      <Dialog open={exportConfirmOpen} onOpenChange={setExportConfirmOpen}>
+        <DialogContent className="w-[calc(100%-1.5rem)] max-w-[32rem] overflow-hidden rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(9,24,39,0.98),rgba(6,17,29,0.98))] p-0 text-white shadow-[0_32px_110px_rgba(0,0,0,0.4)]">
+          <DialogHeader className="border-b border-white/10 px-6 pt-6 pb-5">
+            <div className="mb-3 inline-flex w-fit items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-100">
+              <Download className="h-3.5 w-3.5" />
+              Export Setup
+            </div>
+            <DialogTitle className="text-xl font-semibold text-white">Export reports</DialogTitle>
+            <DialogDescription className="text-sm leading-6 text-slate-300">
+              This will download Excel files for the selected reporting range.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="px-6 py-5">
+            <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-slate-200">
+              {activeRangeLabel}
+            </div>
+          </div>
+
+          <DialogFooter className="border-t border-white/10 px-6 py-4">
+            <Button type="button" variant="ghost" className="h-10 rounded-2xl border border-white/10 !bg-[#0b1424] !text-slate-100 hover:!bg-[#122039] hover:!text-white" onClick={() => setExportConfirmOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="button" className="h-10 rounded-2xl bg-gradient-to-r from-[#0ca6a6] to-[#149fcb] px-5 text-white shadow-[0_18px_44px_rgba(12,166,166,0.22)] hover:from-[#11b5b5] hover:to-[#1aaedf]" onClick={handleConfirmedExport}>
+              <Download className="mr-2 h-4 w-4" />
+              Download Excel
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
