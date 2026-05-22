@@ -2419,66 +2419,65 @@ export default function JobsPage() {
                 onConfirm={handleExport}
             />
 
-            {/* 2. Filter Bar (Enterprise Grade) */}
-            <div className="admin-jobs-filters relative overflow-hidden rounded-[24px] border border-black/8 bg-[linear-gradient(180deg,#ffffff,#fbfbfb)] shadow-[0_20px_60px_rgba(15,23,42,0.08)] dark:border-white/8 dark:bg-[linear-gradient(180deg,rgba(9,22,38,0.985),rgba(7,18,30,0.985))] dark:shadow-[0_20px_60px_rgba(0,0,0,0.24)]">
+            {/* 2. Filter Bar */}
+            <div className="admin-jobs-filters relative overflow-hidden rounded-[26px] border border-slate-200 bg-white shadow-[0_18px_48px_rgba(15,23,42,0.07)] dark:border-white/8 dark:bg-[linear-gradient(180deg,rgba(9,22,38,0.985),rgba(7,18,30,0.985))] dark:shadow-[0_20px_60px_rgba(0,0,0,0.24)]">
                 <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-slate-900/20 to-transparent dark:via-cyan-200/60" />
-                <div className="absolute inset-x-0 top-0 h-12 bg-gradient-to-r from-slate-200/50 via-transparent to-slate-100/35 pointer-events-none dark:from-[#2F8E92]/5 dark:to-blue-500/4" />
-                <div className="relative space-y-4 p-4 md:p-5">
-                    <div className="flex flex-col lg:flex-row gap-4">
-                    {/* Search */}
-                    <div className="relative flex-1 min-w-[300px]">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500" />
-                        <Input
-                            placeholder="Search by job ID, dealership, technician name, or service type..."
-                            className="h-10 rounded-2xl border-black/8 bg-white pl-9 text-slate-900 placeholder:text-slate-400 transition-all shadow-none focus-visible:border-slate-300 focus-visible:ring-slate-200 dark:border-white/8 dark:bg-white/[0.035] dark:text-white dark:placeholder:text-slate-500 dark:focus-visible:border-cyan-300/30 dark:focus-visible:ring-cyan-300/12"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                        />
-                    </div>
-
-                    {/* Filters */}
-                    <div className="flex items-center gap-2 overflow-x-auto pb-2 lg:pb-0">
-                        <Select value={urgencyFilter} onValueChange={setUrgencyFilter}>
-                            <SelectTrigger className="h-10 w-[170px] rounded-2xl border-black/8 bg-white text-slate-900 shadow-none dark:border-white/8 dark:bg-white/[0.035] dark:text-white">
-                                <div className="flex items-center gap-2">
-                                    <Clock className="w-3.5 h-3.5 text-slate-400" />
-                                    <SelectValue placeholder="Urgency" />
-                                </div>
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">All Urgency</SelectItem>
-                                <SelectItem value="critical">Critical</SelectItem>
-                                <SelectItem value="high">High</SelectItem>
-                                <SelectItem value="normal">Medium</SelectItem>
-                                <SelectItem value="low">Low</SelectItem>
-                            </SelectContent>
-                        </Select>
-
-                        <div className="relative">
-                            <Calendar className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+                <div className="absolute inset-x-0 top-0 h-10 bg-gradient-to-r from-slate-100 via-transparent to-slate-50 pointer-events-none dark:from-[#2F8E92]/5 dark:to-blue-500/4" />
+                <div className="relative space-y-3 p-4 md:p-5">
+                    <div className="grid gap-3 lg:grid-cols-[minmax(280px,1fr)_auto] lg:items-center">
+                        <div className="relative min-w-0">
+                            <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500 dark:text-slate-500" />
                             <Input
-                                type="date"
-                                value={dateFilter}
-                                onChange={(event) => setDateFilter(event.target.value)}
-                                className="h-10 w-[180px] rounded-2xl border-black/8 bg-white pl-9 text-slate-900 shadow-none dark:border-white/8 dark:bg-white/[0.035] dark:text-white"
-                                aria-label="Filter by date"
+                                placeholder="Search jobs, locations, technicians, or services..."
+                                className="h-11 rounded-2xl border-slate-200 bg-slate-50 pl-10 text-slate-900 placeholder:text-slate-400 shadow-none transition-all focus-visible:border-slate-300 focus-visible:bg-white focus-visible:ring-slate-200 dark:border-white/8 dark:bg-white/[0.035] dark:text-white dark:placeholder:text-slate-500 dark:focus-visible:border-cyan-300/30 dark:focus-visible:ring-cyan-300/12"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
                             />
                         </div>
 
-                        {(urgencyFilter !== 'all' || statusFilter !== 'all' || dateFilter || searchQuery || activeQuickFilter !== null) && (
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={clearFilters}
-                                className="h-10 rounded-2xl px-3 text-rose-200 hover:bg-rose-400/10 hover:text-rose-100"
-                            >
-                                <X className="w-4 h-4 mr-1" /> Clear
-                            </Button>
-                        )}
-                    </div>
-                </div>
-                    <div className="flex flex-col gap-2">
                         <div className="flex flex-wrap items-center gap-2">
+                            <Select value={urgencyFilter} onValueChange={setUrgencyFilter}>
+                                <SelectTrigger className="h-11 w-full rounded-2xl border-slate-200 bg-white text-slate-900 shadow-none sm:w-[165px] dark:border-white/8 dark:bg-white/[0.035] dark:text-white">
+                                    <div className="flex items-center gap-2">
+                                        <Clock className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400" />
+                                        <SelectValue placeholder="Urgency" />
+                                    </div>
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">All Urgency</SelectItem>
+                                    <SelectItem value="critical">Critical</SelectItem>
+                                    <SelectItem value="high">High</SelectItem>
+                                    <SelectItem value="normal">Medium</SelectItem>
+                                    <SelectItem value="low">Low</SelectItem>
+                                </SelectContent>
+                            </Select>
+
+                            <div className="relative w-full sm:w-[175px]">
+                                <Calendar className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-500 dark:text-slate-400" />
+                                <Input
+                                    type="date"
+                                    value={dateFilter}
+                                    onChange={(event) => setDateFilter(event.target.value)}
+                                    className="h-11 w-full rounded-2xl border-slate-200 bg-white pl-9 text-slate-900 shadow-none dark:border-white/8 dark:bg-white/[0.035] dark:text-white"
+                                    aria-label="Filter by date"
+                                />
+                            </div>
+
+                            {(urgencyFilter !== 'all' || statusFilter !== 'all' || dateFilter || searchQuery || activeQuickFilter !== null) && (
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={clearFilters}
+                                    className="h-11 rounded-2xl border border-rose-200 bg-rose-50 px-3 text-rose-700 hover:bg-rose-100 hover:text-rose-800 dark:border-rose-300/15 dark:bg-rose-400/10 dark:text-rose-100 dark:hover:bg-rose-400/15 dark:hover:text-white"
+                                >
+                                    <X className="mr-1 h-4 w-4" /> Clear
+                                </Button>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="flex flex-col gap-3 border-t border-slate-200 pt-3 dark:border-white/8 xl:flex-row xl:items-center xl:justify-between">
+                        <div className="flex min-w-0 flex-wrap items-center gap-2">
                             {statusFilterOptions.map((option) => (
                                 <Button
                                     key={option.key}
@@ -2490,8 +2489,10 @@ export default function JobsPage() {
                                         setPagination((prev) => ({ ...prev, page: 1 }));
                                     }}
                                     className={cn(
-                                        'h-9 rounded-2xl px-3 text-slate-200 shadow-none',
-                                        statusFilter === option.key ? 'bg-slate-900 border-slate-900 text-white dark:bg-cyan-500/[0.12] dark:border-cyan-300/25 dark:text-cyan-100' : 'border-black/8 bg-white text-slate-700 hover:bg-slate-50 dark:border-white/8 dark:bg-white/[0.03] dark:text-slate-200 dark:hover:bg-white/[0.08]',
+                                        'h-8 rounded-full px-3 text-xs font-semibold shadow-none',
+                                        statusFilter === option.key
+                                            ? 'border-slate-900 bg-slate-900 text-white dark:border-cyan-300/25 dark:bg-cyan-500/[0.12] dark:text-cyan-100'
+                                            : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 dark:border-white/8 dark:bg-white/[0.03] dark:text-slate-200 dark:hover:bg-white/[0.08] dark:hover:text-white',
                                     )}
                                 >
                                     {option.label}
@@ -2500,9 +2501,9 @@ export default function JobsPage() {
                         </div>
                         <div className="flex flex-wrap items-center gap-2 text-xs">
                             <Select value={jobSortMode} onValueChange={(value) => handleSortModeChange(value as JobSortMode)}>
-                                <SelectTrigger className="h-9 w-[180px] rounded-2xl border-black/8 bg-white text-slate-800 shadow-none dark:border-white/8 dark:bg-white/[0.035] dark:text-white">
+                                <SelectTrigger className="h-9 w-full rounded-full border-slate-200 bg-white text-slate-800 shadow-none sm:w-[170px] dark:border-white/8 dark:bg-white/[0.035] dark:text-white">
                                     <div className="flex items-center gap-2 text-sm">
-                                        <TrendingUp className="w-3.5 h-3.5 text-slate-400" />
+                                        <TrendingUp className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400" />
                                         <SelectValue placeholder="Sort by" />
                                     </div>
                                 </SelectTrigger>
@@ -2515,11 +2516,11 @@ export default function JobsPage() {
                                     <SelectItem value="job_id">Job ID</SelectItem>
                                 </SelectContent>
                             </Select>
-                            <Badge variant="outline" className="h-8 rounded-full border-white/10 bg-[#0b1424] px-3 text-slate-300 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                            <Badge variant="outline" className="h-8 rounded-full border-slate-200 bg-slate-50 px-3 text-slate-600 dark:border-white/10 dark:bg-[#0b1424] dark:text-slate-300 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
                                 {jobSortBadgeLabel}
                             </Badge>
                             {activeFilterCount > 0 ? (
-                                <Badge variant="outline" className="h-8 rounded-full border-cyan-300/20 bg-cyan-300/10 px-3 text-cyan-100">
+                                <Badge variant="outline" className="h-8 rounded-full border-cyan-200 bg-cyan-50 px-3 text-cyan-700 dark:border-cyan-300/20 dark:bg-cyan-300/10 dark:text-cyan-100">
                                     {activeFilterCount} active filter{activeFilterCount === 1 ? '' : 's'}
                                 </Badge>
                             ) : null}
