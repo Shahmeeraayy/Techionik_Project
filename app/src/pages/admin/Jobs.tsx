@@ -34,7 +34,8 @@ import {
     Sparkles,
     Trash2,
     Check,
-    ChevronsUpDown
+    ChevronsUpDown,
+    ExternalLink
 } from 'lucide-react';
 import { calculateJobRanking } from '@/lib/priority';
 import { exportArrayData, selectColumnsForExport, type ExportFormat } from '@/lib/export';
@@ -2665,12 +2666,14 @@ export default function JobsPage() {
                                                 <button
                                                     type="button"
                                                     onClick={() => navigate(`/admin/jobs/${job.job_id}`)}
-                                                    className="group/id rounded-2xl px-1 py-1 text-left transition-colors"
+                                                    className="group/id rounded-2xl border border-cyan-300/15 bg-cyan-300/[0.06] px-3 py-2 text-left shadow-[0_10px_24px_rgba(8,145,178,0.08)] transition-all hover:border-cyan-300/35 hover:bg-cyan-300/[0.11] hover:shadow-[0_14px_30px_rgba(8,145,178,0.14)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/40"
+                                                    title="Open job details"
                                                 >
-                                                    <div className="text-sm font-semibold text-white transition-colors group-hover:text-cyan-100 group-hover/id:text-cyan-100" style={displayFontStyle}>
-                                                        {job.job_code}
+                                                    <div className="flex items-center gap-2 text-sm font-semibold text-cyan-100 transition-colors group-hover/id:text-white" style={displayFontStyle}>
+                                                        <span>{job.job_code}</span>
+                                                        <ExternalLink className="h-3.5 w-3.5 text-cyan-200 opacity-80 transition group-hover/id:translate-x-0.5 group-hover/id:-translate-y-0.5 group-hover/id:opacity-100" />
                                                     </div>
-                                                    <div className="mt-1 max-w-full truncate text-xs text-slate-500">{job.job_id}</div>
+                                                    <div className="mt-1 max-w-full truncate text-xs text-slate-400">{job.job_id}</div>
                                                 </button>
                                             </TableCell>
                                             <TableCell className="py-4 align-middle">
