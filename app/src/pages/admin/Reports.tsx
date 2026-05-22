@@ -378,7 +378,7 @@ export default function ReportsPage() {
 
         <Card className={sectionCardClass}>
           <div className={sectionHeaderClass}>
-            <div className="grid grid-cols-1 gap-4 xl:grid-cols-[220px_minmax(0,1fr)_auto] xl:items-end">
+            <div className="grid grid-cols-1 gap-4 xl:grid-cols-[220px_minmax(320px,440px)_auto] xl:items-end">
               <div className="space-y-2">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Quick Range</p>
                 <Select value={quickRange} onValueChange={(value) => handleQuickRangeChange(value as QuickRange)}>
@@ -398,13 +398,13 @@ export default function ReportsPage() {
 
               <div className="space-y-2">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Custom Range</p>
-                <div className="grid min-h-11 grid-cols-1 items-center gap-2 rounded-2xl border border-white/10 bg-[#0b1424] px-3 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] sm:grid-cols-[1fr_auto_1fr]">
+                <div className="grid min-h-11 grid-cols-1 items-center gap-2 rounded-2xl border border-white/10 bg-[#0b1424] px-3 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] sm:grid-cols-[minmax(135px,1fr)_auto_minmax(135px,1fr)]">
                   <Input
                     type="date"
                     value={fromDate}
                     onChange={(event) => setFromDate(event.target.value)}
                     style={reportDarkInputStyle}
-                    className="h-8 min-w-[150px] border-0 px-1 text-xs text-slate-100 shadow-none focus-visible:ring-0"
+                    className="h-8 min-w-0 border-0 px-1 text-xs text-slate-100 shadow-none focus-visible:ring-0"
                   />
                   <span className="hidden items-center gap-1 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400 sm:flex">
                     <Calendar className="h-3.5 w-3.5" />
@@ -415,7 +415,7 @@ export default function ReportsPage() {
                     value={toDate}
                     onChange={(event) => setToDate(event.target.value)}
                     style={reportDarkInputStyle}
-                    className="h-8 min-w-[150px] border-0 px-1 text-xs text-slate-100 shadow-none focus-visible:ring-0"
+                    className="h-8 min-w-0 border-0 px-1 text-xs text-slate-100 shadow-none focus-visible:ring-0"
                   />
                 </div>
               </div>
