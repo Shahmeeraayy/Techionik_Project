@@ -628,27 +628,27 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
         />
 
         {/* Main content */}
-        <main className="flex-1 min-w-0 flex flex-col min-h-screen lg:p-4">
+        <main className="flex-1 min-w-0 max-w-full flex flex-col min-h-screen overflow-x-hidden lg:p-4">
           {/* Top Header - Sticky */}
-          <div className="admin-page-frame flex min-h-screen flex-col overflow-hidden rounded-none lg:rounded-[32px]">
-          <header className="admin-topbar sticky top-0 z-30 bg-background/80 backdrop-blur-md border-b border-border px-5 sm:px-8 py-4 flex items-center justify-between shadow-sm">
-            <div className="flex items-center gap-4 min-w-0">
+          <div className="admin-page-frame flex min-h-screen min-w-0 max-w-full flex-col overflow-hidden rounded-none lg:rounded-[32px]">
+          <header className="admin-topbar sticky top-0 z-30 bg-background/80 backdrop-blur-md border-b border-border px-4 sm:px-8 py-4 flex items-center justify-between gap-3 shadow-sm">
+            <div className="flex min-w-0 flex-1 items-center gap-3 sm:gap-4">
               <Button
                 variant="ghost"
                 size="icon"
-                className="lg:hidden"
+                className="shrink-0 lg:hidden"
                 onClick={() => setSidebarOpen(!sidebarOpen)}
               >
                 {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
               </Button>
 
-              <div className="flex flex-col">
+              <div className="flex min-w-0 flex-col">
                 <p className="hidden sm:block text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">NexusOps</p>
-                <h1 className="text-xl font-bold text-foreground tracking-[-0.04em]">{headerTitle}</h1>
+                <h1 className="truncate text-lg font-bold text-foreground tracking-[-0.04em] sm:text-xl">{headerTitle}</h1>
               </div>
             </div>
 
-            <div className="flex items-center gap-3 sm:gap-6">
+            <div className="flex shrink-0 items-center gap-2 sm:gap-6">
               {!hideHeaderRefreshControls && (
                 <>
                   <span className="hidden sm:block text-xs font-medium text-muted-foreground bg-white px-3 py-1.5 rounded-full border border-black/10 dark:bg-white/[0.04] dark:border-white/8">
@@ -679,7 +679,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
             </div>
           </header>
 
-          <div className="admin-content flex-1 p-4 lg:p-8 overflow-y-auto">
+          <div className="admin-content min-w-0 max-w-full flex-1 overflow-x-hidden overflow-y-auto p-4 lg:p-8">
             {children}
           </div>
           </div>

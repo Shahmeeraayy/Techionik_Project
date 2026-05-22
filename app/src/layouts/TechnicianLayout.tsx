@@ -297,7 +297,7 @@ export function TechnicianLayout({ children }: { children: React.ReactNode }) {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <div className="tech-shell min-h-screen">
+    <div className="tech-shell min-h-screen max-w-full overflow-x-hidden">
       <MobileHeader onMenuClick={() => setMenuOpen(true)} />
       <MobileMenu isOpen={menuOpen} onClose={() => setMenuOpen(false)} />
 
@@ -305,9 +305,9 @@ export function TechnicianLayout({ children }: { children: React.ReactNode }) {
         <DesktopSidebar />
 
         {/* Main content */}
-        <main className="flex-1 min-w-0 pb-20 lg:p-4 lg:pb-4">
-          <div className="tech-page-frame min-h-screen overflow-hidden rounded-none lg:min-h-[calc(100vh-2rem)] lg:rounded-[32px]">
-            <div className="tech-content min-h-screen p-4 lg:min-h-[calc(100vh-2rem)] lg:p-8">
+        <main className="flex-1 min-w-0 max-w-full overflow-x-hidden pb-24 lg:p-4 lg:pb-4">
+          <div className="tech-page-frame min-h-screen min-w-0 max-w-full overflow-hidden rounded-none lg:min-h-[calc(100vh-2rem)] lg:rounded-[32px]">
+            <div className="tech-content min-h-screen min-w-0 max-w-full overflow-x-hidden p-4 pb-[calc(6rem+env(safe-area-inset-bottom))] lg:min-h-[calc(100vh-2rem)] lg:p-8">
               {children}
             </div>
           </div>

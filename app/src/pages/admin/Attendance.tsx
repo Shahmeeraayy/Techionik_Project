@@ -373,7 +373,7 @@ function ReportsTab({ technicians, search }: { technicians: BackendTechnicianLis
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-2 rounded-2xl border border-white/[0.07] bg-[#0d1829] px-3 py-2">
           <CalendarDays className="h-4 w-4 text-slate-500" />
           <span className="text-sm font-medium text-slate-300">
@@ -391,8 +391,8 @@ function ReportsTab({ technicians, search }: { technicians: BackendTechnicianLis
         </Button>
       </div>
 
-      <div className="overflow-hidden rounded-[24px] border border-white/[0.07] bg-[#0d1829]">
-        <div className="grid grid-cols-[1fr_auto_auto_auto_auto_auto] gap-0 border-b border-white/[0.06] px-4 py-3">
+      <div className="overflow-x-auto rounded-[24px] border border-white/[0.07] bg-[#0d1829]">
+        <div className="grid min-w-[720px] grid-cols-[1fr_auto_auto_auto_auto_auto] gap-0 border-b border-white/[0.06] px-4 py-3">
           {['Technician', 'Clock-ins', 'First In', 'Last Out', 'Worked', 'Break'].map(h => (
             <p key={h} className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">{h}</p>
           ))}
@@ -404,7 +404,7 @@ function ReportsTab({ technicians, search }: { technicians: BackendTechnicianLis
             {rows.map((row, i) => (
               <div
                 key={row.id}
-                className="grid grid-cols-[1fr_auto_auto_auto_auto_auto] items-center gap-0 px-4 py-3 hover:bg-white/[0.02]"
+                className="grid min-w-[720px] grid-cols-[1fr_auto_auto_auto_auto_auto] items-center gap-0 px-4 py-3 hover:bg-white/[0.02]"
                 style={{ animation: 'fade-in-up 0.35s ease both', animationDelay: `${i * 40}ms` }}
               >
                 <div className="flex items-center gap-2.5">
@@ -487,8 +487,8 @@ function AuditLogTab({ technicians, search }: { technicians: BackendTechnicianLi
   };
 
   return (
-    <div className="overflow-hidden rounded-[24px] border border-white/[0.07] bg-[#0d1829]">
-      <div className="grid grid-cols-[auto_1fr_auto_auto_auto] border-b border-white/[0.06] px-4 py-3">
+    <div className="overflow-x-auto rounded-[24px] border border-white/[0.07] bg-[#0d1829]">
+      <div className="grid min-w-[760px] grid-cols-[auto_1fr_auto_auto_auto] border-b border-white/[0.06] px-4 py-3">
         {['Event', 'Technician', 'Time', 'Device', 'GPS'].map(h => (
           <p key={h} className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">{h}</p>
         ))}
@@ -502,7 +502,7 @@ function AuditLogTab({ technicians, search }: { technicians: BackendTechnicianLi
             return (
               <div
                 key={entry.eventId}
-                className="grid grid-cols-[auto_1fr_auto_auto_auto] items-center gap-0 px-4 py-3 hover:bg-white/[0.02]"
+                className="grid min-w-[760px] grid-cols-[auto_1fr_auto_auto_auto] items-center gap-0 px-4 py-3 hover:bg-white/[0.02]"
                 style={{ animation: 'fade-in-up 0.3s ease both', animationDelay: `${Math.min(i, 20) * 25}ms` }}
               >
                 <div className="mr-4 flex items-center gap-2">
