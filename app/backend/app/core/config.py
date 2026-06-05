@@ -62,6 +62,11 @@ def get_backend_root() -> Path:
     return Path(__file__).resolve().parents[2]
 
 
+def get_default_database_url() -> str:
+    db_path = (get_backend_root() / "nexusops-dev.db").resolve()
+    return f"sqlite:///{db_path.as_posix()}"
+
+
 def normalize_database_url(value: str) -> str:
     normalized = value.strip()
     # Accept hosted Postgres URLs in common forms and route them to SQLAlchemy's psycopg driver.
@@ -74,7 +79,11 @@ def normalize_database_url(value: str) -> str:
 
 APP_ENV = get_env("APP_ENV", "development").strip().lower()
 
-DATABASE_URL = normalize_database_url(get_required_env("DATABASE_URL"))
+DATABASE_URL = normalize_database_url(
+    get_env("DATABASE_URL", get_default_database_url())
+    if APP_ENV == "development"
+    else get_required_env("DATABASE_URL")
+)
 
 JWT_SECRET_KEY = (
     get_env("JWT_SECRET_KEY", "change-me-dev-only")
@@ -125,4 +134,3 @@ SMTP_FROM_NAME = get_env("SMTP_FROM_NAME", COMPANY_NAME)
 
 if APP_ENV != "development" and JWT_SECRET_KEY.startswith("change-me"):
     raise RuntimeError("JWT_SECRET_KEY must be set to a secure value outside development")
-

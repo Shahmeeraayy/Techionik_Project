@@ -76,6 +76,9 @@ class InvoiceRepository:
     def get_dealership_by_id(self, dealership_id: UUID) -> Optional[Dealership]:
         return self.db.query(Dealership).filter(Dealership.id == dealership_id).first()
 
+    def get_technician_by_id(self, technician_id: UUID) -> Optional[Technician]:
+        return self.db.query(Technician).filter(Technician.id == technician_id).first()
+
     def set_jobs_invoice(self, job_ids: Iterable[UUID], invoice_id: Optional[UUID]) -> None:
         ids = list(job_ids)
         if not ids:
@@ -90,6 +93,9 @@ class InvoiceRepository:
             {"invoice_id": None},
             synchronize_session=False,
         )
+
+    def list_job_ids_for_invoice(self, invoice_id: UUID) -> List[UUID]:
+        return [row[0] for row in self.db.query(Job.id).filter(Job.invoice_id == invoice_id).all()]
 
     def list_pending_approval_jobs(self) -> List[tuple[Job, Optional[Dealership], Optional[Technician]]]:
         return (

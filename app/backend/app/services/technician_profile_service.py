@@ -6,6 +6,7 @@ from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
 from ..core.enums import AuditEntityType, TimeOffEntryType, UserRole
+from ..core.passwords import verify_password
 from ..core.security import AuthenticatedUser
 from ..models.technician_email_change_request import TechnicianEmailChangeRequest
 from ..repositories.technician_repository import TechnicianRepository
@@ -237,16 +238,15 @@ class TechnicianProfileService:
 
         stored_password = (technician.password or "").strip()
         current_password = payload.current_password.strip()
-        if stored_password:
-            if current_password != stored_password:
-                raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Current password is incorrect")
-        else:
+        if not stored_password:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Current password is not configured. Contact admin.",
             )
+        if not verify_password(current_password, stored_password, allow_plaintext_fallback=True):
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Current password is incorrect")
 
-        if payload.new_password == current_password:
+        if payload.new_password.strip() == current_password:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail="New password must be different from current password",

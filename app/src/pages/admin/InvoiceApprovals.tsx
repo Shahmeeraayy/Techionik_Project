@@ -266,6 +266,7 @@ export default function InvoiceApprovalsPage() {
     const [serviceSuggestions, setServiceSuggestions] = useState<string[]>([]);
     const [serviceCatalogOptions, setServiceCatalogOptions] = useState<ServiceCatalogOption[]>([]);
     const [manualInvoiceOpen, setManualInvoiceOpen] = useState(false);
+    const [manualSourceJobId, setManualSourceJobId] = useState('');
     const [manualBillToDraft, setManualBillToDraft] = useState<BillToDraft>({
         name: '',
         street: '',
@@ -411,6 +412,20 @@ export default function InvoiceApprovalsPage() {
             .sort((a, b) => a.localeCompare(b));
     }, [editableServices, serviceSuggestions]);
 
+    const manualInvoiceOptions = useMemo(
+        () => (
+            [...invoices]
+                .filter((invoice) => (invoice.technician_name || '').trim().length > 0)
+                .sort((a, b) => a.job_code.localeCompare(b.job_code))
+        ),
+        [invoices],
+    );
+
+    const selectedManualInvoice = useMemo(
+        () => manualInvoiceOptions.find((invoice) => invoice.job_id === manualSourceJobId) ?? null,
+        [manualInvoiceOptions, manualSourceJobId],
+    );
+
     const toEditableServices = (
         invoice: Pick<BackendPendingInvoiceApproval, 'services'>,
     ): EditableServiceLine[] => invoice.services.map((service) => ({
@@ -422,13 +437,19 @@ export default function InvoiceApprovalsPage() {
         tax_rate: toNumber(service.tax_rate),
     }));
 
-    const toBillToDraft = (invoice: BackendPendingInvoiceApprovalDetail): BillToDraft => ({
+    const toPendingApprovalBillToDraft = (
+        invoice: Pick<BackendPendingInvoiceApproval, 'bill_to' | 'dealership_name'>,
+    ): BillToDraft => ({
         name: invoice.bill_to?.name?.trim() || invoice.dealership_name || '',
         street: invoice.bill_to?.street?.trim() || '',
         city: invoice.bill_to?.city?.trim() || '',
         state: invoice.bill_to?.state?.trim() || '',
         zip_code: invoice.bill_to?.zip_code?.trim() || '',
     });
+
+    const toBillToDraft = (invoice: BackendPendingInvoiceApprovalDetail): BillToDraft => (
+        toPendingApprovalBillToDraft(invoice)
+    );
 
     const handleOpenDrawer = async (invoice: PendingInvoice | BlockedInvoice) => {
         const adminToken = getStoredAdminToken();
@@ -572,6 +593,7 @@ export default function InvoiceApprovalsPage() {
     };
 
     const resetManualInvoiceForm = () => {
+        setManualSourceJobId('');
         setManualBillToDraft({
             name: '',
             street: '',
@@ -584,8 +606,22 @@ export default function InvoiceApprovalsPage() {
         setManualServices([createManualInvoiceLine()]);
     };
 
+    const handleSelectManualJob = (jobId: string) => {
+        setManualSourceJobId(jobId);
+        const sourceInvoice = manualInvoiceOptions.find((invoice) => invoice.job_id === jobId);
+        if (!sourceInvoice) return;
+        setManualBillToDraft(toPendingApprovalBillToDraft(sourceInvoice));
+    };
+
     const openManualInvoiceDialog = () => {
+        const firstReadyInvoice = manualInvoiceOptions[0] ?? null;
+        if (!firstReadyInvoice) {
+            alert('No completed jobs with technician details are ready for invoice creation yet.');
+            return;
+        }
         resetManualInvoiceForm();
+        setManualSourceJobId(firstReadyInvoice.job_id);
+        setManualBillToDraft(toPendingApprovalBillToDraft(firstReadyInvoice));
         setManualInvoiceOpen(true);
     };
 
@@ -628,6 +664,14 @@ export default function InvoiceApprovalsPage() {
             alert('Admin session missing. Please login again.');
             return;
         }
+        if (!selectedManualInvoice) {
+            alert('Select a completed job before creating an invoice.');
+            return;
+        }
+        if (!(selectedManualInvoice.technician_name || '').trim()) {
+            alert('The selected job is missing technician details. Assign a technician first.');
+            return;
+        }
         const recipientEmail = manualRecipientEmail.trim();
         if (!recipientEmail) {
             alert('Add a recipient email before creating and sending this invoice.');
@@ -652,6 +696,8 @@ export default function InvoiceApprovalsPage() {
         setIsCreatingManualInvoice(true);
         try {
             const createdInvoice = await createInvoice(adminToken, {
+                dispatch_job_ids: [selectedManualInvoice.job_id],
+                replace_dispatch_line_items: true,
                 line_items: manualServices.map((service) => ({
                     product_service: service.name.trim(),
                     quantity: service.quantity,
@@ -664,7 +710,7 @@ export default function InvoiceApprovalsPage() {
                 status: 'sent',
                 shipping: 0,
                 customer_message: manualCustomerMessage.trim() || undefined,
-                approval_note: `Manual invoice created by admin for ${recipientEmail}.`,
+                approval_note: `Invoice created by admin for ${recipientEmail} from ${selectedManualInvoice.job_code}.`,
                 send_email_to: recipientEmail,
                 bill_to: {
                     name: manualBillToDraft.name.trim(),
@@ -676,11 +722,12 @@ export default function InvoiceApprovalsPage() {
             });
 
             alert(`Invoice ${createdInvoice.invoice_number} was sent to ${recipientEmail} directly from your NexusOps workspace email identity.`);
+            await fetchInvoicesData();
             setManualInvoiceOpen(false);
             resetManualInvoiceForm();
         } catch (error) {
-            const detail = error instanceof Error ? error.message : 'Unable to create manual invoice.';
-            alert(`Manual invoice failed: ${detail}`);
+            const detail = error instanceof Error ? error.message : 'Unable to create invoice.';
+            alert(`Invoice creation failed: ${detail}`);
         } finally {
             setIsCreatingManualInvoice(false);
         }
@@ -914,6 +961,7 @@ export default function InvoiceApprovalsPage() {
                             size="sm"
                             className="h-11 gap-2 rounded-2xl bg-[linear-gradient(135deg,#4f7cff,#22d3ee)] px-4 font-semibold text-white shadow-[0_18px_42px_rgba(79,124,255,0.24)] hover:brightness-105"
                             onClick={openManualInvoiceDialog}
+                            disabled={manualInvoiceOptions.length === 0}
                         >
                             <Plus className="h-4 w-4" />
                             Create Invoice
@@ -954,15 +1002,49 @@ export default function InvoiceApprovalsPage() {
                     <DialogHeader className="border-b border-white/10 px-6 py-5">
                         <DialogTitle className="flex items-center gap-2 text-xl tracking-[-0.03em] sm:text-2xl" style={displayFontStyle}>
                             <Mail className="h-5 w-5 text-cyan-200" />
-                            Create manual invoice
+                            Create job-linked invoice
                         </DialogTitle>
                         <DialogDescription className="max-w-2xl text-sm leading-6 text-slate-400">
-                            Create and send a manual invoice.
+                            Select a completed job with technician details, then override the line items before sending.
                         </DialogDescription>
                     </DialogHeader>
 
                     <ScrollArea className="max-h-[68vh]">
                         <div className="space-y-6 px-6 py-5">
+                            <div className="rounded-3xl border border-cyan-300/15 bg-cyan-300/10 p-5">
+                                <div className="grid gap-4 xl:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.9fr)]">
+                                    <div className="space-y-1.5">
+                                        <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Source Job</div>
+                                        <Label htmlFor="manual-source-job" className="text-slate-200">Completed job</Label>
+                                        <Select value={manualSourceJobId} onValueChange={handleSelectManualJob}>
+                                            <SelectTrigger id="manual-source-job" className="h-11 rounded-2xl border-white/10 bg-[#0b1424] text-white">
+                                                <SelectValue placeholder="Select a completed job" />
+                                            </SelectTrigger>
+                                            <SelectContent className="border-white/10 bg-[#0b1424] text-white">
+                                                {manualInvoiceOptions.map((invoice) => (
+                                                    <SelectItem key={invoice.job_id} value={invoice.job_id}>
+                                                        {invoice.job_code} - {invoice.dealership_name}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                        <p className="text-xs leading-5 text-cyan-100/80">
+                                            Invoices now require a linked job and assigned technician before they can be sent.
+                                        </p>
+                                    </div>
+                                    <div className="grid gap-3 sm:grid-cols-2">
+                                        <div className="rounded-2xl border border-white/10 bg-[#0b1424] p-4">
+                                            <div className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">Technician</div>
+                                            <div className="mt-2 text-sm text-white">{selectedManualInvoice?.technician_name?.trim() || 'Not assigned'}</div>
+                                        </div>
+                                        <div className="rounded-2xl border border-white/10 bg-[#0b1424] p-4">
+                                            <div className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">Service Summary</div>
+                                            <div className="mt-2 text-sm text-white">{selectedManualInvoice?.service_summary || '-'}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                             <div className="grid gap-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)]">
                                 <div className="rounded-3xl border border-white/10 bg-white/[0.035] p-5">
                                     <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Bill To</div>
@@ -1043,7 +1125,7 @@ export default function InvoiceApprovalsPage() {
                                 <div className="flex flex-wrap items-center justify-between gap-3">
                                     <div>
                                         <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Line Items</div>
-                                        <p className="mt-1 text-sm text-slate-400">Add the services, quantities, rates, and tax rate for this manual invoice.</p>
+                                        <p className="mt-1 text-sm text-slate-400">Add the services, quantities, rates, and tax rate for this job-linked invoice.</p>
                                     </div>
                                     <Button
                                         type="button"
@@ -1156,7 +1238,7 @@ export default function InvoiceApprovalsPage() {
                             type="button"
                             className="min-h-11 gap-2 rounded-2xl bg-[linear-gradient(135deg,#4f7cff,#22d3ee)] px-5 font-semibold text-white hover:brightness-105 disabled:opacity-70"
                             onClick={() => void handleCreateManualInvoice()}
-                            disabled={isCreatingManualInvoice}
+                            disabled={isCreatingManualInvoice || !selectedManualInvoice}
                         >
                             <Mail className="h-4 w-4" />
                             {isCreatingManualInvoice ? 'Creating...' : 'Create & Send'}

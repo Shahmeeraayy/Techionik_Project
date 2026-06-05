@@ -2673,7 +2673,6 @@ export default function JobsPage() {
                                                         <span>{job.job_code}</span>
                                                         <ExternalLink className="h-3.5 w-3.5 text-cyan-200 opacity-80 transition group-hover/id:translate-x-0.5 group-hover/id:-translate-y-0.5 group-hover/id:opacity-100" />
                                                     </div>
-                                                    <div className="mt-1 max-w-full truncate text-xs text-slate-400">{job.job_id}</div>
                                                 </button>
                                             </TableCell>
                                             <TableCell className="py-4 align-middle">
@@ -2818,6 +2817,15 @@ export default function JobsPage() {
                                                                 : 'Assign'}
                                                         </Button>
                                                     ) : null}
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline"
+                                                        className="h-8 w-full justify-start rounded-2xl border-cyan-300/18 bg-cyan-300/[0.06] px-2.5 text-[11px] text-cyan-50 hover:bg-cyan-300/[0.14] hover:text-white"
+                                                        onClick={() => navigate(`/admin/jobs/${job.job_id}`)}
+                                                    >
+                                                        <ExternalLink className="mr-1.5 h-3.5 w-3.5" />
+                                                        View Job
+                                                    </Button>
                                                 </div>
                                             </TableCell>
                                         </TableRow>

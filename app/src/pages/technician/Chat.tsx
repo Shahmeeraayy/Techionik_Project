@@ -1,28 +1,40 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
+  AudioLines,
   Bell,
   Check,
   CheckCheck,
   File,
   Image as ImageIcon,
   MessageSquareText,
+  Mic,
   Paperclip,
   RefreshCw,
   Search,
   Send,
   Shield,
+  Square,
   X,
 } from 'lucide-react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import TechnicianBottomNav from '@/components/common/technician-bottom-nav';
+import { useVoiceNoteRecorder } from '@/hooks/use-voice-note-recorder';
+import {
+  CHAT_ATTACHMENT_ACCEPT,
+  fileToChatAttachment,
+  formatChatAttachmentSize,
+  formatVoiceRecordingDuration,
+  getChatAttachmentValidationMessage,
+  isAudioAttachment,
+  isImageAttachment,
+} from '@/lib/chat-attachments';
 import {
   fetchAdminChatMessages,
   fetchTechnicianChatMessages,
@@ -34,23 +46,6 @@ import {
   type BackendChatMessage,
 } from '@/lib/backend-api';
 
-async function fileToAttachment(file: File): Promise<BackendChatAttachment> {
-  const dataUrl = await new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result || ''));
-    reader.onerror = () => reject(new Error(`Failed to read ${file.name}`));
-    reader.readAsDataURL(file);
-  });
-
-  return {
-    id: `${file.name}-${file.size}-${Date.now()}`,
-    name: file.name,
-    mime_type: file.type || 'application/octet-stream',
-    size_bytes: file.size,
-    data_url: dataUrl,
-  };
-}
-
 function formatMessageStatus(message: BackendChatMessage) {
   if (message.read_at) {
     return <CheckCheck className="h-3.5 w-3.5 text-cyan-300" />;
@@ -61,38 +56,64 @@ function formatMessageStatus(message: BackendChatMessage) {
   return <Check className="h-3.5 w-3.5 text-slate-500" />;
 }
 
+function getAttachmentIcon(mimeType: string) {
+  if (isImageAttachment(mimeType)) {
+    return ImageIcon;
+  }
+  if (isAudioAttachment(mimeType)) {
+    return AudioLines;
+  }
+  return File;
+}
+
 function AttachmentCard({ attachment }: { attachment: BackendChatAttachment }) {
-  const sizeLabel = attachment.size_bytes >= 1024 * 1024
-    ? `${(attachment.size_bytes / (1024 * 1024)).toFixed(1)} MB`
-    : `${Math.max(1, Math.round(attachment.size_bytes / 1024))} KB`;
+  const isImage = isImageAttachment(attachment.mime_type);
+  const isAudio = isAudioAttachment(attachment.mime_type);
+  const AttachmentIcon = getAttachmentIcon(attachment.mime_type);
+  const sizeLabel = formatChatAttachmentSize(attachment.size_bytes);
 
   return (
-    <a
-      href={attachment.data_url}
-      target="_blank"
-      rel="noreferrer"
+    <div
       className="w-full max-w-[420px] overflow-hidden rounded-2xl border border-white/10 bg-[linear-gradient(180deg,rgba(9,24,39,0.98),rgba(6,17,29,0.98))] shadow-[0_14px_34px_rgba(0,0,0,0.24)]"
     >
-      {attachment.mime_type.startsWith('image/') ? (
+      {isImage ? (
         <div className="aspect-[1/0.9] overflow-hidden bg-slate-950">
           <img src={attachment.data_url} alt={attachment.name} className="h-full w-full object-cover" />
         </div>
+      ) : isAudio ? (
+        <div className="bg-[#09131d] p-4">
+          <div className="rounded-[22px] border border-white/10 bg-white/[0.03] p-4">
+            <div className="mb-3 flex items-center gap-2 text-sm font-medium text-slate-100">
+              <AudioLines className="h-4 w-4 text-cyan-300" />
+              Voice message
+            </div>
+            <audio controls preload="metadata" src={attachment.data_url} className="w-full" />
+          </div>
+        </div>
       ) : (
         <div className="flex aspect-[1/0.9] items-center justify-center bg-[#09131d] text-slate-300">
-          <File className="h-7 w-7" />
+          <AttachmentIcon className="h-7 w-7" />
         </div>
       )}
-      <div className="space-y-1 px-3 py-2">
-        <p className="truncate text-xs font-medium text-slate-100">{attachment.name}</p>
-        <p className="text-[11px] text-slate-400">{sizeLabel}</p>
+      <div className="space-y-2 px-3 py-2">
+        <div className="space-y-1">
+          <p className="truncate text-xs font-medium text-slate-100">{attachment.name}</p>
+          <p className="text-[11px] text-slate-400">{sizeLabel}</p>
+        </div>
+        <a
+          href={attachment.data_url}
+          download={attachment.name}
+          className="inline-flex text-[11px] font-medium text-cyan-300 transition hover:text-cyan-200"
+        >
+          Download
+        </a>
       </div>
-    </a>
+    </div>
   );
 }
 
 export default function TechnicianChatPage() {
   const { techId: previewTechId } = useParams();
-  const navigate = useNavigate();
   const isPreviewMode = Boolean(previewTechId);
   const routeBase = isPreviewMode ? `/admin/tech-preview/${previewTechId}` : '/tech';
   const [messages, setMessages] = useState<BackendChatMessage[]>([]);
@@ -104,6 +125,18 @@ export default function TechnicianChatPage() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const seenMessageIdsRef = useRef<Set<string>>(new Set());
+  const {
+    isRecording,
+    isProcessing: isVoiceProcessing,
+    isSupported: voiceRecordingSupported,
+    recordingSeconds,
+    startRecording,
+    stopRecording,
+  } = useVoiceNoteRecorder({
+    onRecorded: async (attachment) => {
+      setPendingAttachments((prev) => [...prev, attachment]);
+    },
+  });
 
   const visibleMessages = useMemo(() => {
     const query = historySearch.trim().toLowerCase();
@@ -187,15 +220,12 @@ export default function TechnicianChatPage() {
     const files = Array.from(event.target.files ?? []);
     const nextAttachments: BackendChatAttachment[] = [];
     for (const file of files) {
-      if (file.size > 10 * 1024 * 1024) {
-        toast.error(`${file.name} exceeds the 10MB limit.`);
+      const validationMessage = getChatAttachmentValidationMessage(file);
+      if (validationMessage) {
+        toast.error(validationMessage);
         continue;
       }
-      if (!(file.type.startsWith('image/') || file.type === 'application/pdf')) {
-        toast.error(`${file.name} must be an image or PDF file.`);
-        continue;
-      }
-      nextAttachments.push(await fileToAttachment(file));
+      nextAttachments.push(await fileToChatAttachment(file));
     }
     setPendingAttachments((prev) => [...prev, ...nextAttachments]);
     event.target.value = '';
@@ -369,19 +399,32 @@ export default function TechnicianChatPage() {
               <div className="border-t border-slate-200 bg-white p-5 dark:border-white/8 dark:bg-[rgba(6,17,29,0.9)]">
                 {pendingAttachments.length > 0 ? (
                   <div className="mb-3 flex flex-wrap gap-2">
-                    {pendingAttachments.map((attachment) => (
-                      <div key={attachment.id} className="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-slate-50 px-3 py-1.5 text-xs text-slate-700 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-200">
-                        {attachment.mime_type.startsWith('image/') ? <ImageIcon className="h-3.5 w-3.5" /> : <File className="h-3.5 w-3.5" />}
-                        <span>{attachment.name}</span>
-                        <button
-                          type="button"
-                          onClick={() => setPendingAttachments((prev) => prev.filter((item) => item.id !== attachment.id))}
-                          className="rounded-full p-0.5 text-slate-600 hover:bg-slate-200 hover:text-slate-950 dark:text-slate-400 dark:hover:bg-white/[0.08] dark:hover:text-white"
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </div>
-                    ))}
+                    {pendingAttachments.map((attachment) => {
+                      const AttachmentIcon = getAttachmentIcon(attachment.mime_type);
+                      return (
+                        <div key={attachment.id} className="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-slate-50 px-3 py-1.5 text-xs text-slate-700 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-200">
+                          <AttachmentIcon className="h-3.5 w-3.5" />
+                          <span>{attachment.name}</span>
+                          <button
+                            type="button"
+                            onClick={() => setPendingAttachments((prev) => prev.filter((item) => item.id !== attachment.id))}
+                            className="rounded-full p-0.5 text-slate-600 hover:bg-slate-200 hover:text-slate-950 dark:text-slate-400 dark:hover:bg-white/[0.08] dark:hover:text-white"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : null}
+                {isRecording || isVoiceProcessing ? (
+                  <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1.5 text-xs text-cyan-100">
+                    {isRecording ? <Square className="h-3.5 w-3.5 fill-current" /> : <AudioLines className="h-3.5 w-3.5 animate-pulse" />}
+                    <span>
+                      {isRecording
+                        ? `Recording voice note ${formatVoiceRecordingDuration(recordingSeconds)}`
+                        : 'Saving voice note...'}
+                    </span>
                   </div>
                 ) : null}
 
@@ -392,14 +435,37 @@ export default function TechnicianChatPage() {
                     size="icon"
                     onClick={() => fileInputRef.current?.click()}
                     className="tech-chat-attach-button h-12 w-12 shrink-0 rounded-full border border-slate-300 bg-white text-slate-700 shadow-sm hover:bg-slate-100 hover:text-slate-950 disabled:bg-slate-100 disabled:text-slate-400 dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(15,23,42,0.98),rgba(8,12,20,0.98))] dark:text-slate-100 dark:shadow-[0_12px_30px_rgba(0,0,0,0.24)] dark:hover:bg-[linear-gradient(180deg,rgba(24,38,64,0.98),rgba(12,20,34,0.98))] dark:hover:text-white"
-                    disabled={isPreviewMode}
+                    disabled={isPreviewMode || isVoiceProcessing}
                   >
                     <Paperclip className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => {
+                      if (isRecording) {
+                        stopRecording();
+                      } else {
+                        void startRecording();
+                      }
+                    }}
+                    className={cn(
+                      'h-12 w-12 shrink-0 rounded-full border shadow-sm',
+                      isRecording
+                        ? 'border-red-400/50 bg-red-500/15 text-red-100 hover:bg-red-500/25'
+                        : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100 hover:text-slate-950 dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(15,23,42,0.98),rgba(8,12,20,0.98))] dark:text-slate-100 dark:hover:bg-[linear-gradient(180deg,rgba(24,38,64,0.98),rgba(12,20,34,0.98))] dark:hover:text-white',
+                    )}
+                    disabled={isPreviewMode || isVoiceProcessing || !voiceRecordingSupported}
+                    aria-label={isRecording ? 'Stop recording voice note' : 'Record voice note'}
+                    title={voiceRecordingSupported ? undefined : 'Voice recording is not supported in this browser'}
+                  >
+                    {isRecording ? <Square className="h-4 w-4 fill-current" /> : <Mic className="h-4 w-4" />}
                   </Button>
                   <input
                     ref={fileInputRef}
                     type="file"
-                    accept=".pdf,image/*"
+                    accept={CHAT_ATTACHMENT_ACCEPT}
                     multiple
                     className="hidden"
                     onChange={(event) => void handleFileSelection(event)}
@@ -410,13 +476,13 @@ export default function TechnicianChatPage() {
                     onKeyDown={handleKeyDown}
                     placeholder={isPreviewMode ? 'Preview mode is read-only' : 'Write a message'}
                     className="min-h-[56px] resize-none rounded-[28px] border border-slate-300 bg-white px-5 py-4 text-slate-900 placeholder:text-slate-400 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-slate-500"
-                    disabled={isPreviewMode}
+                    disabled={isPreviewMode || isVoiceProcessing}
                   />
                   <Button
                     type="button"
                     onClick={() => void handleSend()}
                     className="tech-chat-send-button h-12 w-12 shrink-0 rounded-full border border-blue-700 bg-blue-600 text-white shadow-[0_16px_34px_rgba(37,99,235,0.22)] hover:bg-blue-700 disabled:border-blue-200 disabled:bg-blue-100 disabled:text-blue-500 dark:border-transparent dark:bg-[linear-gradient(135deg,#4f7cff,#7aa2ff)] dark:shadow-[0_18px_40px_rgba(79,124,255,0.24)] dark:hover:bg-[linear-gradient(135deg,#5d88ff,#89adff)]"
-                    disabled={isPreviewMode}
+                    disabled={isPreviewMode || isVoiceProcessing}
                     aria-label="Send message"
                   >
                     <Send className="h-4 w-4" />

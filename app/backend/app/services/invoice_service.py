@@ -97,6 +97,10 @@ class InvoiceService:
         self.current_user = current_user
         self.repo = InvoiceRepository(db)
 
+    @staticmethod
+    def _missing_job_context_detail() -> str:
+        return "Invoices require a Job ID and assigned technician details before they can be saved"
+
     def save_pending_approval_draft(self, job_id: UUID, payload: InvoiceApprovalDraftSaveRequest) -> InvoicePendingApprovalResponse:
         rows = self.repo.list_pending_approval_jobs()
         target = next((row for row in rows if row[0].id == job_id), None)
@@ -345,6 +349,20 @@ class InvoiceService:
         if row is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Invoice not found")
         return row
+
+    def _resolve_invoice_technician(self, job: Job) -> Optional[Technician]:
+        if job.assigned_tech_id is None:
+            return None
+
+        technician = self.repo.get_technician_by_id(job.assigned_tech_id)
+        if technician is None:
+            return None
+
+        technician_name = (technician.name or technician.full_name or "").strip()
+        if not technician_name:
+            return None
+
+        return technician
 
     def _default_company_payload(self) -> InvoiceCompanyPayload:
         settings_row = (
@@ -993,6 +1011,9 @@ class InvoiceService:
     ) -> tuple[list[str], list[InvoiceLineItemPayload]]:
         blockers: list[str] = []
 
+        if self._resolve_invoice_technician(job) is None:
+            blockers.append("Missing assigned technician details")
+
         try:
             self._resolve_tax_rate(
                 tax_code=(job.tax_code or "EXEMPT"),
@@ -1103,6 +1124,11 @@ class InvoiceService:
                 raise HTTPException(
                     status_code=status.HTTP_409_CONFLICT,
                     detail=f"Job {job.job_code} is already linked to another invoice",
+                )
+            if self._resolve_invoice_technician(job) is None:
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail=f"Job {job.job_code} is missing assigned technician details",
                 )
 
             dealership = self.repo.get_dealership_by_id(job.dealership_id) if job.dealership_id else None
@@ -1328,6 +1354,9 @@ class InvoiceService:
         payload: list[InvoicePendingApprovalResponse] = []
 
         for job, dealership, technician in rows:
+            if self._resolve_invoice_technician(job) is None:
+                continue
+
             try:
                 tax_rate = self._resolve_tax_rate(
                     tax_code=(job.tax_code or "EXEMPT"),
@@ -1537,6 +1566,12 @@ class InvoiceService:
         return self._to_response(row)
 
     def create_invoice(self, payload: InvoiceCreateRequest) -> InvoiceResponse:
+        if not payload.dispatch_job_ids:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=self._missing_job_context_detail(),
+            )
+
         requested_billing = self._payload_to_billing(payload.billing, payload.bill_to, payload.ship_to)
         has_requested_bill_to = bool(
             requested_billing
@@ -1674,8 +1709,18 @@ class InvoiceService:
         dispatch_job_ids: list[UUID] = []
         replacing_lines = payload.dispatch_job_ids is not None or payload.line_items is not None
         if replacing_lines:
+            requested_dispatch_job_ids = (
+                payload.dispatch_job_ids
+                if payload.dispatch_job_ids is not None
+                else self.repo.list_job_ids_for_invoice(invoice.id)
+            )
+            if not requested_dispatch_job_ids:
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail=self._missing_job_context_detail(),
+                )
             dispatch_lines, dispatch_billing, dispatch_job_ids = self._build_dispatch_line_items(
-                payload.dispatch_job_ids or [],
+                requested_dispatch_job_ids,
                 current_invoice_id=invoice.id,
             )
 

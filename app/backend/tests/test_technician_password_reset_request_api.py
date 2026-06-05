@@ -12,6 +12,7 @@ os.environ["APP_ENV"] = "development"
 os.environ["DATABASE_URL"] = f"sqlite:///{_TEST_DB_FILE.replace(os.sep, '/')}"
 
 from app.api.deps import SessionLocal, engine
+from app.core.passwords import is_password_hash, verify_password
 from app.main import app
 from app.models.base import Base
 from app.models.technician import Technician
@@ -174,6 +175,11 @@ class TechnicianPasswordResetRequestApiTests(unittest.TestCase):
             self.assertIsNotNone(row)
             self.assertEqual(row.status, "RESOLVED")
             self.assertEqual(row.remarks, "Resolved via technician reset link.")
+            technician_row = db.query(Technician).filter(Technician.id == tech.id).first()
+            self.assertIsNotNone(technician_row)
+            self.assertTrue(is_password_hash(technician_row.password))
+            self.assertNotEqual(technician_row.password, "new-pass-789")
+            self.assertTrue(verify_password("new-pass-789", technician_row.password))
 
     def test_admin_password_update_auto_resolves_pending_request(self):
         tech = self._seed_technician(name="Jolianne", email="jolianne@nexusops.com")
@@ -213,7 +219,13 @@ class TechnicianPasswordResetRequestApiTests(unittest.TestCase):
         self.assertEqual(rows[0]["status"], "RESOLVED")
         self.assertEqual(rows[0]["remarks"], "Resolved when admin updated technician password.")
 
+        with SessionLocal() as db:
+            technician_row = db.query(Technician).filter(Technician.id == tech.id).first()
+            self.assertIsNotNone(technician_row)
+            self.assertTrue(is_password_hash(technician_row.password))
+            self.assertNotEqual(technician_row.password, "new-pass-456")
+            self.assertTrue(verify_password("new-pass-456", technician_row.password))
+
 
 if __name__ == "__main__":
     unittest.main()
-

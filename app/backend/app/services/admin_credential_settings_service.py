@@ -1,10 +1,7 @@
 from __future__ import annotations
 
-import hashlib
-import hmac
 from datetime import datetime, timezone
 import re
-import bcrypt
 
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
@@ -12,6 +9,7 @@ from sqlalchemy import case, text
 from uuid import UUID
 
 from ..core.config import ADMIN_DEFAULT_PASSWORD, ADMIN_EMAIL, DATABASE_URL, DEFAULT_TENANT_ID, EMAIL_ENABLED
+from ..core.passwords import hash_password, verify_password
 from ..core.security import AuthenticatedUser
 from ..models.admin_credential_settings import AdminCredentialSettings
 from ..models.admin_user import AdminUser
@@ -24,39 +22,7 @@ from .tenant_email_identity import (
 
 
 ADMIN_CREDENTIAL_SETTINGS_KEY = "default"
-PBKDF2_ITERATIONS = 600_000
 WORKSPACE_SLUG_PATTERN = re.compile(r"[^a-z0-9]+")
-
-
-def hash_password(password: str) -> str:
-    normalized = password.strip()
-    hashed = bcrypt.hashpw(normalized.encode("utf-8"), bcrypt.gensalt())
-    return f"bcrypt${hashed.decode('utf-8')}"
-
-
-def verify_password(password: str, stored_hash: str) -> bool:
-    if stored_hash.startswith("bcrypt$"):
-        bcrypt_hash = stored_hash.split("$", 1)[1]
-        try:
-            return bcrypt.checkpw(password.strip().encode("utf-8"), bcrypt_hash.encode("utf-8"))
-        except ValueError:
-            return False
-
-    try:
-        algorithm, raw_iterations, salt, digest = stored_hash.split("$", 3)
-        if algorithm != "pbkdf2_sha256":
-            return False
-        iterations = int(raw_iterations)
-    except ValueError:
-        return False
-
-    computed = hashlib.pbkdf2_hmac(
-        "sha256",
-        password.strip().encode("utf-8"),
-        salt.encode("utf-8"),
-        iterations,
-    ).hex()
-    return hmac.compare_digest(computed, digest)
 
 
 class AdminCredentialSettingsService:

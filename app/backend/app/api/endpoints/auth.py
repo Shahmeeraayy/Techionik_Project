@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from ...api import deps
 from ...core.config import APP_ENV, DEFAULT_TENANT_ID
 from ...core.enums import UserRole
+from ...core.passwords import is_password_hash, verify_password
 from ...core.security import create_access_token
 from ...repositories.technician_repository import TechnicianRepository
 from ...services.admin_credential_settings_service import AdminCredentialSettingsService
@@ -48,6 +49,37 @@ class AdminSignupRequest(BaseModel):
     full_name: str = Field(..., min_length=1, max_length=255)
     email: str = Field(..., min_length=3, max_length=255)
     password: str = Field(..., min_length=6, max_length=255)
+
+
+def _verify_technician_credentials(*, email: str, password: str, db: Session):
+    normalized_email = email.strip().lower()
+    normalized_password = password.strip()
+    repo = TechnicianRepository(db)
+    technician = repo.get_technician_by_email_global(normalized_email)
+    if technician is None:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid technician credentials")
+    if technician.status != "active":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Technician account is deactivated")
+
+    stored_password = (technician.password or "").strip()
+    if not stored_password:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Technician password is not configured. Contact admin.",
+        )
+    if not verify_password(normalized_password, stored_password, allow_plaintext_fallback=True):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid technician credentials")
+
+    if not is_password_hash(stored_password):
+        repo.update_technician_fields(
+            technician.id,
+            {
+                "password": normalized_password,
+            },
+        )
+        db.commit()
+
+    return technician
 
 
 def _issue_admin_token(*, email: str, password: str, db: Session) -> DevTokenResponse:
@@ -144,24 +176,7 @@ def create_dev_technician_token(
             detail="Not found",
         )
 
-    normalized_email = payload.email.strip().lower()
-    normalized_password = payload.password.strip()
-    repo = TechnicianRepository(db)
-    technician = repo.get_technician_by_email_global(normalized_email)
-    if technician is None:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid technician credentials")
-    if technician.status != "active":
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Technician account is deactivated")
-
-    stored_password = (technician.password or "").strip()
-    if stored_password:
-        if normalized_password != stored_password:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid technician credentials")
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Technician password is not configured. Contact admin.",
-        )
+    technician = _verify_technician_credentials(email=payload.email, password=payload.password, db=db)
 
     expires_at = datetime.now(timezone.utc) + timedelta(hours=8)
     token = create_access_token(
@@ -188,24 +203,7 @@ def create_technician_token(
     payload: DevTechnicianTokenRequest,
     db: Session = Depends(deps.get_db),
 ):
-    normalized_email = payload.email.strip().lower()
-    normalized_password = payload.password.strip()
-    repo = TechnicianRepository(db)
-    technician = repo.get_technician_by_email_global(normalized_email)
-    if technician is None:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid technician credentials")
-    if technician.status != "active":
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Technician account is deactivated")
-
-    stored_password = (technician.password or "").strip()
-    if stored_password:
-        if normalized_password != stored_password:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid technician credentials")
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Technician password is not configured. Contact admin.",
-        )
+    technician = _verify_technician_credentials(email=payload.email, password=payload.password, db=db)
 
     expires_at = datetime.now(timezone.utc) + timedelta(hours=8)
     token = create_access_token(

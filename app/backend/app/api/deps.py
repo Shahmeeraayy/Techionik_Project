@@ -14,9 +14,12 @@ from ..core.tenant import TenantContext
 from ..models.base import TenantScopedMixin
 from ..models import *  # noqa: F401,F403
 
+IS_SQLITE = DATABASE_URL.startswith("sqlite")
+
 engine = create_engine(
     DATABASE_URL,
-    pool_pre_ping=True,
+    connect_args={"check_same_thread": False} if IS_SQLITE else {},
+    pool_pre_ping=not IS_SQLITE,
 )
 
 

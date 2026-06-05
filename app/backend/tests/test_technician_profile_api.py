@@ -14,6 +14,7 @@ os.environ["APP_ENV"] = "development"
 os.environ["DATABASE_URL"] = f"sqlite:///{_TEST_DB_FILE.replace(os.sep, '/')}"
 
 from app.api.deps import SessionLocal, engine
+from app.core.passwords import is_password_hash, verify_password
 from app.main import app
 from app.models.base import Base
 from app.models.invoice import Invoice, InvoiceLineItem
@@ -82,6 +83,40 @@ class TechnicianProfileApiTests(unittest.TestCase):
         )
         self.assertEqual(token_res.status_code, 200, token_res.text)
         return {"Authorization": f"Bearer {token_res.json()['access_token']}"}
+
+    def test_dev_login_migrates_legacy_plaintext_password(self):
+        tech = self._seed_technician(name="Legacy Tech", email="legacy@nexusops.com")
+
+        self._technician_auth_header(email=tech.email, password="tech123")
+
+        with SessionLocal() as db:
+            row = db.query(Technician).filter(Technician.id == tech.id).first()
+            self.assertIsNotNone(row)
+            self.assertTrue(is_password_hash(row.password))
+            self.assertNotEqual(row.password, "tech123")
+            self.assertTrue(verify_password("tech123", row.password))
+
+    def test_technician_can_change_password_and_store_hashed_secret(self):
+        tech = self._seed_technician(name="Morgan", email="morgan@nexusops.com")
+        tech_auth = self._technician_auth_header(email=tech.email)
+
+        response = self.client.post(
+            "/technicians/me/password",
+            json={"current_password": "tech123", "new_password": "fresh-pass-789"},
+            headers=tech_auth,
+        )
+        self.assertEqual(response.status_code, 200, response.text)
+        self.assertEqual(response.json()["status"], "updated")
+
+        new_auth = self._technician_auth_header(email=tech.email, password="fresh-pass-789")
+        self.assertIn("Authorization", new_auth)
+
+        with SessionLocal() as db:
+            row = db.query(Technician).filter(Technician.id == tech.id).first()
+            self.assertIsNotNone(row)
+            self.assertTrue(is_password_hash(row.password))
+            self.assertNotEqual(row.password, "fresh-pass-789")
+            self.assertTrue(verify_password("fresh-pass-789", row.password))
 
     def test_availability_validation_rules(self):
         with self.assertRaises(ValidationError):
@@ -247,4 +282,3 @@ class TechnicianProfileApiTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

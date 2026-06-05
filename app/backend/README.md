@@ -2,7 +2,7 @@
 
 ## Stack
 - **Framework**: FastAPI
-- **Database**: Supabase/PostgreSQL
+- **Database**: SQLite by default for local development, optional PostgreSQL
 - **ORM**: SQLAlchemy
 - **Validation**: Pydantic
 - **Architecture**: Clean Service-Repository Layer
@@ -50,7 +50,7 @@
 
 ## Setup
 1. Configure environment variables (copy from `.env.example`):
-   - `DATABASE_URL`
+   - Local development uses `DATABASE_URL=sqlite:///./nexusops-dev.db` by default.
    - `JWT_SECRET_KEY`
    - Optional: `APP_ENV`, `CORS_ALLOW_ORIGINS`
 2. Install Python dependencies:
@@ -60,12 +60,11 @@
    - Include dev seed data: `python scripts/migrate.py --with-seed`
 4. Run app: `uvicorn app.main:app --reload --host 0.0.0.0 --port 8000`
 
-See `SUPABASE_SETUP.md` for the recommended Supabase connection flow.
+See `SUPABASE_SETUP.md` only if you intentionally want to switch local development to a hosted Postgres database.
 See `MULTI_TENANCY.md` for the new tenant isolation and RLS foundation.
 
 ## Migration Notes
 - `001_technician_module.sql` and `002_admin_technician_profile.sql` are core schema migrations.
 - `003_technician.sql` is a development seed migration (legacy frontend technicians, zones, skills).
 - `scripts/migrate.py` tracks applied versions in `schema_migrations` and skips already-applied files.
-
 

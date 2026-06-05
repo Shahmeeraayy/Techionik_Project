@@ -1,6 +1,8 @@
 # Supabase Setup
 
-This backend uses SQLAlchemy with a single `DATABASE_URL`. There is no checked-in local database to delete; replacing the old database means replacing `DATABASE_URL` and running the migrations against your new Supabase project.
+Supabase is now optional. Local development defaults to the checked-in SQLite database at `app/backend/nexusops-dev.db`.
+
+Use this guide only if you intentionally want to point the backend at a hosted Postgres database instead of the local SQLite default. The backend still uses a single `DATABASE_URL`, so switching databases means updating that value and rerunning migrations against the target database.
 
 ## 1. Create the backend env file
 

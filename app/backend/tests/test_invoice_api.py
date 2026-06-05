@@ -60,13 +60,23 @@ class InvoiceApiTests(unittest.TestCase):
             db.query(Dealership).delete()
             db.commit()
 
-    def _seed_completed_job(self, *, code: str, dealership: Dealership, service: str, hours: Decimal, rate: Decimal) -> str:
+    def _seed_completed_job(
+        self,
+        *,
+        code: str,
+        dealership: Dealership,
+        service: str,
+        hours: Decimal,
+        rate: Decimal,
+        technician: Technician | None = None,
+    ) -> str:
         with SessionLocal() as db:
             row = Job(
                 id=uuid4(),
                 job_code=code,
                 status="COMPLETED",
                 dealership_id=dealership.id,
+                assigned_tech_id=technician.id if technician is not None else None,
                 customer_name=dealership.name,
                 customer_address=dealership.address,
                 customer_city=dealership.city,
@@ -132,12 +142,14 @@ class InvoiceApiTests(unittest.TestCase):
 
     def test_invoice_crud_routes_with_dispatch_jobs(self):
         dealership = self._seed_dealership()
+        technician = self._seed_technician()
         job_1_id = self._seed_completed_job(
             code="SM2-2024-1001",
             dealership=dealership,
             service="Transponder Key Programming",
             hours=Decimal("2.00"),
             rate=Decimal("95.00"),
+            technician=technician,
         )
         job_2_id = self._seed_completed_job(
             code="SM2-2024-1002",
@@ -145,6 +157,7 @@ class InvoiceApiTests(unittest.TestCase):
             service="Service Call",
             hours=Decimal("1.00"),
             rate=Decimal("45.00"),
+            technician=technician,
         )
 
         create_payload = {
@@ -214,11 +227,13 @@ class InvoiceApiTests(unittest.TestCase):
         self.assertEqual(delete_res.json()["status"], "cancelled")
 
     def test_reject_invoice_without_customer_data(self):
+        technician = self._seed_technician()
         with SessionLocal() as db:
             row = Job(
                 id=uuid4(),
                 job_code="SM2-2024-2001",
                 status="COMPLETED",
+                assigned_tech_id=technician.id,
                 service_type="Emergency Lockout",
                 hours_worked=Decimal("1.00"),
                 rate=Decimal("120.00"),
@@ -244,7 +259,41 @@ class InvoiceApiTests(unittest.TestCase):
         self.assertEqual(create_res.status_code, 422, create_res.text)
         self.assertIn("line item", str(create_res.json()["detail"]).lower())
 
+    def test_reject_invoice_without_job_context(self):
+        create_payload = {
+            "terms": "NET_15",
+            "bill_to": {
+                "name": "Audi de Quebec",
+                "street": "999 Grande Allee",
+                "city": "Quebec",
+                "state": "QC",
+                "zip_code": "G1R 2K4",
+            },
+            "line_items": [
+                {
+                    "product_service": "Key Programming",
+                    "qty": "1",
+                    "rate": "150.00",
+                    "tax_code": "EXEMPT",
+                }
+            ],
+        }
+        create_res = self.client.post("/invoices", json=create_payload, headers=self.auth_header)
+        self.assertEqual(create_res.status_code, 422, create_res.text)
+        self.assertIn("job id", str(create_res.json()["detail"]).lower())
+        self.assertIn("technician", str(create_res.json()["detail"]).lower())
+
     def test_manual_line_item_tax_and_total_rules(self):
+        dealership = self._seed_dealership()
+        technician = self._seed_technician()
+        job_id = self._seed_completed_job(
+            code="SM2-2024-1911",
+            dealership=dealership,
+            service="Key Programming",
+            hours=Decimal("1.00"),
+            rate=Decimal("100.00"),
+            technician=technician,
+        )
         create_payload = {
             "invoice_number": "INV-1911",
             "invoice_date": str(date.today()),
@@ -260,6 +309,8 @@ class InvoiceApiTests(unittest.TestCase):
                 "email": "billing@nexusops.com",
                 "website": "https://www.nexusops.com",
             },
+            "dispatch_job_ids": [job_id],
+            "replace_dispatch_line_items": True,
             "bill_to": {
                 "name": "Audi de Quebec",
                 "street": "999 Grande Allee",
@@ -524,15 +575,44 @@ class InvoiceApiTests(unittest.TestCase):
                     sort_order=0,
                 )
             )
+            missing_technician_row = Job(
+                id=uuid4(),
+                job_code="SM2-2024-4201",
+                status="COMPLETED",
+                dealership_id=dealership.id,
+                customer_name=dealership.name,
+                customer_address=dealership.address,
+                customer_city=dealership.city,
+                customer_state="QC",
+                customer_zip_code=dealership.postal_code,
+                service_type="Diagnostics",
+                vehicle="2024 Audi Q7",
+                tax_code="GST",
+            )
+            db.add(missing_technician_row)
+            db.flush()
+            db.add(
+                JobService(
+                    job_id=missing_technician_row.id,
+                    service_name_snapshot="Diagnostics",
+                    source="dealership",
+                    quantity=Decimal("1.00"),
+                    unit_price=Decimal("120.00"),
+                    sort_order=0,
+                )
+            )
             db.commit()
 
         issues_res = self.client.get("/invoices/pending-approval-issues", headers=self.auth_header)
         self.assertEqual(issues_res.status_code, 200, issues_res.text)
         issues = issues_res.json()
         issue = next((item for item in issues if item["job_code"] == "SM2-2024-4200"), None)
+        missing_technician_issue = next((item for item in issues if item["job_code"] == "SM2-2024-4201"), None)
         self.assertIsNotNone(issue)
+        self.assertIsNotNone(missing_technician_issue)
         self.assertTrue(any("address" in reason.lower() for reason in issue["blocking_reasons"]))
         self.assertTrue(any("missing price" in reason.lower() for reason in issue["blocking_reasons"]))
+        self.assertTrue(any("technician" in reason.lower() for reason in missing_technician_issue["blocking_reasons"]))
 
     def test_reports_pending_approvals_matches_invoice_pending_endpoint(self):
         dealership = self._seed_dealership()
@@ -626,7 +706,7 @@ class InvoiceApiTests(unittest.TestCase):
                     service_name_snapshot="Remote Starter Installation",
                     source="dealership",
                     quantity=Decimal("1.00"),
-                    unit_price=Decimal("250.00"),
+                    unit_price=Decimal("0.00"),
                     sort_order=0,
                 )
             )
@@ -658,6 +738,17 @@ class InvoiceApiTests(unittest.TestCase):
         self.assertIsNone(next((item for item in issues_res.json() if item["job_code"] == "SM2-2024-5200"), None))
 
     def test_invoice_branding_settings_endpoints_and_invoice_defaults(self):
+        dealership = self._seed_dealership()
+        technician = self._seed_technician()
+        job_id = self._seed_completed_job(
+            code="SM2-2024-8800",
+            dealership=dealership,
+            service="Key Programming",
+            hours=Decimal("1.00"),
+            rate=Decimal("150.00"),
+            technician=technician,
+        )
+
         get_default_res = self.client.get(
             "/admin/settings/invoice-branding",
             headers=self.auth_header,
@@ -699,6 +790,8 @@ class InvoiceApiTests(unittest.TestCase):
             "/invoices",
             json={
                 "terms": "NET_15",
+                "dispatch_job_ids": [job_id],
+                "replace_dispatch_line_items": True,
                 "bill_to": {
                     "name": "Audi de Quebec",
                     "street": "999 Grande Allee",
@@ -767,4 +860,3 @@ class InvoiceApiTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

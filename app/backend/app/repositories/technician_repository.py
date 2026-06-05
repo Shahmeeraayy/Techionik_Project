@@ -5,6 +5,7 @@ from uuid import UUID
 from sqlalchemy import and_, delete, func, insert, inspect, select, text, update
 from sqlalchemy.orm import Session
 
+from ..core.passwords import hash_password, is_password_hash
 from ..models.job import Job
 from ..models.skill import Skill, technician_skills
 from ..models.technician import Technician
@@ -60,12 +61,15 @@ class TechnicianRepository:
         status: str,
         manual_availability: bool,
     ) -> Technician:
+        normalized_password = password.strip() if password is not None else None
+        if normalized_password and not is_password_hash(normalized_password):
+            normalized_password = hash_password(normalized_password)
         technician = Technician(
             name=name,
             full_name=name,
             email=email,
             phone=phone,
-            password=password,
+            password=normalized_password,
             status=status,
             manual_availability=manual_availability,
         )
@@ -79,7 +83,15 @@ class TechnicianRepository:
         if technician is None:
             return None
 
-        for key, value in fields.items():
+        updated_fields = dict(fields)
+        if "password" in updated_fields and updated_fields["password"] is not None:
+            normalized_password = str(updated_fields["password"]).strip()
+            if normalized_password and not is_password_hash(normalized_password):
+                updated_fields["password"] = hash_password(normalized_password)
+            else:
+                updated_fields["password"] = normalized_password or None
+
+        for key, value in updated_fields.items():
             setattr(technician, key, value)
 
         self.db.flush()
