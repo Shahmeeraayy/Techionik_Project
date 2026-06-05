@@ -25,6 +25,8 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { cn } from '@/lib/utils';
+import { authInputClass, authInputStyle, authLabelClass } from './AuthSplitShell';
 
 type NavigationState = {
   from?: string;
@@ -99,9 +101,6 @@ export default function TechnicianLoginPage() {
     }
   };
 
-  const fieldInputClass = 'h-14 rounded-2xl border-white/10 !bg-[#0a1220] px-4 text-[15px] !text-white placeholder:!text-slate-500 focus-visible:border-cyan-300/45 focus-visible:ring-cyan-300/15';
-  const fieldInputStyle = { backgroundColor: '#0a1220', color: '#f8fafc', WebkitTextFillColor: '#f8fafc' } as const;
-
   return (
     <main className="auth-shell auth-lock-dark relative min-h-[100svh] overflow-hidden bg-[#05070b] text-white">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_18%,rgba(79,124,255,0.2),transparent_27%),radial-gradient(circle_at_82%_12%,rgba(34,211,238,0.14),transparent_25%),linear-gradient(180deg,#0b1220_0%,#05070b_55%,#020617_100%)]" />
@@ -169,7 +168,7 @@ export default function TechnicianLoginPage() {
 
             <form onSubmit={handleSubmit} className="mt-7 space-y-5">
               <div className="space-y-2">
-                <Label htmlFor="tech-email" className="text-sm font-semibold text-slate-100">
+                <Label htmlFor="tech-email" className={authLabelClass}>
                   Work email
                 </Label>
                 <Input
@@ -180,8 +179,8 @@ export default function TechnicianLoginPage() {
                   autoComplete="email"
                   required
                   placeholder="tech@company.com"
-                  className={fieldInputClass}
-                  style={fieldInputStyle}
+                  className={cn(authInputClass, 'h-14')}
+                  style={authInputStyle}
                 />
               </div>
 
@@ -217,7 +216,7 @@ export default function TechnicianLoginPage() {
 
                         <div className="mt-5 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
                           <div className="space-y-2">
-                            <Label htmlFor="forgot-tech-email" className="text-sm font-semibold text-slate-100">
+                            <Label htmlFor="forgot-tech-email" className={authLabelClass}>
                               Technician email
                             </Label>
                             <Input
@@ -227,8 +226,8 @@ export default function TechnicianLoginPage() {
                               onChange={(event) => setForgotEmail(event.target.value)}
                               autoComplete="email"
                               placeholder="tech@company.com"
-                              className={fieldInputClass}
-                              style={fieldInputStyle}
+                              className={cn(authInputClass, 'h-14')}
+                              style={authInputStyle}
                             />
                           </div>
                           <p className="mt-3 text-sm leading-6 text-white/70">
@@ -273,8 +272,8 @@ export default function TechnicianLoginPage() {
                     autoComplete="current-password"
                     required
                     placeholder="Enter password"
-                    className={`${fieldInputClass} pr-12`}
-                    style={fieldInputStyle}
+                    className={cn(authInputClass, 'h-14 pr-12')}
+                    style={authInputStyle}
                   />
                   <button
                     type="button"

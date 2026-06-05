@@ -15,6 +15,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { cn } from '@/lib/utils';
+import { authInputClass, authInputStyle, authLabelClass } from './AuthSplitShell';
 
 type NavigationState = {
   from?: string;
@@ -122,7 +124,7 @@ export default function AdminLoginPage() {
 
             <form onSubmit={handleSubmit} className="mt-7 space-y-5">
               <div className="space-y-2">
-                <Label htmlFor="admin-email" className="text-sm font-semibold text-slate-100">
+                <Label htmlFor="admin-email" className={authLabelClass}>
                   Work email
                 </Label>
                 <Input
@@ -133,14 +135,14 @@ export default function AdminLoginPage() {
                   autoComplete="email"
                   required
                   placeholder="admin@company.com"
-                  className="h-14 rounded-2xl border-white/10 !bg-[#0a1220] px-4 text-[15px] !text-white placeholder:!text-slate-500 focus-visible:border-cyan-300/45 focus-visible:ring-cyan-300/15"
-                  style={{ backgroundColor: '#0a1220', color: '#f8fafc', WebkitTextFillColor: '#f8fafc' }}
+                  className={cn(authInputClass, 'h-14')}
+                  style={authInputStyle}
                 />
               </div>
 
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="admin-password" className="text-sm font-semibold text-slate-100">
+                  <Label htmlFor="admin-password" className={authLabelClass}>
                     Password
                   </Label>
                   <a href="mailto:support@nexusops.com?subject=Admin%20password%20support" className="text-xs font-semibold text-cyan-200 hover:text-cyan-100">
@@ -156,8 +158,8 @@ export default function AdminLoginPage() {
                     autoComplete="current-password"
                     required
                     placeholder="Enter password"
-                    className="h-14 rounded-2xl border-white/10 !bg-[#0a1220] px-4 pr-12 text-[15px] !text-white placeholder:!text-slate-500 focus-visible:border-cyan-300/45 focus-visible:ring-cyan-300/15"
-                    style={{ backgroundColor: '#0a1220', color: '#f8fafc', WebkitTextFillColor: '#f8fafc' }}
+                    className={cn(authInputClass, 'h-14 pr-12')}
+                    style={authInputStyle}
                   />
                   <button
                     type="button"
