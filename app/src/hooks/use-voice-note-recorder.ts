@@ -3,6 +3,7 @@ import { toast } from 'sonner';
 import type { BackendChatAttachment } from '@/lib/backend-api';
 import {
   MAX_CHAT_ATTACHMENT_BYTES,
+  MAX_CHAT_VOICE_DURATION_SECONDS,
   createVoiceNoteAttachment,
   pickSupportedVoiceMimeType,
 } from '@/lib/chat-attachments';
@@ -115,6 +116,7 @@ export function useVoiceNoteRecorder({
       recorder.onstop = () => {
         const mimeType = recorder.mimeType || preferredMimeType || chunksRef.current[0]?.type || 'audio/webm';
         const voiceNote = new Blob(chunksRef.current, { type: mimeType });
+        const finalDurationSeconds = recordingSeconds;
 
         chunksRef.current = [];
         recorderRef.current = null;
@@ -131,10 +133,15 @@ export function useVoiceNoteRecorder({
           toast.error('Voice message exceeds the 10MB limit.');
           return;
         }
+        if (finalDurationSeconds > MAX_CHAT_VOICE_DURATION_SECONDS) {
+          setIsProcessing(false);
+          toast.error('Voice message exceeds the 5 minute limit.');
+          return;
+        }
 
         void (async () => {
           try {
-            const attachment = await createVoiceNoteAttachment(voiceNote);
+            const attachment = await createVoiceNoteAttachment(voiceNote, finalDurationSeconds);
             await onRecorded(attachment);
             toast.success(successMessage);
           } catch (error) {

@@ -9,7 +9,11 @@ from ...core.security import AuthenticatedUser
 from ...schemas.reporting import ReportsOverviewResponse
 from ...services.reports_service import ReportsService
 
-router = APIRouter(prefix="/admin/reports", tags=["admin-reports"])
+router = APIRouter(
+    prefix="/admin/reports",
+    tags=["admin-reports"],
+    dependencies=[Depends(deps.require_tenant_feature("reports"))],
+)
 
 
 @router.get("/overview", response_model=ReportsOverviewResponse)

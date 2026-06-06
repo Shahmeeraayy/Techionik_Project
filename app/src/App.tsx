@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from '@/components/ui/sonner';
 import { warmupBackend } from '@/lib/backend-api';
 import { AdminLayout } from '@/layouts/AdminLayout';
+import { SuperAdminLayout } from '@/layouts/SuperAdminLayout';
 import { SiteMotion } from '@/components/motion/SiteMotion';
 import { HomeRoute, PublicOnly, RequireRole } from '@/components/auth/RouteGuards';
 import AdminLoginPage from '@/pages/auth/AdminLogin';
@@ -12,6 +13,7 @@ import AdminSignupPage from '@/pages/auth/AdminSignup';
 import TechnicianLoginPage from '@/pages/auth/TechnicianLogin';
 import TechnicianPasswordResetPage from '@/pages/auth/TechnicianPasswordReset';
 import TechnicianSignupPage from '@/pages/auth/TechnicianSignup';
+import SuperAdminLoginPage from '@/pages/super-admin/Login';
 import MarketingHome from '@/pages/marketing/Home';
 import BookingPortalPage from '@/pages/public/BookingPortal';
 
@@ -44,6 +46,14 @@ import TechnicianAttendancePage from '@/pages/technician/Attendance';
 // Admin Attendance
 import AdminAttendancePage from '@/pages/admin/Attendance';
 
+// Super Admin Pages
+import SuperAdminDashboardPage from '@/pages/super-admin/Dashboard';
+import SuperAdminTenantsPage from '@/pages/super-admin/Tenants';
+import SuperAdminTenantDetailPage from '@/pages/super-admin/TenantDetail';
+import SuperAdminPoliciesPage from '@/pages/super-admin/Policies';
+import SuperAdminAuditLogsPage from '@/pages/super-admin/AuditLogs';
+import SuperAdminPlatformSettingsPage from '@/pages/super-admin/PlatformSettings';
+
 function App() {
   useEffect(() => { warmupBackend(); }, []);
 
@@ -60,11 +70,30 @@ function App() {
 
           {/* Login Portals */}
           <Route path="/login" element={<PublicOnly><AdminLoginPage /></PublicOnly>} />
+          <Route path="/super-admin/login" element={<PublicOnly><SuperAdminLoginPage /></PublicOnly>} />
           <Route path="/admin/login" element={<PublicOnly><AdminLoginPage /></PublicOnly>} />
           <Route path="/admin/signup" element={<PublicOnly><AdminSignupPage /></PublicOnly>} />
           <Route path="/tech/login" element={<PublicOnly><TechnicianLoginPage /></PublicOnly>} />
           <Route path="/tech/signup" element={<PublicOnly><TechnicianSignupPage /></PublicOnly>} />
           <Route path="/tech/reset-password/:requestId" element={<TechnicianPasswordResetPage />} />
+
+          <Route
+            path="/super-admin/*"
+            element={
+              <RequireRole role="super_admin">
+                <SuperAdminLayout>
+                  <Routes>
+                    <Route index element={<SuperAdminDashboardPage />} />
+                    <Route path="tenants" element={<SuperAdminTenantsPage />} />
+                    <Route path="tenants/:tenantId" element={<SuperAdminTenantDetailPage />} />
+                    <Route path="policies" element={<SuperAdminPoliciesPage />} />
+                    <Route path="settings" element={<SuperAdminPlatformSettingsPage />} />
+                    <Route path="audit-logs" element={<SuperAdminAuditLogsPage />} />
+                  </Routes>
+                </SuperAdminLayout>
+              </RequireRole>
+            }
+          />
 
           {/* Admin Preview Mode - Technician Portal Preview (No AdminLayout) */}
           <Route

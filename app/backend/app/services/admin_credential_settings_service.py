@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from copy import deepcopy
+from datetime import datetime, timedelta, timezone
 import re
 
 from fastapi import HTTPException, status
@@ -13,12 +14,15 @@ from ..core.passwords import hash_password, verify_password
 from ..core.security import AuthenticatedUser
 from ..models.admin_credential_settings import AdminCredentialSettings
 from ..models.admin_user import AdminUser
+from ..models.platform_settings import PlatformSettings
 from ..models.tenant import Tenant, TenantMembership
 from .tenant_email_identity import (
     build_email_identity_for_slug,
     ensure_tenant_email_columns,
     get_tenant_email_identity as resolve_tenant_email_identity,
 )
+from .access_policy_service import AccessPolicyService
+from .super_admin_service import DEFAULT_PLATFORM_SETTINGS, PLATFORM_SETTINGS_KEY
 
 
 ADMIN_CREDENTIAL_SETTINGS_KEY = "default"
@@ -218,9 +222,26 @@ class AdminCredentialSettingsService:
                 detail="That workspace URL is already taken",
             )
 
+        settings_row = self.db.query(PlatformSettings).filter(PlatformSettings.key == PLATFORM_SETTINGS_KEY).first()
+        platform_settings = deepcopy(DEFAULT_PLATFORM_SETTINGS)
+        if settings_row and settings_row.payload:
+            for section_key, section_value in settings_row.payload.items():
+                if isinstance(section_value, dict) and isinstance(platform_settings.get(section_key), dict):
+                    platform_settings[section_key].update(section_value)
+                else:
+                    platform_settings[section_key] = section_value
+        organization_defaults = platform_settings.get("organization_defaults", DEFAULT_PLATFORM_SETTINGS["organization_defaults"])
+        default_plan = AccessPolicyService.normalize_subscription_plan(str(organization_defaults.get("default_plan", "pro")))
+        trial_duration_days = int(organization_defaults.get("trial_duration_days", 14) or 14)
+
         tenant = Tenant(
             slug=normalized_workspace_slug,
             name=normalized_company_name,
+            plan=AccessPolicyService.legacy_plan_from_subscription_plan(default_plan),
+            platform_status="trial",
+            subscription_plan=default_plan,
+            subscription_status="trial",
+            trial_ends_at=datetime.now(timezone.utc) + timedelta(days=trial_duration_days),
             cache_prefix=f"tenant:{normalized_workspace_slug}",
             **self._email_identity_for_slug(normalized_workspace_slug),
             email_verified=False,

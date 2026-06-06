@@ -4,11 +4,13 @@ import { useAuth } from '@/contexts/AuthContext';
 import type { UserRole } from '@/types';
 
 const defaultPathByRole: Record<UserRole, string> = {
+  super_admin: '/super-admin',
   admin: '/admin',
   technician: '/tech/jobs',
 };
 
 const CANONICAL_LOGIN_PATH = '/login';
+const SUPER_ADMIN_LOGIN_PATH = '/super-admin/login';
 const ADMIN_LOGIN_PATH = '/admin/login';
 const TECHNICIAN_LOGIN_PATH = '/tech/login';
 
@@ -32,11 +34,12 @@ function AppLoadingScreen() {
 }
 
 function getLoginPathForRole(role: UserRole): string {
+  if (role === 'super_admin') return SUPER_ADMIN_LOGIN_PATH;
   return role === 'admin' ? ADMIN_LOGIN_PATH : TECHNICIAN_LOGIN_PATH;
 }
 
 export function RequireRole({ role, children }: { role: UserRole; children: ReactNode }) {
-  const { user, isAuthenticated, isAuthLoading, hasBackendAdminToken, hasBackendTechnicianToken } = useAuth();
+  const { user, isAuthenticated, isAuthLoading, hasBackendSuperAdminToken, hasBackendAdminToken, hasBackendTechnicianToken } = useAuth();
   const location = useLocation();
 
   if (isAuthLoading) {
@@ -67,6 +70,16 @@ export function RequireRole({ role, children }: { role: UserRole; children: Reac
     );
   }
 
+  if (role === 'super_admin' && !hasBackendSuperAdminToken) {
+    return (
+      <Navigate
+        to={SUPER_ADMIN_LOGIN_PATH}
+        replace
+        state={{ from: `${location.pathname}${location.search}` }}
+      />
+    );
+  }
+
   if (role === 'technician' && !hasBackendTechnicianToken) {
     return (
       <Navigate
@@ -81,7 +94,7 @@ export function RequireRole({ role, children }: { role: UserRole; children: Reac
 }
 
 export function PublicOnly({ children }: { children: ReactNode }) {
-  const { user, isAuthenticated, isAuthLoading, hasBackendAdminToken, hasBackendTechnicianToken } = useAuth();
+  const { user, isAuthenticated, isAuthLoading, hasBackendSuperAdminToken, hasBackendAdminToken, hasBackendTechnicianToken } = useAuth();
 
   if (isAuthLoading) {
     return <AppLoadingScreen />;
@@ -95,6 +108,10 @@ export function PublicOnly({ children }: { children: ReactNode }) {
     return <>{children}</>;
   }
 
+  if (user.role === 'super_admin' && !hasBackendSuperAdminToken) {
+    return <>{children}</>;
+  }
+
   if (user.role === 'technician' && !hasBackendTechnicianToken) {
     return <>{children}</>;
   }
@@ -103,7 +120,7 @@ export function PublicOnly({ children }: { children: ReactNode }) {
 }
 
 export function HomeRoute() {
-  const { user, isAuthenticated, isAuthLoading, hasBackendAdminToken, hasBackendTechnicianToken } = useAuth();
+  const { user, isAuthenticated, isAuthLoading, hasBackendSuperAdminToken, hasBackendAdminToken, hasBackendTechnicianToken } = useAuth();
 
   if (isAuthLoading) {
     return <AppLoadingScreen />;
@@ -117,10 +134,13 @@ export function HomeRoute() {
     return <Navigate to={ADMIN_LOGIN_PATH} replace />;
   }
 
+  if (user.role === 'super_admin' && !hasBackendSuperAdminToken) {
+    return <Navigate to={SUPER_ADMIN_LOGIN_PATH} replace />;
+  }
+
   if (user.role === 'technician' && !hasBackendTechnicianToken) {
     return <Navigate to={CANONICAL_LOGIN_PATH} replace />;
   }
 
   return <Navigate to={defaultPathByRole[user.role]} replace />;
 }
-

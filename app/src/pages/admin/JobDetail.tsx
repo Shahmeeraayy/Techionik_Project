@@ -21,6 +21,7 @@ import {
     Trash2,
     Send,
     Save,
+    MessageSquareText,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -1090,7 +1091,18 @@ export default function JobDetailPage() {
                                                 <div className="text-xs text-muted-foreground">{formatPhoneForDisplay(job.technician.phone)} • Active now</div>
                                             </div>
                                         </div>
-                                        <Button variant="outline" size="sm" className="bg-background hover:bg-muted text-foreground border-border" onClick={() => setAssignModalOpen(true)}>Reassign</Button>
+                                        <div className="flex items-center gap-2">
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className="bg-background hover:bg-muted text-foreground border-border"
+                                                onClick={() => navigate(`/admin/chat?jobId=${encodeURIComponent(job.job_id)}`)}
+                                            >
+                                                <MessageSquareText className="mr-2 h-4 w-4" />
+                                                Open Chat
+                                            </Button>
+                                            <Button variant="outline" size="sm" className="bg-background hover:bg-muted text-foreground border-border" onClick={() => setAssignModalOpen(true)}>Reassign</Button>
+                                        </div>
                                     </div>
                                 ) : (
                                     <div className="flex items-center justify-between bg-muted/30 p-4 rounded-lg border border-dashed border-border">

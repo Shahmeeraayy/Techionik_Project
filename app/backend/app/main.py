@@ -9,6 +9,7 @@ from .api import deps
 from .api.endpoints import (
     admin_chat,
     admin_jobs,
+    chat_assets,
     admin_dealerships,
     admin_email_change_requests,
     admin_reports,
@@ -19,6 +20,7 @@ from .api.endpoints import (
     booking_portal,
     invoices,
     signup_requests,
+    super_admin,
     technician_password_reset_requests,
     technician_chat,
     technician_profile,
@@ -35,6 +37,7 @@ from .core.tenant import (
 from .models.job import Job
 from .models.base import Base
 from .services.job_services_service import JobServicesService
+from .services.chat_backfill_service import ChatBackfillService
 
 
 logger = logging.getLogger(__name__)
@@ -59,6 +62,15 @@ def ensure_runtime_schema() -> None:
             "notification_email": "VARCHAR(255)",
             "email_verified": "BOOLEAN DEFAULT false NOT NULL",
             "email_sending_status": "VARCHAR(32) DEFAULT 'demo' NOT NULL",
+            "industry_type": "VARCHAR(64) DEFAULT 'general_services' NOT NULL",
+            "platform_status": "VARCHAR(32) DEFAULT 'trial' NOT NULL",
+            "subscription_plan": "VARCHAR(32) DEFAULT 'pro' NOT NULL",
+            "subscription_status": "VARCHAR(32) DEFAULT 'trial' NOT NULL",
+            "payment_failures_count": "INTEGER DEFAULT 0 NOT NULL",
+            "trial_ends_at": "TIMESTAMP",
+            "subscription_renewal_at": "TIMESTAMP",
+            "suspended_at": "TIMESTAMP",
+            "archived_at": "TIMESTAMP",
         }
         for column_name, column_type in tenant_runtime_columns.items():
             if tenant_columns and column_name not in tenant_columns:
@@ -108,6 +120,9 @@ def ensure_runtime_schema() -> None:
             conn.exec_driver_sql("ALTER TABLE booking_requests ADD COLUMN service_location_zip_code VARCHAR(32)")
 
     with deps.SessionLocal() as session:
+        backfill_service = ChatBackfillService(session)
+        backfill_service.migrate_legacy_messages()
+        backfill_service.ensure_conversation_members()
         service = JobServicesService(session)
         changed = False
         for row in session.query(Job).all():
@@ -164,6 +179,7 @@ async def inject_tenant_context(request: Request, call_next):
 
 app.include_router(admin_technicians.router)
 app.include_router(admin_chat.router)
+app.include_router(chat_assets.router)
 app.include_router(admin_jobs.router)
 app.include_router(booking_portal.public_router)
 app.include_router(booking_portal.admin_router)
@@ -180,6 +196,7 @@ app.include_router(auth.router)
 app.include_router(invoices.router)
 app.include_router(signup_requests.public_router)
 app.include_router(signup_requests.admin_router)
+app.include_router(super_admin.router)
 app.include_router(technician_password_reset_requests.public_router)
 app.include_router(technician_password_reset_requests.admin_router)
 
@@ -195,4 +212,3 @@ def handle_database_operational_error(_: Request, __: OperationalError):
 @app.get("/")
 def root():
     return {"message": "NexusOps technician profile APIs are active."}
-

@@ -10,7 +10,9 @@ import {
   type StorageScope,
 } from '@/lib/storage';
 import {
+  AUTH_SESSION_INVALID_EVENT,
   approveAdminTechnicianSignupRequest,
+  clearStoredSuperAdminToken,
   clearStoredTechnicianToken,
   clearStoredAdminToken,
   createTechnicianSignupRequest,
@@ -22,12 +24,16 @@ import {
   fetchTechnicianMeProfile,
   fetchAdminTechnicianSignupRequests,
   fetchAdminTechnicians,
+  fetchSuperAdminSession,
+  fetchSuperAdminToken,
   getStoredAdminToken,
+  getStoredSuperAdminToken,
   getStoredTenantContext,
   getStoredTechnicianToken,
   rejectAdminTechnicianSignupRequest,
   resolveAdminTechnicianPasswordResetRequest,
   setStoredAdminToken,
+  setStoredSuperAdminToken,
   setStoredTechnicianToken,
   signupAdminOwner,
   updateAdminTechnician,
@@ -137,9 +143,11 @@ export type AdminSignupInput = {
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
+  isSuperAdmin: boolean;
   isAdmin: boolean;
   isTechnician: boolean;
   isAuthLoading: boolean;
+  hasBackendSuperAdminToken: boolean;
   hasBackendAdminToken: boolean;
   hasBackendTechnicianToken: boolean;
   technicianAccounts: TechnicianAccountSummary[];
@@ -485,6 +493,37 @@ function parseStoredRejectedSignupRequests(): TechnicianSignupRequest[] {
     );
 }
 
+function persistAuthenticatedUser(user: User, scope: StorageScope) {
+  const alternateScope = scope === 'local' ? 'session' : 'local';
+  safeRemoveItem(AUTH_STORAGE_KEY, alternateScope);
+  safeSetItem(AUTH_STORAGE_KEY, JSON.stringify(user), scope);
+}
+
+function toSuperAdminUser(
+  payload: {
+    user_id: string;
+    user_name: string;
+    user_email: string;
+    platform_role?: User['platformRole'];
+  },
+  createdAt?: string,
+): User {
+  const nowIso = new Date().toISOString();
+  return {
+    id: payload.user_id,
+    name: payload.user_name,
+    email: payload.user_email,
+    role: 'super_admin',
+    platformRole: payload.platform_role,
+    createdAt: createdAt ?? nowIso,
+    updatedAt: nowIso,
+  };
+}
+
+type AuthSessionInvalidEventDetail = {
+  role?: 'admin' | 'super_admin' | 'technician' | 'unknown';
+};
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [authStorageScope, setAuthStorageScope] = useState<StorageScope>('local');
@@ -492,6 +531,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [pendingTechnicianRequests, setPendingTechnicianRequests] = useState<TechnicianSignupRequest[]>([]);
   const [rejectedTechnicianRequests, setRejectedTechnicianRequests] = useState<TechnicianSignupRequest[]>([]);
   const [pendingTechnicianPasswordResetRequests, setPendingTechnicianPasswordResetRequests] = useState<TechnicianPasswordResetRequest[]>([]);
+  const [hasBackendSuperAdminToken, setHasBackendSuperAdminToken] = useState<boolean>(false);
   const [hasBackendAdminToken, setHasBackendAdminToken] = useState<boolean>(false);
   const [hasBackendTechnicianToken, setHasBackendTechnicianToken] = useState<boolean>(false);
   const [isAuthLoading, setIsAuthLoading] = useState<boolean>(true);
@@ -505,19 +545,47 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const parsedTechnicians = parseStoredTechnicians();
         const parsedPendingRequests = parseStoredSignupRequests();
         const parsedRejectedRequests = parseStoredRejectedSignupRequests();
+        const superAdminToken = getStoredSuperAdminToken();
         const adminToken = getStoredAdminToken();
         const technicianToken = getStoredTechnicianToken();
 
         let nextUser = restoredUser.user;
         let nextTechnicians = parsedTechnicians;
+        let nextHasBackendSuperAdminToken = Boolean(superAdminToken && superAdminToken.trim());
         let nextHasBackendAdminToken = Boolean(adminToken && adminToken.trim());
         let nextHasBackendTechnicianToken = Boolean(technicianToken && technicianToken.trim());
+
+        if (superAdminToken && restoredUser.user && restoredUser.user.role !== 'super_admin') {
+          clearStoredSuperAdminToken();
+          nextHasBackendSuperAdminToken = false;
+        }
+
+        const shouldRestoreSuperAdminFromToken =
+          Boolean(superAdminToken)
+          && (!restoredUser.user || restoredUser.user.role === 'super_admin');
         const shouldRestoreAdminFromToken =
           Boolean(adminToken)
           && (!restoredUser.user || restoredUser.user.role === 'admin');
         const shouldRestoreTechnicianFromToken =
           Boolean(technicianToken)
           && (!restoredUser.user || restoredUser.user.role === 'technician');
+
+        if (shouldRestoreSuperAdminFromToken && superAdminToken) {
+          try {
+            const session = await fetchSuperAdminSession(superAdminToken);
+            nextUser = toSuperAdminUser(
+              session,
+              restoredUser.user?.role === 'super_admin' ? restoredUser.user.createdAt : undefined,
+            );
+          } catch (error) {
+            console.error('Failed to restore Super Admin session from backend token.', error);
+            clearStoredSuperAdminToken();
+            if (!restoredUser.user || restoredUser.user.role === 'super_admin') {
+              nextUser = null;
+            }
+            nextHasBackendSuperAdminToken = false;
+          }
+        }
 
         if (shouldRestoreAdminFromToken && adminToken) {
           try {
@@ -578,6 +646,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setPendingTechnicianRequests(parsedPendingRequests);
         setRejectedTechnicianRequests(parsedRejectedRequests);
         setPendingTechnicianPasswordResetRequests([]);
+        setHasBackendSuperAdminToken(nextHasBackendSuperAdminToken);
         setHasBackendAdminToken(nextHasBackendAdminToken);
         setHasBackendTechnicianToken(nextHasBackendTechnicianToken);
       } catch (error) {
@@ -590,6 +659,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setPendingTechnicianRequests([]);
         setRejectedTechnicianRequests([]);
         setPendingTechnicianPasswordResetRequests([]);
+        setHasBackendSuperAdminToken(false);
         setHasBackendAdminToken(false);
         setHasBackendTechnicianToken(false);
       } finally {
@@ -626,6 +696,53 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
+    const handleAuthSessionInvalid = (event: Event) => {
+      const detail = (event as CustomEvent<AuthSessionInvalidEventDetail>).detail;
+      const invalidRole = detail?.role;
+
+      setHasBackendSuperAdminToken(Boolean(getStoredSuperAdminToken()));
+      setHasBackendAdminToken(Boolean(getStoredAdminToken()));
+      setHasBackendTechnicianToken(Boolean(getStoredTechnicianToken()));
+
+      if (invalidRole === 'admin') {
+        setPendingTechnicianPasswordResetRequests([]);
+      }
+
+      setUser((previous) => {
+        if (!previous) {
+          return previous;
+        }
+        if (invalidRole === 'super_admin' && previous.role === 'super_admin') {
+          return null;
+        }
+        if (invalidRole === 'admin' && previous.role === 'admin') {
+          return null;
+        }
+        if (invalidRole === 'technician' && previous.role === 'technician') {
+          return null;
+        }
+        if (invalidRole === 'unknown') {
+          if (previous.role === 'super_admin' && !getStoredSuperAdminToken()) {
+            return null;
+          }
+          if (previous.role === 'admin' && !getStoredAdminToken()) {
+            return null;
+          }
+          if (previous.role === 'technician' && !getStoredTechnicianToken()) {
+            return null;
+          }
+        }
+        return previous;
+      });
+    };
+
+    window.addEventListener(AUTH_SESSION_INVALID_EVENT, handleAuthSessionInvalid);
+    return () => {
+      window.removeEventListener(AUTH_SESSION_INVALID_EVENT, handleAuthSessionInvalid);
+    };
+  }, []);
+
+  useEffect(() => {
     if (isAuthLoading || user?.role !== 'technician') {
       return;
     }
@@ -654,9 +771,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (user) {
-      const alternateScope = authStorageScope === 'local' ? 'session' : 'local';
-      safeRemoveItem(AUTH_STORAGE_KEY, alternateScope);
-      safeSetItem(AUTH_STORAGE_KEY, JSON.stringify(user), authStorageScope);
+      persistAuthenticatedUser(user, authStorageScope);
       return;
     }
 
@@ -690,6 +805,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [hasBackendAdminToken, refreshBackendAdminData, user]);
 
   useEffect(() => {
+    if (user?.role !== 'super_admin' || hasBackendSuperAdminToken) {
+      return;
+    }
+    setUser(null);
+  }, [hasBackendSuperAdminToken, user]);
+
+  useEffect(() => {
     if (user?.role !== 'technician') {
       return;
     }
@@ -719,6 +841,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         email: normalizedEmail,
         password: normalizedPassword,
       });
+      clearStoredSuperAdminToken();
+      setHasBackendSuperAdminToken(false);
       setStoredAdminToken(tokenResponse.access_token, persistSession);
       setHasBackendAdminToken(true);
       clearStoredTechnicianToken();
@@ -726,13 +850,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setAuthStorageScope(nextStorageScope);
       await refreshBackendAdminData();
 
-      setUser({
+      const nextUser: User = {
         ...currentUser,
         id: tokenResponse.user_id,
         name: tokenResponse.user_name,
         email: tokenResponse.user_email,
         updatedAt: new Date().toISOString(),
+      };
+      persistAuthenticatedUser(nextUser, nextStorageScope);
+      setUser(nextUser);
+      return;
+    }
+
+    if (role === 'super_admin') {
+      const tokenResponse = await fetchSuperAdminToken({
+        email: normalizedEmail,
+        password: normalizedPassword,
       });
+      setStoredSuperAdminToken(tokenResponse.access_token, persistSession);
+      setHasBackendSuperAdminToken(true);
+      clearStoredAdminToken();
+      clearStoredTechnicianToken();
+      setHasBackendAdminToken(false);
+      setHasBackendTechnicianToken(false);
+      setAuthStorageScope(nextStorageScope);
+      const nextUser = toSuperAdminUser(tokenResponse);
+      persistAuthenticatedUser(nextUser, nextStorageScope);
+      setUser(nextUser);
       return;
     }
 
@@ -749,6 +893,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           password: normalizedPassword,
         });
       }
+      clearStoredSuperAdminToken();
+      clearStoredAdminToken();
+      setHasBackendSuperAdminToken(false);
+      setHasBackendAdminToken(false);
       setStoredTechnicianToken(tokenResponse.access_token, persistSession);
       setHasBackendTechnicianToken(true);
 
@@ -782,7 +930,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return next;
       });
 
-      setUser({
+      const nextUser: User = {
         id: backendAccount.id,
         name: backendAccount.name,
         role: 'technician',
@@ -791,7 +939,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         avatar: backendAccount.avatar,
         createdAt: nowIso,
         updatedAt: nowIso,
-      });
+      };
+      persistAuthenticatedUser(nextUser, nextStorageScope);
+      setUser(nextUser);
       return;
     } catch (error) {
       setHasBackendTechnicianToken(false);
@@ -821,20 +971,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       password,
     });
 
+    clearStoredSuperAdminToken();
+    setHasBackendSuperAdminToken(false);
     setStoredAdminToken(tokenResponse.access_token, persistSession);
-      setHasBackendAdminToken(true);
-      clearStoredTechnicianToken();
-      setHasBackendTechnicianToken(false);
-      setAuthStorageScope(nextStorageScope);
-      await refreshBackendAdminData();
+    setHasBackendAdminToken(true);
+    clearStoredTechnicianToken();
+    setHasBackendTechnicianToken(false);
+    setAuthStorageScope(nextStorageScope);
+    await refreshBackendAdminData();
 
-    setUser({
+    const nextUser: User = {
       ...currentUser,
       id: tokenResponse.user_id,
       name: tokenResponse.user_name,
       email: tokenResponse.user_email,
       updatedAt: new Date().toISOString(),
-    });
+    };
+    persistAuthenticatedUser(nextUser, nextStorageScope);
+    setUser(nextUser);
   }, [refreshBackendAdminData]);
 
   const requestTechnicianSignup = useCallback(async (input: TechnicianSignupInput) => {
@@ -1098,20 +1252,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = useCallback(() => {
     setUser(null);
     setPendingTechnicianPasswordResetRequests([]);
+    safeRemoveItemFromScopes(AUTH_STORAGE_KEY);
+    clearStoredSuperAdminToken();
     clearStoredAdminToken();
     clearStoredTechnicianToken();
+    setHasBackendSuperAdminToken(false);
     setHasBackendAdminToken(false);
     setHasBackendTechnicianToken(false);
   }, []);
 
   const switchRole = useCallback((role: UserRole) => {
+    if (role === 'super_admin') {
+      safeRemoveItemFromScopes(AUTH_STORAGE_KEY);
+      clearStoredAdminToken();
+      clearStoredTechnicianToken();
+      setHasBackendAdminToken(false);
+      setHasBackendTechnicianToken(false);
+      setUser(null);
+      return;
+    }
+
     if (role === 'admin') {
+      safeRemoveItemFromScopes(AUTH_STORAGE_KEY);
       clearStoredTechnicianToken();
       setHasBackendTechnicianToken(false);
       setUser(null);
       return;
     }
 
+    safeRemoveItemFromScopes(AUTH_STORAGE_KEY);
     setUser(null);
   }, []);
 
@@ -1122,9 +1291,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const value: AuthContextType = {
     user,
     isAuthenticated: !!user,
+    isSuperAdmin: user?.role === 'super_admin',
     isAdmin: user?.role === 'admin',
     isTechnician: user?.role === 'technician',
     isAuthLoading,
+    hasBackendSuperAdminToken,
     hasBackendAdminToken,
     hasBackendTechnicianToken,
     technicianAccounts: technicianAccounts.map(toTechnicianSummary),

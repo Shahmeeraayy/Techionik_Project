@@ -18,6 +18,7 @@ class AuthenticatedUser:
     role: UserRole
     tenant_id: UUID | None = None
     tenant_role: str | None = None
+    platform_role: str | None = None
     claims: dict | None = None
 
 def _encode_segment(payload: dict) -> str:
@@ -55,6 +56,7 @@ def create_access_token(
     expires_at: datetime,
     tenant_id: UUID | None = None,
     tenant_role: str | None = None,
+    platform_role: str | None = None,
     extra_claims: dict | None = None,
 ) -> str:
     if JWT_ALGORITHM.upper() != "HS256":
@@ -73,9 +75,11 @@ def create_access_token(
         "exp": int(expiry.timestamp()),
         "tenant_id": str(tenant_id) if tenant_id else None,
         "tenant_role": tenant_role or role.value,
+        "platform_role": platform_role,
         "app_metadata": {
             "tenant_id": str(tenant_id) if tenant_id else None,
             "tenant_role": tenant_role or role.value,
+            "platform_role": platform_role,
             "role": role.value,
         },
     }
@@ -168,6 +172,7 @@ def decode_access_token(token: str) -> AuthenticatedUser:
             or (payload.get("user_metadata") or {}).get("tenant_id")
         )
         raw_tenant_role = payload.get("tenant_role") or app_metadata.get("tenant_role")
+        raw_platform_role = payload.get("platform_role") or app_metadata.get("platform_role")
     except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -211,5 +216,6 @@ def decode_access_token(token: str) -> AuthenticatedUser:
         role=role,
         tenant_id=tenant_id,
         tenant_role=str(raw_tenant_role).lower() if raw_tenant_role else role.value,
+        platform_role=str(raw_platform_role).lower() if raw_platform_role else None,
         claims=payload,
     )

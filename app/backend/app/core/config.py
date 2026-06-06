@@ -113,6 +113,9 @@ COMPANY_WEBSITE = get_env("COMPANY_WEBSITE", "https://www.nexusops.com")
 CUSTOMER_PORTAL_BASE_URL = get_env("CUSTOMER_PORTAL_BASE_URL", COMPANY_WEBSITE)
 ADMIN_EMAIL = get_env("ADMIN_EMAIL", "admin@nexusops.com").strip().lower()
 ADMIN_DEFAULT_PASSWORD = get_env("ADMIN_DEFAULT_PASSWORD", "admin123")
+SUPER_ADMIN_EMAIL = get_env("SUPER_ADMIN_EMAIL", "root@nexusops.com").strip().lower()
+SUPER_ADMIN_DEFAULT_PASSWORD = get_env("SUPER_ADMIN_DEFAULT_PASSWORD", "superadmin123")
+SUPER_ADMIN_FULL_NAME = get_env("SUPER_ADMIN_FULL_NAME", "Platform Owner").strip() or "Platform Owner"
 DEFAULT_TENANT_ID = get_env("DEFAULT_TENANT_ID", "00000000-0000-0000-0000-000000000001")
 DEFAULT_TENANT_SLUG = get_env("DEFAULT_TENANT_SLUG", "default")
 DEFAULT_TENANT_NAME = get_env("DEFAULT_TENANT_NAME", COMPANY_NAME)
@@ -131,6 +134,13 @@ SMTP_USERNAME = get_env("SMTP_USERNAME", "")
 SMTP_PASSWORD = get_env("SMTP_PASSWORD", "")
 SMTP_FROM_EMAIL = get_env("SMTP_FROM_EMAIL", COMPANY_EMAIL)
 SMTP_FROM_NAME = get_env("SMTP_FROM_NAME", COMPANY_NAME)
+
+CHAT_STORAGE_ROOT = Path(get_env("CHAT_STORAGE_ROOT", str((get_backend_root() / "private" / "chat").resolve())))
+CHAT_MAX_ATTACHMENT_BYTES = int(get_env("CHAT_MAX_ATTACHMENT_BYTES", str(10 * 1024 * 1024)))
+CHAT_MAX_ATTACHMENTS_PER_MESSAGE = int(get_env("CHAT_MAX_ATTACHMENTS_PER_MESSAGE", "5"))
+CHAT_MAX_TEXT_LENGTH = int(get_env("CHAT_MAX_TEXT_LENGTH", "4000"))
+CHAT_MAX_VOICE_DURATION_SECONDS = int(get_env("CHAT_MAX_VOICE_DURATION_SECONDS", "300"))
+CHAT_INLINE_URL_TTL_SECONDS = int(get_env("CHAT_INLINE_URL_TTL_SECONDS", "0"))
 
 if APP_ENV != "development" and JWT_SECRET_KEY.startswith("change-me"):
     raise RuntimeError("JWT_SECRET_KEY must be set to a secure value outside development")

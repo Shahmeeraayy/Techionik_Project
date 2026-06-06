@@ -23,7 +23,11 @@ from ...schemas.admin_jobs import (
 from ...services.job_services_service import JobServicesService
 from ...services.pre_assignment_service import PreAssignmentService
 
-router = APIRouter(prefix="/admin/jobs", tags=["admin-jobs"])
+router = APIRouter(
+    prefix="/admin/jobs",
+    tags=["admin-jobs"],
+    dependencies=[Depends(deps.require_tenant_feature("jobs_work_orders"))],
+)
 
 
 def _generate_manual_job_code(db: Session) -> str:

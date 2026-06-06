@@ -20,7 +20,11 @@ from ...schemas.invoice import (
 )
 from ...services.invoice_service import InvoiceService
 
-router = APIRouter(prefix="/invoices", tags=["invoices"])
+router = APIRouter(
+    prefix="/invoices",
+    tags=["invoices"],
+    dependencies=[Depends(deps.require_tenant_feature("invoicing"))],
+)
 
 
 @router.get("", response_model=List[InvoiceResponse])
@@ -108,6 +112,7 @@ def mark_invoice_paid(
     invoice_id: UUID,
     payload: InvoiceMarkPaidRequest,
     db: Session = Depends(deps.get_db),
+    _: AuthenticatedUser = Depends(deps.require_tenant_feature("payment_collection")),
     current_user: AuthenticatedUser = Depends(deps.require_roles(UserRole.ADMIN)),
 ):
     return InvoiceService(db, current_user).mark_invoice_paid(

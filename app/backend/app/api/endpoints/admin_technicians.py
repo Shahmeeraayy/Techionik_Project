@@ -29,7 +29,11 @@ from ...services.assignment_service import AssignmentService
 from ...services.technician_jobs_service import TechnicianJobsService
 from ...services.technician_admin_service import TechnicianAdminService
 
-router = APIRouter(prefix="/admin/technicians", tags=["admin-technicians"])
+router = APIRouter(
+    prefix="/admin/technicians",
+    tags=["admin-technicians"],
+    dependencies=[Depends(deps.require_tenant_feature("technicians"))],
+)
 
 
 @router.get("", response_model=List[TechnicianListItemResponse])

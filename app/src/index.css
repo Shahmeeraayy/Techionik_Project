@@ -4732,10 +4732,61 @@
   -webkit-text-fill-color: #ffffff !important;
 }
 
+.super-admin-shell {
+  --foreground: 222 47% 11%;
+  --card-foreground: 222 47% 11%;
+  --popover-foreground: 222 47% 11%;
+  --secondary-foreground: 222 47% 11%;
+  --accent-foreground: 222 47% 11%;
+  --muted-foreground: 215 19% 41%;
+  --border: 215 24% 86%;
+  --input: 215 24% 86%;
+  color-scheme: light;
+}
+
+.super-admin-shell .super-admin-content [data-slot="card-description"] {
+  color: #64748b !important;
+}
+
+.super-admin-shell .super-admin-content :is(label, [data-slot="label"]) {
+  color: #475569 !important;
+}
+
+.super-admin-shell .super-admin-content :is(input, textarea, select),
+.super-admin-shell .super-admin-content [role="combobox"],
+.super-admin-shell .super-admin-content [data-slot="input"],
+.super-admin-shell .super-admin-content [data-slot="textarea"],
+.super-admin-shell .super-admin-content [data-slot="select-trigger"] {
+  background: #ffffff !important;
+  background-image: none !important;
+  border-color: rgba(148, 163, 184, 0.32) !important;
+  color: #0f172a !important;
+  -webkit-text-fill-color: #0f172a !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.82), 0 10px 24px rgba(15, 23, 42, 0.04) !important;
+  color-scheme: light !important;
+}
+
+.super-admin-shell .super-admin-content :is(input, textarea)::placeholder {
+  color: #94a3b8 !important;
+  -webkit-text-fill-color: #94a3b8 !important;
+}
+
+.super-admin-shell .super-admin-content :is(table, thead, tbody, tr, th, td) {
+  border-color: rgba(148, 163, 184, 0.22) !important;
+}
+
+.super-admin-shell .super-admin-content :is(th, [data-slot="table-head"]),
+.super-admin-shell .super-admin-content :is(th, [data-slot="table-head"]) * {
+  color: #64748b !important;
+}
+
+.super-admin-shell .super-admin-content .super-admin-filter-row {
+  align-items: center;
+}
+
 /* Print Styles */
 @media print {
   .no-print {
     display: none !important;
   }
 }
-

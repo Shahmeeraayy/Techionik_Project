@@ -19,5 +19,5 @@ class AuditLog(TenantScopedMixin, Base):
     created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
 
     __table_args__ = (
-        CheckConstraint("actor_role IN ('admin','technician')", name="audit_logs_actor_role_chk"),
+        CheckConstraint("actor_role IN ('super_admin','admin','technician')", name="audit_logs_actor_role_chk"),
     )

@@ -1,7 +1,9 @@
 import { safeGetItemFromScopes, safeRemoveItemFromScopes, safeSetItem } from '@/lib/storage';
 
 const ADMIN_TOKEN_STORAGE_KEY = 'sm_dispatch_admin_access_token';
+const SUPER_ADMIN_TOKEN_STORAGE_KEY = 'sm_dispatch_super_admin_access_token';
 const TECHNICIAN_TOKEN_STORAGE_KEY = 'sm_dispatch_technician_access_token';
+export const AUTH_SESSION_INVALID_EVENT = 'nexusops:auth-session-invalid';
 const API_URL_ENV_KEYS = ['VITE_API_URL', 'VITE_BACKEND_URL'] as const;
 const LOCAL_API_FALLBACK = 'http://127.0.0.1:8000';
 
@@ -35,6 +37,30 @@ type AdminTokenResponse = {
   user_name: string;
   user_email: string;
   tenant_role: 'owner' | 'admin' | 'dispatcher' | 'viewer';
+  platform_role?: null;
+};
+
+type SuperAdminTokenResponse = {
+  access_token: string;
+  token_type: string;
+  expires_at: string;
+  role: 'super_admin';
+  tenant_id?: null;
+  user_id: string;
+  user_name: string;
+  user_email: string;
+  tenant_role?: null;
+  platform_role: 'super_admin' | 'platform_support' | 'billing_admin' | 'security_admin' | 'read_only_auditor';
+};
+
+export type BackendSuperAdminSession = {
+  role: 'super_admin';
+  tenant_id?: null;
+  user_id: string;
+  user_name: string;
+  user_email: string;
+  tenant_role?: null;
+  platform_role: 'super_admin' | 'platform_support' | 'billing_admin' | 'security_admin' | 'read_only_auditor';
 };
 
 type DevTechnicianTokenResponse = {
@@ -72,6 +98,198 @@ export type BackendTechnicianListItem = {
   zones: Array<{ id: string; name: string }>;
   skills: Array<{ id: string; name: string }>;
   current_jobs_count: number;
+};
+
+export type BackendSuperAdminMetricSummary = {
+  total_tenants: number;
+  active_tenants: number;
+  suspended_tenants: number;
+  trial_tenants: number;
+  paid_tenants: number;
+  payment_failures: number;
+  total_platform_users: number;
+  security_alerts: number;
+};
+
+export type BackendSuperAdminTenantSummary = {
+  id: string;
+  name: string;
+  slug: string;
+  industry_type: string;
+  platform_status: 'active' | 'trial' | 'payment_pending' | 'suspended' | 'archived' | 'blocked';
+  subscription_plan: 'basic' | 'pro' | 'enterprise';
+  subscription_status: 'trial' | 'paid' | 'payment_pending' | 'past_due' | 'cancelled' | 'failed';
+  owner_name?: string | null;
+  owner_email?: string | null;
+  users_count: number;
+  technicians_count: number;
+  payment_failures_count: number;
+  created_at: string;
+  updated_at: string;
+  last_login_at?: string | null;
+};
+
+export type BackendSuperAdminSecurityAlert = {
+  id: string;
+  severity: string;
+  title: string;
+  message: string;
+  tenant_id?: string | null;
+  created_at: string;
+};
+
+export type BackendSuperAdminDashboard = {
+  metrics: BackendSuperAdminMetricSummary;
+  recent_tenant_activity: BackendSuperAdminTenantSummary[];
+  recent_security_alerts: BackendSuperAdminSecurityAlert[];
+  system_health: {
+    status: string;
+    database: string;
+    tenant_scope: string;
+    audit_pipeline: string;
+    active_platform_users: number;
+  };
+};
+
+export type BackendSuperAdminFeatureAccess = {
+  key: string;
+  label: string;
+  description: string;
+  included_by_plan: boolean;
+  enabled: boolean;
+  source: 'plan' | 'tenant_flag' | 'manual_override';
+  override?: {
+    is_enabled: boolean;
+    reason?: string | null;
+    updated_at?: string | null;
+  } | null;
+};
+
+export type BackendSuperAdminTenantDetail = {
+  tenant: BackendSuperAdminTenantSummary & {
+    support_email?: string | null;
+    billing_email?: string | null;
+    invoice_email?: string | null;
+    notification_email?: string | null;
+    email_domain?: string | null;
+    status_lookup_enabled?: boolean;
+    trial_ends_at?: string | null;
+    subscription_renewal_at?: string | null;
+  };
+  subscription: {
+    plan: 'basic' | 'pro' | 'enterprise';
+    legacy_plan: 'starter' | 'growth' | 'enterprise';
+    status: 'trial' | 'paid' | 'payment_pending' | 'past_due' | 'cancelled' | 'failed';
+    payment_failures_count: number;
+    trial_ends_at?: string | null;
+    subscription_renewal_at?: string | null;
+  };
+  features: BackendSuperAdminFeatureAccess[];
+  break_glass_required: boolean;
+};
+
+export type BackendSuperAdminTenantUser = {
+  id: string;
+  kind: 'admin' | 'technician';
+  name: string;
+  email: string;
+  role: string;
+  status: string;
+  last_login_at?: string | null;
+  created_at: string;
+};
+
+export type BackendSuperAdminBreakGlassAccess = {
+  tenant_users: BackendSuperAdminTenantUser[];
+  billing_status: {
+    plan: 'basic' | 'pro' | 'enterprise';
+    status: string;
+    payment_failures_count: number;
+    billing_email?: string | null;
+    invoice_email?: string | null;
+    trial_ends_at?: string | null;
+    subscription_renewal_at?: string | null;
+  };
+  audit_logs: Array<{
+    id: string;
+    source: 'platform' | 'tenant';
+    actor: string;
+    role: string;
+    action: string;
+    module: string;
+    status: string;
+    reason?: string | null;
+    created_at: string;
+  }>;
+  security_activity: BackendSuperAdminSecurityAlert[];
+};
+
+export type BackendSuperAdminAuditLog = {
+  id: string;
+  actor_name: string;
+  actor_role: string;
+  tenant_id?: string | null;
+  action: string;
+  module: string;
+  status: string;
+  reason?: string | null;
+  resource_id?: string | null;
+  created_at: string;
+};
+
+export type BackendSuperAdminAccessPolicies = {
+  feature_catalog: Array<{ key: string; label: string; description: string }>;
+  plan_matrix: Record<string, string[]>;
+  platform_roles: Array<{ role: string; permissions: string[] }>;
+  tenant_roles: Array<{ role: string; permissions: string[] }>;
+  validation_flow: string[];
+  default_access: string;
+};
+
+export type BackendSuperAdminAccessCheck = {
+  allowed: boolean;
+  tenant_status: string;
+  steps: Array<{ label: string; allowed: boolean }>;
+  effective_features: BackendSuperAdminFeatureAccess[];
+};
+
+export type BackendPlatformFeatureDefault = {
+  enabled_by_default: boolean;
+  available_by_plan: boolean;
+  manual_override_allowed: boolean;
+  enterprise_only: boolean;
+};
+
+export type BackendSuperAdminPlatformSettings = {
+  general: Record<string, string>;
+  branding: Record<string, string>;
+  organization_defaults: {
+    default_plan: string;
+    trial_duration_days: number;
+    default_enabled_modules: string[];
+    default_user_roles: string[];
+    default_job_statuses: string[];
+    default_invoice_prefix: string;
+    default_timezone: string;
+    default_currency: string;
+    default_technician_limit: number;
+    default_storage_limit_gb: number;
+  };
+  billing: Record<string, string | number | boolean | string[]>;
+  feature_defaults: Record<string, BackendPlatformFeatureDefault>;
+  security: Record<string, string | number | boolean>;
+  email_notifications: Record<string, string | number | boolean | string[]>;
+  files_storage: Record<string, string | number | boolean | string[]>;
+  integrations: Record<string, string>;
+  maintenance: Record<string, string | boolean>;
+};
+
+export type BackendSuperAdminPlatformSettingsResponse = {
+  settings: BackendSuperAdminPlatformSettings;
+  updated_at?: string | null;
+  updated_by_role?: string | null;
+  last_change_reason?: string | null;
+  sensitive_sections: string[];
 };
 
 export type BackendOutOfOfficeRange = {
@@ -266,23 +484,37 @@ export type BackendChatAttachment = {
   name: string;
   mime_type: string;
   size_bytes: number;
-  data_url: string;
+  attachment_type: 'image' | 'document' | 'voice' | string;
+  duration_seconds?: number | null;
+  preview_url?: string | null;
+  download_url?: string | null;
+  data_url?: string | null;
 };
 
 export type BackendChatMessage = {
   id: string;
+  conversation_id: string;
+  conversation_type: 'direct' | 'job';
   technician_id: string;
+  job_id?: string | null;
   sender_role: 'admin' | 'technician';
   sender_id: string;
   text?: string | null;
+  message_type: 'text' | 'attachment' | 'voice' | 'mixed' | string;
   attachments: BackendChatAttachment[];
   is_broadcast: boolean;
+  is_pinned: boolean;
+  pinned_at?: string | null;
   created_at: string;
   delivered_at?: string | null;
   read_at?: string | null;
 };
 
-export type BackendAdminChatConversation = {
+export type BackendChatConversation = {
+  id: string;
+  conversation_type: 'direct' | 'job';
+  channel_kind: 'direct' | 'group' | 'job';
+  title: string;
   technician_id: string;
   technician_name: string;
   technician_email: string;
@@ -290,14 +522,191 @@ export type BackendAdminChatConversation = {
   technician_avatar?: string | null;
   technician_status: 'Available' | 'In Progress' | 'Offline' | 'Out of Office' | string;
   current_jobs_count: number;
+  job_id?: string | null;
+  job_code?: string | null;
+  job_status?: string | null;
   unread_count: number;
+  pinned_count: number;
+  member_count: number;
+  member_ids: string[];
+  member_names: string[];
   last_message_preview?: string | null;
   last_message_at?: string | null;
 };
 
+export type BackendAdminChatConversation = BackendChatConversation;
+export type BackendTechnicianChatConversation = BackendChatConversation;
+
 export type BackendAdminChatUnreadCount = {
   unread_count: number;
 };
+
+export type BackendChatConversationResolve = {
+  conversation: BackendChatConversation;
+};
+
+export type BackendChatPinnedMessages = {
+  items: BackendChatMessage[];
+};
+
+export type BackendChatAuditLog = {
+  id: string;
+  actor_role: string;
+  actor_id: string;
+  action: string;
+  entity_type: string;
+  entity_id: string;
+  created_at: string;
+  metadata?: Record<string, unknown> | null;
+};
+
+type RawBackendChatAttachment = Partial<BackendChatAttachment> & Pick<
+  BackendChatAttachment,
+  'id' | 'name' | 'mime_type' | 'size_bytes'
+>;
+
+type RawBackendChatMessage = Partial<BackendChatMessage> & Pick<
+  BackendChatMessage,
+  'id' | 'technician_id' | 'sender_role' | 'sender_id' | 'created_at'
+> & {
+  attachments?: RawBackendChatAttachment[];
+};
+
+type RawBackendChatConversation = Partial<BackendChatConversation> & Pick<
+  BackendChatConversation,
+  'technician_id' | 'technician_name' | 'technician_email'
+>;
+
+const LEGACY_DIRECT_THREAD_PREFIX = 'legacy-direct:';
+
+function buildLegacyDirectConversationId(technicianId: string): string {
+  return `${LEGACY_DIRECT_THREAD_PREFIX}${technicianId}`;
+}
+
+function parseLegacyDirectTechnicianId(conversationId: string): string | null {
+  if (!conversationId.startsWith(LEGACY_DIRECT_THREAD_PREFIX)) {
+    return null;
+  }
+  const technicianId = conversationId.slice(LEGACY_DIRECT_THREAD_PREFIX.length).trim();
+  return technicianId || null;
+}
+
+function inferLegacyAttachmentType(mimeType: string): BackendChatAttachment['attachment_type'] {
+  const normalized = mimeType.trim().toLowerCase();
+  if (normalized.startsWith('audio/')) {
+    return 'voice';
+  }
+  if (normalized.startsWith('image/')) {
+    return 'image';
+  }
+  return 'document';
+}
+
+function normalizeChatAttachment(attachment: RawBackendChatAttachment): BackendChatAttachment {
+  return {
+    id: attachment.id,
+    name: attachment.name,
+    mime_type: attachment.mime_type,
+    size_bytes: attachment.size_bytes,
+    attachment_type: attachment.attachment_type ?? inferLegacyAttachmentType(attachment.mime_type),
+    duration_seconds: attachment.duration_seconds ?? null,
+    preview_url: attachment.preview_url ?? null,
+    download_url: attachment.download_url ?? null,
+    data_url: attachment.data_url ?? null,
+  };
+}
+
+function resolveLegacyMessageType(
+  text: string | null | undefined,
+  attachments: BackendChatAttachment[],
+): BackendChatMessage['message_type'] {
+  if (attachments.length > 0 && text) {
+    return 'mixed';
+  }
+  if (attachments.length > 0) {
+    return attachments.every((attachment) => attachment.attachment_type === 'voice')
+      ? 'voice'
+      : 'attachment';
+  }
+  return 'text';
+}
+
+function normalizeChatMessage(
+  message: RawBackendChatMessage,
+  conversationId: string,
+  conversationType: BackendChatMessage['conversation_type'] = 'direct',
+): BackendChatMessage {
+  const attachments = (message.attachments ?? []).map(normalizeChatAttachment);
+  return {
+    id: message.id,
+    conversation_id: message.conversation_id ?? conversationId,
+    conversation_type: message.conversation_type ?? conversationType,
+    technician_id: message.technician_id,
+    job_id: message.job_id ?? null,
+    sender_role: message.sender_role,
+    sender_id: message.sender_id,
+    text: message.text ?? null,
+    message_type: message.message_type ?? resolveLegacyMessageType(message.text, attachments),
+    attachments,
+    is_broadcast: message.is_broadcast ?? false,
+    is_pinned: message.is_pinned ?? false,
+    pinned_at: message.pinned_at ?? null,
+    created_at: message.created_at,
+    delivered_at: message.delivered_at ?? null,
+    read_at: message.read_at ?? null,
+  };
+}
+
+function normalizeChatConversation(conversation: RawBackendChatConversation): BackendChatConversation {
+  const conversationType = conversation.conversation_type ?? 'direct';
+  const memberIds = (conversation.member_ids ?? []).filter(Boolean);
+  const memberNames = (conversation.member_names ?? []).filter(Boolean);
+  const memberCount = conversation.member_count ?? memberIds.length ?? 0;
+  const channelKind = conversation.channel_kind
+    ?? (conversationType === 'job' ? 'job' : (Math.max(memberCount, memberIds.length, memberNames.length) > 1 ? 'group' : 'direct'));
+  const normalizedTechnicianName = conversation.technician_name.trim();
+  const fallbackTitle = channelKind === 'job'
+    ? (conversation.job_code?.trim() ? `Job ${conversation.job_code.trim()}` : `Job chat with ${normalizedTechnicianName}`)
+    : channelKind === 'group'
+      ? (conversation.title?.trim() || (memberNames.length > 0 ? `${memberNames[0]} Group` : 'Technician Group'))
+    : `Dispatch with ${normalizedTechnicianName}`;
+
+  return {
+    id: conversation.id?.trim() || buildLegacyDirectConversationId(conversation.technician_id),
+    conversation_type: conversationType,
+    channel_kind: channelKind,
+    title: conversation.title?.trim() || fallbackTitle,
+    technician_id: conversation.technician_id,
+    technician_name: normalizedTechnicianName,
+    technician_email: conversation.technician_email,
+    technician_phone: conversation.technician_phone ?? null,
+    technician_avatar: conversation.technician_avatar ?? null,
+    technician_status: conversation.technician_status ?? 'Offline',
+    current_jobs_count: conversation.current_jobs_count ?? 0,
+    job_id: conversation.job_id ?? null,
+    job_code: conversation.job_code ?? null,
+    job_status: conversation.job_status ?? null,
+    unread_count: conversation.unread_count ?? 0,
+    pinned_count: conversation.pinned_count ?? 0,
+    member_count: Math.max(memberCount, memberIds.length, memberNames.length, 1),
+    member_ids: memberIds.length > 0 ? memberIds : [conversation.technician_id],
+    member_names: memberNames.length > 0 ? memberNames : [normalizedTechnicianName],
+    last_message_preview: conversation.last_message_preview ?? null,
+    last_message_at: conversation.last_message_at ?? null,
+  };
+}
+
+function filterChatMessagesBySearch(messages: BackendChatMessage[], search?: string): BackendChatMessage[] {
+  const query = search?.trim().toLowerCase();
+  if (!query) {
+    return messages;
+  }
+  return messages.filter((message) => {
+    const text = (message.text ?? '').toLowerCase();
+    const attachmentMatch = message.attachments.some((attachment) => attachment.name.toLowerCase().includes(query));
+    return text.includes(query) || attachmentMatch;
+  });
+}
 
 export type BackendDealership = {
   id: string;
@@ -780,6 +1189,10 @@ function getApiBaseUrl(): string {
   return normalized;
 }
 
+export function buildBackendUrl(path: string): string {
+  return `${getApiBaseUrl()}${path}`;
+}
+
 export function assertApiUrlConfigured(): void {
   void getApiBaseUrl();
 }
@@ -794,7 +1207,7 @@ export function warmupBackend(): void {
   try {
     apiBaseUrl = getApiBaseUrl();
   } catch {
-    return; // API URL not configured — skip
+    return; // API URL not configured - skip
   }
 
   const MAX_ATTEMPTS = 8;
@@ -805,7 +1218,7 @@ export function warmupBackend(): void {
     attempts++;
     try {
       const res = await fetch(`${apiBaseUrl}/`, { method: 'GET' });
-      if (res.ok) return; // server is up — done
+      if (res.ok) return; // server is up - done
     } catch {
       // server still sleeping
     }
@@ -831,6 +1244,20 @@ export function clearStoredAdminToken(): void {
   safeRemoveItemFromScopes(ADMIN_TOKEN_STORAGE_KEY);
 }
 
+export function getStoredSuperAdminToken(): string | null {
+  const raw = safeGetItemFromScopes(SUPER_ADMIN_TOKEN_STORAGE_KEY);
+  return raw && raw.trim() ? raw : null;
+}
+
+export function setStoredSuperAdminToken(token: string, persist = true): void {
+  clearStoredSuperAdminToken();
+  safeSetItem(SUPER_ADMIN_TOKEN_STORAGE_KEY, token, persist ? 'local' : 'session');
+}
+
+export function clearStoredSuperAdminToken(): void {
+  safeRemoveItemFromScopes(SUPER_ADMIN_TOKEN_STORAGE_KEY);
+}
+
 export function getStoredTechnicianToken(): string | null {
   const raw = safeGetItemFromScopes(TECHNICIAN_TOKEN_STORAGE_KEY);
   return raw && raw.trim() ? raw : null;
@@ -843,6 +1270,47 @@ export function setStoredTechnicianToken(token: string, persist = true): void {
 
 export function clearStoredTechnicianToken(): void {
   safeRemoveItemFromScopes(TECHNICIAN_TOKEN_STORAGE_KEY);
+}
+
+type AuthSessionInvalidRole = 'admin' | 'super_admin' | 'technician' | 'unknown';
+
+function dispatchAuthSessionInvalid(role: AuthSessionInvalidRole): void {
+  if (typeof window === 'undefined' || typeof window.dispatchEvent !== 'function') {
+    return;
+  }
+
+  window.dispatchEvent(new CustomEvent(AUTH_SESSION_INVALID_EVENT, {
+    detail: { role },
+  }));
+}
+
+function invalidateStoredAuthToken(token: string): void {
+  if (!token) {
+    return;
+  }
+
+  const superAdminToken = getStoredSuperAdminToken();
+  if (superAdminToken && superAdminToken === token) {
+    clearStoredSuperAdminToken();
+    dispatchAuthSessionInvalid('super_admin');
+    return;
+  }
+
+  const adminToken = getStoredAdminToken();
+  if (adminToken && adminToken === token) {
+    clearStoredAdminToken();
+    dispatchAuthSessionInvalid('admin');
+    return;
+  }
+
+  const technicianToken = getStoredTechnicianToken();
+  if (technicianToken && technicianToken === token) {
+    clearStoredTechnicianToken();
+    dispatchAuthSessionInvalid('technician');
+    return;
+  }
+
+  dispatchAuthSessionInvalid('unknown');
 }
 
 function decodeJwtClaims(token: string): DecodedTokenClaims | null {
@@ -886,10 +1354,7 @@ export function getStoredTenantContext(): { tenantId?: string; tenantSlug?: stri
 }
 
 async function tryRefreshAdminToken(expiredToken: string): Promise<string | null> {
-  const currentAdminToken = getStoredAdminToken();
-  if (currentAdminToken && currentAdminToken === expiredToken) {
-    clearStoredAdminToken();
-  }
+  void expiredToken;
   return null;
 }
 
@@ -943,7 +1408,7 @@ async function requestJson<T>(path: string, options: RequestOptions = {}): Promi
           // still starting up
         }
       }
-      throw new Error(`Unable to reach backend at ${apiBaseUrl}. The server may still be starting up — please wait a moment and try again.`);
+      throw new Error(`Unable to reach backend at ${apiBaseUrl}. The server may still be starting up - please wait a moment and try again.`);
     }
   };
 
@@ -966,6 +1431,9 @@ async function requestJson<T>(path: string, options: RequestOptions = {}): Promi
       if (retryResponse.ok) {
         return retryResponse.json() as Promise<T>;
       }
+      if (retryResponse.status === 401 && refreshedToken) {
+        invalidateStoredAuthToken(refreshedToken);
+      }
       // Continue with regular error handling below using retry response.
       let detail = `Request failed (${retryResponse.status})`;
       try {
@@ -978,6 +1446,8 @@ async function requestJson<T>(path: string, options: RequestOptions = {}): Promi
       }
       throw new Error(detail);
     }
+
+    invalidateStoredAuthToken(options.token);
   }
 
   if (!response.ok) {
@@ -1003,6 +1473,22 @@ export async function fetchAdminToken(payload: {
   return requestJson<AdminTokenResponse>('/auth/admin-token', {
     method: 'POST',
     body: payload,
+  });
+}
+
+export async function fetchSuperAdminToken(payload: {
+  email: string;
+  password: string;
+}): Promise<SuperAdminTokenResponse> {
+  return requestJson<SuperAdminTokenResponse>('/auth/super-admin-token', {
+    method: 'POST',
+    body: payload,
+  });
+}
+
+export async function fetchSuperAdminSession(token: string): Promise<BackendSuperAdminSession> {
+  return requestJson<BackendSuperAdminSession>('/auth/super-admin-session', {
+    token,
   });
 }
 
@@ -1039,6 +1525,177 @@ export async function fetchTechnicianToken(payload: {
   });
 }
 
+export async function fetchSuperAdminDashboard(token: string): Promise<BackendSuperAdminDashboard> {
+  return requestJson<BackendSuperAdminDashboard>('/super-admin/dashboard', { token });
+}
+
+export async function fetchSuperAdminTenants(
+  token: string,
+  filters?: {
+    search?: string;
+    platform_status?: string;
+    subscription_plan?: string;
+    subscription_status?: string;
+  },
+): Promise<BackendSuperAdminTenantSummary[]> {
+  const search = new URLSearchParams();
+  if (filters?.search) search.set('search', filters.search);
+  if (filters?.platform_status) search.set('platform_status', filters.platform_status);
+  if (filters?.subscription_plan) search.set('subscription_plan', filters.subscription_plan);
+  if (filters?.subscription_status) search.set('subscription_status', filters.subscription_status);
+  const suffix = search.toString() ? `?${search.toString()}` : '';
+  return requestJson<BackendSuperAdminTenantSummary[]>(`/super-admin/tenants${suffix}`, { token });
+}
+
+export async function fetchSuperAdminTenantDetail(
+  token: string,
+  tenantId: string,
+): Promise<BackendSuperAdminTenantDetail> {
+  return requestJson<BackendSuperAdminTenantDetail>(`/super-admin/tenants/${tenantId}`, { token });
+}
+
+export async function updateSuperAdminTenantProfile(
+  token: string,
+  tenantId: string,
+  payload: {
+    name?: string;
+    industry_type?: string;
+    support_email?: string;
+    billing_email?: string;
+    invoice_email?: string;
+    notification_email?: string;
+  },
+): Promise<BackendSuperAdminTenantDetail> {
+  return requestJson<BackendSuperAdminTenantDetail>(`/super-admin/tenants/${tenantId}/profile`, {
+    method: 'PATCH',
+    token,
+    body: payload,
+  });
+}
+
+export async function updateSuperAdminTenantStatus(
+  token: string,
+  tenantId: string,
+  payload: {
+    status: 'active' | 'trial' | 'payment_pending' | 'suspended' | 'archived' | 'blocked';
+    reason?: string;
+  },
+): Promise<BackendSuperAdminTenantDetail> {
+  return requestJson<BackendSuperAdminTenantDetail>(`/super-admin/tenants/${tenantId}/status`, {
+    method: 'POST',
+    token,
+    body: payload,
+  });
+}
+
+export async function updateSuperAdminTenantPlan(
+  token: string,
+  tenantId: string,
+  payload: {
+    subscription_plan: 'basic' | 'pro' | 'enterprise';
+    subscription_status?: 'trial' | 'paid' | 'payment_pending' | 'past_due' | 'cancelled' | 'failed';
+    reason?: string;
+  },
+): Promise<BackendSuperAdminTenantDetail> {
+  return requestJson<BackendSuperAdminTenantDetail>(`/super-admin/tenants/${tenantId}/plan`, {
+    method: 'POST',
+    token,
+    body: payload,
+  });
+}
+
+export async function updateSuperAdminTenantFeatures(
+  token: string,
+  tenantId: string,
+  payload: {
+    reason?: string;
+    entries: Array<{
+      feature_key: string;
+      is_enabled: boolean;
+      reason?: string;
+    }>;
+  },
+): Promise<{ tenant_id: string; features: BackendSuperAdminFeatureAccess[] }> {
+  return requestJson<{ tenant_id: string; features: BackendSuperAdminFeatureAccess[] }>(`/super-admin/tenants/${tenantId}/features`, {
+    method: 'PUT',
+    token,
+    body: payload,
+  });
+}
+
+export async function fetchSuperAdminBreakGlassAccess(
+  token: string,
+  tenantId: string,
+  reason: string,
+): Promise<BackendSuperAdminBreakGlassAccess> {
+  return requestJson<BackendSuperAdminBreakGlassAccess>(`/super-admin/tenants/${tenantId}/break-glass-access`, {
+    method: 'POST',
+    token,
+    body: { reason },
+  });
+}
+
+export async function fetchSuperAdminAuditLogs(
+  token: string,
+  filters?: {
+    tenant_id?: string;
+    module?: string;
+    status?: string;
+    search?: string;
+  },
+): Promise<BackendSuperAdminAuditLog[]> {
+  const search = new URLSearchParams();
+  if (filters?.tenant_id) search.set('tenant_id', filters.tenant_id);
+  if (filters?.module) search.set('module', filters.module);
+  if (filters?.status) search.set('status', filters.status);
+  if (filters?.search) search.set('search', filters.search);
+  const suffix = search.toString() ? `?${search.toString()}` : '';
+  return requestJson<BackendSuperAdminAuditLog[]>(`/super-admin/audit-logs${suffix}`, { token });
+}
+
+export async function fetchSuperAdminAccessPolicies(token: string): Promise<BackendSuperAdminAccessPolicies> {
+  return requestJson<BackendSuperAdminAccessPolicies>('/super-admin/access-policies', { token });
+}
+
+export async function runSuperAdminAccessCheck(
+  token: string,
+  tenantId: string,
+  payload: {
+    requested_tenant_id?: string;
+    resource_tenant_id?: string;
+    requested_user_id?: string;
+    resource_owner_user_id?: string;
+    tenant_role: string;
+    permission: string;
+    feature_key?: string;
+  },
+): Promise<BackendSuperAdminAccessCheck> {
+  return requestJson<BackendSuperAdminAccessCheck>(`/super-admin/tenants/${tenantId}/access-check`, {
+    method: 'POST',
+    token,
+    body: payload,
+  });
+}
+
+export async function fetchSuperAdminPlatformSettings(token: string): Promise<BackendSuperAdminPlatformSettingsResponse> {
+  return requestJson<BackendSuperAdminPlatformSettingsResponse>('/super-admin/platform-settings', { token });
+}
+
+export async function updateSuperAdminPlatformSettings(
+  token: string,
+  payload: {
+    settings: BackendSuperAdminPlatformSettings;
+    reason?: string;
+    sensitive_confirmation?: string;
+  },
+): Promise<BackendSuperAdminPlatformSettingsResponse> {
+  return requestJson<BackendSuperAdminPlatformSettingsResponse>('/super-admin/platform-settings', {
+    method: 'PUT',
+    token,
+    body: payload,
+  });
+}
+
 export async function fetchAdminTechnicians(token: string): Promise<BackendTechnicianListItem[]> {
   return requestJson<BackendTechnicianListItem[]>('/admin/technicians', {
     token,
@@ -1050,7 +1707,174 @@ export async function fetchAdminChatConversations(
   search?: string,
 ): Promise<BackendAdminChatConversation[]> {
   const suffix = search?.trim() ? `?search=${encodeURIComponent(search.trim())}` : '';
-  return requestJson<BackendAdminChatConversation[]>(`/admin/chat/conversations${suffix}`, {
+  const conversations = await requestJson<RawBackendChatConversation[]>(`/admin/chat/conversations${suffix}`, {
+    token,
+  });
+  return conversations.map(normalizeChatConversation);
+}
+
+export async function fetchAdminChatThreadMessages(
+  token: string,
+  conversationId: string,
+  search?: string,
+): Promise<BackendChatMessage[]> {
+  const legacyTechnicianId = parseLegacyDirectTechnicianId(conversationId);
+  if (legacyTechnicianId) {
+    const messages = await requestJson<RawBackendChatMessage[]>(`/admin/chat/conversations/${legacyTechnicianId}/messages`, {
+      token,
+    });
+    return filterChatMessagesBySearch(
+      messages.map((message) => normalizeChatMessage(message, conversationId, 'direct')),
+      search,
+    );
+  }
+  const suffix = search?.trim() ? `?search=${encodeURIComponent(search.trim())}` : '';
+  const messages = await requestJson<RawBackendChatMessage[]>(`/admin/chat/threads/${conversationId}/messages${suffix}`, {
+    token,
+  });
+  return messages.map((message) => normalizeChatMessage(message, conversationId));
+}
+
+export async function sendAdminChatThreadMessage(
+  token: string,
+  conversationId: string,
+  payload: {
+    text?: string;
+    attachments?: BackendChatAttachment[];
+  },
+): Promise<BackendChatMessage> {
+  const legacyTechnicianId = parseLegacyDirectTechnicianId(conversationId);
+  if (legacyTechnicianId) {
+    const message = await requestJson<RawBackendChatMessage>(`/admin/chat/conversations/${legacyTechnicianId}/messages`, {
+      method: 'POST',
+      token,
+      body: payload,
+    });
+    return normalizeChatMessage(message, conversationId, 'direct');
+  }
+  const message = await requestJson<RawBackendChatMessage>(`/admin/chat/threads/${conversationId}/messages`, {
+    method: 'POST',
+    token,
+    body: payload,
+  });
+  return normalizeChatMessage(message, conversationId);
+}
+
+export async function markAdminChatThreadRead(
+  token: string,
+  conversationId: string,
+): Promise<BackendAdminChatUnreadCount> {
+  const legacyTechnicianId = parseLegacyDirectTechnicianId(conversationId);
+  if (legacyTechnicianId) {
+    return requestJson<BackendAdminChatUnreadCount>(`/admin/chat/conversations/${legacyTechnicianId}/read`, {
+      method: 'POST',
+      token,
+    });
+  }
+  return requestJson<BackendAdminChatUnreadCount>(`/admin/chat/threads/${conversationId}/read`, {
+    method: 'POST',
+    token,
+  });
+}
+
+export async function fetchAdminJobChatConversation(
+  token: string,
+  jobId: string,
+): Promise<BackendChatConversationResolve> {
+  const resolved = await requestJson<{
+    conversation: RawBackendChatConversation;
+  }>(`/admin/chat/jobs/${jobId}/conversation`, {
+    token,
+  });
+  return { conversation: normalizeChatConversation(resolved.conversation) };
+}
+
+export async function createAdminChatGroup(
+  token: string,
+  payload: {
+    title: string;
+    technician_ids: string[];
+  },
+): Promise<BackendChatConversationResolve> {
+  const resolved = await requestJson<{
+    conversation: RawBackendChatConversation;
+  }>('/admin/chat/groups', {
+    method: 'POST',
+    token,
+    body: payload,
+  });
+  return { conversation: normalizeChatConversation(resolved.conversation) };
+}
+
+export async function updateAdminChatGroup(
+  token: string,
+  conversationId: string,
+  payload: {
+    title: string;
+    technician_ids: string[];
+  },
+): Promise<BackendChatConversationResolve> {
+  const resolved = await requestJson<{
+    conversation: RawBackendChatConversation;
+  }>(`/admin/chat/groups/${conversationId}`, {
+    method: 'PUT',
+    token,
+    body: payload,
+  });
+  return { conversation: normalizeChatConversation(resolved.conversation) };
+}
+
+export async function fetchAdminPinnedChatMessages(
+  token: string,
+  conversationId: string,
+): Promise<BackendChatPinnedMessages> {
+  const legacyTechnicianId = parseLegacyDirectTechnicianId(conversationId);
+  if (legacyTechnicianId) {
+    const messages = await requestJson<RawBackendChatMessage[]>(`/admin/chat/conversations/${legacyTechnicianId}/messages`, {
+      token,
+    });
+    return {
+      items: messages
+        .map((message) => normalizeChatMessage(message, conversationId, 'direct'))
+        .filter((message) => message.is_pinned),
+    };
+  }
+  const pinned = await requestJson<{ items: RawBackendChatMessage[] }>(`/admin/chat/threads/${conversationId}/pinned`, {
+    token,
+  });
+  return {
+    items: pinned.items.map((message) => normalizeChatMessage(message, conversationId)),
+  };
+}
+
+export async function pinAdminChatMessage(
+  token: string,
+  messageId: string,
+): Promise<BackendChatMessage> {
+  return requestJson<BackendChatMessage>(`/admin/chat/messages/${messageId}/pin`, {
+    method: 'POST',
+    token,
+  });
+}
+
+export async function unpinAdminChatMessage(
+  token: string,
+  messageId: string,
+): Promise<BackendChatMessage> {
+  return requestJson<BackendChatMessage>(`/admin/chat/messages/${messageId}/pin`, {
+    method: 'DELETE',
+    token,
+  });
+}
+
+export async function fetchAdminChatAuditLogs(
+  token: string,
+  conversationId: string,
+): Promise<BackendChatAuditLog[]> {
+  if (parseLegacyDirectTechnicianId(conversationId)) {
+    return [];
+  }
+  return requestJson<BackendChatAuditLog[]>(`/admin/chat/threads/${conversationId}/audit-logs`, {
     token,
   });
 }
@@ -2001,6 +2825,109 @@ export async function fetchTechnicianMeProfile(token: string): Promise<BackendTe
 
 export async function fetchTechnicianChatMessages(token: string): Promise<BackendChatMessage[]> {
   return requestJson<BackendChatMessage[]>('/technicians/me/chat/messages', { token });
+}
+
+export async function fetchTechnicianChatConversations(
+  token: string,
+  search?: string,
+): Promise<BackendTechnicianChatConversation[]> {
+  const suffix = search?.trim() ? `?search=${encodeURIComponent(search.trim())}` : '';
+  const conversations = await requestJson<RawBackendChatConversation[]>(`/technicians/me/chat/conversations${suffix}`, { token });
+  return conversations.map(normalizeChatConversation);
+}
+
+export async function fetchTechnicianChatThreadMessages(
+  token: string,
+  conversationId: string,
+  search?: string,
+): Promise<BackendChatMessage[]> {
+  const legacyTechnicianId = parseLegacyDirectTechnicianId(conversationId);
+  if (legacyTechnicianId) {
+    const messages = await requestJson<RawBackendChatMessage[]>('/technicians/me/chat/messages', { token });
+    return filterChatMessagesBySearch(
+      messages.map((message) => normalizeChatMessage(message, conversationId, 'direct')),
+      search,
+    );
+  }
+  const suffix = search?.trim() ? `?search=${encodeURIComponent(search.trim())}` : '';
+  const messages = await requestJson<RawBackendChatMessage[]>(`/technicians/me/chat/threads/${conversationId}/messages${suffix}`, { token });
+  return messages.map((message) => normalizeChatMessage(message, conversationId));
+}
+
+export async function sendTechnicianChatThreadMessage(
+  token: string,
+  conversationId: string,
+  payload: {
+    text?: string;
+    attachments?: BackendChatAttachment[];
+  },
+): Promise<BackendChatMessage> {
+  const legacyTechnicianId = parseLegacyDirectTechnicianId(conversationId);
+  if (legacyTechnicianId) {
+    const message = await requestJson<RawBackendChatMessage>('/technicians/me/chat/messages', {
+      method: 'POST',
+      token,
+      body: payload,
+    });
+    return normalizeChatMessage(message, conversationId, 'direct');
+  }
+  const message = await requestJson<RawBackendChatMessage>(`/technicians/me/chat/threads/${conversationId}/messages`, {
+    method: 'POST',
+    token,
+    body: payload,
+  });
+  return normalizeChatMessage(message, conversationId);
+}
+
+export async function markTechnicianChatThreadRead(
+  token: string,
+  conversationId: string,
+): Promise<BackendAdminChatUnreadCount> {
+  const legacyTechnicianId = parseLegacyDirectTechnicianId(conversationId);
+  if (legacyTechnicianId) {
+    await requestJson<{ status: string }>('/technicians/me/chat/read', {
+      method: 'POST',
+      token,
+    });
+    return { unread_count: 0 };
+  }
+  return requestJson<BackendAdminChatUnreadCount>(`/technicians/me/chat/threads/${conversationId}/read`, {
+    method: 'POST',
+    token,
+  });
+}
+
+export async function fetchTechnicianJobChatConversation(
+  token: string,
+  jobId: string,
+): Promise<BackendChatConversationResolve> {
+  const resolved = await requestJson<{
+    conversation: RawBackendChatConversation;
+  }>(`/technicians/me/chat/jobs/${jobId}/conversation`, {
+    token,
+  });
+  return { conversation: normalizeChatConversation(resolved.conversation) };
+}
+
+export async function fetchTechnicianPinnedChatMessages(
+  token: string,
+  conversationId: string,
+): Promise<BackendChatPinnedMessages> {
+  const legacyTechnicianId = parseLegacyDirectTechnicianId(conversationId);
+  if (legacyTechnicianId) {
+    const messages = await requestJson<RawBackendChatMessage[]>('/technicians/me/chat/messages', { token });
+    return {
+      items: messages
+        .map((message) => normalizeChatMessage(message, conversationId, 'direct'))
+        .filter((message) => message.is_pinned),
+    };
+  }
+  const pinned = await requestJson<{ items: RawBackendChatMessage[] }>(`/technicians/me/chat/threads/${conversationId}/pinned`, {
+    token,
+  });
+  return {
+    items: pinned.items.map((message) => normalizeChatMessage(message, conversationId)),
+  };
 }
 
 export async function sendTechnicianChatMessage(

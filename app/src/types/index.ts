@@ -1,7 +1,7 @@
 // NexusOps - Type Definitions
 
 // User Roles
-export type UserRole = 'admin' | 'technician';
+export type UserRole = 'super_admin' | 'admin' | 'technician';
 
 // Job Status
 export type JobStatus =
@@ -65,6 +65,7 @@ export interface User {
   email: string;
   name: string;
   role: UserRole;
+  platformRole?: 'super_admin' | 'platform_support' | 'billing_admin' | 'security_admin' | 'read_only_auditor';
   avatar?: string;
   phone?: string;
   createdAt: string;
@@ -321,4 +322,3 @@ export interface DelayReason {
 export interface RefuseReason {
   reason: string;
 }
-

@@ -1,7 +1,9 @@
 import type { BackendChatAttachment } from '@/lib/backend-api';
 
 export const MAX_CHAT_ATTACHMENT_BYTES = 10 * 1024 * 1024;
-export const CHAT_ATTACHMENT_ACCEPT = '.pdf,image/*,audio/*';
+export const MAX_CHAT_ATTACHMENTS_PER_MESSAGE = 5;
+export const MAX_CHAT_VOICE_DURATION_SECONDS = 300;
+export const CHAT_ATTACHMENT_ACCEPT = '.pdf,.doc,.docx,.txt,image/*,audio/*';
 
 const VOICE_NOTE_MIME_CANDIDATES = [
   'audio/webm;codecs=opus',
@@ -23,8 +25,21 @@ export function isPdfAttachment(mimeType: string) {
   return mimeType === 'application/pdf';
 }
 
+export function isDocumentAttachment(mimeType: string) {
+  return mimeType === 'application/pdf'
+    || mimeType === 'application/msword'
+    || mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    || mimeType === 'text/plain';
+}
+
+export function inferAttachmentType(mimeType: string): BackendChatAttachment['attachment_type'] {
+  if (isImageAttachment(mimeType)) return 'image';
+  if (isAudioAttachment(mimeType)) return 'voice';
+  return 'document';
+}
+
 export function isSupportedChatAttachment(file: File) {
-  return isImageAttachment(file.type) || isAudioAttachment(file.type) || isPdfAttachment(file.type);
+  return isImageAttachment(file.type) || isAudioAttachment(file.type) || isDocumentAttachment(file.type);
 }
 
 export function getChatAttachmentValidationMessage(file: File) {
@@ -32,7 +47,7 @@ export function getChatAttachmentValidationMessage(file: File) {
     return `${file.name} exceeds the 10MB limit.`;
   }
   if (!isSupportedChatAttachment(file)) {
-    return `${file.name} must be an image, audio, or PDF file.`;
+    return `${file.name} must be an image, audio, PDF, DOC, DOCX, or text file.`;
   }
   return null;
 }
@@ -49,6 +64,33 @@ export function formatVoiceRecordingDuration(totalSeconds: number) {
   return `${minutes}:${seconds}`;
 }
 
+async function getAudioDurationSeconds(file: Blob): Promise<number | null> {
+  if (typeof Audio === 'undefined') {
+    return null;
+  }
+
+  return new Promise((resolve) => {
+    const objectUrl = URL.createObjectURL(file);
+    const audio = new Audio();
+    const cleanup = () => {
+      URL.revokeObjectURL(objectUrl);
+      audio.src = '';
+    };
+
+    audio.preload = 'metadata';
+    audio.onloadedmetadata = () => {
+      const duration = Number.isFinite(audio.duration) ? Math.max(1, Math.round(audio.duration)) : null;
+      cleanup();
+      resolve(duration);
+    };
+    audio.onerror = () => {
+      cleanup();
+      resolve(null);
+    };
+    audio.src = objectUrl;
+  });
+}
+
 export async function fileToChatAttachment(file: File): Promise<BackendChatAttachment> {
   const dataUrl = await new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
@@ -57,12 +99,20 @@ export async function fileToChatAttachment(file: File): Promise<BackendChatAttac
     reader.readAsDataURL(file);
   });
 
+  const durationSeconds = isAudioAttachment(file.type)
+    ? await getAudioDurationSeconds(file)
+    : null;
+
   return {
     id: `${file.name}-${file.size}-${Date.now()}`,
     name: file.name,
     mime_type: file.type || 'application/octet-stream',
     size_bytes: file.size,
+    attachment_type: inferAttachmentType(file.type || 'application/octet-stream'),
+    duration_seconds: durationSeconds,
     data_url: dataUrl,
+    preview_url: null,
+    download_url: null,
   };
 }
 
@@ -88,7 +138,7 @@ function getVoiceNoteExtension(mimeType: string) {
   return 'webm';
 }
 
-export async function createVoiceNoteAttachment(blob: Blob) {
+export async function createVoiceNoteAttachment(blob: Blob, durationSeconds: number) {
   const mimeType = blob.type || pickSupportedVoiceMimeType() || 'audio/webm';
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
   const voiceNoteFile = new File(
@@ -97,5 +147,10 @@ export async function createVoiceNoteAttachment(blob: Blob) {
     { type: mimeType },
   );
 
-  return fileToChatAttachment(voiceNoteFile);
+  const attachment = await fileToChatAttachment(voiceNoteFile);
+  return {
+    ...attachment,
+    duration_seconds: durationSeconds,
+    attachment_type: 'voice',
+  };
 }

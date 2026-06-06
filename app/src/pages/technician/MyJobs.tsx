@@ -17,6 +17,7 @@ import {
     RefreshCw,
     Plus,
     Pencil,
+    MessageSquareText,
     Trash2,
     Sparkles,
 } from 'lucide-react';
@@ -302,6 +303,7 @@ function JobCard({
     onDone,
     onDelay,
     onRefuse,
+    onOpenChat,
 }: {
     job: MyJob;
     addedServices: AddedServiceEntry[];
@@ -314,6 +316,7 @@ function JobCard({
     onDone: (jobId: string) => void;
     onDelay: (jobId: string) => void;
     onRefuse: (jobId: string) => void;
+    onOpenChat: (jobId: string) => void;
 }) {
     const [actionLoading, setActionLoading] = useState<string | null>(null);
 
@@ -519,6 +522,16 @@ function JobCard({
                     )}
                 </div>
 
+                <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => onOpenChat(job.job_id)}
+                    className="h-10 w-full justify-center gap-2 rounded-xl border-[#2F8E92]/25 bg-[#2F8E92]/8 text-[#2F8E92] hover:bg-[#2F8E92]/12 hover:text-[#267276] dark:border-teal-400/30 dark:bg-teal-400/10 dark:text-teal-200"
+                >
+                    <MessageSquareText className="h-4 w-4" />
+                    Open Job Chat
+                </Button>
+
                 {/* Action Buttons */}
                 {job.allowed_actions.length > 0 && (
                     <div className="pt-2 flex flex-wrap gap-2">
@@ -625,6 +638,7 @@ export default function MyJobsPage({
 }: {
     viewMode?: 'current' | 'history';
 }) {
+    const navigate = useNavigate();
     const { techId: previewTechId } = useParams();
     const [searchParams] = useSearchParams();
     const routeBase = previewTechId ? `/admin/tech-preview/${previewTechId}` : '/tech';
@@ -660,6 +674,10 @@ export default function MyJobsPage({
 
     // Action Loading
     const [confirmLoading, setConfirmLoading] = useState(false);
+
+    const handleOpenChat = (jobId: string) => {
+        navigate(`${routeBase}/chat?jobId=${encodeURIComponent(jobId)}`);
+    };
     const [offlineMode, setOfflineMode] = useState(false);
 
     const applyJobs = (nextJobs: MyJob[], options?: { fromCache?: boolean }) => {
@@ -1314,6 +1332,7 @@ export default function MyJobsPage({
                                                 onDone={handleDone}
                                                 onDelay={handleDelay}
                                                 onRefuse={handleRefuse}
+                                                onOpenChat={handleOpenChat}
                                             />
                                         ))}
                                     </div>
@@ -1350,6 +1369,7 @@ export default function MyJobsPage({
                                                 onDone={handleDone}
                                                 onDelay={handleDelay}
                                                 onRefuse={handleRefuse}
+                                                onOpenChat={handleOpenChat}
                                             />
                                         ))}
                                     </div>

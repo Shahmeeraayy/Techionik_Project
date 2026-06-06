@@ -43,6 +43,7 @@ MIGRATIONS: list[Migration] = [
     Migration("013_service_catalog_tenant_uniqueness.sql"),
     Migration("014_signup_requests_tenant_uniqueness.sql"),
     Migration("015_tenant_email_identities.sql"),
+    Migration("016_chatter_v1.sql"),
 ]
 
 
@@ -522,4 +523,3 @@ def run() -> None:
 
 if __name__ == "__main__":
     run()
-

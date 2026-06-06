@@ -1,6 +1,6 @@
 from uuid import uuid4
 
-from sqlalchemy import BigInteger, Boolean, CheckConstraint, Column, DateTime, JSON, String, Text, Uuid, text
+from sqlalchemy import BigInteger, Boolean, CheckConstraint, Column, DateTime, Integer, JSON, String, Text, Uuid, text
 from sqlalchemy.sql import func
 
 from .base import Base
@@ -14,6 +14,15 @@ class Tenant(Base):
     name = Column(String(255), nullable=False)
     plan = Column(String(32), nullable=False, server_default=text("'growth'"))
     status = Column(String(16), nullable=False, server_default=text("'active'"))
+    industry_type = Column(String(64), nullable=False, server_default=text("'general_services'"))
+    platform_status = Column(String(32), nullable=False, server_default=text("'trial'"))
+    subscription_plan = Column(String(32), nullable=False, server_default=text("'pro'"))
+    subscription_status = Column(String(32), nullable=False, server_default=text("'trial'"))
+    payment_failures_count = Column(Integer, nullable=False, server_default=text("0"))
+    trial_ends_at = Column(DateTime(timezone=True), nullable=True)
+    subscription_renewal_at = Column(DateTime(timezone=True), nullable=True)
+    suspended_at = Column(DateTime(timezone=True), nullable=True)
+    archived_at = Column(DateTime(timezone=True), nullable=True)
     estimated_response_time_message = Column(Text, nullable=True)
     feature_flags = Column(JSON, nullable=False, server_default=text("'{}'"))
     rate_limit_config = Column(JSON, nullable=False, server_default=text("'{}'"))

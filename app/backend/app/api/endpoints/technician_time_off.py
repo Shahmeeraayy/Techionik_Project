@@ -9,7 +9,11 @@ from ...core.security import AuthenticatedUser
 from ...schemas.technician_profile import TimeOffCreateRequest, TimeOffResponseItem
 from ...services.technician_time_off_service import TechnicianTimeOffService
 
-router = APIRouter(prefix="/technician/time-off", tags=["technician-time-off"])
+router = APIRouter(
+    prefix="/technician/time-off",
+    tags=["technician-time-off"],
+    dependencies=[Depends(deps.require_tenant_feature("scheduling"))],
+)
 
 
 @router.post("", response_model=TimeOffResponseItem)

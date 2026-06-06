@@ -51,6 +51,7 @@ def update_my_availability(
     payload: TechnicianAvailabilityUpdateRequest,
     db: Session = Depends(deps.get_db),
     current_user: AuthenticatedUser = Depends(deps.require_roles(UserRole.TECHNICIAN)),
+    _feature_access: AuthenticatedUser = Depends(deps.require_tenant_feature("scheduling")),
 ):
     return TechnicianProfileService(db, current_user).update_availability(payload)
 
@@ -85,6 +86,7 @@ def list_my_email_change_requests(
 def get_my_jobs_feed(
     db: Session = Depends(deps.get_db),
     current_user: AuthenticatedUser = Depends(deps.require_roles(UserRole.TECHNICIAN)),
+    _feature_access: AuthenticatedUser = Depends(deps.require_tenant_feature("jobs_work_orders")),
 ):
     return TechnicianJobsService(db).get_job_feed(current_user.user_id)
 
@@ -94,6 +96,7 @@ def start_my_job(
     job_id: UUID,
     db: Session = Depends(deps.get_db),
     current_user: AuthenticatedUser = Depends(deps.require_roles(UserRole.TECHNICIAN)),
+    _feature_access: AuthenticatedUser = Depends(deps.require_tenant_feature("jobs_work_orders")),
 ):
     row = TechnicianJobsService(db).start_my_job(current_user.user_id, job_id)
     return TechnicianJobActionResponse(job_id=row.id, status=row.status)
@@ -104,6 +107,7 @@ def accept_my_job(
     job_id: UUID,
     db: Session = Depends(deps.get_db),
     current_user: AuthenticatedUser = Depends(deps.require_roles(UserRole.TECHNICIAN)),
+    _feature_access: AuthenticatedUser = Depends(deps.require_tenant_feature("jobs_work_orders")),
 ):
     row = TechnicianJobsService(db).accept_my_job(current_user.user_id, job_id)
     return TechnicianJobActionResponse(job_id=row.id, status=row.status)
@@ -114,6 +118,7 @@ def complete_my_job(
     job_id: UUID,
     db: Session = Depends(deps.get_db),
     current_user: AuthenticatedUser = Depends(deps.require_roles(UserRole.TECHNICIAN)),
+    _feature_access: AuthenticatedUser = Depends(deps.require_tenant_feature("jobs_work_orders")),
 ):
     row = TechnicianJobsService(db).complete_my_job(current_user.user_id, job_id)
     return TechnicianJobActionResponse(job_id=row.id, status=row.status)
@@ -125,6 +130,7 @@ def delay_my_job(
     payload: TechnicianJobDelayRequest,
     db: Session = Depends(deps.get_db),
     current_user: AuthenticatedUser = Depends(deps.require_roles(UserRole.TECHNICIAN)),
+    _feature_access: AuthenticatedUser = Depends(deps.require_tenant_feature("jobs_work_orders")),
 ):
     row = TechnicianJobsService(db).delay_my_job(
         current_user.user_id,
@@ -141,6 +147,7 @@ def refuse_my_job(
     payload: TechnicianJobRefuseRequest,
     db: Session = Depends(deps.get_db),
     current_user: AuthenticatedUser = Depends(deps.require_roles(UserRole.TECHNICIAN)),
+    _feature_access: AuthenticatedUser = Depends(deps.require_tenant_feature("jobs_work_orders")),
 ):
     row = TechnicianJobsService(db).refuse_my_job(
         current_user.user_id,
@@ -157,6 +164,7 @@ def add_service_to_my_job(
     payload: TechnicianJobAddServiceRequest,
     db: Session = Depends(deps.get_db),
     current_user: AuthenticatedUser = Depends(deps.require_roles(UserRole.TECHNICIAN)),
+    _feature_access: AuthenticatedUser = Depends(deps.require_tenant_feature("jobs_work_orders")),
 ):
     row = TechnicianJobsService(db).add_service_to_my_job(
         current_user.user_id,
@@ -180,6 +188,7 @@ def update_service_on_my_job(
     payload: TechnicianJobUpdateServiceRequest,
     db: Session = Depends(deps.get_db),
     current_user: AuthenticatedUser = Depends(deps.require_roles(UserRole.TECHNICIAN)),
+    _feature_access: AuthenticatedUser = Depends(deps.require_tenant_feature("jobs_work_orders")),
 ):
     row = TechnicianJobsService(db).update_service_on_my_job(
         current_user.user_id,
@@ -203,6 +212,7 @@ def remove_service_from_my_job(
     service_id: UUID,
     db: Session = Depends(deps.get_db),
     current_user: AuthenticatedUser = Depends(deps.require_roles(UserRole.TECHNICIAN)),
+    _feature_access: AuthenticatedUser = Depends(deps.require_tenant_feature("jobs_work_orders")),
 ):
     row = TechnicianJobsService(db).remove_service_from_my_job(
         current_user.user_id,
