@@ -1,18 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  AtSign,
   Bell,
   BriefcaseBusiness,
   Check,
   CheckCheck,
-  Clock3,
-  FolderOpen,
-  Info,
-  ListFilter,
   MessageCircleMore,
   Mic,
-  PanelRightClose,
-  PanelRightOpen,
   Paperclip,
   Pin,
   RefreshCw,
@@ -41,7 +34,6 @@ import {
   getChatAttachmentValidationMessage,
 } from '@/lib/chat-attachments';
 import {
-  buildSharedConversationAttachments,
   filterConversationsByQuickFilter,
   formatConversationClock,
   formatMessageDayLabel,
@@ -49,7 +41,6 @@ import {
   getConversationStatusLine,
   getConversationTypeLabel,
   shouldRenderMessageDayDivider,
-  type ChatInsightTab,
   type ChatQuickFilter,
 } from '@/lib/chat-ui';
 import {
@@ -139,16 +130,6 @@ function getConversationInitials(conversation: BackendAdminChatConversation | nu
     .toUpperCase();
 }
 
-function getConversationSummaryLine(conversation: BackendAdminChatConversation | null) {
-  if (!conversation) {
-    return 'Open a technician thread to chat securely.';
-  }
-  if (conversation.channel_kind === 'group') {
-    return `${conversation.member_count} technicians in this operational group`;
-  }
-  return `${conversation.technician_name} - ${conversation.technician_status}`;
-}
-
 export default function PlatformChatPage() {
   const [searchParams] = useSearchParams();
   const requestedJobId = searchParams.get('jobId');
@@ -160,8 +141,6 @@ export default function PlatformChatPage() {
   const [favorites, setFavorites] = useState<string[]>(() => loadStoredArray(CHAT_FAVORITES_STORAGE_KEY));
   const [draftsByConversation, setDraftsByConversation] = useState<Record<string, string>>(() => loadStoredDrafts(CHAT_DRAFTS_STORAGE_KEY));
   const [activeFilter, setActiveFilter] = useState<ChatQuickFilter>('all');
-  const [showInfoPanel, setShowInfoPanel] = useState(true);
-  const [activeInsightTab, setActiveInsightTab] = useState<ChatInsightTab>('overview');
   const [contactSearch, setContactSearch] = useState('');
   const [historySearch, setHistorySearch] = useState('');
   const [draftMessage, setDraftMessage] = useState('');
@@ -195,11 +174,6 @@ export default function PlatformChatPage() {
     [conversations, selectedConversationId],
   );
 
-  const sharedFiles = useMemo(
-    () => buildSharedConversationAttachments(messages),
-    [messages],
-  );
-
   const favoriteConversations = useMemo(
     () => conversations.filter((conversation) => favorites.includes(conversation.id)),
     [conversations, favorites],
@@ -227,77 +201,7 @@ export default function PlatformChatPage() {
     { key: 'job', label: 'Job Chats', items: groupedConversations.job },
   ]), [groupedConversations]);
 
-  const techniciansById = useMemo(
-    () => new Map(technicians.map((technician) => [technician.id, technician])),
-    [technicians],
-  );
-
-  const selectedGroupMembers = useMemo(
-    () => selectedConversation?.member_ids
-      .map((memberId) => techniciansById.get(memberId))
-      .filter((member): member is BackendTechnicianListItem => Boolean(member)) ?? [],
-    [selectedConversation, techniciansById],
-  );
-
   const selectedConversationDraft = selectedConversationId ? (draftsByConversation[selectedConversationId] ?? '') : '';
-
-  const quickViewItems = useMemo(() => ([
-    {
-      key: 'mentions',
-      label: 'Mentions',
-      count: 0,
-      icon: AtSign,
-      description: 'Mention alerts land here once enabled',
-      disabled: true,
-    },
-    {
-      key: 'drafts',
-      label: 'Drafts',
-      count: Object.values(draftsByConversation).filter((value) => value.trim().length > 0).length,
-      icon: Clock3,
-      description: 'Resume unsent notes quickly',
-      disabled: false,
-      onClick: () => {
-        const nextDraftConversationId = Object.entries(draftsByConversation).find((entry) => entry[1].trim().length > 0)?.[0];
-        if (nextDraftConversationId) {
-          setSelectedConversationId(nextDraftConversationId);
-        }
-      },
-    },
-    {
-      key: 'pins',
-      label: 'Pinned',
-      count: conversations.reduce((sum, conversation) => sum + conversation.pinned_count, 0),
-      icon: Pin,
-      description: 'Operational guidance and saved notes',
-      disabled: false,
-      onClick: () => {
-        setShowInfoPanel(true);
-        setActiveInsightTab('pins');
-      },
-    },
-    {
-      key: 'files',
-      label: 'Shared Files',
-      count: sharedFiles.length,
-      icon: FolderOpen,
-      description: 'Conversation documents and media',
-      disabled: false,
-      onClick: () => {
-        setShowInfoPanel(true);
-        setActiveInsightTab('files');
-      },
-    },
-    {
-      key: 'unread',
-      label: 'Unread',
-      count: totalUnreadCount,
-      icon: MessageCircleMore,
-      description: 'Unread messages across your tenant',
-      disabled: false,
-      onClick: () => setActiveFilter('unread'),
-    },
-  ]), [conversations, draftsByConversation, sharedFiles.length, totalUnreadCount]);
 
   const syncUnreadBadge = (count: number) => {
     if (typeof window === 'undefined') return;
@@ -619,12 +523,7 @@ export default function PlatformChatPage() {
           </Button>
         </div>
 
-        <section className={cn(
-          'grid min-h-0 flex-1 gap-4',
-          showInfoPanel
-            ? 'xl:grid-cols-[320px_minmax(0,1fr)] 2xl:grid-cols-[320px_minmax(0,1fr)_320px]'
-            : 'xl:grid-cols-[320px_minmax(0,1fr)]',
-        )}>
+        <section className="grid min-h-0 flex-1 gap-4 xl:grid-cols-[320px_minmax(0,1fr)]">
           <Card className="flex min-h-0 flex-col overflow-hidden rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(9,24,39,0.96),rgba(6,17,29,0.96))] shadow-[0_24px_80px_rgba(0,0,0,0.28)]">
             <div className="shrink-0 border-b border-white/8 p-5">
               <div className="space-y-3">
@@ -726,46 +625,6 @@ export default function PlatformChatPage() {
             </div>
             <ScrollArea className="min-h-0 flex-1">
               <div className="space-y-4 p-3">
-                <section className="space-y-3 rounded-[24px] border border-white/8 bg-white/[0.02] p-3">
-                  <div className="flex items-center justify-between gap-2">
-                    <div>
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Quick Views</p>
-                      <p className="mt-1 text-xs text-slate-500">Fast operational shortcuts</p>
-                    </div>
-                    <ListFilter className="h-4 w-4 text-slate-500" />
-                  </div>
-                  <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
-                    {quickViewItems.map((item) => {
-                      const Icon = item.icon;
-                      return (
-                        <button
-                          key={item.key}
-                          type="button"
-                          onClick={() => item.onClick?.()}
-                          disabled={item.disabled}
-                          className={cn(
-                            'rounded-2xl border px-3 py-3 text-left transition',
-                            item.disabled
-                              ? 'cursor-not-allowed border-white/8 bg-white/[0.02] text-slate-500'
-                              : 'border-white/10 bg-white/[0.03] text-slate-100 hover:border-cyan-300/20 hover:bg-cyan-300/10',
-                          )}
-                        >
-                          <div className="flex items-center justify-between gap-2">
-                            <div className="flex items-center gap-2">
-                              <Icon className="h-4 w-4" />
-                              <span className="text-sm font-medium">{item.label}</span>
-                            </div>
-                            <Badge variant="outline" className="border-white/10 bg-white/[0.04] text-slate-200">
-                              {item.count}
-                            </Badge>
-                          </div>
-                          <p className="mt-2 text-[11px] leading-5 text-slate-500">{item.description}</p>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </section>
-
                 {favoriteConversations.length > 0 ? (
                   <section className="space-y-2">
                     <div className="px-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">
@@ -982,45 +841,6 @@ export default function PlatformChatPage() {
                     >
                       <Star className={cn('h-4 w-4', selectedConversation && favorites.includes(selectedConversation.id) && 'fill-current text-amber-300')} />
                       Favorite
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setShowInfoPanel(true);
-                        setActiveInsightTab('files');
-                      }}
-                      className="h-9 gap-2 rounded-full border-white/10 bg-white/[0.03] text-slate-200 hover:bg-white/[0.08]"
-                    >
-                      <FolderOpen className="h-4 w-4" />
-                      Files
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setShowInfoPanel(true);
-                        setActiveInsightTab('pins');
-                      }}
-                      className="h-9 gap-2 rounded-full border-white/10 bg-white/[0.03] text-slate-200 hover:bg-white/[0.08]"
-                    >
-                      <Pin className="h-4 w-4" />
-                      Pinned
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setShowInfoPanel((prev) => !prev);
-                        setActiveInsightTab('overview');
-                      }}
-                      className="h-9 gap-2 rounded-full border-white/10 bg-white/[0.03] text-slate-200 hover:bg-white/[0.08]"
-                    >
-                      {showInfoPanel ? <PanelRightClose className="h-4 w-4" /> : <PanelRightOpen className="h-4 w-4" />}
-                      {showInfoPanel ? 'Hide Info' : 'Info'}
                     </Button>
                   </div>
                 </div>
@@ -1251,189 +1071,6 @@ export default function PlatformChatPage() {
             </div>
           </Card>
 
-          {showInfoPanel ? (
-            <Card className="flex min-h-0 flex-col overflow-hidden rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(8,21,36,0.98),rgba(6,15,27,0.98))] shadow-[0_24px_80px_rgba(0,0,0,0.28)]">
-              <div className="shrink-0 border-b border-white/8 p-5">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Conversation Panel</p>
-                    <h3 className="mt-2 text-lg font-semibold text-white">
-                      {selectedConversation ? selectedConversation.title : 'Conversation details'}
-                    </h3>
-                    <p className="mt-1 text-sm text-slate-400">
-                      Files, pinned notes, members, and live context stay here.
-                    </p>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setShowInfoPanel(false)}
-                    className="h-10 w-10 rounded-full border border-white/10 bg-white/[0.03] text-slate-200 hover:bg-white/[0.08]"
-                  >
-                    <PanelRightClose className="h-4 w-4" />
-                  </Button>
-                </div>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {([
-                    { key: 'overview', label: 'Overview', icon: Info },
-                    { key: 'files', label: 'Files', icon: FolderOpen },
-                    { key: 'pins', label: 'Pinned', icon: Pin },
-                    { key: 'members', label: 'Members', icon: Users },
-                  ] as Array<{ key: ChatInsightTab; label: string; icon: typeof Info }>).map((tab) => {
-                    const Icon = tab.icon;
-                    return (
-                      <button
-                        key={tab.key}
-                        type="button"
-                        onClick={() => setActiveInsightTab(tab.key)}
-                        className={cn(
-                          'inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium transition',
-                          activeInsightTab === tab.key
-                            ? 'border-cyan-300/30 bg-cyan-300/12 text-cyan-100'
-                            : 'border-white/10 bg-white/[0.03] text-slate-300 hover:bg-white/[0.06] hover:text-white',
-                        )}
-                      >
-                        <Icon className="h-3.5 w-3.5" />
-                        {tab.label}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <ScrollArea className="min-h-0 flex-1">
-                <div className="space-y-4 p-4">
-                  {!selectedConversation ? (
-                    <div className="rounded-[24px] border border-dashed border-white/10 px-4 py-10 text-center text-sm text-slate-400">
-                      Select a conversation to see files, pinned messages, and member context here.
-                    </div>
-                  ) : activeInsightTab === 'overview' ? (
-                    <>
-                      <div className="grid gap-3 sm:grid-cols-2 2xl:grid-cols-1">
-                        <div className="rounded-[22px] border border-white/10 bg-white/[0.03] p-4">
-                          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">Status</p>
-                          <p className="mt-2 text-sm font-medium text-white">{getConversationStatusLine(selectedConversation)}</p>
-                          <p className="mt-2 text-xs text-slate-500">Last activity {formatRelativeChatTime(selectedConversation.last_message_at)}</p>
-                        </div>
-                        <div className="rounded-[22px] border border-white/10 bg-white/[0.03] p-4">
-                          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">Stats</p>
-                          <div className="mt-2 space-y-2 text-sm text-slate-300">
-                            <p>{selectedConversation.unread_count} unread messages</p>
-                            <p>{selectedConversation.pinned_count} pinned message{selectedConversation.pinned_count === 1 ? '' : 's'}</p>
-                            <p>{sharedFiles.length} shared file{sharedFiles.length === 1 ? '' : 's'}</p>
-                            <p>{selectedConversationDraft.trim() ? 'Draft ready to send' : 'No saved draft'}</p>
-                          </div>
-                        </div>
-                      </div>
-
-                      {selectedConversation.channel_kind === 'direct' ? (
-                        <div className="rounded-[24px] border border-white/10 bg-white/[0.03] p-4">
-                          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">Technician Profile</p>
-                          <div className="mt-3 space-y-2 text-sm text-slate-300">
-                            <p className="text-white">{selectedConversation.technician_name}</p>
-                            <p>{selectedConversation.technician_email}</p>
-                            {selectedConversation.technician_phone ? <p>{selectedConversation.technician_phone}</p> : null}
-                            <p>{selectedConversation.current_jobs_count} active job{selectedConversation.current_jobs_count === 1 ? '' : 's'}</p>
-                          </div>
-                        </div>
-                      ) : null}
-
-                      {selectedConversation.channel_kind === 'job' ? (
-                        <div className="rounded-[24px] border border-emerald-300/15 bg-emerald-300/10 p-4">
-                          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-100/80">Job Context</p>
-                          <div className="mt-3 space-y-2 text-sm text-emerald-50">
-                            <p>{selectedConversation.job_code || 'Linked job thread'}</p>
-                            <p>Status: {selectedConversation.job_status || 'In progress'}</p>
-                            <p>Assigned technician: {selectedConversation.technician_name}</p>
-                          </div>
-                        </div>
-                      ) : null}
-
-                      {selectedConversation.channel_kind === 'group' ? (
-                        <div className="rounded-[24px] border border-cyan-300/15 bg-cyan-300/10 p-4">
-                          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-cyan-100/80">Group Summary</p>
-                          <div className="mt-3 space-y-2 text-sm text-cyan-50">
-                            <p>{selectedConversation.member_count} technicians in this group</p>
-                            <p>{selectedGroupMembers.filter((member) => member.current_jobs_count > 0).length} members currently carrying active jobs</p>
-                            <p>Only tenant-authorized technicians can see or reply here.</p>
-                          </div>
-                        </div>
-                      ) : null}
-
-                      <div className="rounded-[24px] border border-white/10 bg-white/[0.03] p-4">
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">Security</p>
-                        <p className="mt-3 text-sm leading-6 text-slate-300">
-                          Messages, voice notes, and shared files remain tenant-scoped and private. Access stays bound to authorized admins, group members, and assigned job participants.
-                        </p>
-                      </div>
-                    </>
-                  ) : activeInsightTab === 'files' ? (
-                    sharedFiles.length > 0 ? (
-                      sharedFiles.map((attachment) => (
-                        <AttachmentCard
-                          key={`${attachment.message_id}-${attachment.id}`}
-                          attachment={attachment}
-                          token={token}
-                          tone="dark"
-                        />
-                      ))
-                    ) : (
-                      <div className="rounded-[24px] border border-dashed border-white/10 px-4 py-10 text-center text-sm text-slate-400">
-                        No shared files yet. Images, PDFs, voice notes, and other secure uploads will appear here.
-                      </div>
-                    )
-                  ) : activeInsightTab === 'pins' ? (
-                    pinnedMessages.length > 0 ? (
-                      pinnedMessages.map((message) => (
-                        <div key={`panel-pin-${message.id}`} className="rounded-[24px] border border-cyan-300/15 bg-cyan-300/10 p-4 text-sm text-cyan-50">
-                          <div className="flex items-center justify-between gap-3">
-                            <div className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-cyan-100/80">
-                              <Pin className="h-3.5 w-3.5" />
-                              Pinned message
-                            </div>
-                            <span className="text-[11px] text-cyan-100/70">{formatConversationClock(message.created_at)}</span>
-                          </div>
-                          <p className="mt-3 leading-6">{message.text || message.attachments[0]?.name || 'Pinned secure attachment'}</p>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="rounded-[24px] border border-dashed border-white/10 px-4 py-10 text-center text-sm text-slate-400">
-                        No pinned instructions yet. Important notes and job guidance can be pinned here.
-                      </div>
-                    )
-                  ) : (
-                    <div className="space-y-3">
-                      {selectedConversation.channel_kind === 'group' ? (
-                        selectedConversation.member_names.map((memberName, index) => {
-                          const technician = selectedGroupMembers[index];
-                          return (
-                            <div key={`${memberName}-${index}`} className="rounded-[22px] border border-white/10 bg-white/[0.03] p-4">
-                              <div className="flex items-center justify-between gap-3">
-                                <div>
-                                  <p className="text-sm font-semibold text-white">{memberName}</p>
-                                  <p className="mt-1 text-xs text-slate-400">{technician?.email || 'Authorized group member'}</p>
-                                </div>
-                                <Badge variant="outline" className="border-white/10 bg-white/[0.04] text-slate-200">
-                                  {technician?.current_jobs_count ?? 0} jobs
-                                </Badge>
-                              </div>
-                            </div>
-                          );
-                        })
-                      ) : (
-                        <div className="rounded-[24px] border border-white/10 bg-white/[0.03] p-4 text-sm text-slate-300">
-                          <p className="font-semibold text-white">{selectedConversation.technician_name}</p>
-                          <p className="mt-2">{selectedConversation.technician_email}</p>
-                          <p className="mt-2 text-slate-400">Direct and job-linked chats stay limited to authorized admin and technician participants.</p>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </ScrollArea>
-            </Card>
-          ) : null}
         </section>
       </div>
     </div>
