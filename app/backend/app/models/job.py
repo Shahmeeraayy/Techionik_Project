@@ -42,6 +42,7 @@ class Job(TenantScopedMixin, Base):
     requested_service_time = Column(Time, nullable=True)
     source_system = Column(String(32), nullable=True)
     source_metadata = Column(JSON, nullable=True)
+    internal_notes = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
     updated_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now())
 

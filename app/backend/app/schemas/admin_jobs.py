@@ -3,7 +3,7 @@ from decimal import Decimal
 from typing import Any, Dict, List, Optional
 from uuid import UUID
 
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, Field, validator
 
 
 class JobServiceResponse(BaseModel):
@@ -42,6 +42,19 @@ class AdminJobListItemResponse(BaseModel):
     last_refused_by_technician_name: Optional[str] = None
     last_refusal_reason: Optional[str] = None
     last_refusal_comment: Optional[str] = None
+
+
+class AdminJobTimelineEventResponse(BaseModel):
+    id: str
+    event_type: str
+    actor_type: str
+    created_at: datetime
+    payload_json: Optional[Dict[str, Any]] = None
+
+
+class AdminJobDetailResponse(AdminJobListItemResponse):
+    internal_notes: Optional[str] = None
+    timeline: List[AdminJobTimelineEventResponse] = Field(default_factory=list)
 
 
 class AdminJobAssignmentUpdateRequest(BaseModel):
@@ -142,3 +155,14 @@ class AdminJobUpdateRequest(BaseModel):
         if not normalized:
             raise ValueError("service_names must contain at least one service")
         return normalized
+
+
+class AdminJobInternalNotesUpdateRequest(BaseModel):
+    internal_notes: Optional[str] = None
+
+    @validator("internal_notes")
+    def validate_internal_notes(cls, value: Optional[str]):
+        if value is None:
+            return None
+        normalized = value.strip()
+        return normalized or None

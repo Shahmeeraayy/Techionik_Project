@@ -295,6 +295,8 @@ function MobileMenu({ isOpen, onClose }: { isOpen: boolean; onClose: () => void 
 
 export function TechnicianLayout({ children }: { children: React.ReactNode }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const location = useLocation();
+  const isChatRoute = location.pathname.startsWith('/tech/chat');
 
   return (
     <div className="tech-shell min-h-screen max-w-full overflow-x-hidden">
@@ -306,8 +308,20 @@ export function TechnicianLayout({ children }: { children: React.ReactNode }) {
 
         {/* Main content */}
         <main className="flex-1 min-w-0 max-w-full overflow-x-hidden pb-24 lg:p-4 lg:pb-4">
-          <div className="tech-page-frame min-h-screen min-w-0 max-w-full overflow-hidden rounded-none lg:min-h-[calc(100vh-2rem)] lg:rounded-[32px]">
-            <div className="tech-content min-h-screen min-w-0 max-w-full overflow-x-hidden p-4 pb-[calc(6rem+env(safe-area-inset-bottom))] lg:min-h-[calc(100vh-2rem)] lg:p-8">
+          <div
+            className={cn(
+              'tech-page-frame min-w-0 max-w-full overflow-hidden rounded-none lg:rounded-[32px]',
+              isChatRoute ? 'min-h-screen lg:h-[calc(100vh-2rem)]' : 'min-h-screen lg:min-h-[calc(100vh-2rem)]',
+            )}
+          >
+            <div
+              className={cn(
+                'tech-content min-w-0 max-w-full overflow-x-hidden p-4 pb-[calc(6rem+env(safe-area-inset-bottom))] lg:p-8',
+                isChatRoute
+                  ? 'flex min-h-0 flex-col overflow-hidden lg:h-full lg:pb-8'
+                  : 'min-h-screen lg:min-h-[calc(100vh-2rem)]',
+              )}
+            >
               {children}
             </div>
           </div>
@@ -318,4 +332,3 @@ export function TechnicianLayout({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
-

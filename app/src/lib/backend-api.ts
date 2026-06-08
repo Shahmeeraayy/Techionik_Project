@@ -780,6 +780,19 @@ export type BackendAdminJob = {
   last_refusal_comment?: string | null;
 };
 
+export type BackendAdminJobTimelineEvent = {
+  id: string;
+  event_type: string;
+  actor_type: 'SYSTEM' | 'ADMIN' | 'TECHNICIAN' | string;
+  created_at: string;
+  payload_json?: Record<string, unknown> | null;
+};
+
+export type BackendAdminJobDetail = BackendAdminJob & {
+  internal_notes?: string | null;
+  timeline: BackendAdminJobTimelineEvent[];
+};
+
 export type BackendTechnicianJobFeedItem = {
   id: string;
   job_code: string;
@@ -2112,6 +2125,15 @@ export async function fetchAdminJobs(token: string): Promise<BackendAdminJob[]> 
   });
 }
 
+export async function fetchAdminJob(
+  token: string,
+  jobLookup: string,
+): Promise<BackendAdminJobDetail> {
+  return requestJson<BackendAdminJobDetail>(`/admin/jobs/${encodeURIComponent(jobLookup)}`, {
+    token,
+  });
+}
+
 export async function createAdminJob(
   token: string,
   payload: {
@@ -2145,6 +2167,20 @@ export async function updateAdminJob(
   },
 ): Promise<BackendAdminJob> {
   return requestJson<BackendAdminJob>(`/admin/jobs/${jobId}`, {
+    method: 'PATCH',
+    token,
+    body: payload,
+  });
+}
+
+export async function updateAdminJobInternalNotes(
+  token: string,
+  jobId: string,
+  payload: {
+    internal_notes?: string | null;
+  },
+): Promise<BackendAdminJobDetail> {
+  return requestJson<BackendAdminJobDetail>(`/admin/jobs/${jobId}/internal-notes`, {
     method: 'PATCH',
     token,
     body: payload,

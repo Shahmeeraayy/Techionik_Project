@@ -1,0 +1,129 @@
+import type {
+  BackendChatAttachment,
+  BackendChatConversation,
+  BackendChatMessage,
+} from '@/lib/backend-api';
+
+export type ChatQuickFilter = 'all' | 'unread' | 'direct' | 'group' | 'job' | 'pinned';
+export type ChatInsightTab = 'overview' | 'files' | 'pins' | 'members';
+
+export type SharedConversationAttachment = BackendChatAttachment & {
+  created_at: string;
+  message_id: string;
+  sender_role: BackendChatMessage['sender_role'];
+  conversation_type: BackendChatMessage['conversation_type'];
+};
+
+export function formatRelativeChatTime(value?: string | null): string {
+  if (!value) return 'No activity yet';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return 'No activity yet';
+
+  const diffMs = date.getTime() - Date.now();
+  const diffMinutes = Math.round(diffMs / 60000);
+  const absMinutes = Math.abs(diffMinutes);
+
+  if (absMinutes < 1) return 'Just now';
+  if (absMinutes < 60) return `${absMinutes} min ago`;
+
+  const absHours = Math.round(absMinutes / 60);
+  if (absHours < 24) return `${absHours} hr ago`;
+
+  const absDays = Math.round(absHours / 24);
+  if (absDays < 7) return `${absDays} day${absDays === 1 ? '' : 's'} ago`;
+
+  return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+}
+
+export function formatConversationClock(value?: string | null): string {
+  if (!value) return '--';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '--';
+  return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }).toLowerCase();
+}
+
+export function formatMessageDayLabel(value: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  const today = new Date();
+  const yesterday = new Date();
+  yesterday.setDate(today.getDate() - 1);
+
+  const sameDay = (left: Date, right: Date) => (
+    left.getFullYear() === right.getFullYear()
+      && left.getMonth() === right.getMonth()
+      && left.getDate() === right.getDate()
+  );
+
+  if (sameDay(date, today)) return 'Today';
+  if (sameDay(date, yesterday)) return 'Yesterday';
+  return date.toLocaleDateString([], { month: 'long', day: 'numeric' });
+}
+
+export function shouldRenderMessageDayDivider(
+  messages: BackendChatMessage[],
+  index: number,
+): boolean {
+  if (index === 0) return true;
+  const current = formatMessageDayLabel(messages[index]?.created_at ?? '');
+  const previous = formatMessageDayLabel(messages[index - 1]?.created_at ?? '');
+  return current !== previous;
+}
+
+export function getConversationTypeLabel(conversation: BackendChatConversation | null): string {
+  if (!conversation) return 'Secure chat';
+  if (conversation.channel_kind === 'job') return 'Job Chat';
+  if (conversation.channel_kind === 'group') return 'Technician Group';
+  return 'Direct Chat';
+}
+
+export function getConversationStatusLine(conversation: BackendChatConversation | null): string {
+  if (!conversation) return 'Open a secure conversation to continue.';
+  if (conversation.channel_kind === 'group') {
+    return `${conversation.member_count} technician${conversation.member_count === 1 ? '' : 's'} in this group`;
+  }
+  if (conversation.channel_kind === 'job') {
+    return `${conversation.technician_name} · ${conversation.job_status || 'Active job'}`;
+  }
+  return `${conversation.technician_name} · ${conversation.technician_status}`;
+}
+
+export function filterConversationsByQuickFilter(
+  conversations: BackendChatConversation[],
+  filter: ChatQuickFilter,
+): BackendChatConversation[] {
+  switch (filter) {
+    case 'unread':
+      return conversations.filter((conversation) => conversation.unread_count > 0);
+    case 'direct':
+      return conversations.filter((conversation) => conversation.channel_kind === 'direct');
+    case 'group':
+      return conversations.filter((conversation) => conversation.channel_kind === 'group');
+    case 'job':
+      return conversations.filter((conversation) => conversation.channel_kind === 'job');
+    case 'pinned':
+      return conversations.filter((conversation) => conversation.pinned_count > 0);
+    default:
+      return conversations;
+  }
+}
+
+export function buildSharedConversationAttachments(
+  messages: BackendChatMessage[],
+): SharedConversationAttachment[] {
+  const shared: SharedConversationAttachment[] = [];
+  for (const message of messages) {
+    for (const attachment of message.attachments) {
+      shared.push({
+        ...attachment,
+        created_at: message.created_at,
+        message_id: message.id,
+        sender_role: message.sender_role,
+        conversation_type: message.conversation_type,
+      });
+    }
+  }
+  return shared.sort((left, right) => (
+    new Date(right.created_at).getTime() - new Date(left.created_at).getTime()
+  ));
+}

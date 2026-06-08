@@ -311,11 +311,11 @@ export default function TechnicianChatPage() {
   };
 
   return (
-    <div className="tech-shell pb-24 text-white">
-      <div className="relative w-full pb-8">
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-[320px] bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.12),rgba(34,211,238,0)_32%),radial-gradient(circle_at_top_right,rgba(16,185,129,0.1),rgba(16,185,129,0)_28%)]" />
-        <div className="relative mx-auto w-full max-w-[1500px] space-y-6 px-4 pt-4 sm:px-6 lg:px-8">
-          <section className="relative overflow-hidden rounded-[30px] border border-white/10 bg-[linear-gradient(135deg,rgba(7,25,42,0.98),rgba(6,18,32,0.98))] shadow-[0_34px_120px_rgba(0,0,0,0.34)]">
+    <div className="tech-shell flex min-h-0 flex-1 flex-col text-white">
+      <div className="relative flex min-h-0 w-full flex-1 flex-col">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.12),rgba(34,211,238,0)_32%),radial-gradient(circle_at_top_right,rgba(16,185,129,0.1),rgba(16,185,129,0)_28%)]" />
+        <div className="relative mx-auto flex min-h-0 w-full max-w-[1500px] flex-1 flex-col gap-4 px-4 pt-4 sm:px-6 lg:px-8">
+          <section className="relative shrink-0 overflow-hidden rounded-[30px] border border-white/10 bg-[linear-gradient(135deg,rgba(7,25,42,0.98),rgba(6,18,32,0.98))] shadow-[0_34px_120px_rgba(0,0,0,0.34)]">
             <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] bg-[size:120px_120px] opacity-20" />
             <div className="relative flex flex-col gap-5 p-5 lg:flex-row lg:items-end lg:justify-between lg:p-7">
               <div className="max-w-3xl">
@@ -361,9 +361,9 @@ export default function TechnicianChatPage() {
             </div>
           </section>
 
-          <div className="grid gap-6 xl:grid-cols-[320px_minmax(0,1fr)]">
-            <Card className="overflow-hidden rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(9,24,39,0.96),rgba(6,17,29,0.96))] shadow-[0_24px_80px_rgba(0,0,0,0.28)]">
-              <div className="border-b border-white/8 p-5">
+          <div className="grid min-h-0 flex-1 gap-4 xl:grid-cols-[320px_minmax(0,1fr)]">
+            <Card className="flex min-h-0 flex-col overflow-hidden rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(9,24,39,0.96),rgba(6,17,29,0.96))] shadow-[0_24px_80px_rgba(0,0,0,0.28)]">
+              <div className="shrink-0 border-b border-white/8 p-5">
                 <div className="relative">
                   <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
                   <Input
@@ -374,7 +374,7 @@ export default function TechnicianChatPage() {
                   />
                 </div>
               </div>
-              <ScrollArea className="h-[760px]">
+              <ScrollArea className="min-h-0 flex-1">
                 <div className="space-y-4 p-3">
                   {loadingConversations ? (
                     Array.from({ length: 4 }).map((_, index) => (
@@ -447,8 +447,8 @@ export default function TechnicianChatPage() {
               </ScrollArea>
             </Card>
 
-            <Card className="overflow-hidden rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(9,24,39,0.96),rgba(6,17,29,0.96))] shadow-[0_24px_80px_rgba(0,0,0,0.28)]">
-              <div className="border-b border-white/8 p-5">
+            <Card className="flex min-h-0 flex-col overflow-hidden rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(9,24,39,0.96),rgba(6,17,29,0.96))] shadow-[0_24px_80px_rgba(0,0,0,0.28)]">
+              <div className="shrink-0 border-b border-white/8 p-5">
                 <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
                   <div className="space-y-2">
                     <div className="flex flex-wrap items-center gap-2">
@@ -493,7 +493,7 @@ export default function TechnicianChatPage() {
               </div>
 
               {pinnedMessages.length > 0 ? (
-                <div className="border-b border-white/8 px-5 py-4">
+                <div className="shrink-0 border-b border-white/8 px-5 py-4">
                   <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-white">
                     <Pin className="h-4 w-4 text-cyan-300" />
                     Pinned Messages
@@ -511,8 +511,8 @@ export default function TechnicianChatPage() {
                 </div>
               ) : null}
 
-              <div className="grid min-h-[760px] grid-rows-[1fr_auto] bg-[linear-gradient(180deg,rgba(238,247,248,0.03),rgba(255,255,255,0.01))]">
-                <ScrollArea className="h-full">
+              <div className="flex min-h-0 flex-1 flex-col bg-[linear-gradient(180deg,rgba(238,247,248,0.03),rgba(255,255,255,0.01))]">
+                <ScrollArea className="min-h-0 flex-1">
                   <div className="space-y-4 px-5 py-6">
                     {loadingMessages ? (
                       Array.from({ length: 4 }).map((_, index) => (
@@ -525,7 +525,7 @@ export default function TechnicianChatPage() {
                         />
                       ))
                     ) : messages.length === 0 ? (
-                      <div className="flex min-h-[420px] flex-col items-center justify-center text-center">
+                      <div className="flex min-h-[320px] flex-col items-center justify-center py-12 text-center">
                         <div className="mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-white/[0.05]">
                           <MessageSquareText className="h-10 w-10 text-slate-500" />
                         </div>
@@ -586,7 +586,7 @@ export default function TechnicianChatPage() {
                   </div>
                 </ScrollArea>
 
-                <div className="border-t border-slate-200 bg-white p-5 dark:border-white/8 dark:bg-[rgba(6,17,29,0.9)]">
+                <div className="shrink-0 border-t border-slate-200 bg-white p-5 dark:border-white/8 dark:bg-[rgba(6,17,29,0.9)]">
                   {pendingAttachments.length > 0 ? (
                     <div className="mb-3 flex flex-wrap gap-2">
                       {pendingAttachments.map((attachment) => (

@@ -44,6 +44,7 @@ MIGRATIONS: list[Migration] = [
     Migration("014_signup_requests_tenant_uniqueness.sql"),
     Migration("015_tenant_email_identities.sql"),
     Migration("016_chatter_v1.sql"),
+    Migration("018_job_internal_notes.sql"),
 ]
 
 
@@ -174,6 +175,7 @@ def ensure_sqlite_technician_password_column(conn) -> None:
     ensure_column("jobs", "requested_service_time", "TIME")
     ensure_column("jobs", "source_system", "VARCHAR(32)")
     ensure_column("jobs", "source_metadata", "TEXT")
+    ensure_column("jobs", "internal_notes", "TEXT")
     ensure_column("jobs", "pre_assigned_technician_id", "CHAR(32)")
     ensure_column("jobs", "pre_assignment_reason", "VARCHAR(64)")
     ensure_column("job_services", "quantity", "NUMERIC(10,2) DEFAULT 1 NOT NULL")

@@ -1,4 +1,5 @@
-from typing import Dict, List
+from datetime import datetime, timezone
+from typing import Any, Dict, List
 from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -17,7 +18,10 @@ from ...models.technician import Technician
 from ...schemas.admin_jobs import (
     AdminJobAssignmentUpdateRequest,
     AdminJobCreateRequest,
+    AdminJobDetailResponse,
+    AdminJobInternalNotesUpdateRequest,
     AdminJobListItemResponse,
+    AdminJobTimelineEventResponse,
     AdminJobUpdateRequest,
 )
 from ...services.job_services_service import JobServicesService
@@ -37,6 +41,73 @@ def _generate_manual_job_code(db: Session) -> str:
         if existing is None:
             return candidate
     raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Could not generate job code")
+
+
+def _find_job_by_lookup(db: Session, job_lookup: str) -> Job | None:
+    normalized_lookup = job_lookup.strip()
+    try:
+        parsed_id = UUID(normalized_lookup)
+    except ValueError:
+        parsed_id = None
+
+    if parsed_id is not None:
+        row = db.query(Job).filter(Job.id == parsed_id).first()
+        if row is not None:
+            return row
+
+    return db.query(Job).filter(Job.job_code == normalized_lookup).first()
+
+
+def _append_job_event(
+    db: Session,
+    *,
+    job_row: Job,
+    event_type: str,
+    actor_type: str,
+    payload_json: Dict[str, Any] | None = None,
+) -> None:
+    db.add(
+        JobEvent(
+            job_id=job_row.id,
+            event_type=event_type,
+            actor_type=actor_type,
+            payload_json=payload_json or None,
+            created_at=datetime.now(timezone.utc),
+        )
+    )
+
+
+def _serialize_admin_job_timeline(db: Session, job_row: Job) -> list[AdminJobTimelineEventResponse]:
+    rows = (
+        db.query(JobEvent)
+        .filter(JobEvent.job_id == job_row.id)
+        .order_by(JobEvent.created_at.desc(), JobEvent.id.desc())
+        .all()
+    )
+    timeline = [
+        AdminJobTimelineEventResponse(
+            id=str(row.id),
+            event_type=row.event_type,
+            actor_type=row.actor_type,
+            created_at=row.created_at,
+            payload_json=row.payload_json if isinstance(row.payload_json, dict) else None,
+        )
+        for row in rows
+    ]
+    if not any(row.event_type == "JOB_CREATED" for row in timeline):
+        timeline.append(
+            AdminJobTimelineEventResponse(
+                id=f"{job_row.id}-created",
+                event_type="JOB_CREATED",
+                actor_type="ADMIN" if (job_row.source_system or "").strip().lower() == "admin_ui" else "SYSTEM",
+                created_at=job_row.created_at,
+                payload_json={
+                    "status": normalize_dispatch_job_status(job_row.status).value,
+                    "source_system": job_row.source_system,
+                },
+            )
+        )
+    return timeline
 
 
 def _serialize_admin_job_row(db: Session, job_row: Job) -> AdminJobListItemResponse:
@@ -107,6 +178,15 @@ def _serialize_admin_job_row(db: Session, job_row: Job) -> AdminJobListItemRespo
     )
 
 
+def _serialize_admin_job_detail_row(db: Session, job_row: Job) -> AdminJobDetailResponse:
+    base_row = _serialize_admin_job_row(db, job_row)
+    return AdminJobDetailResponse(
+        **base_row.model_dump(),
+        internal_notes=job_row.internal_notes,
+        timeline=_serialize_admin_job_timeline(db, job_row),
+    )
+
+
 @router.post("", response_model=AdminJobListItemResponse, status_code=status.HTTP_201_CREATED)
 def create_admin_job(
     payload: AdminJobCreateRequest,
@@ -171,11 +251,24 @@ def create_admin_job(
         },
     )
     db.add(job_row)
+    db.flush()
     JobServicesService(db).replace_services(
         job=job_row,
         service_names=normalized_service_names,
         source="admin",
         created_by_user_id=current_user.user_id,
+    )
+    _append_job_event(
+        db,
+        job_row=job_row,
+        event_type="JOB_CREATED",
+        actor_type="ADMIN",
+        payload_json={
+            "created_by_user_id": str(current_user.user_id),
+            "service_names": normalized_service_names,
+            "pre_assigned_technician_id": str(job_row.pre_assigned_technician_id) if job_row.pre_assigned_technician_id is not None else None,
+            "source_system": job_row.source_system,
+        },
     )
     db.commit()
     db.refresh(job_row)
@@ -203,6 +296,19 @@ def list_admin_jobs(
     return [_serialize_admin_job_row(db, job) for job, dealership, technician, pre_assigned_technician in rows]
 
 
+@router.get("/{job_lookup}", response_model=AdminJobDetailResponse)
+def get_admin_job(
+    job_lookup: str,
+    db: Session = Depends(deps.get_db),
+    current_user: AuthenticatedUser = Depends(deps.require_roles(UserRole.ADMIN)),
+):
+    job_row = _find_job_by_lookup(db, job_lookup)
+    if job_row is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Job not found")
+
+    return _serialize_admin_job_detail_row(db, job_row)
+
+
 @router.patch("/{job_id}", response_model=AdminJobListItemResponse)
 def update_admin_job(
     job_id: UUID,
@@ -217,18 +323,22 @@ def update_admin_job(
     normalized_status = normalize_dispatch_job_status(job_row.status)
     if normalized_status in {DispatchJobStatus.CANCELLED, DispatchJobStatus.COMPLETED}:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Completed/cancelled jobs cannot be edited")
+    changed_fields: list[str] = []
 
     if payload.dealership_name is not None:
         dealership = (
             db.query(Dealership).filter(Dealership.name == payload.dealership_name).first()
             or db.query(Dealership).filter(Dealership.code == payload.dealership_name).first()
         )
+        previous_dealership_name = job_row.customer_name or job_row.location or ""
         job_row.dealership_id = dealership.id if dealership is not None else None
         job_row.customer_name = dealership.name if dealership is not None else payload.dealership_name
         job_row.location = (dealership.city.strip() if dealership is not None and dealership.city else None)
         metadata = dict(job_row.source_metadata) if isinstance(job_row.source_metadata, dict) else {}
         metadata["dealership_name_input"] = payload.dealership_name
         job_row.source_metadata = metadata
+        if previous_dealership_name != (job_row.customer_name or job_row.location or ""):
+            changed_fields.append("dealership_name")
 
     if payload.service_name is not None or payload.service_names is not None:
         try:
@@ -243,13 +353,32 @@ def update_admin_job(
             source="admin",
             created_by_user_id=current_user.user_id,
         )
+        changed_fields.append("service_names")
 
     if payload.vehicle_summary is not None:
+        if (job_row.vehicle or "") != payload.vehicle_summary:
+            changed_fields.append("vehicle_summary")
         job_row.vehicle = payload.vehicle_summary
     if payload.requested_service_date is not None:
+        if job_row.requested_service_date != payload.requested_service_date:
+            changed_fields.append("requested_service_date")
         job_row.requested_service_date = payload.requested_service_date
     if payload.requested_service_time is not None:
+        if job_row.requested_service_time != payload.requested_service_time:
+            changed_fields.append("requested_service_time")
         job_row.requested_service_time = payload.requested_service_time
+
+    if changed_fields:
+        _append_job_event(
+            db,
+            job_row=job_row,
+            event_type="JOB_UPDATED",
+            actor_type="ADMIN",
+            payload_json={
+                "changed_fields": sorted(set(changed_fields)),
+                "updated_by_user_id": str(current_user.user_id),
+            },
+        )
 
     db.commit()
     db.refresh(job_row)
@@ -292,6 +421,9 @@ def update_admin_job_assignment(
     normalized_status = normalize_dispatch_job_status(job_row.status)
     if normalized_status in {DispatchJobStatus.CANCELLED, DispatchJobStatus.COMPLETED}:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Completed/cancelled jobs cannot be assigned")
+    previous_assigned_technician = None
+    if job_row.assigned_tech_id is not None:
+        previous_assigned_technician = db.query(Technician).filter(Technician.id == job_row.assigned_tech_id).first()
 
     assigned_technician = None
     if payload.assigned_technician_id is not None:
@@ -305,6 +437,28 @@ def update_admin_job_assignment(
     # Prevent "ghost jobs": a scheduled job must never remain unassigned.
     if payload.assigned_technician_id is None and normalized_status == DispatchJobStatus.SCHEDULED:
         job_row.status = db_status_from_dispatch_status(DispatchJobStatus.PENDING)
+    if previous_assigned_technician is None and assigned_technician is not None:
+        event_type = "TECH_ASSIGNED"
+    elif previous_assigned_technician is not None and assigned_technician is None:
+        event_type = "TECH_UNASSIGNED"
+    elif previous_assigned_technician is not None and assigned_technician is not None and previous_assigned_technician.id != assigned_technician.id:
+        event_type = "TECH_REASSIGNED"
+    else:
+        event_type = None
+    if event_type is not None:
+        _append_job_event(
+            db,
+            job_row=job_row,
+            event_type=event_type,
+            actor_type="ADMIN",
+            payload_json={
+                "updated_by_user_id": str(current_user.user_id),
+                "previous_technician_id": str(previous_assigned_technician.id) if previous_assigned_technician is not None else None,
+                "previous_technician_name": previous_assigned_technician.name if previous_assigned_technician is not None else None,
+                "technician_id": str(assigned_technician.id) if assigned_technician is not None else None,
+                "technician_name": assigned_technician.name if assigned_technician is not None else None,
+            },
+        )
     db.commit()
     db.refresh(job_row)
 
@@ -350,6 +504,20 @@ def confirm_admin_job(
         DispatchJobStatus.PENDING_REVIEW,
     }:
         job_row.status = db_status_from_dispatch_status(DispatchJobStatus.SCHEDULED)
+        assigned_technician = None
+        if job_row.assigned_tech_id is not None:
+            assigned_technician = db.query(Technician).filter(Technician.id == job_row.assigned_tech_id).first()
+        _append_job_event(
+            db,
+            job_row=job_row,
+            event_type="JOB_CONFIRMED",
+            actor_type="ADMIN",
+            payload_json={
+                "confirmed_by_user_id": str(current_user.user_id),
+                "technician_id": str(job_row.assigned_tech_id) if job_row.assigned_tech_id is not None else None,
+                "technician_name": assigned_technician.name if assigned_technician is not None else None,
+            },
+        )
 
     db.commit()
     db.refresh(job_row)
@@ -378,3 +546,34 @@ def sync_admin_job_location_from_dealership(
         db.refresh(job_row)
 
     return _serialize_admin_job_row(db, job_row)
+
+
+@router.patch("/{job_id}/internal-notes", response_model=AdminJobDetailResponse)
+def update_admin_job_internal_notes(
+    job_id: UUID,
+    payload: AdminJobInternalNotesUpdateRequest,
+    db: Session = Depends(deps.get_db),
+    current_user: AuthenticatedUser = Depends(deps.require_roles(UserRole.ADMIN)),
+):
+    job_row = db.query(Job).filter(Job.id == job_id).first()
+    if job_row is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Job not found")
+
+    previous_notes = (job_row.internal_notes or "").strip() or None
+    next_notes = payload.internal_notes
+    if previous_notes != next_notes:
+        job_row.internal_notes = next_notes
+        _append_job_event(
+            db,
+            job_row=job_row,
+            event_type="INTERNAL_NOTE_UPDATED" if next_notes else "INTERNAL_NOTE_CLEARED",
+            actor_type="ADMIN",
+            payload_json={
+                "updated_by_user_id": str(current_user.user_id),
+                "note_length": len(next_notes or ""),
+            },
+        )
+        db.commit()
+        db.refresh(job_row)
+
+    return _serialize_admin_job_detail_row(db, job_row)

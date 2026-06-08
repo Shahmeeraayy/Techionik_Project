@@ -1,17 +1,24 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
+  AtSign,
   Bell,
   BriefcaseBusiness,
   Check,
   CheckCheck,
+  Clock3,
+  FolderOpen,
+  Info,
+  ListFilter,
   MessageCircleMore,
   Mic,
+  PanelRightClose,
+  PanelRightOpen,
   Paperclip,
   Pin,
   RefreshCw,
   Search,
   Send,
-  Shield,
+  Star,
   Square,
   Users,
   X,
@@ -34,8 +41,19 @@ import {
   getChatAttachmentValidationMessage,
 } from '@/lib/chat-attachments';
 import {
+  buildSharedConversationAttachments,
+  filterConversationsByQuickFilter,
+  formatConversationClock,
+  formatMessageDayLabel,
+  formatRelativeChatTime,
+  getConversationStatusLine,
+  getConversationTypeLabel,
+  shouldRenderMessageDayDivider,
+  type ChatInsightTab,
+  type ChatQuickFilter,
+} from '@/lib/chat-ui';
+import {
   createAdminChatGroup,
-  fetchAdminChatAuditLogs,
   fetchAdminChatConversations,
   fetchAdminChatThreadMessages,
   fetchAdminJobChatConversation,
@@ -47,7 +65,6 @@ import {
   sendAdminChatThreadMessage,
   type BackendAdminChatConversation,
   type BackendChatAttachment,
-  type BackendChatAuditLog,
   type BackendChatMessage,
   type BackendTechnicianListItem,
   unpinAdminChatMessage,
@@ -55,6 +72,44 @@ import {
 import { cn } from '@/lib/utils';
 
 const CHAT_UNREAD_STORAGE_KEY = 'sm_admin_chat_unread_count';
+const CHAT_FAVORITES_STORAGE_KEY = 'sm_admin_chat_favorites_v1';
+const CHAT_DRAFTS_STORAGE_KEY = 'sm_admin_chat_drafts_v1';
+
+const QUICK_FILTERS: Array<{ key: ChatQuickFilter; label: string }> = [
+  { key: 'all', label: 'All' },
+  { key: 'unread', label: 'Unread' },
+  { key: 'direct', label: 'Direct' },
+  { key: 'group', label: 'Groups' },
+  { key: 'job', label: 'Jobs' },
+  { key: 'pinned', label: 'Pinned' },
+];
+
+function loadStoredArray(key: string): string[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = window.localStorage.getItem(key);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === 'string') : [];
+  } catch {
+    return [];
+  }
+}
+
+function loadStoredDrafts(key: string): Record<string, string> {
+  if (typeof window === 'undefined') return {};
+  try {
+    const raw = window.localStorage.getItem(key);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object') return {};
+    return Object.fromEntries(
+      Object.entries(parsed).filter((entry): entry is [string, string] => typeof entry[0] === 'string' && typeof entry[1] === 'string'),
+    );
+  } catch {
+    return {};
+  }
+}
 
 function formatMessageStatus(message: BackendChatMessage) {
   if (message.read_at) {
@@ -100,9 +155,13 @@ export default function PlatformChatPage() {
   const [conversations, setConversations] = useState<BackendAdminChatConversation[]>([]);
   const [messages, setMessages] = useState<BackendChatMessage[]>([]);
   const [pinnedMessages, setPinnedMessages] = useState<BackendChatMessage[]>([]);
-  const [auditRows, setAuditRows] = useState<BackendChatAuditLog[]>([]);
   const [technicians, setTechnicians] = useState<BackendTechnicianListItem[]>([]);
   const [selectedConversationId, setSelectedConversationId] = useState('');
+  const [favorites, setFavorites] = useState<string[]>(() => loadStoredArray(CHAT_FAVORITES_STORAGE_KEY));
+  const [draftsByConversation, setDraftsByConversation] = useState<Record<string, string>>(() => loadStoredDrafts(CHAT_DRAFTS_STORAGE_KEY));
+  const [activeFilter, setActiveFilter] = useState<ChatQuickFilter>('all');
+  const [showInfoPanel, setShowInfoPanel] = useState(true);
+  const [activeInsightTab, setActiveInsightTab] = useState<ChatInsightTab>('overview');
   const [contactSearch, setContactSearch] = useState('');
   const [historySearch, setHistorySearch] = useState('');
   const [draftMessage, setDraftMessage] = useState('');
@@ -136,22 +195,109 @@ export default function PlatformChatPage() {
     [conversations, selectedConversationId],
   );
 
+  const sharedFiles = useMemo(
+    () => buildSharedConversationAttachments(messages),
+    [messages],
+  );
+
+  const favoriteConversations = useMemo(
+    () => conversations.filter((conversation) => favorites.includes(conversation.id)),
+    [conversations, favorites],
+  );
+
   const totalUnreadCount = useMemo(
     () => conversations.reduce((sum, conversation) => sum + conversation.unread_count, 0),
     [conversations],
   );
 
+  const filteredConversations = useMemo(
+    () => filterConversationsByQuickFilter(conversations, activeFilter),
+    [activeFilter, conversations],
+  );
+
   const groupedConversations = useMemo(() => ({
-    direct: conversations.filter((conversation) => conversation.channel_kind === 'direct'),
-    group: conversations.filter((conversation) => conversation.channel_kind === 'group'),
-    job: conversations.filter((conversation) => conversation.channel_kind === 'job'),
-  }), [conversations]);
+    direct: filteredConversations.filter((conversation) => conversation.channel_kind === 'direct'),
+    group: filteredConversations.filter((conversation) => conversation.channel_kind === 'group'),
+    job: filteredConversations.filter((conversation) => conversation.channel_kind === 'job'),
+  }), [filteredConversations]);
 
   const conversationSections = useMemo(() => ([
     { key: 'direct', label: 'Direct Chats', items: groupedConversations.direct },
     { key: 'group', label: 'Technician Groups', items: groupedConversations.group },
     { key: 'job', label: 'Job Chats', items: groupedConversations.job },
   ]), [groupedConversations]);
+
+  const techniciansById = useMemo(
+    () => new Map(technicians.map((technician) => [technician.id, technician])),
+    [technicians],
+  );
+
+  const selectedGroupMembers = useMemo(
+    () => selectedConversation?.member_ids
+      .map((memberId) => techniciansById.get(memberId))
+      .filter((member): member is BackendTechnicianListItem => Boolean(member)) ?? [],
+    [selectedConversation, techniciansById],
+  );
+
+  const selectedConversationDraft = selectedConversationId ? (draftsByConversation[selectedConversationId] ?? '') : '';
+
+  const quickViewItems = useMemo(() => ([
+    {
+      key: 'mentions',
+      label: 'Mentions',
+      count: 0,
+      icon: AtSign,
+      description: 'Mention alerts land here once enabled',
+      disabled: true,
+    },
+    {
+      key: 'drafts',
+      label: 'Drafts',
+      count: Object.values(draftsByConversation).filter((value) => value.trim().length > 0).length,
+      icon: Clock3,
+      description: 'Resume unsent notes quickly',
+      disabled: false,
+      onClick: () => {
+        const nextDraftConversationId = Object.entries(draftsByConversation).find((entry) => entry[1].trim().length > 0)?.[0];
+        if (nextDraftConversationId) {
+          setSelectedConversationId(nextDraftConversationId);
+        }
+      },
+    },
+    {
+      key: 'pins',
+      label: 'Pinned',
+      count: conversations.reduce((sum, conversation) => sum + conversation.pinned_count, 0),
+      icon: Pin,
+      description: 'Operational guidance and saved notes',
+      disabled: false,
+      onClick: () => {
+        setShowInfoPanel(true);
+        setActiveInsightTab('pins');
+      },
+    },
+    {
+      key: 'files',
+      label: 'Shared Files',
+      count: sharedFiles.length,
+      icon: FolderOpen,
+      description: 'Conversation documents and media',
+      disabled: false,
+      onClick: () => {
+        setShowInfoPanel(true);
+        setActiveInsightTab('files');
+      },
+    },
+    {
+      key: 'unread',
+      label: 'Unread',
+      count: totalUnreadCount,
+      icon: MessageCircleMore,
+      description: 'Unread messages across your tenant',
+      disabled: false,
+      onClick: () => setActiveFilter('unread'),
+    },
+  ]), [conversations, draftsByConversation, sharedFiles.length, totalUnreadCount]);
 
   const syncUnreadBadge = (count: number) => {
     if (typeof window === 'undefined') return;
@@ -186,19 +332,16 @@ export default function PlatformChatPage() {
     if (!conversationId || !token) {
       setMessages([]);
       setPinnedMessages([]);
-      setAuditRows([]);
       return;
     }
     if (!silent) setLoadingMessages(true);
     try {
-      const [thread, pinned, audit] = await Promise.all([
+      const [thread, pinned] = await Promise.all([
         fetchAdminChatThreadMessages(token, conversationId, search.trim() || undefined),
         fetchAdminPinnedChatMessages(token, conversationId),
-        fetchAdminChatAuditLogs(token, conversationId),
       ]);
       setMessages(thread);
       setPinnedMessages(pinned.items);
-      setAuditRows(audit.slice(0, 5));
       await markAdminChatThreadRead(token, conversationId);
 
       const nextIds = new Set(thread.map((message) => message.id));
@@ -286,8 +429,48 @@ export default function PlatformChatPage() {
   }, [contactSearch]);
 
   useEffect(() => {
+    setDraftMessage(selectedConversationDraft);
+  }, [selectedConversationDraft, selectedConversationId]);
+
+  useEffect(() => {
+    if (!selectedConversationId) return;
+    setDraftsByConversation((prev) => {
+      const current = prev[selectedConversationId] ?? '';
+      if (draftMessage.trim().length === 0) {
+        if (!current) return prev;
+        const next = { ...prev };
+        delete next[selectedConversationId];
+        return next;
+      }
+      if (current === draftMessage) return prev;
+      return {
+        ...prev,
+        [selectedConversationId]: draftMessage,
+      };
+    });
+  }, [draftMessage, selectedConversationId]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    window.localStorage.setItem(CHAT_FAVORITES_STORAGE_KEY, JSON.stringify(favorites));
+  }, [favorites]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    window.localStorage.setItem(CHAT_DRAFTS_STORAGE_KEY, JSON.stringify(draftsByConversation));
+  }, [draftsByConversation]);
+
+  useEffect(() => {
     syncUnreadBadge(totalUnreadCount);
   }, [totalUnreadCount]);
+
+  const toggleFavoriteConversation = (conversationId: string) => {
+    setFavorites((prev) => (
+      prev.includes(conversationId)
+        ? prev.filter((item) => item !== conversationId)
+        : [...prev, conversationId]
+    ));
+  };
 
   const handleEnableNotifications = async () => {
     if (typeof window === 'undefined' || !('Notification' in window)) {
@@ -401,61 +584,49 @@ export default function PlatformChatPage() {
   };
 
   return (
-    <div className="relative w-full pb-10">
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-[380px] rounded-[34px] bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.12),rgba(34,211,238,0)_34%),radial-gradient(circle_at_top_right,rgba(52,211,153,0.08),rgba(52,211,153,0)_30%)]" />
-      <div className="relative space-y-6">
-        <section className="relative overflow-hidden rounded-[32px] border border-white/10 bg-[linear-gradient(135deg,rgba(7,25,42,0.98),rgba(6,18,32,0.98))] shadow-[0_34px_120px_rgba(0,0,0,0.34)]">
-          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] bg-[size:120px_120px] opacity-20" />
-          <div className="relative flex flex-col gap-5 p-6 xl:flex-row xl:items-end xl:justify-between xl:p-8">
-            <div className="max-w-3xl">
-              <div className="inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-100">
-                <MessageCircleMore className="h-3.5 w-3.5" />
-                Chatter
-              </div>
-              <h1 className="mt-5 text-[2.35rem] font-semibold leading-none tracking-[-0.06em] text-white md:text-[2.8rem]">
-                Admin to Technician Threads
-              </h1>
-              <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-300 sm:text-[15px]">
-                Tenant-isolated conversations with secure files, voice notes, read status, and job-linked threads.
-              </p>
-            </div>
-            <div className="flex flex-wrap items-center justify-end gap-3">
-              <Badge variant="outline" className="border-cyan-300/20 bg-cyan-300/10 px-3 py-2 text-cyan-100">
-                {conversations.length} threads
-              </Badge>
-              <Badge variant="outline" className="border-amber-300/20 bg-amber-300/10 px-3 py-2 text-amber-100">
-                {totalUnreadCount} unread
-              </Badge>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleEnableNotifications}
-                className="h-10 gap-2 rounded-full border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
-              >
-                <Bell className="h-4 w-4" />
-                {notificationEnabled ? 'Notifications On' : 'Enable Alerts'}
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  void loadConversations(contactSearch, true);
-                  if (selectedConversationId) {
-                    void loadThread(selectedConversationId, historySearch);
-                  }
-                }}
-                className="h-10 gap-2 rounded-full border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
-              >
-                <RefreshCw className={cn('h-4 w-4', (loadingConversations || loadingMessages) && 'animate-spin')} />
-                Refresh
-              </Button>
-            </div>
-          </div>
-        </section>
+    <div className="relative flex min-h-0 w-full flex-1 flex-col overflow-hidden">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-28 rounded-[34px] bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.12),rgba(34,211,238,0)_34%),radial-gradient(circle_at_top_right,rgba(52,211,153,0.08),rgba(52,211,153,0)_30%)]" />
+      <div className="relative flex min-h-0 flex-1 flex-col gap-4">
+        <div className="flex shrink-0 flex-wrap items-center justify-end gap-3 px-1">
+          <Badge variant="outline" className="border-cyan-300/20 bg-cyan-300/10 px-3 py-2 text-cyan-100">
+            {conversations.length} threads
+          </Badge>
+          <Badge variant="outline" className="border-amber-300/20 bg-amber-300/10 px-3 py-2 text-amber-100">
+            {totalUnreadCount} unread
+          </Badge>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleEnableNotifications}
+            className="h-10 gap-2 rounded-full border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
+          >
+            <Bell className="h-4 w-4" />
+            {notificationEnabled ? 'Notifications On' : 'Enable Alerts'}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              void loadConversations(contactSearch, true);
+              if (selectedConversationId) {
+                void loadThread(selectedConversationId, historySearch);
+              }
+            }}
+            className="h-10 gap-2 rounded-full border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
+          >
+            <RefreshCw className={cn('h-4 w-4', (loadingConversations || loadingMessages) && 'animate-spin')} />
+            Refresh
+          </Button>
+        </div>
 
-        <section className="grid gap-6 xl:grid-cols-[360px_minmax(0,1fr)]">
-          <Card className="overflow-hidden rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(9,24,39,0.96),rgba(6,17,29,0.96))] shadow-[0_24px_80px_rgba(0,0,0,0.28)]">
-            <div className="border-b border-white/8 p-5">
+        <section className={cn(
+          'grid min-h-0 flex-1 gap-4',
+          showInfoPanel
+            ? 'xl:grid-cols-[320px_minmax(0,1fr)] 2xl:grid-cols-[320px_minmax(0,1fr)_320px]'
+            : 'xl:grid-cols-[320px_minmax(0,1fr)]',
+        )}>
+          <Card className="flex min-h-0 flex-col overflow-hidden rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(9,24,39,0.96),rgba(6,17,29,0.96))] shadow-[0_24px_80px_rgba(0,0,0,0.28)]">
+            <div className="shrink-0 border-b border-white/8 p-5">
               <div className="space-y-3">
                 <div className="relative">
                   <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
@@ -465,6 +636,23 @@ export default function PlatformChatPage() {
                     placeholder="Search technicians, groups or job codes"
                     className="h-12 rounded-full border-white/10 bg-white/[0.04] pl-11 text-white placeholder:text-slate-500"
                   />
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {QUICK_FILTERS.map((filter) => (
+                    <button
+                      key={filter.key}
+                      type="button"
+                      onClick={() => setActiveFilter(filter.key)}
+                      className={cn(
+                        'rounded-full border px-3 py-1.5 text-xs font-medium transition',
+                        activeFilter === filter.key
+                          ? 'border-cyan-300/30 bg-cyan-300/12 text-cyan-100'
+                          : 'border-white/10 bg-white/[0.03] text-slate-300 hover:bg-white/[0.06] hover:text-white',
+                      )}
+                    >
+                      {filter.label}
+                    </button>
+                  ))}
                 </div>
                 <Button
                   type="button"
@@ -536,17 +724,92 @@ export default function PlatformChatPage() {
                 ) : null}
               </div>
             </div>
-            <ScrollArea className="h-[920px]">
+            <ScrollArea className="min-h-0 flex-1">
               <div className="space-y-4 p-3">
+                <section className="space-y-3 rounded-[24px] border border-white/8 bg-white/[0.02] p-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <div>
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Quick Views</p>
+                      <p className="mt-1 text-xs text-slate-500">Fast operational shortcuts</p>
+                    </div>
+                    <ListFilter className="h-4 w-4 text-slate-500" />
+                  </div>
+                  <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
+                    {quickViewItems.map((item) => {
+                      const Icon = item.icon;
+                      return (
+                        <button
+                          key={item.key}
+                          type="button"
+                          onClick={() => item.onClick?.()}
+                          disabled={item.disabled}
+                          className={cn(
+                            'rounded-2xl border px-3 py-3 text-left transition',
+                            item.disabled
+                              ? 'cursor-not-allowed border-white/8 bg-white/[0.02] text-slate-500'
+                              : 'border-white/10 bg-white/[0.03] text-slate-100 hover:border-cyan-300/20 hover:bg-cyan-300/10',
+                          )}
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-2">
+                              <Icon className="h-4 w-4" />
+                              <span className="text-sm font-medium">{item.label}</span>
+                            </div>
+                            <Badge variant="outline" className="border-white/10 bg-white/[0.04] text-slate-200">
+                              {item.count}
+                            </Badge>
+                          </div>
+                          <p className="mt-2 text-[11px] leading-5 text-slate-500">{item.description}</p>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </section>
+
+                {favoriteConversations.length > 0 ? (
+                  <section className="space-y-2">
+                    <div className="px-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">
+                      Favorites
+                    </div>
+                    <div className="space-y-2">
+                      {favoriteConversations.map((conversation) => (
+                        <button
+                          key={`favorite-${conversation.id}`}
+                          type="button"
+                          onClick={() => setSelectedConversationId(conversation.id)}
+                          className={cn(
+                            'flex w-full items-center justify-between gap-3 rounded-2xl border px-3 py-3 text-left transition',
+                            selectedConversationId === conversation.id
+                              ? 'border-amber-300/25 bg-amber-300/10'
+                              : 'border-white/10 bg-white/[0.03] hover:bg-white/[0.05]',
+                          )}
+                        >
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-semibold text-white">{conversation.title}</p>
+                            <p className="mt-1 truncate text-xs text-slate-400">
+                              {conversation.last_message_preview || getConversationTypeLabel(conversation)}
+                            </p>
+                          </div>
+                          <Star className="h-4 w-4 fill-current text-amber-300" />
+                        </button>
+                      ))}
+                    </div>
+                  </section>
+                ) : null}
+
                 {loadingConversations ? (
                   <div className="space-y-2 p-2">
                     {Array.from({ length: 6 }).map((_, index) => (
                       <div key={index} className="h-20 animate-pulse rounded-2xl bg-white/[0.05]" />
                     ))}
                   </div>
-                ) : conversations.length === 0 ? (
-                  <div className="px-5 py-12 text-center text-sm text-slate-400">
-                    No Chatter threads matched your filters.
+                ) : filteredConversations.length === 0 ? (
+                  <div className="rounded-[24px] border border-dashed border-white/10 px-5 py-12 text-center text-sm text-slate-400">
+                    {contactSearch.trim().length > 0
+                      ? 'No chats matched that search. Try a technician name, group, or job code.'
+                      : activeFilter === 'all'
+                        ? 'No direct chats, technician groups, or job chats have started yet.'
+                        : `No ${activeFilter} conversations are available right now.`}
                   </div>
                 ) : conversationSections.map((section) => (
                   section.items.length > 0 ? (
@@ -581,13 +844,17 @@ export default function PlatformChatPage() {
                                 <p className="truncate text-sm font-semibold text-white">
                                   {conversation.channel_kind === 'group' ? conversation.title : conversation.technician_name}
                                 </p>
-                                <span className="shrink-0 text-xs text-slate-500">
-                                  {conversation.last_message_at
-                                    ? new Date(conversation.last_message_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }).toLowerCase()
-                                    : '--'}
+                                <span className="shrink-0 text-xs text-slate-500" title={conversation.last_message_at ?? undefined}>
+                                  {formatConversationClock(conversation.last_message_at)}
                                 </span>
                               </div>
                               <div className="flex flex-wrap items-center gap-2">
+                                {favorites.includes(conversation.id) ? (
+                                  <Badge variant="outline" className="h-5 border-amber-300/20 bg-amber-300/10 px-2 text-[10px] text-amber-100">
+                                    <Star className="mr-1 h-3 w-3 fill-current" />
+                                    Favorite
+                                  </Badge>
+                                ) : null}
                                 {conversation.channel_kind === 'group' ? (
                                   <Badge variant="outline" className="h-5 border-cyan-300/20 bg-cyan-300/10 px-2 text-[10px] text-cyan-100">
                                     <Users className="mr-1 h-3 w-3" />
@@ -618,6 +885,11 @@ export default function PlatformChatPage() {
                                   </Badge>
                                 ) : null}
                               </div>
+                              <div className="flex items-center gap-2 text-[11px] text-slate-500">
+                                <span>{getConversationTypeLabel(conversation)}</span>
+                                <span>&middot;</span>
+                                <span>{formatRelativeChatTime(conversation.last_message_at)}</span>
+                              </div>
                               <p className="truncate text-sm text-slate-400">
                                 {conversation.last_message_preview
                                   || (conversation.channel_kind === 'group'
@@ -635,8 +907,8 @@ export default function PlatformChatPage() {
             </ScrollArea>
           </Card>
 
-          <Card className="overflow-hidden rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(9,24,39,0.96),rgba(6,17,29,0.96))] shadow-[0_24px_80px_rgba(0,0,0,0.28)]">
-            <div className="border-b border-white/8 p-5">
+          <Card className="flex min-h-0 flex-col overflow-hidden rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(9,24,39,0.96),rgba(6,17,29,0.96))] shadow-[0_24px_80px_rgba(0,0,0,0.28)]">
+            <div className="shrink-0 border-b border-white/8 p-5">
               <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
                 <div className="flex items-start gap-4">
                   <Avatar className="h-12 w-12 border border-white/10">
@@ -653,24 +925,43 @@ export default function PlatformChatPage() {
                       <h2 className="text-xl font-semibold tracking-[-0.04em] text-white">
                         {selectedConversation?.title || 'Select a thread'}
                       </h2>
-                      {selectedConversation?.channel_kind === 'job' ? (
-                        <Badge className="rounded-full bg-emerald-400/15 text-emerald-100">
+                      <Badge className={cn(
+                        'rounded-full',
+                        selectedConversation?.channel_kind === 'job'
+                          ? 'bg-emerald-400/15 text-emerald-100'
+                          : selectedConversation?.channel_kind === 'group'
+                            ? 'bg-cyan-400/15 text-cyan-100'
+                            : 'bg-slate-300/10 text-slate-100',
+                      )}>
+                        {selectedConversation?.channel_kind === 'job' ? (
                           <BriefcaseBusiness className="mr-1 h-3.5 w-3.5" />
-                          Job-linked
-                        </Badge>
-                      ) : selectedConversation?.channel_kind === 'group' ? (
-                        <Badge className="rounded-full bg-cyan-400/15 text-cyan-100">
+                        ) : selectedConversation?.channel_kind === 'group' ? (
                           <Users className="mr-1 h-3.5 w-3.5" />
-                          Technician Group
+                        ) : (
+                          <MessageCircleMore className="mr-1 h-3.5 w-3.5" />
+                        )}
+                        {getConversationTypeLabel(selectedConversation)}
+                      </Badge>
+                      {selectedConversation && favorites.includes(selectedConversation.id) ? (
+                        <Badge className="rounded-full bg-amber-300/15 text-amber-100">
+                          <Star className="mr-1 h-3.5 w-3.5 fill-current" />
+                          Favorite
                         </Badge>
                       ) : null}
                     </div>
-                    <p className="text-sm text-slate-400">
-                      {getConversationSummaryLine(selectedConversation)}
-                    </p>
+                    <p className="text-sm text-slate-400">{getConversationStatusLine(selectedConversation)}</p>
+                    {selectedConversation ? (
+                      <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                        <span>{selectedConversation.unread_count} unread</span>
+                        <span>&middot;</span>
+                        <span>{selectedConversation.pinned_count} pinned</span>
+                        <span>&middot;</span>
+                        <span>{formatRelativeChatTime(selectedConversation.last_message_at)}</span>
+                      </div>
+                    ) : null}
                   </div>
                 </div>
-                <div className="grid min-w-[260px] gap-2">
+                <div className="grid min-w-[280px] gap-2">
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
                     <Input
@@ -680,32 +971,64 @@ export default function PlatformChatPage() {
                       className="h-10 rounded-full border-white/10 bg-white/[0.04] pl-9 text-white placeholder:text-slate-500"
                     />
                   </div>
-                  <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-3 text-xs text-slate-400">
-                    <div className="mb-2 flex items-center gap-2 font-semibold uppercase tracking-[0.18em] text-slate-300">
-                      <Shield className="h-3.5 w-3.5" />
-                      Recent Audit
-                    </div>
-                    {auditRows.length === 0 ? (
-                      <p>No chat audit events yet.</p>
-                    ) : (
-                      <div className="space-y-2">
-                        {auditRows.map((row) => (
-                          <div key={row.id} className="rounded-xl border border-white/8 bg-black/10 px-3 py-2">
-                            <p className="text-[11px] font-semibold text-white">{row.action}</p>
-                            <p className="mt-1 text-[11px] text-slate-400">
-                              {new Date(row.created_at).toLocaleString()}
-                            </p>
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                  <div className="flex flex-wrap items-center justify-end gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => selectedConversation && toggleFavoriteConversation(selectedConversation.id)}
+                      disabled={!selectedConversation}
+                      className="h-9 gap-2 rounded-full border-white/10 bg-white/[0.03] text-slate-200 hover:bg-white/[0.08]"
+                    >
+                      <Star className={cn('h-4 w-4', selectedConversation && favorites.includes(selectedConversation.id) && 'fill-current text-amber-300')} />
+                      Favorite
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setShowInfoPanel(true);
+                        setActiveInsightTab('files');
+                      }}
+                      className="h-9 gap-2 rounded-full border-white/10 bg-white/[0.03] text-slate-200 hover:bg-white/[0.08]"
+                    >
+                      <FolderOpen className="h-4 w-4" />
+                      Files
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setShowInfoPanel(true);
+                        setActiveInsightTab('pins');
+                      }}
+                      className="h-9 gap-2 rounded-full border-white/10 bg-white/[0.03] text-slate-200 hover:bg-white/[0.08]"
+                    >
+                      <Pin className="h-4 w-4" />
+                      Pinned
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setShowInfoPanel((prev) => !prev);
+                        setActiveInsightTab('overview');
+                      }}
+                      className="h-9 gap-2 rounded-full border-white/10 bg-white/[0.03] text-slate-200 hover:bg-white/[0.08]"
+                    >
+                      {showInfoPanel ? <PanelRightClose className="h-4 w-4" /> : <PanelRightOpen className="h-4 w-4" />}
+                      {showInfoPanel ? 'Hide Info' : 'Info'}
+                    </Button>
                   </div>
                 </div>
               </div>
             </div>
 
             {pinnedMessages.length > 0 ? (
-              <div className="border-b border-white/8 px-5 py-4">
+              <div className="shrink-0 border-b border-white/8 px-5 py-4">
                 <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-white">
                   <Pin className="h-4 w-4 text-cyan-300" />
                   Pinned Messages
@@ -723,8 +1046,8 @@ export default function PlatformChatPage() {
               </div>
             ) : null}
 
-            <div className="grid min-h-[920px] grid-rows-[1fr_auto] bg-[linear-gradient(180deg,rgba(238,247,248,0.03),rgba(255,255,255,0.01))]">
-              <ScrollArea className="h-full">
+            <div className="flex min-h-0 flex-1 flex-col bg-[linear-gradient(180deg,rgba(238,247,248,0.03),rgba(255,255,255,0.01))]">
+              <ScrollArea className="min-h-0 flex-1">
                 <div className="space-y-4 px-5 py-6">
                   {loadingMessages ? (
                     Array.from({ length: 4 }).map((_, index) => (
@@ -737,79 +1060,98 @@ export default function PlatformChatPage() {
                       />
                     ))
                   ) : messages.length === 0 ? (
-                    <div className="flex min-h-[420px] flex-col items-center justify-center text-center">
+                    <div className="flex min-h-[320px] flex-col items-center justify-center py-12 text-center">
                       <div className="mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-white/[0.05]">
                         <MessageCircleMore className="h-10 w-10 text-slate-500" />
                       </div>
-                      <h3 className="text-xl font-semibold text-white">No conversation history yet</h3>
+                      <h3 className="text-xl font-semibold text-white">No messages yet</h3>
                       <p className="mt-2 max-w-md text-sm leading-7 text-slate-400">
-                        Start the thread here. Attachments and voice notes are stored privately and checked server-side.
+                        Send a message, attach a file, or record a voice note to start this secure conversation.
                       </p>
                     </div>
-                  ) : messages.map((message) => (
-                    <div
-                      key={message.id}
-                      className={cn('flex', message.sender_role === 'admin' ? 'justify-end' : 'justify-start')}
-                    >
-                      <div className="max-w-[82%] space-y-2">
-                        <div
-                          className={cn(
-                            'rounded-[24px] border px-4 py-3 shadow-[0_10px_25px_rgba(0,0,0,0.14)]',
-                            message.sender_role === 'admin'
-                              ? 'border-white/10 bg-white text-slate-900'
-                              : 'border-white/10 bg-[#070f11] text-white',
-                          )}
-                        >
-                          <div className="mb-2 flex items-center justify-between gap-3">
-                            <div className="flex items-center gap-2">
-                              {message.is_pinned ? <Pin className="h-3.5 w-3.5 text-cyan-400" /> : null}
-                              {message.conversation_type === 'job' && message.job_id ? (
-                                <Badge variant="outline" className="border-emerald-300/20 bg-emerald-300/10 text-[10px] text-emerald-100">
-                                  {selectedConversation?.job_code || 'Job'}
-                                </Badge>
-                              ) : null}
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => void handleTogglePin(message)}
-                              className={cn(
-                                'rounded-full p-1 transition',
-                                message.sender_role === 'admin'
-                                  ? 'text-slate-500 hover:bg-slate-100 hover:text-slate-900'
-                                  : 'text-slate-500 hover:bg-white/[0.08] hover:text-white',
-                              )}
-                              aria-label={message.is_pinned ? 'Unpin message' : 'Pin message'}
-                            >
-                              <Pin className="h-3.5 w-3.5" />
-                            </button>
-                          </div>
-                          {message.text ? <p className="text-sm leading-6">{message.text}</p> : null}
-                          {message.attachments.length > 0 ? (
-                            <div className={cn(
-                              'mt-3 grid gap-2',
-                              message.attachments.length === 1
-                                ? 'grid-cols-1'
-                                : message.attachments.length === 2
-                                  ? 'grid-cols-2'
-                                  : 'grid-cols-3',
-                            )}>
-                              {message.attachments.map((attachment) => (
-                                <AttachmentCard
-                                  key={attachment.id}
-                                  attachment={attachment}
-                                  token={token}
-                                  tone={message.sender_role === 'admin' ? 'light' : 'dark'}
-                                />
-                              ))}
-                            </div>
-                          ) : null}
+                  ) : messages.map((message, index) => (
+                    <div key={message.id} className="space-y-4">
+                      {shouldRenderMessageDayDivider(messages, index) ? (
+                        <div className="flex items-center gap-3 py-1">
+                          <div className="h-px flex-1 bg-white/8" />
+                          <span className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-[11px] font-medium uppercase tracking-[0.18em] text-slate-400">
+                            {formatMessageDayLabel(message.created_at)}
+                          </span>
+                          <div className="h-px flex-1 bg-white/8" />
                         </div>
-                        <div className={cn(
-                          'flex items-center gap-2 px-1 text-xs text-slate-500',
-                          message.sender_role === 'admin' ? 'justify-end' : 'justify-start',
-                        )}>
-                          <span>{new Date(message.created_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }).toLowerCase()}</span>
-                          {message.sender_role === 'admin' ? formatMessageStatus(message) : null}
+                      ) : null}
+                      <div className={cn('flex', message.sender_role === 'admin' ? 'justify-end' : 'justify-start')}>
+                        <div className="max-w-[82%] space-y-2">
+                          <p className={cn(
+                            'px-1 text-[11px] font-semibold uppercase tracking-[0.18em]',
+                            message.sender_role === 'admin' ? 'text-right text-slate-500' : 'text-left text-slate-400',
+                          )}>
+                            {message.sender_role === 'admin' ? 'Admin Dispatch' : (selectedConversation?.technician_name || 'Technician')}
+                          </p>
+                          <div
+                            className={cn(
+                              'rounded-[24px] border px-4 py-3 shadow-[0_10px_25px_rgba(0,0,0,0.14)]',
+                              message.sender_role === 'admin'
+                                ? 'border-white/10 bg-white text-slate-900'
+                                : 'border-white/10 bg-[#070f11] text-white',
+                            )}
+                          >
+                            <div className="mb-2 flex items-center justify-between gap-3">
+                              <div className="flex items-center gap-2">
+                                {message.is_pinned ? <Pin className="h-3.5 w-3.5 text-cyan-400" /> : null}
+                                {message.conversation_type === 'job' && message.job_id ? (
+                                  <Badge variant="outline" className="border-emerald-300/20 bg-emerald-300/10 text-[10px] text-emerald-100">
+                                    {selectedConversation?.job_code || 'Job'}
+                                  </Badge>
+                                ) : null}
+                                {message.attachments.some((attachment) => attachment.attachment_type === 'voice') ? (
+                                  <Badge variant="outline" className="border-cyan-300/20 bg-cyan-300/10 text-[10px] text-cyan-100">
+                                    Voice note
+                                  </Badge>
+                                ) : null}
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => void handleTogglePin(message)}
+                                className={cn(
+                                  'rounded-full p-1 transition',
+                                  message.sender_role === 'admin'
+                                    ? 'text-slate-500 hover:bg-slate-100 hover:text-slate-900'
+                                    : 'text-slate-500 hover:bg-white/[0.08] hover:text-white',
+                                )}
+                                aria-label={message.is_pinned ? 'Unpin message' : 'Pin message'}
+                              >
+                                <Pin className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
+                            {message.text ? <p className="text-sm leading-6">{message.text}</p> : null}
+                            {message.attachments.length > 0 ? (
+                              <div className={cn(
+                                'mt-3 grid gap-2',
+                                message.attachments.length === 1
+                                  ? 'grid-cols-1'
+                                  : message.attachments.length === 2
+                                    ? 'grid-cols-2'
+                                    : 'grid-cols-3',
+                              )}>
+                                {message.attachments.map((attachment) => (
+                                  <AttachmentCard
+                                    key={attachment.id}
+                                    attachment={attachment}
+                                    token={token}
+                                    tone={message.sender_role === 'admin' ? 'light' : 'dark'}
+                                  />
+                                ))}
+                              </div>
+                            ) : null}
+                          </div>
+                          <div className={cn(
+                            'flex items-center gap-2 px-1 text-xs text-slate-500',
+                            message.sender_role === 'admin' ? 'justify-end' : 'justify-start',
+                          )}>
+                            <span>{formatConversationClock(message.created_at)}</span>
+                            {message.sender_role === 'admin' ? formatMessageStatus(message) : null}
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -818,7 +1160,7 @@ export default function PlatformChatPage() {
                 </div>
               </ScrollArea>
 
-              <div className="border-t border-white/8 bg-[rgba(6,17,29,0.9)] p-5">
+              <div className="shrink-0 border-t border-white/8 bg-[rgba(6,17,29,0.9)] p-5">
                 {pendingAttachments.length > 0 ? (
                   <div className="mb-3 flex flex-wrap gap-2">
                     {pendingAttachments.map((attachment) => (
@@ -908,6 +1250,190 @@ export default function PlatformChatPage() {
               </div>
             </div>
           </Card>
+
+          {showInfoPanel ? (
+            <Card className="flex min-h-0 flex-col overflow-hidden rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(8,21,36,0.98),rgba(6,15,27,0.98))] shadow-[0_24px_80px_rgba(0,0,0,0.28)]">
+              <div className="shrink-0 border-b border-white/8 p-5">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Conversation Panel</p>
+                    <h3 className="mt-2 text-lg font-semibold text-white">
+                      {selectedConversation ? selectedConversation.title : 'Conversation details'}
+                    </h3>
+                    <p className="mt-1 text-sm text-slate-400">
+                      Files, pinned notes, members, and live context stay here.
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setShowInfoPanel(false)}
+                    className="h-10 w-10 rounded-full border border-white/10 bg-white/[0.03] text-slate-200 hover:bg-white/[0.08]"
+                  >
+                    <PanelRightClose className="h-4 w-4" />
+                  </Button>
+                </div>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {([
+                    { key: 'overview', label: 'Overview', icon: Info },
+                    { key: 'files', label: 'Files', icon: FolderOpen },
+                    { key: 'pins', label: 'Pinned', icon: Pin },
+                    { key: 'members', label: 'Members', icon: Users },
+                  ] as Array<{ key: ChatInsightTab; label: string; icon: typeof Info }>).map((tab) => {
+                    const Icon = tab.icon;
+                    return (
+                      <button
+                        key={tab.key}
+                        type="button"
+                        onClick={() => setActiveInsightTab(tab.key)}
+                        className={cn(
+                          'inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium transition',
+                          activeInsightTab === tab.key
+                            ? 'border-cyan-300/30 bg-cyan-300/12 text-cyan-100'
+                            : 'border-white/10 bg-white/[0.03] text-slate-300 hover:bg-white/[0.06] hover:text-white',
+                        )}
+                      >
+                        <Icon className="h-3.5 w-3.5" />
+                        {tab.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <ScrollArea className="min-h-0 flex-1">
+                <div className="space-y-4 p-4">
+                  {!selectedConversation ? (
+                    <div className="rounded-[24px] border border-dashed border-white/10 px-4 py-10 text-center text-sm text-slate-400">
+                      Select a conversation to see files, pinned messages, and member context here.
+                    </div>
+                  ) : activeInsightTab === 'overview' ? (
+                    <>
+                      <div className="grid gap-3 sm:grid-cols-2 2xl:grid-cols-1">
+                        <div className="rounded-[22px] border border-white/10 bg-white/[0.03] p-4">
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">Status</p>
+                          <p className="mt-2 text-sm font-medium text-white">{getConversationStatusLine(selectedConversation)}</p>
+                          <p className="mt-2 text-xs text-slate-500">Last activity {formatRelativeChatTime(selectedConversation.last_message_at)}</p>
+                        </div>
+                        <div className="rounded-[22px] border border-white/10 bg-white/[0.03] p-4">
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">Stats</p>
+                          <div className="mt-2 space-y-2 text-sm text-slate-300">
+                            <p>{selectedConversation.unread_count} unread messages</p>
+                            <p>{selectedConversation.pinned_count} pinned message{selectedConversation.pinned_count === 1 ? '' : 's'}</p>
+                            <p>{sharedFiles.length} shared file{sharedFiles.length === 1 ? '' : 's'}</p>
+                            <p>{selectedConversationDraft.trim() ? 'Draft ready to send' : 'No saved draft'}</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {selectedConversation.channel_kind === 'direct' ? (
+                        <div className="rounded-[24px] border border-white/10 bg-white/[0.03] p-4">
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">Technician Profile</p>
+                          <div className="mt-3 space-y-2 text-sm text-slate-300">
+                            <p className="text-white">{selectedConversation.technician_name}</p>
+                            <p>{selectedConversation.technician_email}</p>
+                            {selectedConversation.technician_phone ? <p>{selectedConversation.technician_phone}</p> : null}
+                            <p>{selectedConversation.current_jobs_count} active job{selectedConversation.current_jobs_count === 1 ? '' : 's'}</p>
+                          </div>
+                        </div>
+                      ) : null}
+
+                      {selectedConversation.channel_kind === 'job' ? (
+                        <div className="rounded-[24px] border border-emerald-300/15 bg-emerald-300/10 p-4">
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-100/80">Job Context</p>
+                          <div className="mt-3 space-y-2 text-sm text-emerald-50">
+                            <p>{selectedConversation.job_code || 'Linked job thread'}</p>
+                            <p>Status: {selectedConversation.job_status || 'In progress'}</p>
+                            <p>Assigned technician: {selectedConversation.technician_name}</p>
+                          </div>
+                        </div>
+                      ) : null}
+
+                      {selectedConversation.channel_kind === 'group' ? (
+                        <div className="rounded-[24px] border border-cyan-300/15 bg-cyan-300/10 p-4">
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-cyan-100/80">Group Summary</p>
+                          <div className="mt-3 space-y-2 text-sm text-cyan-50">
+                            <p>{selectedConversation.member_count} technicians in this group</p>
+                            <p>{selectedGroupMembers.filter((member) => member.current_jobs_count > 0).length} members currently carrying active jobs</p>
+                            <p>Only tenant-authorized technicians can see or reply here.</p>
+                          </div>
+                        </div>
+                      ) : null}
+
+                      <div className="rounded-[24px] border border-white/10 bg-white/[0.03] p-4">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">Security</p>
+                        <p className="mt-3 text-sm leading-6 text-slate-300">
+                          Messages, voice notes, and shared files remain tenant-scoped and private. Access stays bound to authorized admins, group members, and assigned job participants.
+                        </p>
+                      </div>
+                    </>
+                  ) : activeInsightTab === 'files' ? (
+                    sharedFiles.length > 0 ? (
+                      sharedFiles.map((attachment) => (
+                        <AttachmentCard
+                          key={`${attachment.message_id}-${attachment.id}`}
+                          attachment={attachment}
+                          token={token}
+                          tone="dark"
+                        />
+                      ))
+                    ) : (
+                      <div className="rounded-[24px] border border-dashed border-white/10 px-4 py-10 text-center text-sm text-slate-400">
+                        No shared files yet. Images, PDFs, voice notes, and other secure uploads will appear here.
+                      </div>
+                    )
+                  ) : activeInsightTab === 'pins' ? (
+                    pinnedMessages.length > 0 ? (
+                      pinnedMessages.map((message) => (
+                        <div key={`panel-pin-${message.id}`} className="rounded-[24px] border border-cyan-300/15 bg-cyan-300/10 p-4 text-sm text-cyan-50">
+                          <div className="flex items-center justify-between gap-3">
+                            <div className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-cyan-100/80">
+                              <Pin className="h-3.5 w-3.5" />
+                              Pinned message
+                            </div>
+                            <span className="text-[11px] text-cyan-100/70">{formatConversationClock(message.created_at)}</span>
+                          </div>
+                          <p className="mt-3 leading-6">{message.text || message.attachments[0]?.name || 'Pinned secure attachment'}</p>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="rounded-[24px] border border-dashed border-white/10 px-4 py-10 text-center text-sm text-slate-400">
+                        No pinned instructions yet. Important notes and job guidance can be pinned here.
+                      </div>
+                    )
+                  ) : (
+                    <div className="space-y-3">
+                      {selectedConversation.channel_kind === 'group' ? (
+                        selectedConversation.member_names.map((memberName, index) => {
+                          const technician = selectedGroupMembers[index];
+                          return (
+                            <div key={`${memberName}-${index}`} className="rounded-[22px] border border-white/10 bg-white/[0.03] p-4">
+                              <div className="flex items-center justify-between gap-3">
+                                <div>
+                                  <p className="text-sm font-semibold text-white">{memberName}</p>
+                                  <p className="mt-1 text-xs text-slate-400">{technician?.email || 'Authorized group member'}</p>
+                                </div>
+                                <Badge variant="outline" className="border-white/10 bg-white/[0.04] text-slate-200">
+                                  {technician?.current_jobs_count ?? 0} jobs
+                                </Badge>
+                              </div>
+                            </div>
+                          );
+                        })
+                      ) : (
+                        <div className="rounded-[24px] border border-white/10 bg-white/[0.03] p-4 text-sm text-slate-300">
+                          <p className="font-semibold text-white">{selectedConversation.technician_name}</p>
+                          <p className="mt-2">{selectedConversation.technician_email}</p>
+                          <p className="mt-2 text-slate-400">Direct and job-linked chats stay limited to authorized admin and technician participants.</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </ScrollArea>
+            </Card>
+          ) : null}
         </section>
       </div>
     </div>

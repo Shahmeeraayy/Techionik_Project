@@ -184,6 +184,7 @@ class PreAssignmentService:
     ) -> list[Technician]:
         if row.skill_id is None or row.zone_id is None:
             return []
+        tenant_id = self.db.info.get("tenant_id") or row.tenant_id
 
         overlap_condition = (
             and_(
@@ -215,7 +216,7 @@ class PreAssignmentService:
                     and_(
                         technician_skills.c.technician_id == Technician.id,
                         technician_skills.c.skill_id == row.skill_id,
-                        technician_skills.c.tenant_id == self.db.info.get("tenant_id"),
+                        technician_skills.c.tenant_id == tenant_id,
                     )
                 )
             )
@@ -224,7 +225,7 @@ class PreAssignmentService:
                     and_(
                         technician_zones.c.technician_id == Technician.id,
                         technician_zones.c.zone_id == row.zone_id,
-                        technician_zones.c.tenant_id == self.db.info.get("tenant_id"),
+                        technician_zones.c.tenant_id == tenant_id,
                     )
                 )
             )

@@ -470,6 +470,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
   const [pendingIntakeCount, setPendingIntakeCount] = useState(0);
   const [pendingInvoiceApprovalCount, setPendingInvoiceApprovalCount] = useState(0);
   const hideHeaderRefreshControls = location.pathname.startsWith('/admin');
+  const isChatRoute = location.pathname.startsWith('/admin/chat');
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -637,7 +638,12 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
           )}
         >
           {/* Top Header - Sticky */}
-          <div className="admin-page-frame flex min-h-screen min-w-0 max-w-full flex-col overflow-hidden rounded-none lg:rounded-[32px]">
+          <div
+            className={cn(
+              'admin-page-frame flex min-w-0 max-w-full flex-col overflow-hidden rounded-none lg:rounded-[32px]',
+              isChatRoute ? 'min-h-screen lg:h-[calc(100vh-2rem)]' : 'min-h-screen',
+            )}
+          >
           <header className="admin-topbar sticky top-0 z-30 bg-background/80 backdrop-blur-md border-b border-border px-4 sm:px-8 py-4 flex items-center justify-between gap-3 shadow-sm">
             <div className="flex min-w-0 flex-1 items-center gap-3 sm:gap-4">
               <Button
@@ -686,7 +692,14 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
             </div>
           </header>
 
-          <div className="admin-content min-w-0 max-w-full flex-1 overflow-x-hidden overflow-y-auto p-4 lg:p-8">
+          <div
+            className={cn(
+              'admin-content min-w-0 max-w-full flex-1 overflow-x-hidden',
+              isChatRoute
+                ? 'flex min-h-0 flex-col overflow-hidden p-4 lg:p-6'
+                : 'overflow-y-auto p-4 lg:p-8',
+            )}
+          >
             {children}
           </div>
           </div>

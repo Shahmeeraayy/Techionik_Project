@@ -18,6 +18,9 @@ class TechnicianJobsService:
     def __init__(self, db: Session):
         self.db = db
 
+    def _begin_transaction(self):
+        return self.db.begin_nested() if self.db.in_transaction() else self.db.begin()
+
     def get_job_feed(self, technician_id: UUID) -> TechnicianJobFeedResponse:
         rows: List[Tuple[Job, Dealership, Zone]] = (
             self.db.query(Job, Dealership, Zone)
@@ -122,7 +125,7 @@ class TechnicianJobsService:
         )
 
     def refuse_my_job(self, technician_id: UUID, job_id: UUID, *, reason: str | None, comment: str | None) -> Job:
-        with self.db.begin():
+        with self._begin_transaction():
             row = self._lock_assigned_job(job_id=job_id)
             if row.assigned_tech_id != technician_id:
                 raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Job is not assigned to current technician")
@@ -154,7 +157,7 @@ class TechnicianJobsService:
         return row
 
     def add_service_to_my_job(self, technician_id: UUID, job_id: UUID, *, service_name: str, notes: str | None, quantity: Any = None, unit_price: Any = None) -> Job:
-        with self.db.begin():
+        with self._begin_transaction():
             row = self._lock_assigned_job(job_id=job_id)
             if row.assigned_tech_id != technician_id:
                 raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Job is not assigned to current technician")
@@ -191,7 +194,7 @@ class TechnicianJobsService:
         quantity: Any = None,
         unit_price: Any = None,
     ) -> Job:
-        with self.db.begin():
+        with self._begin_transaction():
             row = self._lock_assigned_job(job_id=job_id)
             if row.assigned_tech_id != technician_id:
                 raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Job is not assigned to current technician")
@@ -228,7 +231,7 @@ class TechnicianJobsService:
         return row
 
     def remove_service_from_my_job(self, technician_id: UUID, job_id: UUID, *, service_id: UUID) -> Job:
-        with self.db.begin():
+        with self._begin_transaction():
             row = self._lock_assigned_job(job_id=job_id)
             if row.assigned_tech_id != technician_id:
                 raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Job is not assigned to current technician")
