@@ -1,4 +1,5 @@
 import type { BackendChatAttachment } from '@/lib/backend-api';
+import { buildBackendUrl } from '@/lib/backend-api';
 
 export const MAX_CHAT_ATTACHMENT_BYTES = 10 * 1024 * 1024;
 export const MAX_CHAT_ATTACHMENTS_PER_MESSAGE = 5;
@@ -62,6 +63,18 @@ export function formatVoiceRecordingDuration(totalSeconds: number) {
   const minutes = String(Math.floor(totalSeconds / 60)).padStart(2, '0');
   const seconds = String(totalSeconds % 60).padStart(2, '0');
   return `${minutes}:${seconds}`;
+}
+
+export async function fetchSecureChatAttachmentBlob(path: string, token: string): Promise<Blob> {
+  const response = await fetch(buildBackendUrl(path), {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  if (!response.ok) {
+    throw new Error('Failed to load secure attachment.');
+  }
+  return response.blob();
 }
 
 async function getAudioDurationSeconds(file: Blob): Promise<number | null> {

@@ -6,12 +6,25 @@ import type {
 
 export type ChatQuickFilter = 'all' | 'unread' | 'direct' | 'group' | 'job' | 'pinned';
 export type ChatInsightTab = 'overview' | 'files' | 'pins' | 'members';
+export type ChatWorkspaceTab = 'chat' | 'shared';
+export type ChatSharedTab = 'files' | 'links';
 
 export type SharedConversationAttachment = BackendChatAttachment & {
   created_at: string;
   message_id: string;
   sender_role: BackendChatMessage['sender_role'];
   conversation_type: BackendChatMessage['conversation_type'];
+};
+
+export type SharedConversationLink = {
+  id: string;
+  created_at: string;
+  message_id: string;
+  sender_role: BackendChatMessage['sender_role'];
+  conversation_type: BackendChatMessage['conversation_type'];
+  title: string;
+  domain: string;
+  url: string;
 };
 
 export function formatRelativeChatTime(value?: string | null): string {
@@ -83,9 +96,9 @@ export function getConversationStatusLine(conversation: BackendChatConversation 
     return `${conversation.member_count} technician${conversation.member_count === 1 ? '' : 's'} in this group`;
   }
   if (conversation.channel_kind === 'job') {
-    return `${conversation.technician_name} · ${conversation.job_status || 'Active job'}`;
+    return `${conversation.technician_name} \u00B7 ${conversation.job_status || 'Active job'}`;
   }
-  return `${conversation.technician_name} · ${conversation.technician_status}`;
+  return `${conversation.technician_name} \u00B7 ${conversation.technician_status}`;
 }
 
 export function filterConversationsByQuickFilter(
@@ -126,4 +139,102 @@ export function buildSharedConversationAttachments(
   return shared.sort((left, right) => (
     new Date(right.created_at).getTime() - new Date(left.created_at).getTime()
   ));
+}
+
+function normalizeLinkCandidate(candidate: string): string | null {
+  const trimmed = candidate.trim().replace(/[)\].,;!?'"<>]+$/g, '');
+  if (!trimmed) {
+    return null;
+  }
+
+  const prefixed = /^https?:\/\//i.test(trimmed)
+    ? trimmed
+    : (trimmed.startsWith('www.') ? `https://${trimmed}` : null);
+
+  if (!prefixed) {
+    return null;
+  }
+
+  try {
+    return new URL(prefixed).toString();
+  } catch {
+    return null;
+  }
+}
+
+function extractUrlsFromText(text?: string | null): string[] {
+  if (!text) {
+    return [];
+  }
+
+  const matches = text.match(/(?:https?:\/\/|www\.)[^\s<>"'`]+/gi) ?? [];
+  return Array.from(new Set(matches.map(normalizeLinkCandidate).filter((value): value is string => Boolean(value))));
+}
+
+function formatSharedLinkTitle(url: string): string {
+  try {
+    const parsed = new URL(url);
+    const pathSegments = parsed.pathname.split('/').filter(Boolean);
+    const lastSegment = pathSegments[pathSegments.length - 1];
+    if (lastSegment) {
+      return decodeURIComponent(lastSegment).replace(/[-_]+/g, ' ');
+    }
+    return parsed.hostname.replace(/^www\./, '');
+  } catch {
+    return url;
+  }
+}
+
+export function buildSharedConversationLinks(
+  messages: BackendChatMessage[],
+): SharedConversationLink[] {
+  const links: SharedConversationLink[] = [];
+
+  for (const message of messages) {
+    const urls = extractUrlsFromText(message.text);
+    for (const [index, url] of urls.entries()) {
+      try {
+        const parsed = new URL(url);
+        links.push({
+          id: `${message.id}:${index}:${url}`,
+          created_at: message.created_at,
+          message_id: message.id,
+          sender_role: message.sender_role,
+          conversation_type: message.conversation_type,
+          title: formatSharedLinkTitle(url),
+          domain: parsed.hostname.replace(/^www\./, ''),
+          url: parsed.toString(),
+        });
+      } catch {
+        links.push({
+          id: `${message.id}:${index}:${url}`,
+          created_at: message.created_at,
+          message_id: message.id,
+          sender_role: message.sender_role,
+          conversation_type: message.conversation_type,
+          title: url,
+          domain: url,
+          url,
+        });
+      }
+    }
+  }
+
+  return links.sort((left, right) => (
+    new Date(right.created_at).getTime() - new Date(left.created_at).getTime()
+  ));
+}
+
+export function formatSharedConversationTimestamp(value: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return '--';
+  }
+
+  return date.toLocaleString([], {
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
 }

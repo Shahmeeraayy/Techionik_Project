@@ -174,23 +174,17 @@ const TECHNICIANS_STORAGE_KEY = 'sm_dispatch_technician_accounts';
 const TECHNICIAN_SIGNUP_REQUESTS_STORAGE_KEY = 'sm_dispatch_technician_signup_requests';
 const TECHNICIAN_REJECTED_SIGNUP_REQUESTS_STORAGE_KEY = 'sm_dispatch_technician_rejected_signup_requests';
 const ADMIN_EMAIL = currentUser.email.toLowerCase();
-
-const DEFAULT_TECHNICIAN_ACCOUNTS: TechnicianAccount[] = [
-  {
-    id: technicianUser.id,
-    name: technicianUser.name,
-    email: technicianUser.email.toLowerCase(),
-    phone: technicianUser.phone,
-    password: undefined,
-    avatar: technicianUser.avatar,
-    isActive: true,
-    createdAt: technicianUser.createdAt,
-    updatedAt: technicianUser.updatedAt,
-  },
-];
+const DEFAULT_TECHNICIAN_ACCOUNTS: TechnicianAccount[] = [];
 
 function normalizeEmail(value: string) {
   return value.trim().toLowerCase();
+}
+
+function isLegacyMockTechnicianAccount(account: Pick<TechnicianAccount, 'id' | 'email'>) {
+  return (
+    account.id === technicianUser.id
+    && normalizeEmail(account.email) === normalizeEmail(technicianUser.email)
+  );
 }
 
 function createId(prefix: 'tech' | 'req') {
@@ -413,6 +407,7 @@ function parseStoredTechnicians(): TechnicianAccount[] {
       };
     })
     .filter((item): item is TechnicianAccount => item !== null)
+    .filter((item) => !isLegacyMockTechnicianAccount(item))
     .filter((item, index, list) =>
       list.findIndex((candidate) => candidate.id === item.id) === index
     );
@@ -535,6 +530,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [hasBackendAdminToken, setHasBackendAdminToken] = useState<boolean>(false);
   const [hasBackendTechnicianToken, setHasBackendTechnicianToken] = useState<boolean>(false);
   const [isAuthLoading, setIsAuthLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    setTechnicianAccounts((prev) => {
+      const filtered = prev.filter((account) => !isLegacyMockTechnicianAccount(account));
+      return filtered.length === prev.length ? prev : filtered;
+    });
+  }, []);
 
   useEffect(() => {
     let isMounted = true;

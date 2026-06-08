@@ -2,8 +2,13 @@ import { useEffect, useMemo, useState } from 'react';
 import { AudioLines, Download, File, Image as ImageIcon, LoaderCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
-import { buildBackendUrl, type BackendChatAttachment } from '@/lib/backend-api';
-import { formatChatAttachmentSize, isAudioAttachment, isImageAttachment } from '@/lib/chat-attachments';
+import { type BackendChatAttachment } from '@/lib/backend-api';
+import {
+  fetchSecureChatAttachmentBlob,
+  formatChatAttachmentSize,
+  isAudioAttachment,
+  isImageAttachment,
+} from '@/lib/chat-attachments';
 
 function getAttachmentIcon(mimeType: string) {
   if (isImageAttachment(mimeType)) {
@@ -13,18 +18,6 @@ function getAttachmentIcon(mimeType: string) {
     return AudioLines;
   }
   return File;
-}
-
-async function fetchAttachmentBlob(path: string, token: string): Promise<Blob> {
-  const response = await fetch(buildBackendUrl(path), {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-  if (!response.ok) {
-    throw new Error('Failed to load secure attachment.');
-  }
-  return response.blob();
 }
 
 export function AttachmentCard({
@@ -53,7 +46,7 @@ export function AttachmentCard({
     }
 
     setPreviewLoading(true);
-    void fetchAttachmentBlob(attachment.preview_url, token)
+    void fetchSecureChatAttachmentBlob(attachment.preview_url, token)
       .then((blob) => {
         if (cancelled) return;
         objectUrl = URL.createObjectURL(blob);
@@ -94,7 +87,7 @@ export function AttachmentCard({
 
     try {
       setDownloading(true);
-      const blob = await fetchAttachmentBlob(attachment.download_url, token);
+      const blob = await fetchSecureChatAttachmentBlob(attachment.download_url, token);
       const objectUrl = URL.createObjectURL(blob);
       const anchor = document.createElement('a');
       anchor.href = objectUrl;

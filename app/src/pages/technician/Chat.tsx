@@ -34,6 +34,7 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import { SharedConversationPanel } from '@/components/chat/SharedConversationPanel';
 import { useVoiceNoteRecorder } from '@/hooks/use-voice-note-recorder';
 import {
   CHAT_ATTACHMENT_ACCEPT,
@@ -50,6 +51,7 @@ import {
   getConversationStatusLine,
   getConversationTypeLabel,
   shouldRenderMessageDayDivider,
+  type ChatWorkspaceTab,
   type ChatInsightTab,
   type ChatQuickFilter,
 } from '@/lib/chat-ui';
@@ -147,10 +149,11 @@ export default function TechnicianChatPage() {
   const [contactSearch, setContactSearch] = useState('');
   const [historySearch, setHistorySearch] = useState('');
   const [draftMessage, setDraftMessage] = useState('');
-  const [pendingAttachments, setPendingAttachments] = useState<BackendChatAttachment[]>([]);
+  const [pendingAttachmentsByConversation, setPendingAttachmentsByConversation] = useState<Record<string, BackendChatAttachment[]>>({});
   const [notificationEnabled, setNotificationEnabled] = useState(false);
   const [loadingConversations, setLoadingConversations] = useState(true);
   const [loadingMessages, setLoadingMessages] = useState(false);
+  const [workspaceTab, setWorkspaceTab] = useState<ChatWorkspaceTab>('chat');
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const seenMessageIdsRef = useRef<Set<string>>(new Set());
@@ -163,7 +166,13 @@ export default function TechnicianChatPage() {
     stopRecording,
   } = useVoiceNoteRecorder({
     onRecorded: async (attachment) => {
-      setPendingAttachments((prev) => [...prev, attachment]);
+      if (!selectedConversationId) {
+        return;
+      }
+      setPendingAttachmentsByConversation((prev) => ({
+        ...prev,
+        [selectedConversationId]: [...(prev[selectedConversationId] ?? []), attachment],
+      }));
     },
   });
 
@@ -171,6 +180,10 @@ export default function TechnicianChatPage() {
     () => conversations.find((conversation) => conversation.id === selectedConversationId) ?? null,
     [conversations, selectedConversationId],
   );
+
+  const selectedConversationPendingAttachments = selectedConversationId
+    ? (pendingAttachmentsByConversation[selectedConversationId] ?? [])
+    : [];
 
   const groupedConversations = useMemo(() => ({
     direct: conversations.filter((conversation) => conversation.channel_kind === 'direct'),
@@ -317,6 +330,10 @@ export default function TechnicianChatPage() {
     return () => window.clearTimeout(timeoutId);
   }, [contactSearch]);
 
+  useEffect(() => {
+    setWorkspaceTab('chat');
+  }, [selectedConversationId]);
+
   const handleEnableNotifications = async () => {
     if (typeof window === 'undefined' || !('Notification' in window)) {
       toast.error('Browser notifications are not supported in this browser.');
@@ -340,23 +357,36 @@ export default function TechnicianChatPage() {
       }
       nextAttachments.push(await fileToChatAttachment(file));
     }
-    setPendingAttachments((prev) => [...prev, ...nextAttachments]);
+    if (selectedConversationId && nextAttachments.length > 0) {
+      setPendingAttachmentsByConversation((prev) => ({
+        ...prev,
+        [selectedConversationId]: [
+          ...(prev[selectedConversationId] ?? []),
+          ...nextAttachments,
+        ],
+      }));
+      setWorkspaceTab('chat');
+    }
     event.target.value = '';
   };
 
   const handleSend = async () => {
     const content = draftMessage.trim();
-    if (isPreviewMode || !token || !selectedConversationId || (!content && pendingAttachments.length === 0)) return;
+    if (isPreviewMode || !token || !selectedConversationId || (!content && selectedConversationPendingAttachments.length === 0)) return;
 
     try {
       const sent = await sendTechnicianChatThreadMessage(token, selectedConversationId, {
         text: content || undefined,
-        attachments: pendingAttachments,
+        attachments: selectedConversationPendingAttachments,
       });
       setMessages((prev) => [...prev, sent]);
       seenMessageIdsRef.current.add(sent.id);
       setDraftMessage('');
-      setPendingAttachments([]);
+      setPendingAttachmentsByConversation((prev) => {
+        const next = { ...prev };
+        delete next[selectedConversationId];
+        return next;
+      });
       await loadConversations(contactSearch, true);
       await loadThread(selectedConversationId, historySearch, true);
     } catch (error) {
@@ -375,53 +405,7 @@ export default function TechnicianChatPage() {
     <div className="tech-shell flex min-h-0 flex-1 flex-col text-white">
       <div className="relative flex min-h-0 w-full flex-1 flex-col">
         <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.12),rgba(34,211,238,0)_32%),radial-gradient(circle_at_top_right,rgba(16,185,129,0.1),rgba(16,185,129,0)_28%)]" />
-        <div className="relative mx-auto flex min-h-0 w-full max-w-[1500px] flex-1 flex-col gap-4 px-4 pt-4 sm:px-6 lg:px-8">
-          <section className="relative shrink-0 overflow-hidden rounded-[30px] border border-white/10 bg-[linear-gradient(135deg,rgba(7,25,42,0.98),rgba(6,18,32,0.98))] shadow-[0_34px_120px_rgba(0,0,0,0.34)]">
-            <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] bg-[size:120px_120px] opacity-20" />
-            <div className="relative flex flex-col gap-5 p-5 lg:flex-row lg:items-end lg:justify-between lg:p-7">
-              <div className="max-w-3xl">
-                <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.28em] text-white">
-                  <MessageSquareText className="h-3.5 w-3.5" />
-                  Chatter
-                </div>
-                <h1 className="mt-5 text-[clamp(2rem,3.4vw,3.15rem)] font-semibold leading-[0.94] tracking-[-0.07em] text-white">
-                  Dispatch Chat
-                </h1>
-                <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-300 sm:text-[15px]">
-                  Secure admin communication for direct dispatch and assigned job threads.
-                </p>
-                {isPreviewMode ? (
-                  <p className="mt-3 text-xs font-medium text-white/80">Preview mode is read-only for technician Chatter.</p>
-                ) : null}
-              </div>
-              <div className="flex items-center gap-3 self-start lg:self-end">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleEnableNotifications}
-                  className="h-11 gap-2 rounded-2xl border border-white/12 bg-[linear-gradient(180deg,rgba(15,23,42,0.98),rgba(8,12,20,0.98))] px-4 text-slate-100 shadow-[0_14px_34px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.055)] hover:bg-[linear-gradient(180deg,rgba(24,38,64,0.98),rgba(12,20,34,0.98))] hover:text-white"
-                >
-                  <Bell className="h-4 w-4" />
-                  {notificationEnabled ? 'Notifications On' : 'Enable Alerts'}
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    void loadConversations(contactSearch, true);
-                    if (selectedConversationId) {
-                      void loadThread(selectedConversationId, historySearch);
-                    }
-                  }}
-                  className="h-11 gap-2 rounded-2xl border border-white/12 bg-[linear-gradient(180deg,rgba(15,23,42,0.98),rgba(8,12,20,0.98))] px-4 text-slate-100 shadow-[0_14px_34px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.055)] hover:bg-[linear-gradient(180deg,rgba(24,38,64,0.98),rgba(12,20,34,0.98))] hover:text-white"
-                >
-                  <RefreshCw className={cn('h-4 w-4', (loadingConversations || loadingMessages) && 'animate-spin')} />
-                  Refresh
-                </Button>
-              </div>
-            </div>
-          </section>
-
+        <div className="relative mx-auto flex min-h-0 w-full max-w-[1500px] flex-1 flex-col gap-3 px-4 pt-4 sm:px-6 lg:px-8">
           <div className="grid min-h-0 flex-1 gap-4 xl:grid-cols-[320px_minmax(0,1fr)]">
             <Card className="flex min-h-0 flex-col overflow-hidden rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(9,24,39,0.96),rgba(6,17,29,0.96))] shadow-[0_24px_80px_rgba(0,0,0,0.28)]">
               <div className="shrink-0 border-b border-white/8 p-5">
@@ -550,193 +534,252 @@ export default function TechnicianChatPage() {
                       {isPreviewMode ? 'Admin preview only. Sending is disabled.' : 'Only your tenant and assigned-job threads are visible here.'}
                     </div>
                   </div>
-                </div>
               </div>
+            </div>
 
-              {pinnedMessages.length > 0 ? (
-                <div className="shrink-0 border-b border-white/8 px-5 py-4">
-                  <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-white">
-                    <Pin className="h-4 w-4 text-cyan-300" />
-                    Pinned Messages
-                  </div>
-                  <div className="flex gap-3 overflow-x-auto pb-1">
-                    {pinnedMessages.map((message) => (
-                      <div key={`pin-${message.id}`} className="min-w-[240px] rounded-2xl border border-cyan-300/15 bg-cyan-300/10 p-3 text-sm text-cyan-50">
-                        <p className="line-clamp-3 leading-6">{message.text || message.attachments[0]?.name || 'Pinned secure attachment'}</p>
-                        <p className="mt-2 text-[11px] text-cyan-200/80">
-                          {new Date(message.created_at).toLocaleString()}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ) : null}
+            <div className="shrink-0 border-b border-white/8 px-5 py-4">
+              <div className="inline-flex h-11 rounded-full border border-white/10 bg-white/[0.04] p-1">
+                <button
+                  type="button"
+                  onClick={() => setWorkspaceTab('chat')}
+                  className={cn(
+                    'h-9 rounded-full px-4 text-sm transition',
+                    workspaceTab === 'chat'
+                      ? 'bg-cyan-300 text-slate-950'
+                      : 'text-slate-300 hover:bg-white/[0.06] hover:text-white',
+                  )}
+                >
+                  Chat
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setWorkspaceTab('shared')}
+                  className={cn(
+                    'h-9 rounded-full px-4 text-sm transition',
+                    workspaceTab === 'shared'
+                      ? 'bg-cyan-300 text-slate-950'
+                      : 'text-slate-300 hover:bg-white/[0.06] hover:text-white',
+                  )}
+                >
+                  Shared
+                </button>
+              </div>
+            </div>
 
-              <div className="flex min-h-0 flex-1 flex-col bg-[linear-gradient(180deg,rgba(238,247,248,0.03),rgba(255,255,255,0.01))]">
-                <ScrollArea className="min-h-0 flex-1">
-                  <div className="space-y-4 px-5 py-6">
-                    {loadingMessages ? (
-                      Array.from({ length: 4 }).map((_, index) => (
-                        <div
-                          key={index}
-                          className={cn(
-                            'h-16 w-[72%] animate-pulse rounded-[24px] bg-white/[0.05]',
-                            index % 2 === 0 ? 'ml-0' : 'ml-auto',
-                          )}
-                        />
-                      ))
-                    ) : messages.length === 0 ? (
-                      <div className="flex min-h-[320px] flex-col items-center justify-center py-12 text-center">
-                        <div className="mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-white/[0.05]">
-                          <MessageSquareText className="h-10 w-10 text-slate-500" />
-                        </div>
-                        <h3 className="text-xl font-semibold text-white">No messages yet</h3>
-                        <p className="mt-2 max-w-md text-sm leading-7 text-slate-400">
-                          Start a secure conversation with the admin team here. Job-linked chats stay attached to the assigned job.
-                        </p>
-                      </div>
-                    ) : messages.map((message) => (
-                      <div
-                        key={message.id}
-                        className={cn('flex', message.sender_role === 'technician' ? 'justify-end' : 'justify-start')}
-                      >
-                        <div className="max-w-[82%] space-y-2">
-                          <div
-                            className={cn(
-                              'rounded-[24px] border px-4 py-3 shadow-[0_10px_25px_rgba(0,0,0,0.14)]',
-                              message.sender_role === 'technician'
-                                ? 'border-white/10 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] text-white'
-                                : 'border-white/10 bg-[#070f11] text-white',
-                            )}
-                          >
-                            <div className="mb-2 flex items-center gap-2">
-                              {message.is_pinned ? <Pin className="h-3.5 w-3.5 text-cyan-300" /> : null}
-                              {message.conversation_type === 'job' && selectedConversation?.job_code ? (
-                                <Badge variant="outline" className="border-emerald-300/20 bg-emerald-300/10 text-[10px] text-emerald-100">
-                                  {selectedConversation.job_code}
-                                </Badge>
-                              ) : null}
-                            </div>
-                            {message.text ? <p className="text-sm leading-6">{message.text}</p> : null}
-                            {message.attachments.length > 0 ? (
-                              <div className={cn(
-                                'mt-3 grid gap-2',
-                                message.attachments.length === 1
-                                  ? 'grid-cols-1'
-                                  : message.attachments.length === 2
-                                    ? 'grid-cols-2'
-                                    : 'grid-cols-3',
-                              )}>
-                                {message.attachments.map((attachment) => (
-                                  <AttachmentCard key={attachment.id} attachment={attachment} token={token} tone="dark" />
-                                ))}
-                              </div>
-                            ) : null}
-                          </div>
-                          <div className={cn(
-                            'flex items-center gap-2 px-1 text-xs text-slate-500',
-                            message.sender_role === 'technician' ? 'justify-end' : 'justify-start',
-                          )}>
-                            <span>{new Date(message.created_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }).toLowerCase()}</span>
-                            {message.sender_role === 'technician' ? formatMessageStatus(message) : null}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                    <div ref={bottomRef} />
-                  </div>
-                </ScrollArea>
-
-                <div className="shrink-0 border-t border-slate-200 bg-white p-5 dark:border-white/8 dark:bg-[rgba(6,17,29,0.9)]">
-                  {pendingAttachments.length > 0 ? (
-                    <div className="mb-3 flex flex-wrap gap-2">
-                      {pendingAttachments.map((attachment) => (
-                        <div key={attachment.id} className="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-slate-50 px-3 py-1.5 text-xs text-slate-700 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-200">
-                          <span>{attachment.name}</span>
-                          <button
-                            type="button"
-                            onClick={() => setPendingAttachments((prev) => prev.filter((item) => item.id !== attachment.id))}
-                            className="rounded-full p-0.5 text-slate-600 hover:bg-slate-200 hover:text-slate-950 dark:text-slate-400 dark:hover:bg-white/[0.08] dark:hover:text-white"
-                          >
-                            <X className="h-3 w-3" />
-                          </button>
+            {workspaceTab === 'chat' ? (
+              <>
+                {pinnedMessages.length > 0 ? (
+                  <div className="shrink-0 border-b border-white/8 px-5 py-4">
+                    <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-white">
+                      <Pin className="h-4 w-4 text-cyan-300" />
+                      Pinned Messages
+                    </div>
+                    <div className="flex gap-3 overflow-x-auto pb-1">
+                      {pinnedMessages.map((message) => (
+                        <div key={`pin-${message.id}`} className="min-w-[240px] rounded-2xl border border-cyan-300/15 bg-cyan-300/10 p-3 text-sm text-cyan-50">
+                          <p className="line-clamp-3 leading-6">{message.text || message.attachments[0]?.name || 'Pinned secure attachment'}</p>
+                          <p className="mt-2 text-[11px] text-cyan-200/80">
+                            {new Date(message.created_at).toLocaleString()}
+                          </p>
                         </div>
                       ))}
                     </div>
-                  ) : null}
-                  {isRecording || isVoiceProcessing ? (
-                    <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1.5 text-xs text-cyan-100">
-                      {isRecording ? <Square className="h-3.5 w-3.5 fill-current" /> : <RefreshCw className="h-3.5 w-3.5 animate-spin" />}
-                      <span>
-                        {isRecording
-                          ? `Recording voice note ${formatVoiceRecordingDuration(recordingSeconds)}`
-                          : 'Securing voice note...'}
-                      </span>
-                    </div>
-                  ) : null}
+                  </div>
+                ) : null}
 
-                  <div className="flex items-end gap-3">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => fileInputRef.current?.click()}
-                      className="tech-chat-attach-button h-12 w-12 shrink-0 rounded-full border border-slate-300 bg-white text-slate-700 shadow-sm hover:bg-slate-100 hover:text-slate-950 disabled:bg-slate-100 disabled:text-slate-400 dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(15,23,42,0.98),rgba(8,12,20,0.98))] dark:text-slate-100 dark:shadow-[0_12px_30px_rgba(0,0,0,0.24)] dark:hover:bg-[linear-gradient(180deg,rgba(24,38,64,0.98),rgba(12,20,34,0.98))] dark:hover:text-white"
-                      disabled={isPreviewMode || !selectedConversationId || isVoiceProcessing}
-                    >
-                      <Paperclip className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => {
-                        if (isRecording) {
-                          stopRecording();
-                        } else {
-                          void startRecording();
-                        }
-                      }}
-                      className={cn(
-                        'h-12 w-12 shrink-0 rounded-full border shadow-sm',
-                        isRecording
-                          ? 'border-red-400/50 bg-red-500/15 text-red-100 hover:bg-red-500/25'
-                          : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100 hover:text-slate-950 dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(15,23,42,0.98),rgba(8,12,20,0.98))] dark:text-slate-100 dark:hover:bg-[linear-gradient(180deg,rgba(24,38,64,0.98),rgba(12,20,34,0.98))] dark:hover:text-white',
-                      )}
-                      disabled={isPreviewMode || !selectedConversationId || isVoiceProcessing || !voiceRecordingSupported}
-                      aria-label={isRecording ? 'Stop recording voice note' : 'Record voice note'}
-                    >
-                      {isRecording ? <Square className="h-4 w-4 fill-current" /> : <Mic className="h-4 w-4" />}
-                    </Button>
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept={CHAT_ATTACHMENT_ACCEPT}
-                      multiple
-                      className="hidden"
-                      onChange={(event) => void handleFileSelection(event)}
-                    />
-                    <Textarea
-                      value={draftMessage}
-                      onChange={(event) => setDraftMessage(event.target.value)}
-                      onKeyDown={handleComposerKeyDown}
-                      placeholder={isPreviewMode ? 'Preview mode is read-only' : 'Write a secure message'}
-                      className="min-h-[56px] resize-none rounded-[28px] border border-slate-300 bg-white px-5 py-4 text-slate-900 placeholder:text-slate-400 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-slate-500"
-                      disabled={isPreviewMode || !selectedConversationId || isVoiceProcessing}
-                    />
-                    <Button
-                      type="button"
-                      onClick={() => void handleSend()}
-                      className="tech-chat-send-button h-12 w-12 shrink-0 rounded-full border border-blue-700 bg-blue-600 text-white shadow-[0_16px_34px_rgba(37,99,235,0.22)] hover:bg-blue-700 disabled:border-blue-200 disabled:bg-blue-100 disabled:text-blue-500 dark:border-transparent dark:bg-[linear-gradient(135deg,#4f7cff,#7aa2ff)] dark:shadow-[0_18px_40px_rgba(79,124,255,0.24)] dark:hover:bg-[linear-gradient(135deg,#5d88ff,#89adff)]"
-                      disabled={isPreviewMode || !selectedConversationId || isVoiceProcessing}
-                      aria-label="Send message"
-                    >
-                      <Send className="h-4 w-4" />
-                    </Button>
+                <div className="flex min-h-0 flex-1 flex-col bg-[linear-gradient(180deg,rgba(238,247,248,0.03),rgba(255,255,255,0.01))]">
+                  <ScrollArea className="min-h-0 flex-1">
+                    <div className="space-y-4 px-5 py-6">
+                      {loadingMessages ? (
+                        Array.from({ length: 4 }).map((_, index) => (
+                          <div
+                            key={index}
+                            className={cn(
+                              'h-16 w-[72%] animate-pulse rounded-[24px] bg-white/[0.05]',
+                              index % 2 === 0 ? 'ml-0' : 'ml-auto',
+                            )}
+                          />
+                        ))
+                      ) : messages.length === 0 ? (
+                        <div className="flex min-h-[320px] flex-col items-center justify-center py-12 text-center">
+                          <div className="mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-white/[0.05]">
+                            <MessageSquareText className="h-10 w-10 text-slate-500" />
+                          </div>
+                          <h3 className="text-xl font-semibold text-white">No messages yet</h3>
+                          <p className="mt-2 max-w-md text-sm leading-7 text-slate-400">
+                            Start a secure conversation with the admin team here. Job-linked chats stay attached to the assigned job.
+                          </p>
+                        </div>
+                      ) : messages.map((message) => (
+                        <div
+                          key={message.id}
+                          className={cn('flex', message.sender_role === 'technician' ? 'justify-end' : 'justify-start')}
+                        >
+                          <div className="max-w-[82%] space-y-2">
+                            <div
+                              className={cn(
+                                'rounded-[24px] border px-4 py-3 shadow-[0_10px_25px_rgba(0,0,0,0.14)]',
+                                message.sender_role === 'technician'
+                                  ? 'border-white/10 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] text-white'
+                                  : 'border-white/10 bg-[#070f11] text-white',
+                              )}
+                            >
+                              <div className="mb-2 flex items-center gap-2">
+                                {message.is_pinned ? <Pin className="h-3.5 w-3.5 text-cyan-300" /> : null}
+                                {message.conversation_type === 'job' && selectedConversation?.job_code ? (
+                                  <Badge variant="outline" className="border-emerald-300/20 bg-emerald-300/10 text-[10px] text-emerald-100">
+                                    {selectedConversation.job_code}
+                                  </Badge>
+                                ) : null}
+                              </div>
+                              {message.text ? <p className="text-sm leading-6">{message.text}</p> : null}
+                              {message.attachments.length > 0 ? (
+                                <div className={cn(
+                                  'mt-3 grid gap-2',
+                                  message.attachments.length === 1
+                                    ? 'grid-cols-1'
+                                    : message.attachments.length === 2
+                                      ? 'grid-cols-2'
+                                      : 'grid-cols-3',
+                                )}>
+                                  {message.attachments.map((attachment) => (
+                                    <AttachmentCard key={attachment.id} attachment={attachment} token={token} tone="dark" />
+                                  ))}
+                                </div>
+                              ) : null}
+                            </div>
+                            <div className={cn(
+                              'flex items-center gap-2 px-1 text-xs text-slate-500',
+                              message.sender_role === 'technician' ? 'justify-end' : 'justify-start',
+                            )}>
+                              <span>{new Date(message.created_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }).toLowerCase()}</span>
+                              {message.sender_role === 'technician' ? formatMessageStatus(message) : null}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                      <div ref={bottomRef} />
+                    </div>
+                  </ScrollArea>
+
+                  <div className="shrink-0 border-t border-slate-200 bg-white p-5 dark:border-white/8 dark:bg-[rgba(6,17,29,0.9)]">
+                    {selectedConversationPendingAttachments.length > 0 ? (
+                      <div className="mb-3 flex flex-wrap gap-2">
+                        {selectedConversationPendingAttachments.map((attachment) => (
+                          <div key={attachment.id} className="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-slate-50 px-3 py-1.5 text-xs text-slate-700 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-200">
+                            <span>{attachment.name}</span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (!selectedConversationId) {
+                                  return;
+                                }
+                                setPendingAttachmentsByConversation((prev) => {
+                                  const current = prev[selectedConversationId] ?? [];
+                                  const next = current.filter((item) => item.id !== attachment.id);
+                                  if (next.length === 0) {
+                                    const nextState = { ...prev };
+                                    delete nextState[selectedConversationId];
+                                    return nextState;
+                                  }
+                                  return {
+                                    ...prev,
+                                    [selectedConversationId]: next,
+                                  };
+                                });
+                              }}
+                              className="rounded-full p-0.5 text-slate-600 hover:bg-slate-200 hover:text-slate-950 dark:text-slate-400 dark:hover:bg-white/[0.08] dark:hover:text-white"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    ) : null}
+                    {isRecording || isVoiceProcessing ? (
+                      <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1.5 text-xs text-cyan-100">
+                        {isRecording ? <Square className="h-3.5 w-3.5 fill-current" /> : <RefreshCw className="h-3.5 w-3.5 animate-spin" />}
+                        <span>
+                          {isRecording
+                            ? `Recording voice note ${formatVoiceRecordingDuration(recordingSeconds)}`
+                            : 'Securing voice note...'}
+                        </span>
+                      </div>
+                    ) : null}
+
+                    <div className="flex items-end gap-3">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="tech-chat-attach-button h-12 w-12 shrink-0 rounded-full border border-slate-300 bg-white text-slate-700 shadow-sm hover:bg-slate-100 hover:text-slate-950 disabled:bg-slate-100 disabled:text-slate-400 dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(15,23,42,0.98),rgba(8,12,20,0.98))] dark:text-slate-100 dark:shadow-[0_12px_30px_rgba(0,0,0,0.24)] dark:hover:bg-[linear-gradient(180deg,rgba(24,38,64,0.98),rgba(12,20,34,0.98))] dark:hover:text-white"
+                        disabled={isPreviewMode || !selectedConversationId || isVoiceProcessing}
+                      >
+                        <Paperclip className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          if (isRecording) {
+                            stopRecording();
+                          } else {
+                            void startRecording();
+                          }
+                        }}
+                        className={cn(
+                          'h-12 w-12 shrink-0 rounded-full border shadow-sm',
+                          isRecording
+                            ? 'border-red-400/50 bg-red-500/15 text-red-100 hover:bg-red-500/25'
+                            : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100 hover:text-slate-950 dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(15,23,42,0.98),rgba(8,12,20,0.98))] dark:text-slate-100 dark:hover:bg-[linear-gradient(180deg,rgba(24,38,64,0.98),rgba(12,20,34,0.98))] dark:hover:text-white',
+                        )}
+                        disabled={isPreviewMode || !selectedConversationId || isVoiceProcessing || !voiceRecordingSupported}
+                        aria-label={isRecording ? 'Stop recording voice note' : 'Record voice note'}
+                      >
+                        {isRecording ? <Square className="h-4 w-4 fill-current" /> : <Mic className="h-4 w-4" />}
+                      </Button>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept={CHAT_ATTACHMENT_ACCEPT}
+                        multiple
+                        className="hidden"
+                        onChange={(event) => void handleFileSelection(event)}
+                      />
+                      <Textarea
+                        value={draftMessage}
+                        onChange={(event) => setDraftMessage(event.target.value)}
+                        onKeyDown={handleComposerKeyDown}
+                        placeholder={isPreviewMode ? 'Preview mode is read-only' : 'Write a secure message'}
+                        className="min-h-[56px] resize-none rounded-[28px] border border-slate-300 bg-white px-5 py-4 text-slate-900 placeholder:text-slate-400 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-slate-500"
+                        disabled={isPreviewMode || !selectedConversationId || isVoiceProcessing}
+                      />
+                      <Button
+                        type="button"
+                        onClick={() => void handleSend()}
+                        className="tech-chat-send-button h-12 w-12 shrink-0 rounded-full border border-blue-700 bg-blue-600 text-white shadow-[0_16px_34px_rgba(37,99,235,0.22)] hover:bg-blue-700 disabled:border-blue-200 disabled:bg-blue-100 disabled:text-blue-500 dark:border-transparent dark:bg-[linear-gradient(135deg,#4f7cff,#7aa2ff)] dark:shadow-[0_18px_40px_rgba(79,124,255,0.24)] dark:hover:bg-[linear-gradient(135deg,#5d88ff,#89adff)]"
+                        disabled={isPreviewMode || !selectedConversationId || isVoiceProcessing}
+                        aria-label="Send message"
+                      >
+                        <Send className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </Card>
+              </>
+            ) : (
+              <SharedConversationPanel
+                conversation={selectedConversation}
+                messages={messages}
+                token={token}
+                viewerRole={isPreviewMode ? 'admin' : 'technician'}
+                canUpload={Boolean(selectedConversationId && !isPreviewMode && !isVoiceProcessing)}
+                onUploadFiles={() => fileInputRef.current?.click()}
+              />
+            )}
+          </Card>
           </div>
         </div>
       </div>
