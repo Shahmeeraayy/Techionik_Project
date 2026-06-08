@@ -1,17 +1,25 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
+  AtSign,
   Bell,
   BriefcaseBusiness,
   Check,
   CheckCheck,
+  Clock3,
+  FolderOpen,
+  Info,
+  ListFilter,
   MessageSquareText,
   Mic,
+  PanelRightClose,
+  PanelRightOpen,
   Paperclip,
   Pin,
   RefreshCw,
   Search,
   Send,
   Shield,
+  Star,
   Square,
   Users,
   X,
@@ -34,6 +42,18 @@ import {
   getChatAttachmentValidationMessage,
 } from '@/lib/chat-attachments';
 import {
+  buildSharedConversationAttachments,
+  filterConversationsByQuickFilter,
+  formatConversationClock,
+  formatMessageDayLabel,
+  formatRelativeChatTime,
+  getConversationStatusLine,
+  getConversationTypeLabel,
+  shouldRenderMessageDayDivider,
+  type ChatInsightTab,
+  type ChatQuickFilter,
+} from '@/lib/chat-ui';
+import {
   fetchAdminChatConversations,
   fetchAdminChatThreadMessages,
   fetchAdminJobChatConversation,
@@ -51,6 +71,47 @@ import {
   type BackendChatMessage,
 } from '@/lib/backend-api';
 import { cn } from '@/lib/utils';
+
+const TECH_FAVORITES_STORAGE_KEY = 'sm_technician_chat_favorites_v1';
+const TECH_DRAFTS_STORAGE_KEY = 'sm_technician_chat_drafts_v1';
+const PREVIEW_FAVORITES_STORAGE_KEY = 'sm_preview_chat_favorites_v1';
+const PREVIEW_DRAFTS_STORAGE_KEY = 'sm_preview_chat_drafts_v1';
+
+const QUICK_FILTERS: Array<{ key: ChatQuickFilter; label: string }> = [
+  { key: 'all', label: 'All' },
+  { key: 'unread', label: 'Unread' },
+  { key: 'direct', label: 'Direct' },
+  { key: 'group', label: 'Groups' },
+  { key: 'job', label: 'Jobs' },
+  { key: 'pinned', label: 'Pinned' },
+];
+
+function loadStoredArray(key: string): string[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = window.localStorage.getItem(key);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === 'string') : [];
+  } catch {
+    return [];
+  }
+}
+
+function loadStoredDrafts(key: string): Record<string, string> {
+  if (typeof window === 'undefined') return {};
+  try {
+    const raw = window.localStorage.getItem(key);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object') return {};
+    return Object.fromEntries(
+      Object.entries(parsed).filter((entry): entry is [string, string] => typeof entry[0] === 'string' && typeof entry[1] === 'string'),
+    );
+  } catch {
+    return {};
+  }
+}
 
 function formatMessageStatus(message: BackendChatMessage) {
   if (message.read_at) {
