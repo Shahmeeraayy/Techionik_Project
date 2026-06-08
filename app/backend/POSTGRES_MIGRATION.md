@@ -1,12 +1,12 @@
 # PostgreSQL Migration Guide
 
-NexusOps uses PostgreSQL as the required database for staging, demo, client-facing, and production environments. SQLite is allowed only for temporary local development and testing.
+NexusOps uses PostgreSQL as the final and required database. SQLite is not used for staging, production, demo, client testing, or backend certification.
 
 ## Environment policy
 
-- Local-only fallback: `sqlite:///./nexusops-dev.db`
-- Shared development, demo, staging, production: `postgresql+psycopg://...`
-- Non-local environments will now fail fast if `DATABASE_URL` points to SQLite.
+- Backend runtime: `postgresql+psycopg://.../nexusops`
+- Smoke test runtime: `postgresql+psycopg://.../nexusops_test`
+- SQLite is kept only as a legacy data source for one-time migration into PostgreSQL.
 
 ## 1. Configure the backend environment
 
@@ -15,6 +15,7 @@ Create `app/backend/.env` from `.env.example` and point `DATABASE_URL` at Postgr
 ```env
 APP_ENV=development
 DATABASE_URL=postgresql+psycopg://postgres:password@localhost:5432/nexusops
+TEST_DATABASE_URL=postgresql+psycopg://postgres:password@localhost:5432/nexusops_test
 ```
 
 Cloud providers such as Neon, Supabase, Render PostgreSQL, and AWS RDS also work:
@@ -23,7 +24,23 @@ Cloud providers such as Neon, Supabase, Render PostgreSQL, and AWS RDS also work
 DATABASE_URL=postgresql+psycopg://USER:PASSWORD@HOST:PORT/nexusops?sslmode=require
 ```
 
-## 2. Run managed schema migrations
+## 2. Provision PostgreSQL databases
+
+Create the main and smoke-test databases:
+
+```bash
+cd app/backend
+python scripts/provision_postgres_databases.py
+```
+
+By default the helper provisions:
+
+- `nexusops`
+- `nexusops_test`
+
+It uses the PostgreSQL server from `DATABASE_URL` and creates the missing databases if they do not exist yet.
+
+## 3. Run managed schema migrations
 
 This repo currently uses the managed backend migration script rather than Alembic:
 
@@ -39,7 +56,13 @@ For local demo data only:
 python scripts/migrate.py --with-seed
 ```
 
-## 3. Migrate existing SQLite data if needed
+To prepare the smoke-test database:
+
+```bash
+DATABASE_URL=$TEST_DATABASE_URL python scripts/migrate.py
+```
+
+## 4. Migrate existing SQLite data if needed
 
 1. Back up `app/backend/nexusops-dev.db`.
 2. Create the PostgreSQL schema first with `python scripts/migrate.py`.
@@ -58,7 +81,7 @@ Optional flags:
 
 The script writes a JSON migration report under `app/backend/private/migration-reports/`.
 
-## 4. Verify database connectivity
+## 5. Verify database connectivity
 
 Start the backend:
 
@@ -82,16 +105,25 @@ Expected PostgreSQL response:
 }
 ```
 
-SQLite is still reported as local-only:
+## 6. Run PostgreSQL smoke tests
 
-```json
-{
-  "database": "sqlite",
-  "status": "connected",
-  "environment": "development",
-  "mode": "local_development_only"
-}
+```bash
+DATABASE_URL=$TEST_DATABASE_URL python -m pytest .\tests\test_postgres_smoke.py -q
 ```
+
+Minimum smoke coverage:
+
+- `/health`
+- `/health/db`
+- admin login
+- technician login
+- booking request creation
+- job/admin detail flow
+- attendance clock in and clock out
+- chatter send/read
+- invoice CRUD flow
+- super admin login
+- tenant isolation checks
 
 ## Deployment checklist
 

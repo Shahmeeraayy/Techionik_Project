@@ -62,11 +62,6 @@ def get_backend_root() -> Path:
     return Path(__file__).resolve().parents[2]
 
 
-def get_default_database_url() -> str:
-    db_path = (get_backend_root() / "nexusops-dev.db").resolve()
-    return f"sqlite:///{db_path.as_posix()}"
-
-
 def normalize_database_url(value: str) -> str:
     normalized = value.strip()
     if normalized.startswith("postgres://"):
@@ -77,16 +72,14 @@ def normalize_database_url(value: str) -> str:
 
 
 LOCAL_APP_ENVIRONMENTS = {"development", "dev", "local", "test"}
+TRUE_VALUES = {"1", "true", "yes", "on"}
 
 
 APP_ENV = get_env("APP_ENV", get_env("ENVIRONMENT", "development")).strip().lower()
 IS_LOCAL_APP_ENV = APP_ENV in LOCAL_APP_ENVIRONMENTS
+ALLOW_SQLITE_FOR_TESTS = get_env("ALLOW_SQLITE_FOR_TESTS", "false").strip().lower() in TRUE_VALUES
 
-DATABASE_URL = normalize_database_url(
-    get_env("DATABASE_URL", get_default_database_url())
-    if IS_LOCAL_APP_ENV
-    else get_required_env("DATABASE_URL")
-)
+DATABASE_URL = normalize_database_url(get_required_env("DATABASE_URL"))
 IS_SQLITE = DATABASE_URL.startswith("sqlite")
 IS_POSTGRES = DATABASE_URL.startswith("postgresql")
 DATABASE_BACKEND = "sqlite" if IS_SQLITE else "postgresql" if IS_POSTGRES else DATABASE_URL.split(":", 1)[0]
@@ -94,8 +87,11 @@ DATABASE_BACKEND = "sqlite" if IS_SQLITE else "postgresql" if IS_POSTGRES else D
 if not IS_SQLITE and not IS_POSTGRES:
     raise RuntimeError("Unsupported DATABASE_URL scheme. NexusOps supports SQLite and PostgreSQL only.")
 
-if not IS_LOCAL_APP_ENV and not IS_POSTGRES:
-    raise RuntimeError("PostgreSQL DATABASE_URL is required outside local development and test environments")
+if IS_SQLITE and not ALLOW_SQLITE_FOR_TESTS:
+    raise RuntimeError("SQLite is not allowed for NexusOps final backend runtime. Use PostgreSQL.")
+
+if not IS_POSTGRES and not (IS_SQLITE and ALLOW_SQLITE_FOR_TESTS):
+    raise RuntimeError("PostgreSQL DATABASE_URL is required for NexusOps backend runtime.")
 
 JWT_SECRET_KEY = (
     get_env("JWT_SECRET_KEY", "change-me-dev-only")

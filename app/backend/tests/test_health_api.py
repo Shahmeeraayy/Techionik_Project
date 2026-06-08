@@ -9,6 +9,7 @@ if os.path.exists(_TEST_DB_FILE):
     os.remove(_TEST_DB_FILE)
 
 os.environ["APP_ENV"] = "development"
+os.environ["ALLOW_SQLITE_FOR_TESTS"] = "1"
 os.environ["DATABASE_URL"] = f"sqlite:///{_TEST_DB_FILE.replace(os.sep, '/')}"
 
 from app.api.deps import engine

@@ -4,6 +4,7 @@ from decimal import Decimal
 from uuid import uuid4
 
 os.environ["APP_ENV"] = "development"
+os.environ["ALLOW_SQLITE_FOR_TESTS"] = "1"
 os.environ["DATABASE_URL"] = "sqlite:///:memory:"
 
 from app.models.invoice import InvoiceLineItem

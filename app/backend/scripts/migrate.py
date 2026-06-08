@@ -19,6 +19,7 @@ if str(BACKEND_ROOT) not in sys.path:
 from app.core.config import DATABASE_URL, DEFAULT_TENANT_ID, DEFAULT_TENANT_NAME, DEFAULT_TENANT_SLUG
 from app.models import Job, JobService, Skill, Technician, Tenant, WorkingHours, Zone, technician_skills, technician_zones
 from app.models.base import Base
+from app.services.chat_backfill_service import ChatBackfillService
 
 
 @dataclass(frozen=True)
@@ -44,8 +45,10 @@ MIGRATIONS: list[Migration] = [
     Migration("014_signup_requests_tenant_uniqueness.sql"),
     Migration("015_tenant_email_identities.sql"),
     Migration("016_chatter_v1.sql"),
+    Migration("017_chatter_groups.sql"),
     Migration("018_job_internal_notes.sql"),
     Migration("019_attendance_live_tracking.sql"),
+    Migration("020_postgres_runtime_alignment.sql"),
 ]
 
 
@@ -315,6 +318,13 @@ def backfill_job_services(engine) -> None:
             session.commit()
 
 
+def backfill_chat_data(engine) -> None:
+    with Session(engine) as session:
+        service = ChatBackfillService(session)
+        service.migrate_legacy_messages()
+        service.ensure_conversation_members()
+
+
 def seed_development_data(engine) -> None:
     with Session(engine) as session:
         tenant_id = UUID(DEFAULT_TENANT_ID)
@@ -511,6 +521,7 @@ def run() -> None:
     if args.with_seed and "003_technician.sql" in pending:
         seed_development_data(engine)
 
+    backfill_chat_data(engine)
     backfill_job_services(engine)
 
     with engine.begin() as conn:

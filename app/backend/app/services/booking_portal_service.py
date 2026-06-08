@@ -627,9 +627,8 @@ class BookingPortalService:
         )
 
         self.db.commit()
-        # Restore the original tenant scope so subsequent queries in the same
-        # request are not inadvertently scoped to the owner tenant.
-        self._set_session_tenant(original_tenant_id)
+        reference_number = row.reference_number
+        estimated_response_time_message = settings.estimated_response_time_message
 
         # Send emails immediately after commit. Failures are logged but do not
         # surface as HTTP errors — the booking is already saved.
@@ -652,6 +651,7 @@ class BookingPortalService:
 
         # Update outbox status so we have a record of delivery attempts.
         try:
+            self._set_session_tenant(tenant.id)
             self.db.execute(
                 text("UPDATE email_outbox SET status = :status, error_message = :error_message WHERE id = :id"),
                 {
@@ -662,11 +662,15 @@ class BookingPortalService:
             )
             self.db.commit()
         except Exception:
-            pass
+            self.db.rollback()
+        finally:
+            # Restore the original tenant scope so subsequent queries in the
+            # same request are not inadvertently scoped to the owner tenant.
+            self._set_session_tenant(original_tenant_id)
 
         return BookingPortalSubmissionResponse(
-            reference_number=row.reference_number,
-            estimated_response_time_message=settings.estimated_response_time_message,
+            reference_number=reference_number,
+            estimated_response_time_message=estimated_response_time_message,
         )
 
     def lookup_status(self, payload: BookingPortalStatusLookupRequest) -> BookingPortalStatusLookupResponse:

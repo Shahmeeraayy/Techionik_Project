@@ -4,6 +4,7 @@ import unittest
 
 
 os.environ["APP_ENV"] = "development"
+os.environ["ALLOW_SQLITE_FOR_TESTS"] = "1"
 os.environ["DATABASE_URL"] = "sqlite:///:memory:"
 
 import app.core.config as config_module
@@ -17,6 +18,7 @@ class DatabaseConfigTests(unittest.TestCase):
             "DATABASE_URL": os.environ.get("DATABASE_URL"),
             "JWT_SECRET_KEY": os.environ.get("JWT_SECRET_KEY"),
             "SUPABASE_JWT_SECRET": os.environ.get("SUPABASE_JWT_SECRET"),
+            "ALLOW_SQLITE_FOR_TESTS": os.environ.get("ALLOW_SQLITE_FOR_TESTS"),
         }
 
     def tearDown(self):
@@ -46,8 +48,9 @@ class DatabaseConfigTests(unittest.TestCase):
         os.environ["APP_ENV"] = "staging"
         os.environ["DATABASE_URL"] = "sqlite:///./nexusops-dev.db"
         os.environ["JWT_SECRET_KEY"] = "staging-secret"
+        os.environ.pop("ALLOW_SQLITE_FOR_TESTS", None)
 
-        with self.assertRaisesRegex(RuntimeError, "PostgreSQL DATABASE_URL is required"):
+        with self.assertRaisesRegex(RuntimeError, "SQLite is not allowed"):
             self._reload()
 
 

@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from sqlalchemy import inspect, text
+from sqlalchemy import text
 from sqlalchemy.exc import OperationalError
 import logging
 
@@ -35,10 +35,6 @@ from .core.tenant import (
     reset_current_tenant_context,
     set_current_tenant_context,
 )
-from .models.job import Job
-from .models.base import Base
-from .services.job_services_service import JobServicesService
-from .services.chat_backfill_service import ChatBackfillService
 
 
 logger = logging.getLogger(__name__)
@@ -67,85 +63,8 @@ def _assert_database_connection() -> None:
 
 
 @app.on_event("startup")
-def ensure_runtime_schema() -> None:
-    with deps.engine.begin() as conn:
-        Base.metadata.create_all(bind=conn)
-        tenant_columns = {column["name"] for column in inspect(conn).get_columns("tenants")}
-        tenant_runtime_columns = {
-            "email_domain": "VARCHAR(255)",
-            "support_email": "VARCHAR(255)",
-            "billing_email": "VARCHAR(255)",
-            "invoice_email": "VARCHAR(255)",
-            "notification_email": "VARCHAR(255)",
-            "email_verified": "BOOLEAN DEFAULT false NOT NULL",
-            "email_sending_status": "VARCHAR(32) DEFAULT 'demo' NOT NULL",
-            "industry_type": "VARCHAR(64) DEFAULT 'general_services' NOT NULL",
-            "platform_status": "VARCHAR(32) DEFAULT 'trial' NOT NULL",
-            "subscription_plan": "VARCHAR(32) DEFAULT 'pro' NOT NULL",
-            "subscription_status": "VARCHAR(32) DEFAULT 'trial' NOT NULL",
-            "payment_failures_count": "INTEGER DEFAULT 0 NOT NULL",
-            "trial_ends_at": "TIMESTAMP",
-            "subscription_renewal_at": "TIMESTAMP",
-            "suspended_at": "TIMESTAMP",
-            "archived_at": "TIMESTAMP",
-        }
-        for column_name, column_type in tenant_runtime_columns.items():
-            if tenant_columns and column_name not in tenant_columns:
-                conn.exec_driver_sql(f"ALTER TABLE tenants ADD COLUMN {column_name} {column_type}")
-
-        email_outbox_columns = {column["name"] for column in inspect(conn).get_columns("email_outbox")}
-        email_outbox_runtime_columns = {
-            "sender_email": "VARCHAR(255)",
-            "reply_to_email": "VARCHAR(255)",
-            "error_message": "TEXT",
-            "sent_at": "TIMESTAMP",
-        }
-        for column_name, column_type in email_outbox_runtime_columns.items():
-            if email_outbox_columns and column_name not in email_outbox_columns:
-                conn.exec_driver_sql(f"ALTER TABLE email_outbox ADD COLUMN {column_name} {column_type}")
-
-        invoice_columns = {column["name"] for column in inspect(conn).get_columns("invoices")}
-        if invoice_columns and "approval_note" not in invoice_columns:
-            conn.exec_driver_sql("ALTER TABLE invoices ADD COLUMN approval_note TEXT")
-
-        job_service_columns = {column["name"] for column in inspect(conn).get_columns("job_services")}
-        if job_service_columns and "quantity" not in job_service_columns:
-            conn.exec_driver_sql("ALTER TABLE job_services ADD COLUMN quantity NUMERIC(10,2) DEFAULT 1 NOT NULL")
-        if job_service_columns and "unit_price" not in job_service_columns:
-            conn.exec_driver_sql("ALTER TABLE job_services ADD COLUMN unit_price NUMERIC(12,2) DEFAULT 0 NOT NULL")
-
-        service_catalog_columns = {column["name"] for column in inspect(conn).get_columns("service_catalog")}
-        if service_catalog_columns and "sku" not in service_catalog_columns:
-            conn.exec_driver_sql("ALTER TABLE service_catalog ADD COLUMN sku VARCHAR(128)")
-        if service_catalog_columns and "description" not in service_catalog_columns:
-            conn.exec_driver_sql("ALTER TABLE service_catalog ADD COLUMN description TEXT")
-
-        booking_request_columns = {column["name"] for column in inspect(conn).get_columns("booking_requests")}
-        if booking_request_columns and "service_catalog_ids" not in booking_request_columns:
-            conn.exec_driver_sql("ALTER TABLE booking_requests ADD COLUMN service_catalog_ids JSON")
-        if booking_request_columns and "service_names" not in booking_request_columns:
-            conn.exec_driver_sql("ALTER TABLE booking_requests ADD COLUMN service_names JSON")
-        if booking_request_columns and "assigned_technician_id" not in booking_request_columns:
-            conn.exec_driver_sql("ALTER TABLE booking_requests ADD COLUMN assigned_technician_id UUID REFERENCES technicians(id)")
-        if booking_request_columns and "service_location_address" not in booking_request_columns:
-            conn.exec_driver_sql("ALTER TABLE booking_requests ADD COLUMN service_location_address TEXT")
-        if booking_request_columns and "service_location_city" not in booking_request_columns:
-            conn.exec_driver_sql("ALTER TABLE booking_requests ADD COLUMN service_location_city VARCHAR(128)")
-        if booking_request_columns and "service_location_state" not in booking_request_columns:
-            conn.exec_driver_sql("ALTER TABLE booking_requests ADD COLUMN service_location_state VARCHAR(128)")
-        if booking_request_columns and "service_location_zip_code" not in booking_request_columns:
-            conn.exec_driver_sql("ALTER TABLE booking_requests ADD COLUMN service_location_zip_code VARCHAR(32)")
-
-    with deps.SessionLocal() as session:
-        backfill_service = ChatBackfillService(session)
-        backfill_service.migrate_legacy_messages()
-        backfill_service.ensure_conversation_members()
-        service = JobServicesService(session)
-        changed = False
-        for row in session.query(Job).all():
-            changed = service.backfill_job(row) or changed
-        if changed:
-            session.commit()
+def validate_runtime_database() -> None:
+    _assert_database_connection()
 
 
 app.add_middleware(
