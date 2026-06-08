@@ -20,14 +20,27 @@ import {
   endBreak,
   activeSession,
   todaySessions,
+  captureGps,
   workedMs,
   breakMs,
   fmtDuration,
   type AttendanceSession,
   type AttendanceStatus,
+  type AttendanceEventKind,
 } from '@/lib/attendance-store';
 import { useParams } from 'react-router-dom';
-import { getStoredAdminToken } from '@/lib/backend-api';
+import {
+  buildDeviceLogPayload,
+  createTechnicianLocationCheckpoint,
+  fetchTechnicianAttendanceCurrent,
+  fetchTechnicianAttendanceHistory,
+  getStoredAdminToken,
+  getStoredTechnicianToken,
+  performTechnicianAttendanceAction,
+  saveTechnicianLocationConsent,
+  updateTechnicianLocation,
+  type BackendAttendanceSession,
+} from '@/lib/backend-api';
 
 // ─── Status config ────────────────────────────────────────────────────────────
 
@@ -75,16 +88,93 @@ export default function TechnicianAttendancePage() {
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [showHistory, setShowHistory] = useState(false);
   const [todayHistory, setTodayHistory] = useState<AttendanceSession[]>([]);
+  const [permissionState, setPermissionState] = useState<PermissionState | 'unsupported' | 'unknown'>('unknown');
+  const [checkingPermission, setCheckingPermission] = useState(true);
 
   const successTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const loginCheckpointSent = useRef(false);
 
-  const reload = useCallback(() => {
+  const reload = useCallback(async () => {
     if (!techId) return;
+    const token = getStoredTechnicianToken();
+    if (token && !isPreview) {
+      try {
+        const [current, history] = await Promise.all([
+          fetchTechnicianAttendanceCurrent(token),
+          fetchTechnicianAttendanceHistory(token),
+        ]);
+        setSession(current ? fromBackendSession(current, techName) : null);
+        setTodayHistory(history.map(item => fromBackendSession(item, techName)));
+        return;
+      } catch {
+        setError('Backend attendance is unavailable. Showing local device records.');
+      }
+    }
     setSession(activeSession(techId));
     setTodayHistory(todaySessions(techId));
+  }, [isPreview, techId, techName]);
+
+  const refreshPermission = useCallback(async () => {
+    if (!('permissions' in navigator) || !navigator.permissions.query) {
+      setPermissionState('unsupported');
+      setCheckingPermission(false);
+      return;
+    }
+    try {
+      const status = await navigator.permissions.query({ name: 'geolocation' as PermissionName });
+      setPermissionState(status.state);
+      status.onchange = () => setPermissionState(status.state);
+    } catch {
+      setPermissionState('unknown');
+    } finally {
+      setCheckingPermission(false);
+    }
   }, [techId]);
 
-  useEffect(() => { reload(); }, [reload]);
+  useEffect(() => { void refreshPermission(); }, [refreshPermission]);
+  useEffect(() => { void reload(); }, [reload]);
+
+  useEffect(() => {
+    const token = getStoredTechnicianToken();
+    if (!token || permissionState !== 'granted' || loginCheckpointSent.current || isPreview) return;
+    loginCheckpointSent.current = true;
+    void captureGps().then((gps) => {
+      void saveTechnicianLocationConsent(token, { status: 'granted', device: buildDeviceLogPayload() });
+      if (gps) {
+        void createTechnicianLocationCheckpoint(token, {
+          event_type: 'technician_login',
+          latitude: gps.lat,
+          longitude: gps.lng,
+          accuracy: gps.accuracy,
+          device: buildDeviceLogPayload(),
+        });
+      }
+    });
+  }, [isPreview, permissionState]);
+
+  useEffect(() => {
+    const token = getStoredTechnicianToken();
+    if (!token || isPreview || permissionState !== 'granted' || !session || session.status === 'clocked_out') return;
+    let cancelled = false;
+    const ping = async () => {
+      const gps = await captureGps();
+      if (!gps || cancelled) return;
+      await updateTechnicianLocation(token, {
+        latitude: gps.lat,
+        longitude: gps.lng,
+        accuracy: gps.accuracy,
+        availability_status: statusToAvailability(session.status),
+        tracking_status: 'active',
+        device: buildDeviceLogPayload(),
+      }).catch(() => undefined);
+    };
+    void ping();
+    const id = setInterval(() => void ping(), 12000);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
+  }, [isPreview, permissionState, session]);
 
   const flash = (msg: string) => {
     setSuccessMsg(msg);
@@ -92,12 +182,39 @@ export default function TechnicianAttendancePage() {
     successTimer.current = setTimeout(() => setSuccessMsg(null), 3500);
   };
 
-  const run = async (fn: () => Promise<AttendanceSession>, successText: string) => {
+  const requestLocationAccess = async () => {
+    setError(null);
+    setCheckingPermission(true);
+    const token = getStoredTechnicianToken();
+    const gps = await captureGps();
+    const status = gps ? 'granted' : 'denied';
+    setPermissionState(status);
+    if (token && !isPreview) {
+      await saveTechnicianLocationConsent(token, { status, device: buildDeviceLogPayload() }).catch(() => undefined);
+    }
+    if (!gps) {
+      setError('Location access is required for attendance and live job tracking.');
+    }
+    setCheckingPermission(false);
+  };
+
+  const run = async (localFn: () => Promise<AttendanceSession>, backendAction: 'clock-in' | 'clock-out' | 'break/start' | 'break/end', successText: string) => {
     setError(null);
     setLoading(true);
     try {
-      await fn();
-      reload();
+      const gps = await captureGps();
+      const token = getStoredTechnicianToken();
+      if (token && !isPreview) {
+        await performTechnicianAttendanceAction(token, backendAction, {
+          latitude: gps?.lat ?? null,
+          longitude: gps?.lng ?? null,
+          accuracy: gps?.accuracy ?? null,
+          device: buildDeviceLogPayload(),
+        });
+      } else {
+        await localFn();
+      }
+      await reload();
       flash(successText);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Action failed.');
@@ -115,6 +232,39 @@ export default function TechnicianAttendancePage() {
   const brk = session ? breakMs(session, now) : 0;
   const currentBreak = session?.breaks.find(b => !b.endedAt);
   const currentBreakMs = currentBreak ? now - new Date(currentBreak.startedAt).getTime() : 0;
+
+  if (!isPreview && !checkingPermission && permissionState !== 'granted') {
+    return (
+      <div className="flex min-h-screen flex-col bg-[#07111f] px-5 py-6 text-white">
+        <div className="mx-auto flex min-h-[70vh] w-full max-w-sm flex-col justify-center">
+          <div className="rounded-[24px] border border-white/[0.07] bg-[#0d1829] p-5 shadow-[0_24px_48px_rgba(0,0,0,0.45)]">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-cyan-400/30 bg-cyan-400/10">
+              <MapPin className="h-5 w-5 text-cyan-300" />
+            </div>
+            <h1 className="mt-5 text-xl font-bold">Enable Live Location</h1>
+            <p className="mt-2 text-sm leading-6 text-slate-400">
+              NexusOps needs your location access so the admin can see your current position during active work.
+            </p>
+            <p className="mt-2 text-sm leading-6 text-slate-500">
+              Your location is used only for operational tracking inside your company workspace.
+            </p>
+            {permissionState === 'denied' && (
+              <div className="mt-4 rounded-2xl border border-red-400/20 bg-red-400/10 px-3 py-2.5 text-sm text-red-200">
+                Location access is blocked. Enable location permission from your browser settings, then try again.
+              </div>
+            )}
+            <button
+              className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl border border-cyan-400/40 bg-cyan-400/15 px-4 py-3 text-sm font-bold text-cyan-200"
+              onClick={requestLocationAccess}
+            >
+              <MapPin className="h-4 w-4" />
+              Allow Location Access
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen flex-col bg-[#07111f] pb-28">
@@ -230,7 +380,7 @@ export default function TechnicianAttendancePage() {
                 icon={<LogIn className="h-5 w-5" />}
                 color="#34d399"
                 loading={loading}
-                onClick={() => run(() => clockIn(techId, techName), 'Clocked in successfully!')}
+                onClick={() => run(() => clockIn(techId, techName), 'clock-in', 'Clocked in successfully!')}
               />
             )}
 
@@ -241,14 +391,14 @@ export default function TechnicianAttendancePage() {
                   icon={<Coffee className="h-5 w-5" />}
                   color="#fbbf24"
                   loading={loading}
-                  onClick={() => run(() => startBreak(techId), 'Break started.')}
+                  onClick={() => run(() => startBreak(techId), 'break/start', 'Break started.')}
                 />
                 <ActionButton
                   label="Clock Out"
                   icon={<LogOut className="h-5 w-5" />}
                   color="#f87171"
                   loading={loading}
-                  onClick={() => run(() => clockOut(techId), 'Clocked out. Great work!')}
+                  onClick={() => run(() => clockOut(techId), 'clock-out', 'Clocked out. Great work!')}
                 />
               </>
             )}
@@ -260,14 +410,14 @@ export default function TechnicianAttendancePage() {
                   icon={<Coffee className="h-5 w-5" />}
                   color="#34d399"
                   loading={loading}
-                  onClick={() => run(() => endBreak(techId), 'Break ended. Back to work!')}
+                  onClick={() => run(() => endBreak(techId), 'break/end', 'Break ended. Back to work!')}
                 />
                 <ActionButton
                   label="Clock Out"
                   icon={<LogOut className="h-5 w-5" />}
                   color="#f87171"
                   loading={loading}
-                  onClick={() => run(() => clockOut(techId), 'Clocked out. Great work!')}
+                  onClick={() => run(() => clockOut(techId), 'clock-out', 'Clocked out. Great work!')}
                 />
               </>
             )}
@@ -382,13 +532,56 @@ function ActionButton({
 
 // ─── Event helpers ────────────────────────────────────────────────────────────
 
-import type { AttendanceEventKind } from '@/lib/attendance-store';
-
 function eventColor(kind: AttendanceEventKind): string {
   if (kind === 'clock_in') return '#34d399';
   if (kind === 'clock_out') return '#f87171';
   if (kind === 'break_start') return '#fbbf24';
   return '#34d399';
+}
+
+function statusToAvailability(status: AttendanceStatus): string {
+  if (status === 'clocked_in') return 'Available';
+  if (status === 'on_break') return 'Break';
+  return 'Offline';
+}
+
+function fromBackendSession(session: BackendAttendanceSession, technicianName: string): AttendanceSession {
+  const events = session.events.map(event => ({
+    id: event.id,
+    kind: event.event_type as AttendanceEventKind,
+    timestamp: event.occurred_at,
+    location: event.latitude != null && event.longitude != null
+      ? { lat: event.latitude, lng: event.longitude, accuracy: event.accuracy ?? 0 }
+      : null,
+    device: event.device_log_id ? 'Logged device' : 'Browser',
+  }));
+  const breaks: AttendanceSession['breaks'] = [];
+  let openBreak: AttendanceSession['breaks'][number] | null = null;
+  events.forEach((event) => {
+    if (event.kind === 'break_start') {
+      openBreak = { startedAt: event.timestamp, endedAt: null };
+      breaks.push(openBreak);
+    }
+    if (event.kind === 'break_end' && openBreak) {
+      openBreak.endedAt = event.timestamp;
+      openBreak = null;
+    }
+  });
+  const clockInEvent = events.find(event => event.kind === 'clock_in');
+  const clockOutEvent = [...events].reverse().find(event => event.kind === 'clock_out');
+  return {
+    id: session.id,
+    technicianId: session.technician_id,
+    technicianName,
+    date: session.clock_in_at.slice(0, 10),
+    clockedInAt: session.clock_in_at,
+    clockedOutAt: session.clock_out_at ?? null,
+    status: session.status as AttendanceStatus,
+    breaks,
+    events,
+    clockInLocation: clockInEvent?.location ?? null,
+    clockOutLocation: clockOutEvent?.location ?? null,
+  };
 }
 
 function eventLabel(kind: AttendanceEventKind): string {

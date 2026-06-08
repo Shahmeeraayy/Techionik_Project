@@ -2,7 +2,7 @@
 
 ## Stack
 - **Framework**: FastAPI
-- **Database**: SQLite by default for local development, optional PostgreSQL
+- **Database**: PostgreSQL for demo/staging/production, SQLite only as a temporary local fallback
 - **ORM**: SQLAlchemy
 - **Validation**: Pydantic
 - **Architecture**: Clean Service-Repository Layer
@@ -50,7 +50,9 @@
 
 ## Setup
 1. Configure environment variables (copy from `.env.example`):
-   - Local development uses `DATABASE_URL=sqlite:///./nexusops-dev.db` by default.
+   - Preferred local development uses `DATABASE_URL=postgresql+psycopg://postgres:password@localhost:5432/nexusops`
+   - SQLite is allowed only for temporary local development with `DATABASE_URL=sqlite:///./nexusops-dev.db`
+   - Staging, demo, production, and client-facing environments must use PostgreSQL.
    - `JWT_SECRET_KEY`
    - Optional: `APP_ENV`, `CORS_ALLOW_ORIGINS`
 2. Install Python dependencies:
@@ -58,9 +60,12 @@
 3. Run managed migrations:
    - Core schema only: `python scripts/migrate.py`
    - Include dev seed data: `python scripts/migrate.py --with-seed`
+   - This repo does not use Alembic yet; managed migrations currently run through `python scripts/migrate.py`.
 4. Run app: `uvicorn app.main:app --reload --host 0.0.0.0 --port 8000`
+5. Verify the active database: `GET /health/db`
 
-See `SUPABASE_SETUP.md` only if you intentionally want to switch local development to a hosted Postgres database.
+See `POSTGRES_MIGRATION.md` for the PostgreSQL rollout, SQLite-to-Postgres transfer flow, deployment checklist, and backup notes.
+See `SUPABASE_SETUP.md` for a Supabase-flavored PostgreSQL example.
 See `MULTI_TENANCY.md` for the new tenant isolation and RLS foundation.
 
 ## Migration Notes

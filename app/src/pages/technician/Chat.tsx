@@ -9,6 +9,7 @@ import {
   FolderOpen,
   Info,
   ListFilter,
+  MapPin,
   MessageSquareText,
   Mic,
   PanelRightClose,
@@ -62,17 +63,23 @@ import {
   fetchAdminPinnedChatMessages,
   fetchTechnicianChatConversations,
   fetchTechnicianChatThreadMessages,
+  fetchPendingChatterLocationRequests,
   fetchTechnicianJobChatConversation,
   fetchTechnicianPinnedChatMessages,
   getStoredAdminToken,
   getStoredTechnicianToken,
   markTechnicianChatThreadRead,
   sendTechnicianChatThreadMessage,
+  shareChatterLocationRequest,
+  declineChatterLocationRequest,
+  buildDeviceLogPayload,
   type BackendChatAttachment,
   type BackendChatConversation,
   type BackendChatMessage,
+  type BackendChatterLocationRequest,
 } from '@/lib/backend-api';
 import { cn } from '@/lib/utils';
+import { captureGps } from '@/lib/attendance-store';
 
 const TECH_FAVORITES_STORAGE_KEY = 'sm_technician_chat_favorites_v1';
 const TECH_DRAFTS_STORAGE_KEY = 'sm_technician_chat_drafts_v1';
@@ -154,6 +161,8 @@ export default function TechnicianChatPage() {
   const [loadingConversations, setLoadingConversations] = useState(true);
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [workspaceTab, setWorkspaceTab] = useState<ChatWorkspaceTab>('chat');
+  const [locationRequests, setLocationRequests] = useState<BackendChatterLocationRequest[]>([]);
+  const [respondingLocationRequestId, setRespondingLocationRequestId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const seenMessageIdsRef = useRef<Set<string>>(new Set());
@@ -183,6 +192,9 @@ export default function TechnicianChatPage() {
 
   const selectedConversationPendingAttachments = selectedConversationId
     ? (pendingAttachmentsByConversation[selectedConversationId] ?? [])
+    : [];
+  const selectedLocationRequests = selectedConversationId
+    ? locationRequests.filter((request) => request.conversation_id === selectedConversationId)
     : [];
 
   const groupedConversations = useMemo(() => ({
@@ -270,6 +282,18 @@ export default function TechnicianChatPage() {
     }
   };
 
+  const loadLocationRequests = async () => {
+    if (!token || isPreviewMode) {
+      setLocationRequests([]);
+      return;
+    }
+    try {
+      setLocationRequests(await fetchPendingChatterLocationRequests(token));
+    } catch {
+      setLocationRequests([]);
+    }
+  };
+
   useEffect(() => {
     void (async () => {
       setLoadingConversations(true);
@@ -283,6 +307,7 @@ export default function TechnicianChatPage() {
           }
         }
         await loadConversations('', false);
+        await loadLocationRequests();
       } catch (error) {
         toast.error(error instanceof Error ? error.message : 'Failed to load Chatter.');
       } finally {
@@ -306,12 +331,14 @@ export default function TechnicianChatPage() {
   useEffect(() => {
     const intervalId = window.setInterval(() => {
       void loadConversations(contactSearch, true);
+      void loadLocationRequests();
       if (selectedConversationId) {
         void loadThread(selectedConversationId, historySearch, true);
       }
     }, 5000);
     const onFocus = () => {
       void loadConversations(contactSearch, true);
+      void loadLocationRequests();
       if (selectedConversationId) {
         void loadThread(selectedConversationId, historySearch, true);
       }
@@ -391,6 +418,52 @@ export default function TechnicianChatPage() {
       await loadThread(selectedConversationId, historySearch, true);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to send message.');
+    }
+  };
+
+  const handleShareLocationRequest = async (requestId: string) => {
+    if (!token || !selectedConversationId) return;
+    setRespondingLocationRequestId(requestId);
+    try {
+      const gps = await captureGps();
+      if (!gps) {
+        toast.error('Location access is required to share your current location.');
+        return;
+      }
+      await shareChatterLocationRequest(token, requestId, {
+        latitude: gps.lat,
+        longitude: gps.lng,
+        accuracy: gps.accuracy,
+        device: buildDeviceLogPayload(),
+      });
+      await sendTechnicianChatThreadMessage(token, selectedConversationId, {
+        text: `Shared current location: ${gps.lat.toFixed(5)}, ${gps.lng.toFixed(5)} (${Math.round(gps.accuracy)}m accuracy).`,
+      }).catch(() => undefined);
+      toast.success('Current location shared.');
+      await loadLocationRequests();
+      await loadThread(selectedConversationId, historySearch, true);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to share location.');
+    } finally {
+      setRespondingLocationRequestId(null);
+    }
+  };
+
+  const handleDeclineLocationRequest = async (requestId: string) => {
+    if (!token || !selectedConversationId) return;
+    setRespondingLocationRequestId(requestId);
+    try {
+      await declineChatterLocationRequest(token, requestId);
+      await sendTechnicianChatThreadMessage(token, selectedConversationId, {
+        text: 'Declined the location request.',
+      }).catch(() => undefined);
+      toast.info('Location request declined.');
+      await loadLocationRequests();
+      await loadThread(selectedConversationId, historySearch, true);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to decline location request.');
+    } finally {
+      setRespondingLocationRequestId(null);
     }
   };
 
@@ -590,6 +663,44 @@ export default function TechnicianChatPage() {
                 <div className="flex min-h-0 flex-1 flex-col bg-[linear-gradient(180deg,rgba(238,247,248,0.03),rgba(255,255,255,0.01))]">
                   <ScrollArea className="min-h-0 flex-1">
                     <div className="space-y-4 px-5 py-6">
+                      {selectedLocationRequests.map((request) => (
+                        <div key={request.id} className="rounded-[24px] border border-cyan-300/20 bg-cyan-300/10 p-4 text-cyan-50">
+                          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                            <div className="flex items-start gap-3">
+                              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-cyan-300/25 bg-cyan-300/10">
+                                <MapPin className="h-5 w-5 text-cyan-200" />
+                              </div>
+                              <div>
+                                <p className="text-sm font-semibold text-white">Location Request</p>
+                                <p className="mt-1 text-xs leading-5 text-cyan-100/80">
+                                  Admin is requesting your current location. Expires {new Date(request.expires_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}.
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex shrink-0 gap-2">
+                              <Button
+                                type="button"
+                                size="sm"
+                                onClick={() => void handleShareLocationRequest(request.id)}
+                                disabled={respondingLocationRequestId === request.id}
+                                className="h-9 rounded-full bg-cyan-300 px-3 text-xs font-semibold text-slate-950 hover:bg-cyan-200"
+                              >
+                                Share Current Location
+                              </Button>
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="outline"
+                                onClick={() => void handleDeclineLocationRequest(request.id)}
+                                disabled={respondingLocationRequestId === request.id}
+                                className="h-9 rounded-full border-cyan-100/20 bg-transparent px-3 text-xs font-semibold text-cyan-50 hover:bg-cyan-50/10"
+                              >
+                                Decline
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
                       {loadingMessages ? (
                         Array.from({ length: 4 }).map((_, index) => (
                           <div

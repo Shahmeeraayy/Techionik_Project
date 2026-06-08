@@ -26,6 +26,18 @@ from .service_catalog import ServiceCatalog
 from .skill import Skill, technician_skills
 from .signup_request import SignupRequest
 from .technician import Technician
+from .technician_tracking import (
+    AttendanceAuditLog,
+    ChatterLocationRequest,
+    ChatterSharedLocation,
+    GeoFenceRule,
+    GeoFenceValidationLog,
+    TechnicianAttendanceEvent,
+    TechnicianAttendanceSession,
+    TechnicianDeviceLog,
+    TechnicianLocation,
+    TechnicianLocationEvent,
+)
 from .technician_email_change_request import TechnicianEmailChangeRequest
 from .technician_password_reset_request import TechnicianPasswordResetRequest
 from .tenant_feature_override import TenantFeatureOverride

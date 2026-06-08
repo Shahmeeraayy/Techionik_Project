@@ -4,6 +4,7 @@ import {
   BriefcaseBusiness,
   Check,
   CheckCheck,
+  MapPin,
   MessageCircleMore,
   Mic,
   Paperclip,
@@ -47,6 +48,7 @@ import {
 } from '@/lib/chat-ui';
 import {
   createAdminChatGroup,
+  createChatterLocationRequest,
   fetchAdminChatConversations,
   fetchAdminChatThreadMessages,
   fetchAdminJobChatConversation,
@@ -151,6 +153,7 @@ export default function PlatformChatPage() {
   const [groupTitle, setGroupTitle] = useState('');
   const [groupMemberIds, setGroupMemberIds] = useState<string[]>([]);
   const [savingGroup, setSavingGroup] = useState(false);
+  const [requestingLocation, setRequestingLocation] = useState(false);
   const [notificationEnabled, setNotificationEnabled] = useState(false);
   const [loadingConversations, setLoadingConversations] = useState(true);
   const [loadingMessages, setLoadingMessages] = useState(false);
@@ -498,6 +501,32 @@ export default function PlatformChatPage() {
     }
   };
 
+  const handleRequestLocation = async () => {
+    if (!token || !selectedConversation) return;
+    if (selectedConversation.channel_kind === 'group') {
+      toast.error('Location requests are only available in direct or job conversations.');
+      return;
+    }
+    try {
+      setRequestingLocation(true);
+      await createChatterLocationRequest(token, {
+        technician_id: selectedConversation.technician_id,
+        conversation_id: selectedConversation.id,
+      });
+      toast.success('Location request sent.', {
+        description: 'The technician can share once or decline from Chatter.',
+      });
+      await sendAdminChatThreadMessage(token, selectedConversation.id, {
+        text: 'Location request sent. Please share your current location when available.',
+      }).catch(() => undefined);
+      await loadThread(selectedConversation.id, historySearch, true);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to request location.');
+    } finally {
+      setRequestingLocation(false);
+    }
+  };
+
   const handleTogglePin = async (message: BackendChatMessage) => {
     if (!token) return;
     try {
@@ -831,6 +860,17 @@ export default function PlatformChatPage() {
                     />
                   </div>
                   <div className="flex flex-wrap items-center justify-end gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => void handleRequestLocation()}
+                      disabled={!selectedConversation || selectedConversation.channel_kind === 'group' || requestingLocation}
+                      className="h-9 gap-2 rounded-full border-white/10 bg-white/[0.03] text-slate-200 hover:bg-white/[0.08]"
+                    >
+                      <MapPin className="h-4 w-4" />
+                      Request Location
+                    </Button>
                     <Button
                       type="button"
                       variant="outline"

@@ -7,15 +7,13 @@ from sqlalchemy import event, text
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker, with_loader_criteria
 
-from ..core.config import DATABASE_URL, DEFAULT_TENANT_ID
+from ..core.config import DATABASE_URL, DEFAULT_TENANT_ID, IS_SQLITE
 from ..core.enums import UserRole
 from ..core.security import AuthenticatedUser, decode_access_token
 from ..core.tenant import TenantContext
 from ..models.base import TenantScopedMixin
 from ..models import *  # noqa: F401,F403
 from ..services.access_policy_service import AccessPolicyService
-
-IS_SQLITE = DATABASE_URL.startswith("sqlite")
 
 engine = create_engine(
     DATABASE_URL,
@@ -73,10 +71,11 @@ def get_db(request: Request) -> Generator[Session, None, None]:
     try:
         tenant_id = _resolve_tenant_id_from_request(request)
         db.info["tenant_id"] = tenant_id
-
-        if not DATABASE_URL.startswith("sqlite"):
-            db.execute(text("SELECT set_config('app.current_tenant_id', :tenant_id, true)"), {"tenant_id": str(tenant_id)})
-
+        if not IS_SQLITE:
+            db.execute(
+                text("SELECT set_config('app.current_tenant_id', :tenant_id, true)"),
+                {"tenant_id": str(tenant_id)},
+            )
         yield db
     finally:
         db.close()

@@ -45,6 +45,7 @@ MIGRATIONS: list[Migration] = [
     Migration("015_tenant_email_identities.sql"),
     Migration("016_chatter_v1.sql"),
     Migration("018_job_internal_notes.sql"),
+    Migration("019_attendance_live_tracking.sql"),
 ]
 
 

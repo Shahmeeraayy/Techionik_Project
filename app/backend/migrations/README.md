@@ -6,6 +6,7 @@
 - `003_technician.sql`: Development-only seed data (legacy frontend technicians).
 - `007_invoices.sql`: Invoice schema and constraints.
 - `008_dispatch_job_invoice_fields.sql`: Dispatch-job invoice mapping fields.
+- `019_attendance_live_tracking.sql`: Attendance sessions, live locations, geo-fencing, device logs, audit logs, and Chatter location requests.
 
 ## How to run
 Use the managed runner from `backend/`:

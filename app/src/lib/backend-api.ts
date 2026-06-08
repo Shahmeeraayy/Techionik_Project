@@ -3221,3 +3221,241 @@ export async function fetchAdminReportsOverview(
   const suffix = search.toString() ? `?${search.toString()}` : '';
   return requestJson<BackendReportsOverview>(`/admin/reports/overview${suffix}`, { token });
 }
+
+export type BackendDeviceLogPayload = {
+  device_type?: string | null;
+  browser_name?: string | null;
+  browser_version?: string | null;
+  operating_system?: string | null;
+  user_agent?: string | null;
+  session_id?: string | null;
+  app_version?: string | null;
+};
+
+export type BackendLocationPayload = {
+  latitude?: number | null;
+  longitude?: number | null;
+  accuracy?: number | null;
+  device?: BackendDeviceLogPayload | null;
+  job_id?: string | null;
+};
+
+export type BackendAttendanceEvent = {
+  id: string;
+  attendance_session_id: string;
+  event_type: 'clock_in' | 'clock_out' | 'break_start' | 'break_end' | string;
+  latitude?: number | null;
+  longitude?: number | null;
+  accuracy?: number | null;
+  device_log_id?: string | null;
+  geo_fence_validation_id?: string | null;
+  occurred_at: string;
+};
+
+export type BackendAttendanceSession = {
+  id: string;
+  technician_id: string;
+  clock_in_at: string;
+  clock_out_at?: string | null;
+  total_minutes: number;
+  active_work_minutes: number;
+  break_minutes: number;
+  status: 'clocked_in' | 'clocked_out' | 'on_break' | string;
+  events: BackendAttendanceEvent[];
+};
+
+export type BackendLatestLocation = {
+  id: string;
+  technician_id: string;
+  technician_name?: string | null;
+  job_id?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  accuracy?: number | null;
+  tracking_status: string;
+  availability_status: string;
+  location_permission_status: string;
+  location_consent_given_at?: string | null;
+  last_seen_at?: string | null;
+  location_state: 'online' | 'recently_active' | 'offline_stale' | 'offline' | string;
+  active_job_reference?: string | null;
+  attendance_status?: string | null;
+};
+
+export type BackendLocationCheckpoint = {
+  id: string;
+  technician_id: string;
+  job_id?: string | null;
+  attendance_event_id?: string | null;
+  event_type: string;
+  job_status?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  accuracy?: number | null;
+  captured_at: string;
+};
+
+export type BackendAttendanceDashboard = {
+  summary: {
+    total_technicians: number;
+    active_technicians: number;
+    on_break: number;
+    offline: number;
+    total_work_minutes: number;
+    total_break_minutes: number;
+    geo_fence_warnings: number;
+  };
+  locations: BackendLatestLocation[];
+  reports: Array<{
+    technician_id: string;
+    technician_name: string;
+    total_minutes: number;
+    active_work_minutes: number;
+    break_minutes: number;
+    clock_ins: number;
+    first_clock_in_at?: string | null;
+    last_clock_out_at?: string | null;
+    missed_clock_out: boolean;
+    geo_fence_violations: number;
+  }>;
+  checkpoints: BackendLocationCheckpoint[];
+};
+
+export function buildDeviceLogPayload(): BackendDeviceLogPayload {
+  const userAgent = typeof navigator === 'undefined' ? '' : navigator.userAgent;
+  const platform = typeof navigator === 'undefined' ? '' : navigator.platform;
+  const browserMatch = userAgent.match(/(Edg|Chrome|Firefox|Safari)\/([\d.]+)/);
+  let sessionId = safeGetItemFromScopes('nexusops_session_id');
+  if (!sessionId && typeof crypto !== 'undefined') {
+    sessionId = crypto.randomUUID();
+    safeSetItem('nexusops_session_id', sessionId, 'session');
+  }
+  return {
+    device_type: /Mobi|Android|iPhone|iPad/i.test(userAgent) ? 'mobile' : 'desktop',
+    browser_name: browserMatch?.[1] ?? 'Browser',
+    browser_version: browserMatch?.[2] ?? null,
+    operating_system: platform || null,
+    user_agent: userAgent || null,
+    session_id: sessionId,
+    app_version: 'web-v1',
+  };
+}
+
+export async function saveTechnicianLocationConsent(
+  token: string,
+  payload: { status: 'granted' | 'denied' | 'prompt' | 'unknown'; device?: BackendDeviceLogPayload | null },
+): Promise<BackendLatestLocation> {
+  return requestJson<BackendLatestLocation>('/technician/location/consent', {
+    method: 'POST',
+    token,
+    body: payload,
+  });
+}
+
+export async function updateTechnicianLocation(
+  token: string,
+  payload: BackendLocationPayload & { availability_status?: string | null; tracking_status?: string | null },
+): Promise<BackendLatestLocation> {
+  return requestJson<BackendLatestLocation>('/technician/location/update', {
+    method: 'POST',
+    token,
+    body: payload,
+  });
+}
+
+export async function createTechnicianLocationCheckpoint(
+  token: string,
+  payload: BackendLocationPayload & { event_type: string; job_status?: string | null; attendance_event_id?: string | null },
+): Promise<BackendLocationCheckpoint> {
+  return requestJson<BackendLocationCheckpoint>('/technician/location/checkpoint', {
+    method: 'POST',
+    token,
+    body: payload,
+  });
+}
+
+export async function fetchTechnicianAttendanceCurrent(token: string): Promise<BackendAttendanceSession | null> {
+  return requestJson<BackendAttendanceSession | null>('/technician/attendance/current', { token });
+}
+
+export async function fetchTechnicianAttendanceHistory(token: string): Promise<BackendAttendanceSession[]> {
+  return requestJson<BackendAttendanceSession[]>('/technician/attendance/history', { token });
+}
+
+export async function performTechnicianAttendanceAction(
+  token: string,
+  action: 'clock-in' | 'clock-out' | 'break/start' | 'break/end',
+  payload: BackendLocationPayload,
+): Promise<BackendAttendanceSession> {
+  return requestJson<BackendAttendanceSession>(`/technician/attendance/${action}`, {
+    method: 'POST',
+    token,
+    body: payload,
+  });
+}
+
+export async function fetchAdminAttendanceDashboard(token: string): Promise<BackendAttendanceDashboard> {
+  return requestJson<BackendAttendanceDashboard>('/admin/attendance/dashboard', { token });
+}
+
+export type BackendChatterLocationRequest = {
+  id: string;
+  conversation_id?: string | null;
+  message_id?: string | null;
+  admin_id: string;
+  technician_id: string;
+  status: 'pending' | 'shared' | 'declined' | 'expired';
+  requested_at: string;
+  responded_at?: string | null;
+  expires_at: string;
+};
+
+export type BackendChatterSharedLocation = {
+  id: string;
+  request_id: string;
+  conversation_id?: string | null;
+  technician_id: string;
+  admin_id: string;
+  latitude: number;
+  longitude: number;
+  accuracy?: number | null;
+  device_log_id?: string | null;
+  shared_at: string;
+};
+
+export async function createChatterLocationRequest(
+  token: string,
+  payload: { technician_id: string; conversation_id?: string | null; message_id?: string | null },
+): Promise<BackendChatterLocationRequest> {
+  return requestJson<BackendChatterLocationRequest>('/chatter/location-request', {
+    method: 'POST',
+    token,
+    body: payload,
+  });
+}
+
+export async function fetchPendingChatterLocationRequests(token: string): Promise<BackendChatterLocationRequest[]> {
+  return requestJson<BackendChatterLocationRequest[]>('/chatter/location-requests/pending', { token });
+}
+
+export async function shareChatterLocationRequest(
+  token: string,
+  requestId: string,
+  payload: BackendLocationPayload,
+): Promise<BackendChatterSharedLocation> {
+  return requestJson<BackendChatterSharedLocation>(`/chatter/location-request/${requestId}/share`, {
+    method: 'POST',
+    token,
+    body: payload,
+  });
+}
+
+export async function declineChatterLocationRequest(
+  token: string,
+  requestId: string,
+): Promise<BackendChatterLocationRequest> {
+  return requestJson<BackendChatterLocationRequest>(`/chatter/location-request/${requestId}/decline`, {
+    method: 'POST',
+    token,
+  });
+}

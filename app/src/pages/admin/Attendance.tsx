@@ -23,7 +23,14 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { fetchAdminTechnicians, getStoredAdminToken, type BackendTechnicianListItem } from '@/lib/backend-api';
+import {
+  fetchAdminAttendanceDashboard,
+  fetchAdminTechnicians,
+  getStoredAdminToken,
+  type BackendAttendanceDashboard,
+  type BackendLatestLocation,
+  type BackendTechnicianListItem,
+} from '@/lib/backend-api';
 import {
   buildAdminRecords,
   fmtDuration,
@@ -86,6 +93,7 @@ export default function AdminAttendancePage() {
   const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
   const [search, setSearch] = useState('');
   const [tab, setTab] = useState('live');
+  const [dashboard, setDashboard] = useState<BackendAttendanceDashboard | null>(null);
 
   useLiveTick(5000);
 
@@ -95,8 +103,12 @@ export default function AdminAttendancePage() {
     setLoading(true);
     setError(null);
     try {
-      const data = await fetchAdminTechnicians(token);
+      const [data, tracking] = await Promise.all([
+        fetchAdminTechnicians(token),
+        fetchAdminAttendanceDashboard(token).catch(() => null),
+      ]);
       setTechnicians(data);
+      setDashboard(tracking);
       setRecords(buildAdminRecords(data.map(t => ({ id: t.id, name: t.full_name ?? t.name }))));
       setLastRefreshed(new Date());
     } catch {
@@ -118,10 +130,10 @@ export default function AdminAttendancePage() {
   );
 
   const summary = {
-    total: records.length,
-    in: records.filter(r => r.status === 'clocked_in').length,
-    break: records.filter(r => r.status === 'on_break').length,
-    out: records.filter(r => r.status === 'not_clocked_in' || r.status === 'clocked_out').length,
+    total: dashboard?.summary.total_technicians ?? records.length,
+    in: dashboard?.summary.active_technicians ?? records.filter(r => r.status === 'clocked_in').length,
+    break: dashboard?.summary.on_break ?? records.filter(r => r.status === 'on_break').length,
+    out: dashboard?.summary.offline ?? records.filter(r => r.status === 'not_clocked_in' || r.status === 'clocked_out').length,
   };
 
   return (
@@ -225,6 +237,13 @@ export default function AdminAttendancePage() {
             <LoadingSkeleton />
           ) : filtered.length === 0 ? (
             <EmptyState label="No technicians found" />
+          ) : dashboard ? (
+            <LiveTrackingPanel
+              locations={dashboard.locations.filter(item =>
+                (item.technician_name ?? '').toLowerCase().includes(search.toLowerCase()),
+              )}
+              records={filtered}
+            />
           ) : (
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
               {filtered.map((rec, i) => (
@@ -236,14 +255,141 @@ export default function AdminAttendancePage() {
 
         {/* REPORTS */}
         <TabsContent value="reports" className="mt-0 flex-1">
-          <ReportsTab technicians={technicians} search={search} />
+          <ReportsTab technicians={technicians} search={search} dashboard={dashboard} />
         </TabsContent>
 
         {/* AUDIT LOG */}
         <TabsContent value="audit" className="mt-0 flex-1">
-          <AuditLogTab technicians={technicians} search={search} />
+          <AuditLogTab technicians={technicians} search={search} dashboard={dashboard} />
         </TabsContent>
       </Tabs>
+    </div>
+  );
+}
+
+function LiveTrackingPanel({ locations, records }: { locations: BackendLatestLocation[]; records: AdminAttendanceRecord[] }) {
+  return (
+    <div className="grid min-h-[560px] gap-4 xl:grid-cols-[minmax(0,1.35fr)_360px]">
+      <LeafletTrackingMap locations={locations} />
+      <div className="min-h-0 space-y-3 overflow-y-auto pr-1">
+        {locations.length > 0 ? (
+          locations.map((location, index) => (
+            <LiveLocationCard key={location.technician_id} location={location} index={index} />
+          ))
+        ) : (
+          records.map((rec, index) => <TechnicianCard key={rec.technicianId} rec={rec} index={index} />)
+        )}
+      </div>
+    </div>
+  );
+}
+
+function LeafletTrackingMap({ locations }: { locations: BackendLatestLocation[] }) {
+  const mapRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const el = mapRef.current;
+    if (!el) return;
+    let cancelled = false;
+
+    async function ensureLeaflet() {
+      if (!document.querySelector('link[data-leaflet-css]')) {
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+        link.dataset.leafletCss = 'true';
+        document.head.appendChild(link);
+      }
+      if ((window as any).L) return (window as any).L;
+      await new Promise<void>((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+        script.async = true;
+        script.onload = () => resolve();
+        script.onerror = () => reject(new Error('Leaflet failed to load'));
+        document.body.appendChild(script);
+      });
+      return (window as any).L;
+    }
+
+    void ensureLeaflet().then((L) => {
+      if (cancelled || !el) return;
+      if ((el as any)._leaflet_id) {
+        (el as any)._nexusMap?.remove();
+      }
+      const valid = locations.filter(item => item.latitude != null && item.longitude != null);
+      const center = valid[0] ? [valid[0].latitude, valid[0].longitude] : [31.5204, 74.3587];
+      const map = L.map(el, { zoomControl: true }).setView(center, valid.length ? 12 : 5);
+      (el as any)._nexusMap = map;
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap contributors',
+      }).addTo(map);
+      valid.forEach((item) => {
+        const marker = L.marker([item.latitude, item.longitude]).addTo(map);
+        marker.bindPopup(`
+          <strong>${item.technician_name ?? 'Technician'}</strong><br/>
+          Status: ${item.availability_status}<br/>
+          Availability: ${item.tracking_status}<br/>
+          Last Updated: ${item.last_seen_at ? new Date(item.last_seen_at).toLocaleTimeString() : 'Unknown'}<br/>
+          Accuracy: ${Math.round(item.accuracy ?? 0)} meters<br/>
+          Active Job: ${item.active_job_reference ?? 'None'}
+        `);
+      });
+      if (valid.length > 1) {
+        map.fitBounds(valid.map(item => [item.latitude, item.longitude]), { padding: [28, 28] });
+      }
+    }).catch(() => undefined);
+
+    return () => {
+      cancelled = true;
+      const map = (el as any)?._nexusMap;
+      if (map) map.remove();
+    };
+  }, [locations]);
+
+  return (
+    <div className="overflow-hidden rounded-[24px] border border-white/[0.07] bg-[#0d1829]">
+      <div className="flex items-center justify-between border-b border-white/[0.06] px-4 py-3">
+        <div>
+          <p className="text-sm font-semibold text-white">Live Technician Tracking</p>
+          <p className="text-xs text-slate-500">OpenStreetMap markers refresh every 10 seconds</p>
+        </div>
+        <MapPin className="h-4 w-4 text-cyan-400" />
+      </div>
+      <div ref={mapRef} className="h-[500px] w-full bg-[#07111f]" />
+    </div>
+  );
+}
+
+function LiveLocationCard({ location, index }: { location: BackendLatestLocation; index: number }) {
+  const online = location.location_state === 'online';
+  return (
+    <div
+      className="rounded-[22px] border border-white/[0.07] bg-[#0d1829] p-4"
+      style={{ animation: 'fade-in-up 0.4s ease both', animationDelay: `${index * 45}ms` }}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="truncate text-sm font-semibold text-white">{location.technician_name ?? 'Technician'}</p>
+          <p className="mt-0.5 text-xs text-slate-500">{location.active_job_reference ?? 'No active job'}</p>
+        </div>
+        <Badge className={cn('rounded-full border px-2 py-0.5 text-[10px]', online ? 'border-emerald-400/30 bg-emerald-400/10 text-emerald-300' : 'border-slate-500/30 bg-slate-500/10 text-slate-400')}>
+          {online ? 'Online' : location.location_state.replace('_', ' ')}
+        </Badge>
+      </div>
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        <StatChip label="Status" value={location.availability_status} color="#34d399" />
+        <StatChip label="Accuracy" value={`${Math.round(location.accuracy ?? 0)}m`} color="#38bdf8" />
+      </div>
+      <div className="mt-3 rounded-xl border border-white/[0.05] bg-white/[0.03] px-3 py-2 text-xs text-slate-500">
+        {location.latitude != null && location.longitude != null
+          ? `${location.latitude.toFixed(5)}, ${location.longitude.toFixed(5)}`
+          : 'GPS unavailable'}
+        <span className="ml-2 text-slate-600">
+          {location.last_seen_at ? new Date(location.last_seen_at).toLocaleTimeString() : 'No ping yet'}
+        </span>
+      </div>
     </div>
   );
 }
@@ -335,10 +481,20 @@ function StatChip({ label, value, color }: { label: string; value: string; color
 
 // ─── Reports Tab ──────────────────────────────────────────────────────────────
 
-function ReportsTab({ technicians, search }: { technicians: BackendTechnicianListItem[]; search: string }) {
+function ReportsTab({ technicians, search, dashboard }: { technicians: BackendTechnicianListItem[]; search: string; dashboard: BackendAttendanceDashboard | null }) {
   const now = Date.now();
 
-  const rows = technicians
+  const rows = dashboard ? dashboard.reports
+    .filter(t => t.technician_name.toLowerCase().includes(search.toLowerCase()))
+    .map(t => ({
+      id: t.technician_id,
+      name: t.technician_name,
+      totalWorked: t.active_work_minutes * 60 * 1000,
+      totalBreak: t.break_minutes * 60 * 1000,
+      clockIns: t.clock_ins,
+      firstIn: t.first_clock_in_at ?? null,
+      lastOut: t.last_clock_out_at ?? null,
+    })) : technicians
     .filter(t => (t.full_name ?? t.name).toLowerCase().includes(search.toLowerCase()))
     .map(t => {
       const sessions = todaySessions(t.id);
@@ -445,7 +601,40 @@ type AuditEntry = {
   lng: number | null;
 };
 
-function AuditLogTab({ technicians, search }: { technicians: BackendTechnicianListItem[]; search: string }) {
+function AuditLogTab({ technicians, search, dashboard }: { technicians: BackendTechnicianListItem[]; search: string; dashboard: BackendAttendanceDashboard | null }) {
+  if (dashboard) {
+    const entries = dashboard.checkpoints.filter(item => {
+      const tech = dashboard.locations.find(location => location.technician_id === item.technician_id);
+      return (tech?.technician_name ?? '').toLowerCase().includes(search.toLowerCase());
+    });
+    return (
+      <div className="overflow-x-auto rounded-[24px] border border-white/[0.07] bg-[#0d1829]">
+        <div className="grid min-w-[760px] grid-cols-[auto_1fr_auto_auto_auto] border-b border-white/[0.06] px-4 py-3">
+          {['Checkpoint', 'Technician', 'Time', 'Job', 'GPS'].map(h => (
+            <p key={h} className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">{h}</p>
+          ))}
+        </div>
+        {entries.length === 0 ? (
+          <div className="py-12 text-center text-sm text-slate-500">No location checkpoints recorded yet.</div>
+        ) : (
+          <div className="max-h-[520px] overflow-y-auto divide-y divide-white/[0.04]">
+            {entries.map((entry, i) => {
+              const tech = dashboard.locations.find(location => location.technician_id === entry.technician_id);
+              return (
+                <div key={entry.id} className="grid min-w-[760px] grid-cols-[auto_1fr_auto_auto_auto] items-center px-4 py-3 hover:bg-white/[0.02]" style={{ animation: 'fade-in-up 0.3s ease both', animationDelay: `${Math.min(i, 20) * 25}ms` }}>
+                  <span className="mr-4 rounded-full border border-cyan-400/30 bg-cyan-400/10 px-2 py-0.5 text-[10px] font-bold uppercase text-cyan-300">{entry.event_type.replaceAll('_', ' ')}</span>
+                  <span className="text-sm text-slate-300">{tech?.technician_name ?? entry.technician_id}</span>
+                  <span className="px-3 text-xs tabular-nums text-slate-500">{new Date(entry.captured_at).toLocaleTimeString()}</span>
+                  <span className="px-3 text-xs text-slate-500">{entry.job_status ?? entry.job_id ?? 'None'}</span>
+                  <span className="px-3 text-xs text-slate-600">{entry.latitude != null ? `${entry.latitude.toFixed(3)},${entry.longitude!.toFixed(3)}` : 'GPS unavailable'}</span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    );
+  }
   const entries: AuditEntry[] = [];
 
   technicians.forEach(t => {

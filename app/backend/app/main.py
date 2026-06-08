@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from sqlalchemy import inspect
+from sqlalchemy import inspect, text
 from sqlalchemy.exc import OperationalError
 import logging
 
@@ -9,6 +9,7 @@ from .api import deps
 from .api.endpoints import (
     admin_chat,
     admin_jobs,
+    attendance_tracking,
     chat_assets,
     admin_dealerships,
     admin_email_change_requests,
@@ -26,7 +27,7 @@ from .api.endpoints import (
     technician_profile,
     technician_time_off,
 )
-from .core.config import CORS_ALLOW_ORIGINS, CORS_ALLOW_ORIGIN_REGEX
+from .core.config import APP_ENV, CORS_ALLOW_ORIGINS, CORS_ALLOW_ORIGIN_REGEX, DATABASE_BACKEND, IS_SQLITE
 from .core.security import decode_access_token
 from .core.tenant import (
     TenantContext,
@@ -47,6 +48,22 @@ app = FastAPI(
     description="Backend APIs for admin technician profile, scheduling, and availability.",
     version="2.0.0",
 )
+
+
+def _build_database_health_payload() -> dict[str, str]:
+    payload = {
+        "database": DATABASE_BACKEND,
+        "status": "connected",
+        "environment": APP_ENV,
+    }
+    if IS_SQLITE:
+        payload["mode"] = "local_development_only"
+    return payload
+
+
+def _assert_database_connection() -> None:
+    with deps.engine.connect() as conn:
+        conn.execute(text("SELECT 1"))
 
 
 @app.on_event("startup")
@@ -178,6 +195,9 @@ async def inject_tenant_context(request: Request, call_next):
         reset_current_tenant_context(token)
 
 app.include_router(admin_technicians.router)
+app.include_router(attendance_tracking.technician_router)
+app.include_router(attendance_tracking.admin_router)
+app.include_router(attendance_tracking.chatter_router)
 app.include_router(admin_chat.router)
 app.include_router(chat_assets.router)
 app.include_router(admin_jobs.router)
@@ -212,3 +232,22 @@ def handle_database_operational_error(_: Request, __: OperationalError):
 @app.get("/")
 def root():
     return {"message": "NexusOps technician profile APIs are active."}
+
+
+@app.get("/health")
+def health():
+    _assert_database_connection()
+    payload = _build_database_health_payload()
+    return {
+        "status": "ok",
+        "database": payload["database"],
+        "database_status": payload["status"],
+        "environment": payload["environment"],
+        **({"mode": payload["mode"]} if "mode" in payload else {}),
+    }
+
+
+@app.get("/health/db")
+def health_db():
+    _assert_database_connection()
+    return _build_database_health_payload()

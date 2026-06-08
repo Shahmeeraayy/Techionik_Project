@@ -1,8 +1,8 @@
-# Supabase Setup
+# Supabase PostgreSQL Setup
 
-Supabase is now optional. Local development defaults to the checked-in SQLite database at `app/backend/nexusops-dev.db`.
+NexusOps requires PostgreSQL for demo, staging, production, and client-facing environments. SQLite is allowed only for temporary local development.
 
-Use this guide only if you intentionally want to point the backend at a hosted Postgres database instead of the local SQLite default. The backend still uses a single `DATABASE_URL`, so switching databases means updating that value and rerunning migrations against the target database.
+Use this guide when your PostgreSQL provider is Supabase. The backend still uses a single `DATABASE_URL`, so switching databases means updating that value and rerunning migrations against the target database.
 
 ## 1. Create the backend env file
 
@@ -69,6 +69,23 @@ Then the frontend should keep using:
 VITE_API_URL=http://localhost:8000
 ```
 
-## 5. Deploying
+## 5. Verify the active database
+
+Call:
+
+```http
+GET /health/db
+```
+
+Expected result:
+
+```json
+{
+  "database": "postgresql",
+  "status": "connected"
+}
+```
+
+## 6. Deploying
 
 In your hosting provider, set the same `DATABASE_URL` as an environment variable. Do not commit `.env` with real Supabase credentials.

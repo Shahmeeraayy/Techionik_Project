@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ThemeProvider } from "@/components/theme-provider"
@@ -8,51 +8,52 @@ import { AdminLayout } from '@/layouts/AdminLayout';
 import { SuperAdminLayout } from '@/layouts/SuperAdminLayout';
 import { SiteMotion } from '@/components/motion/SiteMotion';
 import { HomeRoute, PublicOnly, RequireRole } from '@/components/auth/RouteGuards';
-import AdminLoginPage from '@/pages/auth/AdminLogin';
-import AdminSignupPage from '@/pages/auth/AdminSignup';
-import TechnicianLoginPage from '@/pages/auth/TechnicianLogin';
-import TechnicianPasswordResetPage from '@/pages/auth/TechnicianPasswordReset';
-import TechnicianSignupPage from '@/pages/auth/TechnicianSignup';
-import SuperAdminLoginPage from '@/pages/super-admin/Login';
-import MarketingHome from '@/pages/marketing/Home';
-import BookingPortalPage from '@/pages/public/BookingPortal';
+const AdminLoginPage = lazy(() => import('@/pages/auth/AdminLogin'));
+const AdminSignupPage = lazy(() => import('@/pages/auth/AdminSignup'));
+const TechnicianLoginPage = lazy(() => import('@/pages/auth/TechnicianLogin'));
+const TechnicianPasswordResetPage = lazy(() => import('@/pages/auth/TechnicianPasswordReset'));
+const TechnicianSignupPage = lazy(() => import('@/pages/auth/TechnicianSignup'));
+const SuperAdminLoginPage = lazy(() => import('@/pages/super-admin/Login'));
+const MarketingHome = lazy(() => import('@/pages/marketing/Home'));
+const BookingPortalPage = lazy(() => import('@/pages/public/BookingPortal'));
 
-// Admin Pages
-import AdminDashboard from '@/pages/admin/Dashboard';
-import JobsPage from '@/pages/admin/Jobs';
-import JobDetailPage from '@/pages/admin/JobDetail';
-import InvoiceApprovalsPage from '@/pages/admin/InvoiceApprovals';
-import IntakeQueuePage from '@/pages/admin/IntakeQueue';
-import TechniciansPage from '@/pages/admin/Technicians';
-import TechnicianAccountsPage from '@/pages/admin/TechnicianAccounts';
-import DealershipsPage from '@/pages/admin/Dealerships';
-import ServicesPage from '@/pages/admin/Services';
-import ReportsPage from '@/pages/admin/Reports';
-import SettingsPage from '@/pages/admin/Settings';
-import InvoiceHistoryPage from '@/pages/admin/InvoiceHistory';
-import PlatformChatPage from '@/pages/admin/PlatformChat';
+const AdminDashboard = lazy(() => import('@/pages/admin/Dashboard'));
+const JobsPage = lazy(() => import('@/pages/admin/Jobs'));
+const JobDetailPage = lazy(() => import('@/pages/admin/JobDetail'));
+const InvoiceApprovalsPage = lazy(() => import('@/pages/admin/InvoiceApprovals'));
+const IntakeQueuePage = lazy(() => import('@/pages/admin/IntakeQueue'));
+const TechniciansPage = lazy(() => import('@/pages/admin/Technicians'));
+const TechnicianAccountsPage = lazy(() => import('@/pages/admin/TechnicianAccounts'));
+const DealershipsPage = lazy(() => import('@/pages/admin/Dealerships'));
+const ServicesPage = lazy(() => import('@/pages/admin/Services'));
+const ReportsPage = lazy(() => import('@/pages/admin/Reports'));
+const SettingsPage = lazy(() => import('@/pages/admin/Settings'));
+const InvoiceHistoryPage = lazy(() => import('@/pages/admin/InvoiceHistory'));
+const PlatformChatPage = lazy(() => import('@/pages/admin/PlatformChat'));
+const TechnicianPreview = lazy(() => import('@/pages/admin/TechnicianPreview'));
+const AdminAttendancePage = lazy(() => import('@/pages/admin/Attendance'));
 
-// Admin Preview Mode
-import TechnicianPreview from '@/pages/admin/TechnicianPreview';
+const AvailableJobsPage = lazy(() => import('@/pages/technician/AvailableJobs'));
+const MyJobsPage = lazy(() => import('@/pages/technician/MyJobs'));
+const JobHistoryPage = lazy(() => import('@/pages/technician/JobHistory'));
+const ProfilePage = lazy(() => import('@/pages/technician/Profile'));
+const TechnicianChatPage = lazy(() => import('@/pages/technician/Chat'));
+const TechnicianAttendancePage = lazy(() => import('@/pages/technician/Attendance'));
 
-// Technician Pages
-import AvailableJobsPage from '@/pages/technician/AvailableJobs';
-import MyJobsPage from '@/pages/technician/MyJobs';
-import JobHistoryPage from '@/pages/technician/JobHistory';
-import ProfilePage from '@/pages/technician/Profile';
-import TechnicianChatPage from '@/pages/technician/Chat';
-import TechnicianAttendancePage from '@/pages/technician/Attendance';
+const SuperAdminDashboardPage = lazy(() => import('@/pages/super-admin/Dashboard'));
+const SuperAdminTenantsPage = lazy(() => import('@/pages/super-admin/Tenants'));
+const SuperAdminTenantDetailPage = lazy(() => import('@/pages/super-admin/TenantDetail'));
+const SuperAdminPoliciesPage = lazy(() => import('@/pages/super-admin/Policies'));
+const SuperAdminAuditLogsPage = lazy(() => import('@/pages/super-admin/AuditLogs'));
+const SuperAdminPlatformSettingsPage = lazy(() => import('@/pages/super-admin/PlatformSettings'));
 
-// Admin Attendance
-import AdminAttendancePage from '@/pages/admin/Attendance';
-
-// Super Admin Pages
-import SuperAdminDashboardPage from '@/pages/super-admin/Dashboard';
-import SuperAdminTenantsPage from '@/pages/super-admin/Tenants';
-import SuperAdminTenantDetailPage from '@/pages/super-admin/TenantDetail';
-import SuperAdminPoliciesPage from '@/pages/super-admin/Policies';
-import SuperAdminAuditLogsPage from '@/pages/super-admin/AuditLogs';
-import SuperAdminPlatformSettingsPage from '@/pages/super-admin/PlatformSettings';
+function RouteFallback() {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-[#07111f] text-sm text-slate-400">
+      Loading NexusOps...
+    </div>
+  );
+}
 
 function App() {
   useEffect(() => { warmupBackend(); }, []);
@@ -61,6 +62,7 @@ function App() {
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
       <AuthProvider>
         <SiteMotion>
+        <Suspense fallback={<RouteFallback />}>
         <Routes>
           <Route path="/" element={<MarketingHome />} />
           <Route path="/book" element={<BookingPortalPage />} />
@@ -336,6 +338,7 @@ function App() {
 
           <Route path="*" element={<HomeRoute />} />
         </Routes>
+        </Suspense>
         </SiteMotion>
         <Toaster richColors position="top-right" />
       </AuthProvider>

@@ -69,7 +69,6 @@ def get_default_database_url() -> str:
 
 def normalize_database_url(value: str) -> str:
     normalized = value.strip()
-    # Accept hosted Postgres URLs in common forms and route them to SQLAlchemy's psycopg driver.
     if normalized.startswith("postgres://"):
         return "postgresql+psycopg://" + normalized[len("postgres://"):]
     if normalized.startswith("postgresql://") and "+psycopg" not in normalized.split("://", 1)[0]:
@@ -77,17 +76,30 @@ def normalize_database_url(value: str) -> str:
     return normalized
 
 
-APP_ENV = get_env("APP_ENV", "development").strip().lower()
+LOCAL_APP_ENVIRONMENTS = {"development", "dev", "local", "test"}
+
+
+APP_ENV = get_env("APP_ENV", get_env("ENVIRONMENT", "development")).strip().lower()
+IS_LOCAL_APP_ENV = APP_ENV in LOCAL_APP_ENVIRONMENTS
 
 DATABASE_URL = normalize_database_url(
     get_env("DATABASE_URL", get_default_database_url())
-    if APP_ENV == "development"
+    if IS_LOCAL_APP_ENV
     else get_required_env("DATABASE_URL")
 )
+IS_SQLITE = DATABASE_URL.startswith("sqlite")
+IS_POSTGRES = DATABASE_URL.startswith("postgresql")
+DATABASE_BACKEND = "sqlite" if IS_SQLITE else "postgresql" if IS_POSTGRES else DATABASE_URL.split(":", 1)[0]
+
+if not IS_SQLITE and not IS_POSTGRES:
+    raise RuntimeError("Unsupported DATABASE_URL scheme. NexusOps supports SQLite and PostgreSQL only.")
+
+if not IS_LOCAL_APP_ENV and not IS_POSTGRES:
+    raise RuntimeError("PostgreSQL DATABASE_URL is required outside local development and test environments")
 
 JWT_SECRET_KEY = (
     get_env("JWT_SECRET_KEY", "change-me-dev-only")
-    if APP_ENV == "development"
+    if IS_LOCAL_APP_ENV
     else get_required_env("JWT_SECRET_KEY")
 )
 SUPABASE_JWT_SECRET = get_env("SUPABASE_JWT_SECRET", "")
@@ -142,5 +154,5 @@ CHAT_MAX_TEXT_LENGTH = int(get_env("CHAT_MAX_TEXT_LENGTH", "4000"))
 CHAT_MAX_VOICE_DURATION_SECONDS = int(get_env("CHAT_MAX_VOICE_DURATION_SECONDS", "300"))
 CHAT_INLINE_URL_TTL_SECONDS = int(get_env("CHAT_INLINE_URL_TTL_SECONDS", "0"))
 
-if APP_ENV != "development" and JWT_SECRET_KEY.startswith("change-me"):
+if not IS_LOCAL_APP_ENV and JWT_SECRET_KEY.startswith("change-me"):
     raise RuntimeError("JWT_SECRET_KEY must be set to a secure value outside development")

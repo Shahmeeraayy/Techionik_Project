@@ -27,7 +27,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import {
     addTechnicianMyJobService,
     acceptTechnicianMyJob,
+    buildDeviceLogPayload,
     completeTechnicianMyJob,
+    createTechnicianLocationCheckpoint,
     delayTechnicianMyJob,
     fetchAdminServices,
     fetchAdminTechnicianJobsFeed,
@@ -42,6 +44,7 @@ import {
     type BackendServiceCatalogItem,
     type BackendTechnicianJobFeedItem,
 } from '@/lib/backend-api';
+import { captureGps } from '@/lib/attendance-store';
 import { DISPATCH_JOB_STATUS, normalizeDispatchJobStatus } from '@/lib/job-status';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -982,6 +985,19 @@ export default function MyJobsPage({
     const activeJobs = jobs.filter(j => ['pending', 'scheduled', 'in_progress', 'delayed', 'unknown'].includes(j.job_status));
     const completedJobs = jobs.filter(j => j.job_status === 'completed');
 
+    const captureJobCheckpoint = async (token: string, jobId: string, eventType: string, jobStatus?: string) => {
+        const gps = await captureGps();
+        await createTechnicianLocationCheckpoint(token, {
+            event_type: eventType,
+            job_id: jobId,
+            job_status: jobStatus,
+            latitude: gps?.lat ?? null,
+            longitude: gps?.lng ?? null,
+            accuracy: gps?.accuracy ?? null,
+            device: buildDeviceLogPayload(),
+        }).catch(() => undefined);
+    };
+
     // Handlers
     const handleAccept = async (jobId: string) => {
         if (previewTechId) {
@@ -998,6 +1014,7 @@ export default function MyJobsPage({
 
         try {
             await acceptTechnicianMyJob(token, jobId);
+            await captureJobCheckpoint(token, jobId, 'job_accepted', 'scheduled');
             await fetchJobs();
         } catch (error) {
             const message = error instanceof Error ? error.message : 'Failed to accept job.';
@@ -1020,6 +1037,7 @@ export default function MyJobsPage({
 
         try {
             await startTechnicianMyJob(token, jobId);
+            await captureJobCheckpoint(token, jobId, 'job_started', 'in_progress');
             await fetchJobs();
         } catch (error) {
             const message = error instanceof Error ? error.message : 'Failed to start job.';
@@ -1048,6 +1066,7 @@ export default function MyJobsPage({
             if (token && user?.role === 'technician') {
                 try {
                     await completeTechnicianMyJob(token, selectedJobId);
+                    await captureJobCheckpoint(token, selectedJobId, 'job_completed', 'completed');
                     await fetchJobs();
                 } catch (error) {
                     const message = error instanceof Error ? error.message : 'Failed to complete job.';
@@ -1091,6 +1110,7 @@ export default function MyJobsPage({
                         minutes,
                         note: delayNote || undefined,
                     });
+                    await captureJobCheckpoint(token, selectedJobId, 'job_status_changed', 'delayed');
                     await fetchJobs();
                 } catch (error) {
                     const message = error instanceof Error ? error.message : 'Failed to delay job.';
@@ -1128,6 +1148,7 @@ export default function MyJobsPage({
                         reason: refuseReason,
                         comment: refuseComment || undefined,
                     });
+                    await captureJobCheckpoint(token, selectedJobId, 'job_status_changed', 'refused');
                     await fetchJobs();
                 } catch (error) {
                     const message = error instanceof Error ? error.message : 'Failed to refuse job.';
