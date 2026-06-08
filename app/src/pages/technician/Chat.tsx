@@ -9,6 +9,7 @@ import {
   FolderOpen,
   Info,
   ListFilter,
+  Image as ImageIcon,
   MapPin,
   MessageSquareText,
   Mic,
@@ -24,13 +25,23 @@ import {
   Square,
   Users,
   X,
+  Plus,
 } from 'lucide-react';
-import { useParams, useSearchParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import TechnicianBottomNav from '@/components/common/technician-bottom-nav';
 import { AttachmentCard } from '@/components/chat/AttachmentCard';
+import { StructuredMessageCard } from '@/components/chat/StructuredMessageCard';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
@@ -51,6 +62,7 @@ import {
   formatRelativeChatTime,
   getConversationStatusLine,
   getConversationTypeLabel,
+  isImportantChatMessage,
   shouldRenderMessageDayDivider,
   type ChatWorkspaceTab,
   type ChatInsightTab,
@@ -143,6 +155,7 @@ function getConversationSummaryLine(conversation: BackendChatConversation | null
 }
 
 export default function TechnicianChatPage() {
+  const navigate = useNavigate();
   const { techId: previewTechId } = useParams();
   const [searchParams] = useSearchParams();
   const requestedJobId = searchParams.get('jobId');
@@ -157,13 +170,15 @@ export default function TechnicianChatPage() {
   const [historySearch, setHistorySearch] = useState('');
   const [draftMessage, setDraftMessage] = useState('');
   const [pendingAttachmentsByConversation, setPendingAttachmentsByConversation] = useState<Record<string, BackendChatAttachment[]>>({});
+  const [importantNextMessage, setImportantNextMessage] = useState(false);
   const [notificationEnabled, setNotificationEnabled] = useState(false);
   const [loadingConversations, setLoadingConversations] = useState(true);
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [workspaceTab, setWorkspaceTab] = useState<ChatWorkspaceTab>('chat');
   const [locationRequests, setLocationRequests] = useState<BackendChatterLocationRequest[]>([]);
   const [respondingLocationRequestId, setRespondingLocationRequestId] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const attachInputRef = useRef<HTMLInputElement | null>(null);
+  const sitePhotoInputRef = useRef<HTMLInputElement | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const seenMessageIdsRef = useRef<Set<string>>(new Set());
   const {
@@ -359,6 +374,7 @@ export default function TechnicianChatPage() {
 
   useEffect(() => {
     setWorkspaceTab('chat');
+    setImportantNextMessage(false);
   }, [selectedConversationId]);
 
   const handleEnableNotifications = async () => {
@@ -373,11 +389,79 @@ export default function TechnicianChatPage() {
     }
   };
 
-  const handleFileSelection = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const buildOutgoingMetadata = (metadata?: Record<string, unknown> | null) => {
+    const next = metadata ? { ...metadata } : {};
+    if (importantNextMessage) {
+      next.important = true;
+      if (!next.kind) {
+        next.kind = 'important';
+      }
+    }
+    return Object.keys(next).length > 0 ? next : undefined;
+  };
+
+  const clearPendingAttachments = (conversationId: string) => {
+    if (!conversationId) {
+      return;
+    }
+    setPendingAttachmentsByConversation((prev) => {
+      const next = { ...prev };
+      delete next[conversationId];
+      return next;
+    });
+  };
+
+  const sendChatMessage = async (
+    payload: {
+      text?: string;
+      attachments?: BackendChatAttachment[];
+      metadata?: Record<string, unknown> | null;
+      clearDraft?: boolean;
+      clearAttachments?: boolean;
+    },
+  ) => {
+    const conversationId = selectedConversationId;
+    const attachments = payload.attachments ?? selectedConversationPendingAttachments;
+    const content = payload.text?.trim();
+    if (isPreviewMode || !token || !conversationId || (!content && attachments.length === 0)) {
+      return null;
+    }
+
+    const sent = await sendTechnicianChatThreadMessage(token, conversationId, {
+      text: content || undefined,
+      attachments,
+      metadata: buildOutgoingMetadata(payload.metadata),
+    });
+
+    setMessages((prev) => [...prev, sent]);
+    seenMessageIdsRef.current.add(sent.id);
+    setDraftMessage((current) => (payload.clearDraft ? '' : current));
+    if (payload.clearAttachments ?? true) {
+      clearPendingAttachments(conversationId);
+    }
+    setImportantNextMessage(false);
+    await loadConversations(contactSearch, true);
+    await loadThread(conversationId, historySearch, true);
+    return sent;
+  };
+
+  const handleOpenAttachFiles = () => {
+    attachInputRef.current?.click();
+  };
+
+  const handleOpenSitePhotoPicker = () => {
+    sitePhotoInputRef.current?.click();
+  };
+
+  const handleFileSelection = async (event: React.ChangeEvent<HTMLInputElement>, source: 'attach' | 'site_photo') => {
     const files = Array.from(event.target.files ?? []);
     const nextAttachments: BackendChatAttachment[] = [];
     for (const file of files) {
-      const validationMessage = getChatAttachmentValidationMessage(file);
+      const isSitePhoto = source === 'site_photo';
+      const isImageFile = file.type.startsWith('image/') || /\.(png|jpe?g|gif|webp|heic|heif)$/i.test(file.name);
+      const validationMessage = isSitePhoto
+        ? (isImageFile ? null : `${file.name} must be an image for site photo uploads.`)
+        : getChatAttachmentValidationMessage(file);
       if (validationMessage) {
         toast.error(validationMessage);
         continue;
@@ -399,26 +483,74 @@ export default function TechnicianChatPage() {
 
   const handleSend = async () => {
     const content = draftMessage.trim();
-    if (isPreviewMode || !token || !selectedConversationId || (!content && selectedConversationPendingAttachments.length === 0)) return;
-
+    if (!content && selectedConversationPendingAttachments.length === 0) {
+      return;
+    }
     try {
-      const sent = await sendTechnicianChatThreadMessage(token, selectedConversationId, {
+      await sendChatMessage({
         text: content || undefined,
         attachments: selectedConversationPendingAttachments,
+        clearDraft: true,
+        clearAttachments: true,
       });
-      setMessages((prev) => [...prev, sent]);
-      seenMessageIdsRef.current.add(sent.id);
-      setDraftMessage('');
-      setPendingAttachmentsByConversation((prev) => {
-        const next = { ...prev };
-        delete next[selectedConversationId];
-        return next;
-      });
-      await loadConversations(contactSearch, true);
-      await loadThread(selectedConversationId, historySearch, true);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to send message.');
     }
+  };
+
+  const handleShareLiveLocation = async () => {
+    if (isPreviewMode || !token || !selectedConversation) return;
+    try {
+      const gps = await captureGps();
+      if (!gps) {
+        toast.error('Location access is required to share your current location.');
+        return;
+      }
+      await sendChatMessage({
+        text: `Shared live location: ${gps.lat.toFixed(5)}, ${gps.lng.toFixed(5)} (${Math.round(gps.accuracy)}m accuracy).`,
+        attachments: [],
+        metadata: {
+          kind: 'live_location',
+          latitude: gps.lat,
+          longitude: gps.lng,
+          accuracy: gps.accuracy,
+        },
+        clearDraft: false,
+        clearAttachments: false,
+      });
+      toast.success('Live location shared.');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to share location.');
+    }
+  };
+
+  const handleShareJobDetails = async () => {
+    if (isPreviewMode || !token || !selectedConversation || selectedConversation.channel_kind !== 'job' || !selectedConversation.job_id) {
+      toast.error('Job details are only available in job-linked chats.');
+      return;
+    }
+    try {
+      await sendChatMessage({
+        text: `Shared job details for ${selectedConversation.job_code || 'this job'}.`,
+        attachments: [],
+        metadata: {
+          kind: 'job_details',
+        },
+        clearDraft: false,
+        clearAttachments: false,
+      });
+      toast.success('Job details shared.');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to share job details.');
+    }
+  };
+
+  const toggleImportantNextMessage = () => {
+    setImportantNextMessage((prev) => !prev);
+  };
+
+  const handleOpenJob = (jobId: string) => {
+    navigate(`${routeBase}/current-job?jobId=${encodeURIComponent(jobId)}`);
   };
 
   const handleShareLocationRequest = async (requestId: string) => {
@@ -436,8 +568,11 @@ export default function TechnicianChatPage() {
         accuracy: gps.accuracy,
         device: buildDeviceLogPayload(),
       });
-      await sendTechnicianChatThreadMessage(token, selectedConversationId, {
+      await sendChatMessage({
         text: `Shared current location: ${gps.lat.toFixed(5)}, ${gps.lng.toFixed(5)} (${Math.round(gps.accuracy)}m accuracy).`,
+        attachments: [],
+        clearDraft: false,
+        clearAttachments: false,
       }).catch(() => undefined);
       toast.success('Current location shared.');
       await loadLocationRequests();
@@ -454,8 +589,11 @@ export default function TechnicianChatPage() {
     setRespondingLocationRequestId(requestId);
     try {
       await declineChatterLocationRequest(token, requestId);
-      await sendTechnicianChatThreadMessage(token, selectedConversationId, {
+      await sendChatMessage({
         text: 'Declined the location request.',
+        attachments: [],
+        clearDraft: false,
+        clearAttachments: false,
       }).catch(() => undefined);
       toast.info('Location request declined.');
       await loadLocationRequests();
@@ -727,28 +865,38 @@ export default function TechnicianChatPage() {
                           className={cn('flex', message.sender_role === 'technician' ? 'justify-end' : 'justify-start')}
                         >
                           <div className="max-w-[82%] space-y-2">
-                            <div
-                              className={cn(
-                                'rounded-[24px] border px-4 py-3 shadow-[0_10px_25px_rgba(0,0,0,0.14)]',
-                                message.sender_role === 'technician'
-                                  ? 'border-white/10 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] text-white'
-                                  : 'border-white/10 bg-[#070f11] text-white',
-                              )}
-                            >
-                              <div className="mb-2 flex items-center gap-2">
-                                {message.is_pinned ? <Pin className="h-3.5 w-3.5 text-cyan-300" /> : null}
-                                {message.conversation_type === 'job' && selectedConversation?.job_code ? (
+                              <div
+                                className={cn(
+                                  'rounded-[24px] border px-4 py-3 shadow-[0_10px_25px_rgba(0,0,0,0.14)]',
+                                  message.sender_role === 'technician'
+                                    ? 'border-white/10 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] text-white'
+                                    : 'border-white/10 bg-[#070f11] text-white',
+                                  isImportantChatMessage(message) && 'ring-1 ring-amber-300/30',
+                                )}
+                              >
+                                <div className="mb-2 flex items-center gap-2">
+                                  {message.is_pinned ? <Pin className="h-3.5 w-3.5 text-cyan-300" /> : null}
+                                  {message.conversation_type === 'job' && selectedConversation?.job_code ? (
                                   <Badge variant="outline" className="border-emerald-300/20 bg-emerald-300/10 text-[10px] text-emerald-100">
                                     {selectedConversation.job_code}
-                                  </Badge>
+                                    </Badge>
+                                  ) : null}
+                                </div>
+                                <StructuredMessageCard
+                                  message={message}
+                                  conversation={selectedConversation}
+                                  viewerRole={isPreviewMode ? 'admin' : 'technician'}
+                                  tone="dark"
+                                  onOpenJob={handleOpenJob}
+                                />
+                                {message.text && (!message.metadata?.kind || message.metadata.kind === 'important' || message.metadata.kind === 'site_photo') ? (
+                                  <p className="text-sm leading-6">{message.text}</p>
                                 ) : null}
-                              </div>
-                              {message.text ? <p className="text-sm leading-6">{message.text}</p> : null}
-                              {message.attachments.length > 0 ? (
-                                <div className={cn(
-                                  'mt-3 grid gap-2',
-                                  message.attachments.length === 1
-                                    ? 'grid-cols-1'
+                                {message.attachments.length > 0 ? (
+                                  <div className={cn(
+                                    'mt-3 grid gap-2',
+                                    message.attachments.length === 1
+                                      ? 'grid-cols-1'
                                     : message.attachments.length === 2
                                       ? 'grid-cols-2'
                                       : 'grid-cols-3',
@@ -818,12 +966,27 @@ export default function TechnicianChatPage() {
                       </div>
                     ) : null}
 
+                    {importantNextMessage ? (
+                      <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-amber-300/20 bg-amber-300/10 px-3 py-1.5 text-xs font-medium text-amber-100">
+                        <Star className="h-3.5 w-3.5 fill-current" />
+                        Important next message
+                        <button
+                          type="button"
+                          onClick={toggleImportantNextMessage}
+                          className="rounded-full p-0.5 text-amber-100/80 hover:bg-amber-200/10 hover:text-amber-50"
+                          aria-label="Clear important message flag"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ) : null}
+
                     <div className="flex items-end gap-3">
                       <Button
                         type="button"
                         variant="ghost"
                         size="icon"
-                        onClick={() => fileInputRef.current?.click()}
+                        onClick={handleOpenAttachFiles}
                         className="tech-chat-attach-button h-12 w-12 shrink-0 rounded-full border border-slate-300 bg-white text-slate-700 shadow-sm hover:bg-slate-100 hover:text-slate-950 disabled:bg-slate-100 disabled:text-slate-400 dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(15,23,42,0.98),rgba(8,12,20,0.98))] dark:text-slate-100 dark:shadow-[0_12px_30px_rgba(0,0,0,0.24)] dark:hover:bg-[linear-gradient(180deg,rgba(24,38,64,0.98),rgba(12,20,34,0.98))] dark:hover:text-white"
                         disabled={isPreviewMode || !selectedConversationId || isVoiceProcessing}
                       >
@@ -851,22 +1014,57 @@ export default function TechnicianChatPage() {
                       >
                         {isRecording ? <Square className="h-4 w-4 fill-current" /> : <Mic className="h-4 w-4" />}
                       </Button>
-                      <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept={CHAT_ATTACHMENT_ACCEPT}
-                        multiple
-                        className="hidden"
-                        onChange={(event) => void handleFileSelection(event)}
-                      />
-                      <Textarea
-                        value={draftMessage}
-                        onChange={(event) => setDraftMessage(event.target.value)}
-                        onKeyDown={handleComposerKeyDown}
-                        placeholder={isPreviewMode ? 'Preview mode is read-only' : 'Write a secure message'}
-                        className="min-h-[56px] resize-none rounded-[28px] border border-slate-300 bg-white px-5 py-4 text-slate-900 placeholder:text-slate-400 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-slate-500"
-                        disabled={isPreviewMode || !selectedConversationId || isVoiceProcessing}
-                      />
+                      <div className="min-w-0 flex-1">
+                        <Textarea
+                          value={draftMessage}
+                          onChange={(event) => setDraftMessage(event.target.value)}
+                          onKeyDown={handleComposerKeyDown}
+                          placeholder={isPreviewMode ? 'Preview mode is read-only' : 'Write a secure message'}
+                          className="min-h-[56px] resize-none rounded-[28px] border border-slate-300 bg-white px-5 py-4 text-slate-900 placeholder:text-slate-400 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-slate-500"
+                          disabled={isPreviewMode || !selectedConversationId || isVoiceProcessing}
+                        />
+                      </div>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-12 w-12 shrink-0 rounded-full border border-slate-300 bg-white text-slate-700 shadow-sm hover:bg-slate-100 hover:text-slate-950 disabled:bg-slate-100 disabled:text-slate-400 dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(15,23,42,0.98),rgba(8,12,20,0.98))] dark:text-slate-100 dark:shadow-[0_12px_30px_rgba(0,0,0,0.24)] dark:hover:bg-[linear-gradient(180deg,rgba(24,38,64,0.98),rgba(12,20,34,0.98))] dark:hover:text-white"
+                            disabled={isPreviewMode || !selectedConversationId || isVoiceProcessing}
+                            aria-label="More actions"
+                          >
+                            <Plus className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="border-white/10 bg-[#091827] text-slate-100">
+                          <DropdownMenuItem onSelect={() => handleOpenAttachFiles()} disabled={isPreviewMode || !selectedConversationId || isVoiceProcessing}>
+                            <Paperclip className="h-4 w-4" />
+                            Attach File
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onSelect={() => handleOpenSitePhotoPicker()} disabled={isPreviewMode || !selectedConversationId || isVoiceProcessing}>
+                            <ImageIcon className="h-4 w-4" />
+                            Upload Site Photo
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onSelect={() => void handleShareLiveLocation()} disabled={isPreviewMode || !selectedConversationId || isVoiceProcessing}>
+                            <MapPin className="h-4 w-4" />
+                            Send Live Location
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onSelect={() => void handleShareJobDetails()} disabled={isPreviewMode || !selectedConversation || selectedConversation.channel_kind !== 'job' || isVoiceProcessing}>
+                            <BriefcaseBusiness className="h-4 w-4" />
+                            Share Job Details
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator className="bg-white/10" />
+                          <DropdownMenuCheckboxItem
+                            checked={importantNextMessage}
+                            onCheckedChange={() => toggleImportantNextMessage()}
+                            disabled={isPreviewMode || !selectedConversationId || isVoiceProcessing}
+                          >
+                            <Star className="h-4 w-4" />
+                            Mark as Important
+                          </DropdownMenuCheckboxItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                       <Button
                         type="button"
                         onClick={() => void handleSend()}
@@ -877,6 +1075,23 @@ export default function TechnicianChatPage() {
                         <Send className="h-4 w-4" />
                       </Button>
                     </div>
+                    <input
+                      ref={attachInputRef}
+                      type="file"
+                      accept={CHAT_ATTACHMENT_ACCEPT}
+                      multiple
+                      className="hidden"
+                      onChange={(event) => void handleFileSelection(event, 'attach')}
+                    />
+                    <input
+                      ref={sitePhotoInputRef}
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      multiple
+                      className="hidden"
+                      onChange={(event) => void handleFileSelection(event, 'site_photo')}
+                    />
                   </div>
                 </div>
               </>
@@ -887,7 +1102,7 @@ export default function TechnicianChatPage() {
                 token={token}
                 viewerRole={isPreviewMode ? 'admin' : 'technician'}
                 canUpload={Boolean(selectedConversationId && !isPreviewMode && !isVoiceProcessing)}
-                onUploadFiles={() => fileInputRef.current?.click()}
+                onUploadFiles={handleOpenAttachFiles}
               />
             )}
           </Card>

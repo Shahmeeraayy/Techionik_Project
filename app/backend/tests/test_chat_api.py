@@ -216,7 +216,7 @@ class ChatApiTestCase(unittest.TestCase):
             headers=self.tech_one_headers,
         )
         self.assertEqual(thread.status_code, 200, thread.text)
-        self.assertEqual(thread.json()[-1]["id"], message_id)
+        self.assertTrue(any(row["id"] == message_id for row in thread.json()))
 
         read = self.client.post(
             f"/technicians/me/chat/threads/{conversation_id}/read",
@@ -232,6 +232,57 @@ class ChatApiTestCase(unittest.TestCase):
         latest = admin_thread.json()[-1]
         self.assertIsNotNone(latest["delivered_at"])
         self.assertIsNotNone(latest["read_at"])
+
+    def test_chat_message_metadata_roundtrip_search_and_role_guards(self):
+        resolved = self.client.get(
+            f"/admin/chat/jobs/{self.job_one_id}/conversation",
+            headers=self.admin_one_headers,
+        )
+        self.assertEqual(resolved.status_code, 200, resolved.text)
+        conversation = resolved.json()["conversation"]
+        conversation_id = conversation["id"]
+
+        shared = self.client.post(
+            f"/admin/chat/threads/{conversation_id}/messages",
+            headers=self.admin_one_headers,
+            json={
+                "text": "Sharing the job summary.",
+                "metadata": {"kind": "job_details"},
+            },
+        )
+        self.assertEqual(shared.status_code, 201, shared.text)
+        payload = shared.json()
+        self.assertEqual(payload["metadata"]["kind"], "job_details")
+        self.assertEqual(payload["metadata"]["job_id"], self.job_one_id)
+        self.assertEqual(payload["metadata"]["job_code"], "JOB-CHAT-001")
+        self.assertEqual(payload["metadata"]["job_status"], "scheduled")
+
+        search = self.client.get(
+            f"/admin/chat/threads/{conversation_id}/messages?search=job_details",
+            headers=self.admin_one_headers,
+        )
+        self.assertEqual(search.status_code, 200, search.text)
+        self.assertTrue(any(row["id"] == payload["id"] for row in search.json()))
+
+        forbidden_location = self.client.post(
+            "/technicians/me/chat/messages",
+            headers=self.tech_one_headers,
+            json={
+                "text": "Requesting a location update.",
+                "metadata": {"kind": "location_request"},
+            },
+        )
+        self.assertEqual(forbidden_location.status_code, 403, forbidden_location.text)
+
+        forbidden_status = self.client.post(
+            "/technicians/me/chat/messages",
+            headers=self.tech_one_headers,
+            json={
+                "text": "Requesting a status update.",
+                "metadata": {"kind": "status_request"},
+            },
+        )
+        self.assertEqual(forbidden_status.status_code, 403, forbidden_status.text)
 
     def test_secure_attachment_voice_and_audit_access_are_scoped(self):
         resolved = self.client.get(

@@ -1,3 +1,4 @@
+import json
 from datetime import datetime
 from typing import Iterable, List, Optional
 from uuid import UUID
@@ -226,10 +227,19 @@ class ChatRepository:
                 ChatConversationMessage.deleted_at.is_(None),
             )
         )
-        if search:
-            pattern = f"%{search.strip().lower()}%"
-            query = query.filter(func.lower(func.coalesce(ChatConversationMessage.body, "")).like(pattern))
-        return query.order_by(ChatConversationMessage.created_at.asc(), ChatConversationMessage.id.asc()).all()
+        rows = query.order_by(ChatConversationMessage.created_at.asc(), ChatConversationMessage.id.asc()).all()
+        if not search:
+            return rows
+
+        query_text = search.strip().lower()
+        filtered_rows: List[ChatConversationMessage] = []
+        for row in rows:
+            attachment_names = [attachment.original_name.lower() for attachment in row.attachments]
+            metadata_text = json.dumps(row.metadata_json, sort_keys=True, default=str).lower() if isinstance(row.metadata_json, dict) else ""
+            body = (row.body or "").lower()
+            if query_text in body or any(query_text in name for name in attachment_names) or query_text in metadata_text:
+                filtered_rows.append(row)
+        return filtered_rows
 
     def create_message(
         self,

@@ -4,6 +4,7 @@ import {
   BriefcaseBusiness,
   Check,
   CheckCheck,
+  Image as ImageIcon,
   MapPin,
   MessageCircleMore,
   Mic,
@@ -16,8 +17,9 @@ import {
   Square,
   Users,
   X,
+  Plus,
 } from 'lucide-react';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -26,7 +28,16 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { AttachmentCard } from '@/components/chat/AttachmentCard';
+import { StructuredMessageCard } from '@/components/chat/StructuredMessageCard';
 import { SharedConversationPanel } from '@/components/chat/SharedConversationPanel';
 import { useVoiceNoteRecorder } from '@/hooks/use-voice-note-recorder';
 import {
@@ -42,6 +53,7 @@ import {
   formatRelativeChatTime,
   getConversationStatusLine,
   getConversationTypeLabel,
+  isImportantChatMessage,
   shouldRenderMessageDayDivider,
   type ChatWorkspaceTab,
   type ChatQuickFilter,
@@ -64,6 +76,7 @@ import {
   type BackendTechnicianListItem,
   unpinAdminChatMessage,
 } from '@/lib/backend-api';
+import { captureGps } from '@/lib/attendance-store';
 import { cn } from '@/lib/utils';
 
 const CHAT_UNREAD_STORAGE_KEY = 'sm_admin_chat_unread_count';
@@ -135,6 +148,7 @@ function getConversationInitials(conversation: BackendAdminChatConversation | nu
 }
 
 export default function PlatformChatPage() {
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const requestedJobId = searchParams.get('jobId');
   const [conversations, setConversations] = useState<BackendAdminChatConversation[]>([]);
@@ -154,11 +168,13 @@ export default function PlatformChatPage() {
   const [groupMemberIds, setGroupMemberIds] = useState<string[]>([]);
   const [savingGroup, setSavingGroup] = useState(false);
   const [requestingLocation, setRequestingLocation] = useState(false);
+  const [importantNextMessage, setImportantNextMessage] = useState(false);
   const [notificationEnabled, setNotificationEnabled] = useState(false);
   const [loadingConversations, setLoadingConversations] = useState(true);
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [workspaceTab, setWorkspaceTab] = useState<ChatWorkspaceTab>('chat');
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const attachInputRef = useRef<HTMLInputElement | null>(null);
+  const sitePhotoInputRef = useRef<HTMLInputElement | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const seenMessageIdsRef = useRef<Set<string>>(new Set());
   const token = getStoredAdminToken() || '';
@@ -353,6 +369,7 @@ export default function PlatformChatPage() {
 
   useEffect(() => {
     setWorkspaceTab('chat');
+    setImportantNextMessage(false);
   }, [selectedConversationId]);
 
   useEffect(() => {
@@ -450,11 +467,79 @@ export default function PlatformChatPage() {
     }
   };
 
-  const handleFileSelection = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const buildOutgoingMetadata = (metadata?: Record<string, unknown> | null) => {
+    const next = metadata ? { ...metadata } : {};
+    if (importantNextMessage) {
+      next.important = true;
+      if (!next.kind) {
+        next.kind = 'important';
+      }
+    }
+    return Object.keys(next).length > 0 ? next : undefined;
+  };
+
+  const clearPendingAttachments = (conversationId: string) => {
+    if (!conversationId) {
+      return;
+    }
+    setPendingAttachmentsByConversation((prev) => {
+      const next = { ...prev };
+      delete next[conversationId];
+      return next;
+    });
+  };
+
+  const sendChatMessage = async (
+    payload: {
+      text?: string;
+      attachments?: BackendChatAttachment[];
+      metadata?: Record<string, unknown> | null;
+      clearDraft?: boolean;
+      clearAttachments?: boolean;
+    },
+  ) => {
+    const conversationId = selectedConversationId;
+    const attachments = payload.attachments ?? selectedConversationPendingAttachments;
+    const content = payload.text?.trim();
+    if (!token || !conversationId || (!content && attachments.length === 0)) {
+      return null;
+    }
+
+    const sent = await sendAdminChatThreadMessage(token, conversationId, {
+      text: content || undefined,
+      attachments,
+      metadata: buildOutgoingMetadata(payload.metadata),
+    });
+
+    setMessages((prev) => [...prev, sent]);
+    setDraftMessage((current) => (payload.clearDraft ? '' : current));
+    if (payload.clearAttachments ?? true) {
+      clearPendingAttachments(conversationId);
+    }
+    setImportantNextMessage(false);
+    seenMessageIdsRef.current.add(sent.id);
+    await loadConversations(contactSearch, true);
+    await loadThread(conversationId, historySearch, true);
+    return sent;
+  };
+
+  const handleOpenAttachFiles = () => {
+    attachInputRef.current?.click();
+  };
+
+  const handleOpenSitePhotoPicker = () => {
+    sitePhotoInputRef.current?.click();
+  };
+
+  const handleFileSelection = async (event: React.ChangeEvent<HTMLInputElement>, source: 'attach' | 'site_photo') => {
     const files = Array.from(event.target.files ?? []);
     const nextAttachments: BackendChatAttachment[] = [];
     for (const file of files) {
-      const validationMessage = getChatAttachmentValidationMessage(file);
+      const isSitePhoto = source === 'site_photo';
+      const isImageFile = file.type.startsWith('image/') || /\.(png|jpe?g|gif|webp|heic|heif)$/i.test(file.name);
+      const validationMessage = isSitePhoto
+        ? (isImageFile ? null : `${file.name} must be an image for site photo uploads.`)
+        : getChatAttachmentValidationMessage(file);
       if (validationMessage) {
         toast.error(validationMessage);
         continue;
@@ -476,26 +561,15 @@ export default function PlatformChatPage() {
 
   const handleSend = async () => {
     const content = draftMessage.trim();
-    if (!token || !selectedConversationId || (!content && selectedConversationPendingAttachments.length === 0)) return;
+    if (!content && selectedConversationPendingAttachments.length === 0) return;
 
     try {
-      const sent = await sendAdminChatThreadMessage(token, selectedConversationId, {
+      await sendChatMessage({
         text: content || undefined,
         attachments: selectedConversationPendingAttachments,
+        clearDraft: true,
+        clearAttachments: true,
       });
-      setMessages((prev) => [...prev, sent]);
-      setDraftMessage('');
-      setPendingAttachmentsByConversation((prev) => {
-        if (!selectedConversationId) {
-          return prev;
-        }
-        const next = { ...prev };
-        delete next[selectedConversationId];
-        return next;
-      });
-      seenMessageIdsRef.current.add(sent.id);
-      await loadConversations(contactSearch, true);
-      await loadThread(selectedConversationId, historySearch, true);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to send message.');
     }
@@ -516,15 +590,94 @@ export default function PlatformChatPage() {
       toast.success('Location request sent.', {
         description: 'The technician can share once or decline from Chatter.',
       });
-      await sendAdminChatThreadMessage(token, selectedConversation.id, {
+      await sendChatMessage({
         text: 'Location request sent. Please share your current location when available.',
+        attachments: [],
+        metadata: { kind: 'location_request' },
+        clearDraft: false,
+        clearAttachments: false,
       }).catch(() => undefined);
-      await loadThread(selectedConversation.id, historySearch, true);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to request location.');
     } finally {
       setRequestingLocation(false);
     }
+  };
+
+  const handleShareLiveLocation = async () => {
+    if (!token || !selectedConversation) return;
+    try {
+      const gps = await captureGps();
+      if (!gps) {
+        toast.error('Location access is required to share your current location.');
+        return;
+      }
+      await sendChatMessage({
+        text: `Shared live location: ${gps.lat.toFixed(5)}, ${gps.lng.toFixed(5)} (${Math.round(gps.accuracy)}m accuracy).`,
+        attachments: [],
+        metadata: {
+          kind: 'live_location',
+          latitude: gps.lat,
+          longitude: gps.lng,
+          accuracy: gps.accuracy,
+        },
+        clearDraft: false,
+        clearAttachments: false,
+      });
+      toast.success('Live location shared.');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to share location.');
+    }
+  };
+
+  const handleShareJobDetails = async () => {
+    if (!token || !selectedConversation || selectedConversation.channel_kind !== 'job' || !selectedConversation.job_id) {
+      toast.error('Job details are only available in job-linked chats.');
+      return;
+    }
+    try {
+      await sendChatMessage({
+        text: `Shared job details for ${selectedConversation.job_code || 'this job'}.`,
+        attachments: [],
+        metadata: {
+          kind: 'job_details',
+        },
+        clearDraft: false,
+        clearAttachments: false,
+      });
+      toast.success('Job details shared.');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to share job details.');
+    }
+  };
+
+  const handleRequestStatusUpdate = async () => {
+    if (!token || !selectedConversation || selectedConversation.channel_kind === 'group') {
+      toast.error('Status update requests are only available in direct or job conversations.');
+      return;
+    }
+    try {
+      await sendChatMessage({
+        text: 'Please send a status update when you can.',
+        attachments: [],
+        metadata: {
+          kind: 'status_request',
+        },
+        clearDraft: false,
+        clearAttachments: false,
+      });
+      toast.success('Status update request sent.');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to request a status update.');
+    }
+  };
+
+  const toggleImportantNextMessage = () => {
+    setImportantNextMessage((prev) => !prev);
+  };
+
+  const handleOpenJob = (jobId: string) => {
+    navigate(`/admin/jobs/${encodeURIComponent(jobId)}`);
   };
 
   const handleTogglePin = async (message: BackendChatMessage) => {
@@ -864,17 +1017,6 @@ export default function PlatformChatPage() {
                       type="button"
                       variant="outline"
                       size="sm"
-                      onClick={() => void handleRequestLocation()}
-                      disabled={!selectedConversation || selectedConversation.channel_kind === 'group' || requestingLocation}
-                      className="h-9 gap-2 rounded-full border-white/10 bg-white/[0.03] text-slate-200 hover:bg-white/[0.08]"
-                    >
-                      <MapPin className="h-4 w-4" />
-                      Request Location
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
                       onClick={() => selectedConversation && toggleFavoriteConversation(selectedConversation.id)}
                       disabled={!selectedConversation}
                       className="h-9 gap-2 rounded-full border-white/10 bg-white/[0.03] text-slate-200 hover:bg-white/[0.08]"
@@ -985,6 +1127,7 @@ export default function PlatformChatPage() {
                                   message.sender_role === 'admin'
                                     ? 'border-white/10 bg-white text-slate-900'
                                     : 'border-white/10 bg-[#070f11] text-white',
+                                  isImportantChatMessage(message) && 'ring-1 ring-amber-300/30',
                                 )}
                               >
                                 <div className="mb-2 flex items-center justify-between gap-3">
@@ -1015,7 +1158,16 @@ export default function PlatformChatPage() {
                                     <Pin className="h-3.5 w-3.5" />
                                   </button>
                                 </div>
-                                {message.text ? <p className="text-sm leading-6">{message.text}</p> : null}
+                                <StructuredMessageCard
+                                  message={message}
+                                  conversation={selectedConversation}
+                                  viewerRole="admin"
+                                  tone={message.sender_role === 'admin' ? 'light' : 'dark'}
+                                  onOpenJob={handleOpenJob}
+                                />
+                                {message.text && (!message.metadata?.kind || message.metadata.kind === 'important' || message.metadata.kind === 'site_photo') ? (
+                                  <p className="text-sm leading-6">{message.text}</p>
+                                ) : null}
                                 {message.attachments.length > 0 ? (
                                   <div className={cn(
                                     'mt-3 grid gap-2',
@@ -1097,12 +1249,27 @@ export default function PlatformChatPage() {
                       </div>
                     ) : null}
 
+                    {importantNextMessage ? (
+                      <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-amber-300/20 bg-amber-300/10 px-3 py-1.5 text-xs font-medium text-amber-100">
+                        <Star className="h-3.5 w-3.5 fill-current" />
+                        Important next message
+                        <button
+                          type="button"
+                          onClick={toggleImportantNextMessage}
+                          className="rounded-full p-0.5 text-amber-100/80 hover:bg-amber-200/10 hover:text-amber-50"
+                          aria-label="Clear important message flag"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ) : null}
+
                     <div className="flex items-end gap-3">
                       <Button
                         type="button"
                         variant="outline"
                         size="icon"
-                        onClick={() => fileInputRef.current?.click()}
+                        onClick={handleOpenAttachFiles}
                         className="h-12 w-12 shrink-0 rounded-full border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
                         disabled={!selectedConversationId || isVoiceProcessing}
                       >
@@ -1130,22 +1297,65 @@ export default function PlatformChatPage() {
                       >
                         {isRecording ? <Square className="h-4 w-4 fill-current" /> : <Mic className="h-4 w-4" />}
                       </Button>
-                      <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept={CHAT_ATTACHMENT_ACCEPT}
-                        multiple
-                        className="hidden"
-                        onChange={(event) => void handleFileSelection(event)}
-                      />
-                      <Textarea
-                        value={draftMessage}
-                        onChange={(event) => setDraftMessage(event.target.value)}
-                        onKeyDown={handleComposerKeyDown}
-                        placeholder={selectedConversationId ? 'Write a secure message' : 'Select a thread to start chatting'}
-                        className="min-h-[56px] resize-none rounded-[28px] border-white/10 bg-white/[0.04] px-5 py-4 text-white placeholder:text-slate-500"
-                        disabled={!selectedConversationId || isVoiceProcessing}
-                      />
+                      <div className="min-w-0 flex-1">
+                        <Textarea
+                          value={draftMessage}
+                          onChange={(event) => setDraftMessage(event.target.value)}
+                          onKeyDown={handleComposerKeyDown}
+                          placeholder={selectedConversationId ? 'Write a secure message' : 'Select a thread to start chatting'}
+                          className="min-h-[56px] resize-none rounded-[28px] border-white/10 bg-white/[0.04] px-5 py-4 text-white placeholder:text-slate-500"
+                          disabled={!selectedConversationId || isVoiceProcessing}
+                        />
+                      </div>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            className="h-12 w-12 shrink-0 rounded-full border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
+                            disabled={!selectedConversationId || isVoiceProcessing}
+                            aria-label="More actions"
+                          >
+                            <Plus className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="border-white/10 bg-[#091827] text-slate-100">
+                          <DropdownMenuItem onSelect={() => handleOpenAttachFiles()} disabled={!selectedConversationId || isVoiceProcessing}>
+                            <Paperclip className="h-4 w-4" />
+                            Attach File
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onSelect={() => handleOpenSitePhotoPicker()} disabled={!selectedConversationId || isVoiceProcessing}>
+                            <ImageIcon className="h-4 w-4" />
+                            Upload Site Photo
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onSelect={() => void handleShareLiveLocation()} disabled={!selectedConversationId || isVoiceProcessing}>
+                            <MapPin className="h-4 w-4" />
+                            Send Live Location
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onSelect={() => void handleRequestLocation()} disabled={!selectedConversation || selectedConversation.channel_kind === 'group' || requestingLocation || isVoiceProcessing}>
+                            <MapPin className="h-4 w-4" />
+                            Request Location
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onSelect={() => void handleRequestStatusUpdate()} disabled={!selectedConversation || selectedConversation.channel_kind === 'group' || isVoiceProcessing}>
+                            <MessageCircleMore className="h-4 w-4" />
+                            Request Status Update
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onSelect={() => void handleShareJobDetails()} disabled={!selectedConversation || selectedConversation.channel_kind !== 'job' || isVoiceProcessing}>
+                            <BriefcaseBusiness className="h-4 w-4" />
+                            Share Job Details
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator className="bg-white/10" />
+                          <DropdownMenuCheckboxItem
+                            checked={importantNextMessage}
+                            onCheckedChange={() => toggleImportantNextMessage()}
+                            disabled={!selectedConversationId || isVoiceProcessing}
+                          >
+                            <Star className="h-4 w-4" />
+                            Mark as Important
+                          </DropdownMenuCheckboxItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                       <Button
                         type="button"
                         onClick={() => void handleSend()}
@@ -1155,6 +1365,23 @@ export default function PlatformChatPage() {
                         <Send className="h-4 w-4" />
                       </Button>
                     </div>
+                    <input
+                      ref={attachInputRef}
+                      type="file"
+                      accept={CHAT_ATTACHMENT_ACCEPT}
+                      multiple
+                      className="hidden"
+                      onChange={(event) => void handleFileSelection(event, 'attach')}
+                    />
+                    <input
+                      ref={sitePhotoInputRef}
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      multiple
+                      className="hidden"
+                      onChange={(event) => void handleFileSelection(event, 'site_photo')}
+                    />
                   </div>
                 </div>
               </>
@@ -1165,7 +1392,7 @@ export default function PlatformChatPage() {
                 token={token}
                 viewerRole="admin"
                 canUpload={Boolean(selectedConversationId && !isVoiceProcessing)}
-                onUploadFiles={() => fileInputRef.current?.click()}
+                onUploadFiles={handleOpenAttachFiles}
               />
             )}
           </Card>

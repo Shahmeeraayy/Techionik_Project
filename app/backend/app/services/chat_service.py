@@ -1,3 +1,4 @@
+import json
 from datetime import datetime, timezone
 from typing import List, Optional
 from uuid import UUID, uuid4
@@ -124,6 +125,7 @@ class ChatService:
             created_at=row.created_at,
             delivered_at=row.delivered_at,
             read_at=row.read_at,
+            metadata=row.metadata_json if isinstance(row.metadata_json, dict) else None,
         )
 
     def _technician_status_label(self, technician_id: UUID, technician_status: str, current_jobs_count: int) -> str:
@@ -178,6 +180,9 @@ class ChatService:
             job_id=conversation.job_id,
             job_code=conversation.job.job_code if conversation.job is not None else None,
             job_status=conversation.job.status if conversation.job is not None else None,
+            job_location=conversation.job.location if conversation.job is not None else None,
+            job_requested_service_date=conversation.job.requested_service_date.isoformat() if conversation.job is not None and conversation.job.requested_service_date else None,
+            job_requested_service_time=conversation.job.requested_service_time.isoformat() if conversation.job is not None and conversation.job.requested_service_time else None,
             unread_count=unread_count,
             pinned_count=pinned_count,
             member_count=max(len(member_ids), 1),
@@ -396,7 +401,8 @@ class ChatService:
         for row in rows:
             text = (row.body or "").lower()
             attachment_names = [attachment.original_name.lower() for attachment in row.attachments]
-            if query in text or any(query in name for name in attachment_names):
+            metadata_text = json.dumps(row.metadata_json, sort_keys=True, default=str).lower() if isinstance(row.metadata_json, dict) else ""
+            if query in text or any(query in name for name in attachment_names) or query in metadata_text:
                 results.append(row)
         return results
 
@@ -408,6 +414,68 @@ class ChatService:
                 return "voice"
             return "attachment"
         return "text"
+
+    def _build_message_metadata(
+        self,
+        *,
+        conversation: ChatConversation,
+        payload: ChatMessageCreateRequest,
+    ) -> dict:
+        metadata: dict = {"conversation_type": conversation.conversation_type}
+        incoming = payload.metadata if isinstance(payload.metadata, dict) else {}
+        if incoming:
+            metadata.update(incoming)
+
+        kind = str(metadata.get("kind") or metadata.get("action") or "").strip().lower()
+        important_requested = bool(metadata.get("important")) or kind in {"important", "mark_important", "mark_as_important"}
+
+        if kind in {"site_photo", "upload_site_photo"}:
+            metadata["kind"] = "site_photo"
+        elif kind in {"live_location", "share_live_location"}:
+            latitude = metadata.get("latitude")
+            longitude = metadata.get("longitude")
+            if not isinstance(latitude, (int, float)) or not isinstance(longitude, (int, float)):
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Live location metadata requires coordinates")
+            metadata["kind"] = "live_location"
+            metadata["latitude"] = float(latitude)
+            metadata["longitude"] = float(longitude)
+            accuracy = metadata.get("accuracy")
+            if isinstance(accuracy, (int, float)):
+                metadata["accuracy"] = float(accuracy)
+            else:
+                metadata.pop("accuracy", None)
+            map_url = metadata.get("map_url")
+            if not isinstance(map_url, str) or not map_url.strip():
+                metadata["map_url"] = f"https://www.google.com/maps?q={metadata['latitude']},{metadata['longitude']}"
+            else:
+                metadata["map_url"] = map_url.strip()
+        elif kind in {"job_details", "share_job_details"}:
+            if conversation.conversation_type != "job" or conversation.job is None or conversation.job_id is None:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Job details can only be shared in job chats")
+            metadata["kind"] = "job_details"
+            metadata["job_id"] = str(conversation.job_id)
+            metadata["job_code"] = conversation.job.job_code
+            metadata["job_status"] = conversation.job.status
+            metadata["job_location"] = conversation.job.location
+            metadata["job_requested_service_date"] = conversation.job.requested_service_date.isoformat() if conversation.job.requested_service_date else None
+            metadata["job_requested_service_time"] = conversation.job.requested_service_time.isoformat() if conversation.job.requested_service_time else None
+        elif kind in {"location_request", "request_location"}:
+            if self.current_user.role != UserRole.ADMIN:
+                raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only admins can request technician location in chat")
+            metadata["kind"] = "location_request"
+        elif kind in {"status_request", "request_status_update"}:
+            if self.current_user.role != UserRole.ADMIN:
+                raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only admins can request a status update in chat")
+            metadata["kind"] = "status_request"
+        elif kind:
+            metadata["kind"] = kind
+
+        if important_requested:
+            metadata["important"] = True
+            if "kind" not in metadata:
+                metadata["kind"] = "important"
+
+        return {key: value for key, value in metadata.items() if value is not None}
 
     def _store_attachments(
         self,
@@ -445,6 +513,7 @@ class ChatService:
         return stored_items
 
     def _log_message_events(self, *, conversation: ChatConversation, message: ChatConversationMessage) -> None:
+        metadata = message.metadata_json if isinstance(message.metadata_json, dict) else {}
         AuditService.log_event(
             self.db,
             actor_role=self.current_user.role,
@@ -458,8 +527,68 @@ class ChatService:
                 "technician_id": str(conversation.technician_id),
                 "job_id": str(conversation.job_id) if conversation.job_id else None,
                 "message_type": message.message_type,
+                "message_kind": metadata.get("kind"),
+                "important": bool(metadata.get("important")),
             },
         )
+        message_kind = str(metadata.get("kind") or "").strip().lower()
+        if message_kind == "important":
+            AuditService.log_event(
+                self.db,
+                actor_role=self.current_user.role,
+                actor_id=self.current_user.user_id,
+                action="chat.message.important",
+                entity_type=AuditEntityType.CHAT_MESSAGE.value,
+                entity_id=message.id,
+                metadata={
+                    "conversation_id": str(conversation.id),
+                    "message_id": str(message.id),
+                },
+            )
+        elif message_kind == "live_location":
+            AuditService.log_event(
+                self.db,
+                actor_role=self.current_user.role,
+                actor_id=self.current_user.user_id,
+                action="chat.location.shared",
+                entity_type=AuditEntityType.CHAT_MESSAGE.value,
+                entity_id=message.id,
+                metadata={
+                    "conversation_id": str(conversation.id),
+                    "message_id": str(message.id),
+                    "latitude": metadata.get("latitude"),
+                    "longitude": metadata.get("longitude"),
+                    "accuracy": metadata.get("accuracy"),
+                },
+            )
+        elif message_kind == "job_details":
+            AuditService.log_event(
+                self.db,
+                actor_role=self.current_user.role,
+                actor_id=self.current_user.user_id,
+                action="chat.job_details.shared",
+                entity_type=AuditEntityType.CHAT_MESSAGE.value,
+                entity_id=message.id,
+                metadata={
+                    "conversation_id": str(conversation.id),
+                    "message_id": str(message.id),
+                    "job_id": metadata.get("job_id"),
+                    "job_code": metadata.get("job_code"),
+                },
+            )
+        elif message_kind == "status_request":
+            AuditService.log_event(
+                self.db,
+                actor_role=self.current_user.role,
+                actor_id=self.current_user.user_id,
+                action="chat.status_requested",
+                entity_type=AuditEntityType.CHAT_MESSAGE.value,
+                entity_id=message.id,
+                metadata={
+                    "conversation_id": str(conversation.id),
+                    "message_id": str(message.id),
+                },
+            )
         for attachment in message.attachments:
             AuditService.log_event(
                 self.db,
@@ -527,6 +656,7 @@ class ChatService:
 
     def send_conversation_message(self, conversation_id: UUID, payload: ChatMessageCreateRequest) -> ChatMessageResponse:
         conversation = self._require_conversation_access(conversation_id)
+        metadata = self._build_message_metadata(conversation=conversation, payload=payload)
         message = self.repo.create_message(
             conversation_id=conversation.id,
             technician_id=conversation.technician_id,
@@ -534,7 +664,7 @@ class ChatService:
             sender_id=self.current_user.user_id,
             body=payload.text,
             message_type="text",
-            metadata_json={"conversation_type": conversation.conversation_type},
+            metadata_json=metadata,
         )
         stored_attachments = self._store_attachments(conversation=conversation, message=message, payload=payload)
         message.attachments = stored_attachments

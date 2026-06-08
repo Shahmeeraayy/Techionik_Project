@@ -2,6 +2,7 @@ import type {
   BackendChatAttachment,
   BackendChatConversation,
   BackendChatMessage,
+  BackendChatMessageMetadata,
 } from '@/lib/backend-api';
 
 export type ChatQuickFilter = 'all' | 'unread' | 'direct' | 'group' | 'job' | 'pinned';
@@ -26,6 +27,31 @@ export type SharedConversationLink = {
   domain: string;
   url: string;
 };
+
+export function getChatMessageMetadata(message: BackendChatMessage): BackendChatMessageMetadata {
+  return (message.metadata && typeof message.metadata === 'object'
+    ? message.metadata
+    : {}) as BackendChatMessageMetadata;
+}
+
+export function getChatMessageKind(message: BackendChatMessage): string | null {
+  const metadata = getChatMessageMetadata(message);
+  const kind = String(metadata.kind ?? metadata.action ?? '').trim().toLowerCase();
+  return kind || null;
+}
+
+export function isImportantChatMessage(message: BackendChatMessage): boolean {
+  const metadata = getChatMessageMetadata(message);
+  return Boolean(metadata.important || getChatMessageKind(message) === 'important');
+}
+
+export function buildGoogleMapsUrl(latitude: number, longitude: number): string {
+  return `https://www.google.com/maps?q=${latitude},${longitude}`;
+}
+
+export function formatCoordinate(value: number): string {
+  return Number.isFinite(value) ? value.toFixed(5) : '';
+}
 
 export function formatRelativeChatTime(value?: string | null): string {
   if (!value) return 'No activity yet';
@@ -191,7 +217,12 @@ export function buildSharedConversationLinks(
   const links: SharedConversationLink[] = [];
 
   for (const message of messages) {
-    const urls = extractUrlsFromText(message.text);
+    const metadata = getChatMessageMetadata(message);
+    const metadataUrls = typeof metadata.map_url === 'string' ? [metadata.map_url] : [];
+    const urls = Array.from(new Set([
+      ...extractUrlsFromText(message.text),
+      ...metadataUrls,
+    ]));
     for (const [index, url] of urls.entries()) {
       try {
         const parsed = new URL(url);

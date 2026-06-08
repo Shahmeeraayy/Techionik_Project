@@ -44,6 +44,7 @@ class ChatAttachmentResponse(BaseModel):
 class ChatMessageCreateRequest(BaseModel):
     text: Optional[str] = Field(default=None, max_length=CHAT_MAX_TEXT_LENGTH)
     attachments: List[ChatAttachmentPayload] = Field(default_factory=list)
+    metadata: Optional[dict] = None
 
     @field_validator("text")
     @classmethod
@@ -87,6 +88,7 @@ class ChatMessageResponse(BaseModel):
     pinned_at: Optional[datetime] = None
     delivered_at: Optional[datetime] = None
     read_at: Optional[datetime] = None
+    metadata: Optional[dict] = None
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
@@ -107,6 +109,9 @@ class ChatConversationSummaryResponse(BaseModel):
     job_id: Optional[UUID] = None
     job_code: Optional[str] = None
     job_status: Optional[str] = None
+    job_location: Optional[str] = None
+    job_requested_service_date: Optional[str] = None
+    job_requested_service_time: Optional[str] = None
     unread_count: int = 0
     pinned_count: int = 0
     member_count: int = 1

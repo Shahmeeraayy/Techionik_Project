@@ -491,6 +491,23 @@ export type BackendChatAttachment = {
   data_url?: string | null;
 };
 
+export type BackendChatMessageMetadata = Record<string, unknown> & {
+  kind?: string;
+  action?: string;
+  important?: boolean;
+  latitude?: number;
+  longitude?: number;
+  accuracy?: number | null;
+  map_url?: string | null;
+  job_id?: string | null;
+  job_code?: string | null;
+  job_status?: string | null;
+  job_location?: string | null;
+  job_requested_service_date?: string | null;
+  job_requested_service_time?: string | null;
+  request_text?: string | null;
+};
+
 export type BackendChatMessage = {
   id: string;
   conversation_id: string;
@@ -508,6 +525,7 @@ export type BackendChatMessage = {
   created_at: string;
   delivered_at?: string | null;
   read_at?: string | null;
+  metadata?: BackendChatMessageMetadata | null;
 };
 
 export type BackendChatConversation = {
@@ -525,6 +543,9 @@ export type BackendChatConversation = {
   job_id?: string | null;
   job_code?: string | null;
   job_status?: string | null;
+  job_location?: string | null;
+  job_requested_service_date?: string | null;
+  job_requested_service_time?: string | null;
   unread_count: number;
   pinned_count: number;
   member_count: number;
@@ -560,6 +581,12 @@ export type BackendChatAuditLog = {
   metadata?: Record<string, unknown> | null;
 };
 
+export type BackendChatMessageCreatePayload = {
+  text?: string;
+  attachments?: BackendChatAttachment[];
+  metadata?: BackendChatMessageMetadata | null;
+};
+
 type RawBackendChatAttachment = Partial<BackendChatAttachment> & Pick<
   BackendChatAttachment,
   'id' | 'name' | 'mime_type' | 'size_bytes'
@@ -570,6 +597,7 @@ type RawBackendChatMessage = Partial<BackendChatMessage> & Pick<
   'id' | 'technician_id' | 'sender_role' | 'sender_id' | 'created_at'
 > & {
   attachments?: RawBackendChatAttachment[];
+  metadata?: BackendChatMessageMetadata | null;
 };
 
 type RawBackendChatConversation = Partial<BackendChatConversation> & Pick<
@@ -654,6 +682,7 @@ function normalizeChatMessage(
     created_at: message.created_at,
     delivered_at: message.delivered_at ?? null,
     read_at: message.read_at ?? null,
+    metadata: message.metadata ?? null,
   };
 }
 
@@ -686,6 +715,9 @@ function normalizeChatConversation(conversation: RawBackendChatConversation): Ba
     job_id: conversation.job_id ?? null,
     job_code: conversation.job_code ?? null,
     job_status: conversation.job_status ?? null,
+    job_location: conversation.job_location ?? null,
+    job_requested_service_date: conversation.job_requested_service_date ?? null,
+    job_requested_service_time: conversation.job_requested_service_time ?? null,
     unread_count: conversation.unread_count ?? 0,
     pinned_count: conversation.pinned_count ?? 0,
     member_count: Math.max(memberCount, memberIds.length, memberNames.length, 1),
@@ -704,7 +736,8 @@ function filterChatMessagesBySearch(messages: BackendChatMessage[], search?: str
   return messages.filter((message) => {
     const text = (message.text ?? '').toLowerCase();
     const attachmentMatch = message.attachments.some((attachment) => attachment.name.toLowerCase().includes(query));
-    return text.includes(query) || attachmentMatch;
+    const metadataMatch = JSON.stringify(message.metadata ?? {}).toLowerCase().includes(query);
+    return text.includes(query) || attachmentMatch || metadataMatch;
   });
 }
 
@@ -1751,10 +1784,7 @@ export async function fetchAdminChatThreadMessages(
 export async function sendAdminChatThreadMessage(
   token: string,
   conversationId: string,
-  payload: {
-    text?: string;
-    attachments?: BackendChatAttachment[];
-  },
+  payload: BackendChatMessageCreatePayload,
 ): Promise<BackendChatMessage> {
   const legacyTechnicianId = parseLegacyDirectTechnicianId(conversationId);
   if (legacyTechnicianId) {
@@ -1904,10 +1934,7 @@ export async function fetchAdminChatMessages(
 export async function sendAdminChatMessage(
   token: string,
   technicianId: string,
-  payload: {
-    text?: string;
-    attachments?: BackendChatAttachment[];
-  },
+  payload: BackendChatMessageCreatePayload,
 ): Promise<BackendChatMessage> {
   return requestJson<BackendChatMessage>(`/admin/chat/conversations/${technicianId}/messages`, {
     method: 'POST',
@@ -1918,10 +1945,7 @@ export async function sendAdminChatMessage(
 
 export async function broadcastAdminChatMessage(
   token: string,
-  payload: {
-    text?: string;
-    attachments?: BackendChatAttachment[];
-  },
+  payload: BackendChatMessageCreatePayload,
 ): Promise<BackendChatMessage[]> {
   return requestJson<BackendChatMessage[]>('/admin/chat/broadcast', {
     method: 'POST',
@@ -2893,10 +2917,7 @@ export async function fetchTechnicianChatThreadMessages(
 export async function sendTechnicianChatThreadMessage(
   token: string,
   conversationId: string,
-  payload: {
-    text?: string;
-    attachments?: BackendChatAttachment[];
-  },
+  payload: BackendChatMessageCreatePayload,
 ): Promise<BackendChatMessage> {
   const legacyTechnicianId = parseLegacyDirectTechnicianId(conversationId);
   if (legacyTechnicianId) {
@@ -2968,10 +2989,7 @@ export async function fetchTechnicianPinnedChatMessages(
 
 export async function sendTechnicianChatMessage(
   token: string,
-  payload: {
-    text?: string;
-    attachments?: BackendChatAttachment[];
-  },
+  payload: BackendChatMessageCreatePayload,
 ): Promise<BackendChatMessage> {
   return requestJson<BackendChatMessage>('/technicians/me/chat/messages', {
     method: 'POST',
