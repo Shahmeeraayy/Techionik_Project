@@ -1173,6 +1173,7 @@ export type BackendTechnicianPerformanceRow = {
   refusal_rate?: number;
   on_time_rate?: number;
   total_service_line_value?: number;
+  work_hours?: number;
 };
 
 export type BackendDealershipPerformanceRow = {
@@ -1311,6 +1312,13 @@ export type BackendPaymentMethodRow = {
   amount: number;
 };
 
+export type BackendPaymentBreakdownRow = {
+  label: string;
+  count: number;
+  amount: number;
+  kind?: string;
+};
+
 export type BackendPaymentStatusRow = {
   status: string;
   count: number;
@@ -1324,6 +1332,7 @@ export type BackendPaymentMetrics = {
   failed_payments: number;
   payment_amount_by_method: BackendPaymentMethodRow[];
   payment_status: BackendPaymentStatusRow[];
+  payment_breakdown?: BackendPaymentBreakdownRow[];
 };
 
 export type BackendReportsOverview = {

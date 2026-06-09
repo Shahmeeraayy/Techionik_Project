@@ -34,6 +34,7 @@ from ..schemas.reporting import (
     InvoiceStatusRow,
     InvoicingDetailRow,
     JobCompletionMetrics,
+    PaymentBreakdownRow,
     PaymentMethodRow,
     PaymentMetrics,
     PaymentStatusRow,
@@ -540,6 +541,17 @@ class ReportsService:
             refusal_rate = round((refusals / total_actions) * 100, 1) if total_actions else 0.0
             completion_rate = round((len(completed) / len(tech_jobs)) * 100, 1) if tech_jobs else 0.0
             tech_revenue = round(float(revenue_by_tech.get(row.id, 0.0)), 2)
+            tech_work_minutes = sum(
+                int(attendance.active_work_minutes or 0)
+                for attendance in self.db.query(TechnicianAttendanceSession)
+                .filter(
+                    TechnicianAttendanceSession.technician_id == row.id,
+                    TechnicianAttendanceSession.clock_in_at >= start_dt,
+                    TechnicianAttendanceSession.clock_in_at <= end_dt,
+                )
+                .all()
+            )
+            tech_work_hours = round(_hours_label(tech_work_minutes), 2)
 
             tech_rows.append(
                 TechnicianPerformanceRow(
@@ -554,6 +566,7 @@ class ReportsService:
                     refusal_rate=refusal_rate,
                     on_time_rate=completion_rate,
                     total_service_line_value=tech_revenue,
+                    work_hours=tech_work_hours,
                 )
             )
         tech_rows.sort(key=lambda item: item.name.lower())
@@ -860,17 +873,35 @@ class ReportsService:
             sum(float(row.total or 0) for row in invoices_in_range if _normalize_invoice_state(row.status) == "Paid"),
             2,
         )
+        pending_amount = round(
+            sum(
+                float(row.total or 0)
+                for row in invoices_in_range
+                if _normalize_invoice_state(row.status).lower() in PENDING_PAYMENT_STATES
+            ),
+            2,
+        )
+        failed_amount = round(
+            sum(float(row.total or 0) for row in invoices_in_range if _normalize_invoice_state(row.status) == "Cancelled"),
+            2,
+        )
+        payment_breakdown = [
+            PaymentBreakdownRow(label="Paid", count=sum(1 for row in invoices_in_range if _normalize_invoice_state(row.status) == "Paid"), amount=total_paid_amount, kind="status"),
+            PaymentBreakdownRow(label="Pending", count=sum(1 for row in invoices_in_range if _normalize_invoice_state(row.status).lower() in PENDING_PAYMENT_STATES), amount=pending_amount, kind="status"),
+            PaymentBreakdownRow(label="Failed / Cancelled", count=sum(1 for row in invoices_in_range if _normalize_invoice_state(row.status) == "Cancelled"), amount=failed_amount, kind="status"),
+        ]
         payment_metrics = PaymentMetrics(
             total_payments_received=sum(1 for row in invoices_in_range if _normalize_invoice_state(row.status) == "Paid"),
             total_paid_amount=total_paid_amount,
             pending_payments=sum(
                 1 for row in invoices_in_range if _normalize_invoice_state(row.status).lower() in PENDING_PAYMENT_STATES
             ),
-            failed_payments=0,
+            failed_payments=sum(1 for row in invoices_in_range if _normalize_invoice_state(row.status) == "Cancelled"),
             payment_amount_by_method=[
                 PaymentMethodRow(method="Unspecified", amount=total_paid_amount)
             ] if total_paid_amount > 0 else [],
             payment_status=payment_status_rows,
+            payment_breakdown=payment_breakdown,
         )
 
         return ReportsOverviewResponse(

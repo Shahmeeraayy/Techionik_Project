@@ -21,6 +21,7 @@ from ..core.config import (
     SMTP_PASSWORD,
     SMTP_PORT,
     SMTP_USERNAME,
+    get_env,
 )
 
 logger = logging.getLogger(__name__)
@@ -61,9 +62,32 @@ def smtp_config_summary() -> dict:
     }
 
 
+def resolve_notification_recipients(to: str | Iterable[str]) -> list[str]:
+    """Expand recipient addresses for QA/testing mode without changing normal logic."""
+    if isinstance(to, str):
+        recipients = [item.strip() for item in to.split(",") if item and item.strip()]
+    else:
+        recipients = [item.strip() for item in to if item and item.strip()]
+
+    if not recipients:
+        return []
+
+    test_mode_enabled = get_env("NOTIFICATION_TEST_MODE", "false").strip().lower() in {"1", "true", "yes", "on"}
+    test_recipient = get_env("NOTIFICATION_TEST_RECIPIENT", "").strip().lower()
+    if not test_mode_enabled or not test_recipient:
+        return recipients
+
+    normalized_recipients = {recipient.lower() for recipient in recipients}
+    if test_recipient in normalized_recipients:
+        return recipients
+
+    # QA/testing-only recipient; remove or disable before production.
+    return [*recipients, test_recipient]
+
+
 def _build_message(
     *,
-    to: str,
+    to: str | Iterable[str],
     from_email: str | None = None,
     from_name: str | None = None,
     reply_to: str | None = None,
@@ -77,7 +101,7 @@ def _build_message(
     resolved_from_email = from_email or SMTP_FROM_EMAIL
     resolved_from_name = from_name if from_name is not None else SMTP_FROM_NAME
     msg["From"] = f"{resolved_from_name} <{resolved_from_email}>" if resolved_from_name else resolved_from_email
-    msg["To"] = to
+    msg["To"] = ", ".join(resolve_notification_recipients(to))
     if reply_to:
         msg["Reply-To"] = reply_to
 
@@ -196,17 +220,18 @@ def _send(
     html_body: str | None = None,
     attachments: Iterable[EmailAttachment] | None = None,
 ) -> None:
-    msg = _build_message(to=to, from_email=from_email, from_name=from_name, reply_to=reply_to, subject=subject, body=body, html_body=html_body, attachments=attachments)
+    effective_recipients = resolve_notification_recipients(to)
+    msg = _build_message(to=effective_recipients, from_email=from_email, from_name=from_name, reply_to=reply_to, subject=subject, body=body, html_body=html_body, attachments=attachments)
     envelope_from = from_email or SMTP_FROM_EMAIL
     if SMTP_PORT == 465:
         with smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT, timeout=30) as server:
             server.login(SMTP_USERNAME, SMTP_PASSWORD)
-            server.sendmail(envelope_from, [to], msg.as_string())
+            server.sendmail(envelope_from, effective_recipients, msg.as_string())
     else:
         with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=30) as server:
             server.ehlo()
             server.starttls()
             server.ehlo()
             server.login(SMTP_USERNAME, SMTP_PASSWORD)
-            server.sendmail(envelope_from, [to], msg.as_string())
-    logger.info("Email sent to %s — %s", to, subject)
+            server.sendmail(envelope_from, effective_recipients, msg.as_string())
+    logger.info("Email sent to %s — %s", ", ".join(effective_recipients), subject)

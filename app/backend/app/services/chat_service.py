@@ -6,6 +6,7 @@ from uuid import UUID, uuid4
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
+from ..core.config import COMPANY_EMAIL, COMPANY_NAME
 from ..core.enums import AuditEntityType, UserRole
 from ..core.security import AuthenticatedUser
 from ..models.admin_user import AdminUser
@@ -30,6 +31,7 @@ from ..schemas.chat import (
 from .audit_service import AuditService
 from .availability_service import AvailabilityService
 from .chat_storage_service import ChatStorageService
+from .email_service import send_platform_email
 from .notification_service import NotificationService
 
 
@@ -647,7 +649,19 @@ class ChatService:
                     "href": f"/tech/chat?conversationId={conversation.id}",
                 },
             )
+            for recipient_user_id in recipient_user_ids:
+                technician = self.repo.get_technician_by_id(recipient_user_id)
+                if technician and technician.email:
+                    send_platform_email(
+                        to=technician.email,
+                        from_email=COMPANY_EMAIL,
+                        from_name=COMPANY_NAME,
+                        reply_to=COMPANY_EMAIL,
+                        subject="New message received",
+                        body=f"You received a new message from {sender_name}.",
+                    )
             return
+
         self.notification_service.create_admin_notifications(
             event_type="new_message",
             title="New Message",
@@ -657,6 +671,18 @@ class ChatService:
                 "href": f"/admin/chat?conversationId={conversation.id}",
             },
         )
+        tenant_id = getattr(self.current_user, "tenant_id", None)
+        if tenant_id is not None:
+            for admin_user in self.db.query(AdminUser).filter(AdminUser.tenant_id == tenant_id, AdminUser.status == "active").all():
+                if admin_user.email:
+                    send_platform_email(
+                        to=admin_user.email,
+                        from_email=COMPANY_EMAIL,
+                        from_name=COMPANY_NAME,
+                        reply_to=COMPANY_EMAIL,
+                        subject="New message received",
+                        body=f"You received a new message from {sender_name}.",
+                    )
 
     def list_admin_conversations(self, search: Optional[str] = None) -> List[AdminChatConversationSummaryResponse]:
         for technician in self.repo.list_technicians():

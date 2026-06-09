@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.orm import aliased
 
 from ...api import deps
+from ...core.config import COMPANY_EMAIL, COMPANY_NAME
 from ...core.enums import JobWorkflowStatus, UserRole
 from ...core.job_status import DispatchJobStatus, db_status_from_dispatch_status, normalize_dispatch_job_status
 from ...core.security import AuthenticatedUser
@@ -24,6 +25,7 @@ from ...schemas.admin_jobs import (
     AdminJobTimelineEventResponse,
     AdminJobUpdateRequest,
 )
+from ...services.email_service import send_platform_email
 from ...services.job_services_service import JobServicesService
 from ...services.notification_service import NotificationService
 from ...services.pre_assignment_service import PreAssignmentService
@@ -475,6 +477,15 @@ def update_admin_job_assignment(
                 "href": f"/tech/current-job?jobId={job_row.id}",
             },
         )
+        if assigned_technician.email:
+            send_platform_email(
+                to=assigned_technician.email,
+                from_email=COMPANY_EMAIL,
+                from_name=COMPANY_NAME,
+                reply_to=COMPANY_EMAIL,
+                subject=f"New job assigned: {job_row.job_code}",
+                body=f"You have been assigned a new job: {job_row.job_code}.",
+            )
     db.commit()
     db.refresh(job_row)
 
@@ -550,6 +561,15 @@ def confirm_admin_job(
                     "href": f"/tech/current-job?jobId={job_row.id}",
                 },
             )
+            if assigned_technician.email:
+                send_platform_email(
+                    to=assigned_technician.email,
+                    from_email=COMPANY_EMAIL,
+                    from_name=COMPANY_NAME,
+                    reply_to=COMPANY_EMAIL,
+                    subject=f"New job assigned: {job_row.job_code}",
+                    body=f"You have been assigned a new job: {job_row.job_code}.",
+                )
 
     db.commit()
     db.refresh(job_row)

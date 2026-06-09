@@ -914,6 +914,9 @@ class InvoiceApiTests(unittest.TestCase):
         self.assertEqual(payload["payment_metrics"]["total_payments_received"], 1)
         self.assertEqual(payload["payment_metrics"]["pending_payments"], 1)
         self.assertEqual(payload["payment_metrics"]["total_paid_amount"], 150.0)
+        self.assertEqual(payload["technician_performance"][0]["work_hours"], 7.5)
+        self.assertGreaterEqual(len(payload["payment_metrics"]["payment_breakdown"]), 2)
+        self.assertEqual(payload["payment_metrics"]["payment_breakdown"][0]["label"], "Paid")
 
         service_row = next(
             (row for row in payload["service_category_analytics"]["categories"] if row["category"] == "Electrical"),

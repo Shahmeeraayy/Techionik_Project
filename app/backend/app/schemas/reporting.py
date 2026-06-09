@@ -79,6 +79,7 @@ class TechnicianPerformanceRow(BaseModel):
     refusal_rate: float = 0
     on_time_rate: float = 0
     total_service_line_value: float = 0
+    work_hours: float = 0
 
 
 class DealershipPerformanceRow(BaseModel):
@@ -217,6 +218,13 @@ class PaymentMethodRow(BaseModel):
     amount: float
 
 
+class PaymentBreakdownRow(BaseModel):
+    label: str
+    count: int
+    amount: float
+    kind: str = "status"
+
+
 class PaymentStatusRow(BaseModel):
     status: str
     count: int
@@ -230,6 +238,7 @@ class PaymentMetrics(BaseModel):
     failed_payments: int
     payment_amount_by_method: List[PaymentMethodRow] = Field(default_factory=list)
     payment_status: List[PaymentStatusRow] = Field(default_factory=list)
+    payment_breakdown: List[PaymentBreakdownRow] = Field(default_factory=list)
 
 
 class ReportsOverviewResponse(BaseModel):

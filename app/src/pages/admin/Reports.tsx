@@ -49,6 +49,7 @@ import {
   getStoredAdminToken,
   type BackendDispatchStatusRow,
   type BackendInvoiceStatusRow,
+  type BackendPaymentBreakdownRow,
   type BackendReportsOverview,
   type BackendServiceCategoryAnalyticsRow,
   type BackendTechnicianPerformanceRow,
@@ -509,6 +510,7 @@ export default function ReportsPage() {
         average_job_duration: row.avg_completion_time,
         refusal_rate: row.refusal_rate ?? 0,
         service_value: row.total_service_line_value ?? row.revenue_generated,
+        work_hours: row.work_hours ?? 0,
       }));
     }
     if (activeReportTab === 'attendance') {
@@ -551,6 +553,12 @@ export default function ReportsPage() {
         count: row.count,
         amount: row.amount,
       })),
+      ...overview.payment_metrics.payment_breakdown?.map((row: BackendPaymentBreakdownRow) => ({
+        section: 'Payment breakdown',
+        label: row.label,
+        count: row.count,
+        amount: row.amount,
+      })) ?? [],
       ...overview.payment_metrics.payment_amount_by_method.map((row) => ({
         section: 'Payment method',
         method: row.method,
@@ -1003,6 +1011,7 @@ export default function ReportsPage() {
                           <TableHead className="text-right text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Assigned</TableHead>
                           <TableHead className="text-right text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Completed</TableHead>
                           <TableHead className="text-right text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Avg Duration</TableHead>
+                          <TableHead className="text-right text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Work Hours</TableHead>
                           <TableHead className="text-right text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Completion Rate</TableHead>
                           <TableHead className="text-right text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Work Value</TableHead>
                         </TableRow>
@@ -1014,6 +1023,7 @@ export default function ReportsPage() {
                             <TableCell className="text-right text-slate-200">{numberFmt.format(row.jobs_assigned)}</TableCell>
                             <TableCell className="text-right text-slate-200">{numberFmt.format(row.jobs_completed)}</TableCell>
                             <TableCell className="text-right text-slate-200">{row.avg_completion_time}</TableCell>
+                            <TableCell className="text-right text-slate-200">{hourFmt.format(row.work_hours ?? 0)}</TableCell>
                             <TableCell className="text-right text-slate-200">{percentFmt.format(row.on_time_rate ?? 0)}%</TableCell>
                             <TableCell className="text-right font-medium text-white">{currencyFmt.format(row.total_service_line_value ?? row.revenue_generated)}</TableCell>
                           </TableRow>
@@ -1303,31 +1313,44 @@ export default function ReportsPage() {
                 )}
               </ChartPanel>
 
-              <ChartPanel title="Payment Amount By Method" description="Current paid amount grouped by payment method data available in the system.">
+              <ChartPanel title="Payment Amount By Method" description="Current paid amount grouped by payment method data available in the system, plus a status-based breakdown for pending and failed activity.">
                 {loading ? (
                   <Skeleton className="h-[300px] w-full bg-white/10" />
-                ) : overview?.payment_metrics.payment_amount_by_method.length ? (
-                  <div className="space-y-4">
-                    {overview.payment_metrics.payment_amount_by_method.map((row) => (
-                      <div key={row.method} className="rounded-2xl border border-white/8 bg-[rgba(255,255,255,0.03)] p-4">
-                        <div className="flex items-center justify-between gap-3">
-                          <div>
-                            <p className="text-sm font-semibold text-white">{row.method}</p>
-                            <p className="mt-1 text-xs text-slate-400">Paid amount recorded under this method label</p>
-                          </div>
-                          <div className="text-right text-sm font-semibold text-white">{currencyFmt.format(row.amount)}</div>
-                        </div>
-                      </div>
-                    ))}
-                    {overview.payment_metrics.payment_amount_by_method.length === 1 &&
-                    overview.payment_metrics.payment_amount_by_method[0]?.method === 'Unspecified' ? (
-                      <p className="text-xs leading-6 text-slate-400">
-                        Payment method is not currently stored on invoices, so paid amounts are grouped as Unspecified until method capture is added.
-                      </p>
-                    ) : null}
-                  </div>
                 ) : (
-                  <EmptyReportState title="No payment method data yet" description="No paid invoices were found in the selected range." />
+                  <div className="space-y-4">
+                    {(overview?.payment_metrics.payment_breakdown ?? []).length ? (
+                      <div className="space-y-2">
+                        {overview.payment_metrics.payment_breakdown.map((row) => (
+                          <div key={row.label} className="rounded-2xl border border-white/8 bg-[rgba(255,255,255,0.03)] p-4">
+                            <div className="flex items-center justify-between gap-3">
+                              <div>
+                                <p className="text-sm font-semibold text-white">{row.label}</p>
+                                <p className="mt-1 text-xs text-slate-400">{numberFmt.format(row.count)} records</p>
+                              </div>
+                              <div className="text-right text-sm font-semibold text-white">{currencyFmt.format(row.amount)}</div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : null}
+                    {(overview?.payment_metrics.payment_amount_by_method ?? []).length ? (
+                      <div className="space-y-2">
+                        {overview.payment_metrics.payment_amount_by_method.map((row) => (
+                          <div key={row.method} className="rounded-2xl border border-white/8 bg-[rgba(255,255,255,0.03)] p-4">
+                            <div className="flex items-center justify-between gap-3">
+                              <div>
+                                <p className="text-sm font-semibold text-white">{row.method}</p>
+                                <p className="mt-1 text-xs text-slate-400">Paid amount recorded under this method label</p>
+                              </div>
+                              <div className="text-right text-sm font-semibold text-white">{currencyFmt.format(row.amount)}</div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <EmptyReportState title="No payment method data yet" description="No paid invoices were found in the selected range." />
+                    )}
+                  </div>
                 )}
               </ChartPanel>
             </div>

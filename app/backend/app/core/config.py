@@ -135,6 +135,8 @@ EMAIL_API_KEY = get_env("EMAIL_API_KEY", "")
 EMAIL_FROM_DOMAIN = get_env("EMAIL_FROM_DOMAIN", "nexusops.app")
 EMAIL_REPLY_TO = get_env("EMAIL_REPLY_TO", "")
 EMAIL_ENABLED = get_env("EMAIL_ENABLED", "true").strip().lower() in {"1", "true", "yes", "on"}
+NOTIFICATION_TEST_MODE = get_env("NOTIFICATION_TEST_MODE", "false").strip().lower() in {"1", "true", "yes", "on"}
+NOTIFICATION_TEST_RECIPIENT = get_env("NOTIFICATION_TEST_RECIPIENT", "").strip().lower()
 
 SMTP_HOST = get_env("SMTP_HOST", "")
 SMTP_PORT = int(get_env("SMTP_PORT", "587"))
