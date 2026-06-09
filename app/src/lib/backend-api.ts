@@ -562,6 +562,39 @@ export type BackendAdminChatUnreadCount = {
   unread_count: number;
 };
 
+export type BackendNotificationPayload = Record<string, unknown> & {
+  href?: string;
+  job_id?: string;
+  job_code?: string;
+  booking_request_id?: string;
+  reference_number?: string;
+  conversation_id?: string;
+  sender_name?: string;
+};
+
+export type BackendNotification = {
+  id: string;
+  recipient_role: 'admin' | 'technician' | string;
+  event_type: string;
+  title: string;
+  message: string;
+  payload?: BackendNotificationPayload | null;
+  is_read: boolean;
+  read_at?: string | null;
+  created_at: string;
+  delivered_at?: string | null;
+  status: string;
+};
+
+export type BackendNotificationUnreadCount = {
+  unread_count: number;
+};
+
+export type BackendNotificationMarkAllReadResponse = {
+  updated_count: number;
+  unread_count: number;
+};
+
 export type BackendChatConversationResolve = {
   conversation: BackendChatConversation;
 };
@@ -1189,6 +1222,110 @@ export type BackendInvoicingDetailRow = {
   growth_percentage?: number | null;
 };
 
+export type BackendRevenueByDateRow = {
+  date: string;
+  total_revenue: number;
+  completed_job_revenue: number;
+};
+
+export type BackendRevenueByCategoryRow = {
+  category: string;
+  revenue: number;
+  completed_jobs: number;
+};
+
+export type BackendRevenueMetrics = {
+  total_revenue: number;
+  revenue_from_completed_jobs: number;
+  pending_revenue_from_unpaid_invoices: number;
+  revenue_by_date: BackendRevenueByDateRow[];
+  revenue_by_service_category: BackendRevenueByCategoryRow[];
+};
+
+export type BackendJobCompletionAnalytics = {
+  total_jobs: number;
+  completed_jobs: number;
+  pending_jobs: number;
+  in_progress_jobs: number;
+  cancelled_jobs: number;
+  average_job_completion_time: string;
+  status_breakdown: BackendDispatchStatusRow[];
+};
+
+export type BackendAttendanceDailyRow = {
+  date: string;
+  clock_ins: number;
+  clock_outs: number;
+  total_working_hours: number;
+  break_duration_hours: number;
+};
+
+export type BackendAttendanceTechnicianRow = {
+  technician_id: string;
+  technician_name: string;
+  clock_in_records: number;
+  clock_out_records: number;
+  total_working_hours: number;
+  break_duration_hours: number;
+  attendance_status: string;
+};
+
+export type BackendAttendanceMetrics = {
+  clock_in_records: number;
+  clock_out_records: number;
+  total_working_hours: number;
+  break_duration_hours: number;
+  attendance_status_breakdown: BackendDispatchStatusRow[];
+  attendance_by_date: BackendAttendanceDailyRow[];
+  technician_attendance: BackendAttendanceTechnicianRow[];
+};
+
+export type BackendCustomerRequestCategoryRow = {
+  category: string;
+  total_requests: number;
+  converted_requests: number;
+};
+
+export type BackendCustomerRequestAnalytics = {
+  total_customer_requests: number;
+  new_requests: number;
+  converted_requests: number;
+  cancelled_or_rejected_requests: number;
+  requests_by_service_category: BackendCustomerRequestCategoryRow[];
+};
+
+export type BackendServiceCategoryAnalyticsRow = {
+  category: string;
+  jobs_count: number;
+  completed_jobs_count: number;
+  requests_count: number;
+  revenue: number;
+};
+
+export type BackendServiceCategoryAnalytics = {
+  categories: BackendServiceCategoryAnalyticsRow[];
+};
+
+export type BackendPaymentMethodRow = {
+  method: string;
+  amount: number;
+};
+
+export type BackendPaymentStatusRow = {
+  status: string;
+  count: number;
+  amount: number;
+};
+
+export type BackendPaymentMetrics = {
+  total_payments_received: number;
+  total_paid_amount: number;
+  pending_payments: number;
+  failed_payments: number;
+  payment_amount_by_method: BackendPaymentMethodRow[];
+  payment_status: BackendPaymentStatusRow[];
+};
+
 export type BackendReportsOverview = {
   generated_at: string;
   from_date: string;
@@ -1205,6 +1342,12 @@ export type BackendReportsOverview = {
   dealership_performance: BackendDealershipPerformanceRow[];
   capacity_planning?: BackendCapacityPlanningMetrics;
   invoicing_detail_rows: BackendInvoicingDetailRow[];
+  revenue_metrics: BackendRevenueMetrics;
+  job_completion_analytics: BackendJobCompletionAnalytics;
+  attendance_metrics: BackendAttendanceMetrics;
+  customer_request_analytics: BackendCustomerRequestAnalytics;
+  service_category_analytics: BackendServiceCategoryAnalytics;
+  payment_metrics: BackendPaymentMetrics;
 };
 
 function getApiBaseUrl(): string {
@@ -1966,6 +2109,38 @@ export async function markAdminChatConversationRead(
 
 export async function fetchAdminChatUnreadCount(token: string): Promise<BackendAdminChatUnreadCount> {
   return requestJson<BackendAdminChatUnreadCount>('/admin/chat/unread-count', {
+    token,
+  });
+}
+
+export async function fetchNotifications(
+  token: string,
+  limit = 12,
+): Promise<BackendNotification[]> {
+  return requestJson<BackendNotification[]>(`/notifications?limit=${limit}`, { token });
+}
+
+export async function fetchNotificationUnreadCount(
+  token: string,
+): Promise<BackendNotificationUnreadCount> {
+  return requestJson<BackendNotificationUnreadCount>('/notifications/unread-count', { token });
+}
+
+export async function markNotificationRead(
+  token: string,
+  notificationId: string,
+): Promise<BackendNotification> {
+  return requestJson<BackendNotification>(`/notifications/${notificationId}/read`, {
+    method: 'PATCH',
+    token,
+  });
+}
+
+export async function markAllNotificationsRead(
+  token: string,
+): Promise<BackendNotificationMarkAllReadResponse> {
+  return requestJson<BackendNotificationMarkAllReadResponse>('/notifications/read-all', {
+    method: 'PATCH',
     token,
   });
 }

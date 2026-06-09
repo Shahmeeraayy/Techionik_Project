@@ -2,12 +2,14 @@ import { Briefcase, Calendar, Clock, MessageSquareText, User, CalendarClock, Sun
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/components/theme-provider';
+import { getStoredTechnicianToken } from '@/lib/backend-api';
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { NotificationCenter } from '@/components/notifications/NotificationCenter';
 
 export type TechnicianBottomNavTab = 'jobs' | 'current-job' | 'history' | 'chat' | 'profile' | 'attendance';
 
@@ -63,6 +65,7 @@ export default function TechnicianBottomNav({
     routeBase: string;
 }) {
     const navigate = useNavigate();
+    const notificationToken = routeBase.startsWith('/admin/tech-preview/') ? null : getStoredTechnicianToken();
     const tabs = [
         { id: 'jobs', label: 'Jobs', icon: Briefcase, path: `${routeBase}/jobs` },
         { id: 'current-job', label: 'Current Job', icon: Calendar, path: `${routeBase}/current-job` },
@@ -74,7 +77,13 @@ export default function TechnicianBottomNav({
 
     return (
         <div className="safe-area-bottom pointer-events-none fixed bottom-0 left-0 right-0 z-50 px-3 pb-3 pt-2 sm:px-4">
-            <div className="mx-auto flex w-full max-w-[760px] justify-end px-2 pb-2">
+            <div className="mx-auto flex w-full max-w-[760px] justify-end gap-3 px-2 pb-2">
+                <NotificationCenter
+                    token={notificationToken}
+                    side="top"
+                    align="end"
+                    buttonClassName="tech-theme-toggle pointer-events-auto flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-[0_18px_42px_rgba(15,23,42,0.14)] transition hover:bg-slate-50 hover:text-slate-950 dark:border-white/10 dark:bg-[#111111] dark:text-white dark:shadow-[0_18px_42px_rgba(0,0,0,0.34)] dark:hover:bg-[#1d1d1d]"
+                />
                 <TechnicianThemeToggle />
             </div>
             <div className="tech-nav-dock pointer-events-auto mx-auto w-full max-w-[760px] rounded-[28px] border border-slate-200 bg-white px-2 py-2 shadow-[0_18px_42px_rgba(15,23,42,0.14)] dark:border-white/10 dark:bg-[#111111] dark:shadow-[0_20px_70px_rgba(0,0,0,0.34)]">

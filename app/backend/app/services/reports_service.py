@@ -7,14 +7,22 @@ from typing import Iterable, Optional
 
 from sqlalchemy.orm import Session
 
+from ..models.booking_request import BookingRequest
 from ..models.dealership import Dealership
 from ..models.invoice import Invoice
 from ..models.job import Job
 from ..models.job_rejection import JobRejection
+from ..models.service_catalog import ServiceCatalog
 from ..models.technician import Technician
+from ..models.technician_tracking import TechnicianAttendanceSession
 from ..schemas.reporting import (
+    AttendanceDailyRow,
+    AttendanceMetrics,
+    AttendanceTechnicianRow,
     CapacityPlanningMetrics,
     CapacityUtilizationRow,
+    CustomerRequestAnalyticsMetrics,
+    CustomerRequestCategoryRow,
     DealershipPerformanceRow,
     DispatchOverviewMetrics,
     DispatchStatusRow,
@@ -25,9 +33,18 @@ from ..schemas.reporting import (
     InvoicePerformanceMetrics,
     InvoiceStatusRow,
     InvoicingDetailRow,
+    JobCompletionMetrics,
+    PaymentMethodRow,
+    PaymentMetrics,
+    PaymentStatusRow,
     PeakDemandWindowRow,
     ReportKpis,
     ReportsOverviewResponse,
+    RevenueByCategoryRow,
+    RevenueByDateRow,
+    RevenueMetrics,
+    ServiceCategoryAnalyticsMetrics,
+    ServiceCategoryAnalyticsRow,
     TechnicianPerformanceRow,
     UnderstaffedPeriodRow,
 )
@@ -40,6 +57,11 @@ TAX_CODE_RATES: dict[str, Decimal] = {
     "QST": Decimal("0.09975"),
     "GST_QST": Decimal("0.14975"),
 }
+
+REQUEST_NEW_STATUSES = {"received", "under_review"}
+REQUEST_CONVERTED_STATUSES = {"job_scheduled", "in_progress", "completed"}
+ACTIVE_ATTENDANCE_STATUSES = {"clocked_in", "on_break"}
+PENDING_PAYMENT_STATES = {"draft", "sent", "overdue"}
 
 
 def _to_utc_start(value: date) -> datetime:
@@ -77,6 +99,10 @@ def _duration_label(minutes: float) -> str:
     return f"{hours}h {remainder}m" if remainder > 0 else f"{hours}h"
 
 
+def _hours_label(minutes: int) -> float:
+    return round(max(minutes, 0) / 60, 2)
+
+
 def _normalize_job_status(value: Optional[str]) -> str:
     status = (value or "").strip().lower()
     mapping = {
@@ -107,6 +133,20 @@ def _normalize_invoice_state(value: Optional[str]) -> str:
         "cancelled": "Cancelled",
     }
     return mapping.get(status, "Draft")
+
+
+def _normalize_request_status(value: Optional[str]) -> str:
+    return (value or "").strip().lower()
+
+
+def _normalize_attendance_status(value: Optional[str]) -> str:
+    status = (value or "").strip().lower()
+    mapping = {
+        "clocked_in": "Clocked In",
+        "on_break": "On Break",
+        "clocked_out": "Clocked Out",
+    }
+    return mapping.get(status, "Clocked Out")
 
 
 def _metadata_text(row: Job, *keys: str, default: str = "") -> str:
@@ -190,6 +230,39 @@ def _is_pending_approval_eligible(job: Job, dealership: Optional[Dealership]) ->
     return True
 
 
+def _percent_int(count: int, total: int) -> int:
+    return int(round((count / total) * 100)) if total else 0
+
+
+def _iter_dates(from_date: date, to_date: date) -> list[date]:
+    days = []
+    cursor = from_date
+    while cursor <= to_date:
+        days.append(cursor)
+        cursor += timedelta(days=1)
+    return days
+
+
+def _service_category_from_name(
+    service_name: Optional[str],
+    service_category_by_name: dict[str, str],
+) -> str:
+    normalized = (service_name or "").strip().lower()
+    if not normalized:
+        return "Uncategorized"
+    return service_category_by_name.get(normalized, "Uncategorized")
+
+
+def _request_service_category(
+    row: BookingRequest,
+    service_catalog_by_id: dict,
+    service_category_by_name: dict[str, str],
+) -> str:
+    if row.service_catalog_id in service_catalog_by_id:
+        return service_catalog_by_id[row.service_catalog_id].category or "Uncategorized"
+    return _service_category_from_name(row.service_name, service_category_by_name)
+
+
 class ReportsService:
     def __init__(self, db: Session):
         self.db = db
@@ -206,18 +279,26 @@ class ReportsService:
         all_techs = self.db.query(Technician).order_by(Technician.name.asc()).all()
         tech_by_id = {row.id: row for row in all_techs}
         all_dealerships = self.db.query(Dealership).order_by(Dealership.name.asc()).all()
-        jobs_in_range = (
-            self.db.query(Job)
-            .filter(Job.created_at >= start_dt, Job.created_at <= end_dt)
-            .all()
-        )
+        all_service_catalog = self.db.query(ServiceCatalog).all()
+        service_catalog_by_id = {row.id: row for row in all_service_catalog}
+        service_category_by_name = {
+            (row.name or "").strip().lower(): (row.category or "Uncategorized")
+            for row in all_service_catalog
+            if (row.name or "").strip()
+        }
+
+        all_jobs = self.db.query(Job).all()
+        jobs_in_range = [
+            row
+            for row in all_jobs
+            if (created_at := _ensure_utc(row.created_at)) is not None and start_dt <= created_at <= end_dt
+        ]
         completed_jobs_in_range = [
             row
-            for row in self.db.query(Job).all()
+            for row in all_jobs
             if (
                 (completed_at := _job_completion_timestamp(row)) is not None
-                and completed_at >= start_dt
-                and completed_at <= end_dt
+                and start_dt <= completed_at <= end_dt
             )
         ]
 
@@ -233,8 +314,7 @@ class ReportsService:
             if (
                 _normalize_job_status(job.status) == "Completed"
                 and (completed_at := _job_completion_timestamp(job)) is not None
-                and completed_at >= start_dt
-                and completed_at <= end_dt
+                and start_dt <= completed_at <= end_dt
                 and _is_pending_approval_eligible(job, dealership)
             )
         )
@@ -244,11 +324,9 @@ class ReportsService:
         ]
         busy_tech_ids = {
             row.assigned_tech_id
-            for row in self.db.query(Job)
-            .filter(Job.assigned_tech_id.is_not(None))
-            .filter(Job.status.in_(["ASSIGNED", "IN_PROGRESS", "DELAYED", "assigned", "in_progress", "delayed"]))
-            .all()
+            for row in all_jobs
             if row.assigned_tech_id is not None
+            and (row.status or "").strip().lower() in {"assigned", "in_progress", "delayed"}
         }
         technician_utilization = int(round((len(busy_tech_ids) / len(active_techs)) * 100)) if active_techs else 0
 
@@ -295,29 +373,29 @@ class ReportsService:
         )
 
         status_counts: dict[str, int] = defaultdict(int)
+        urgency_counts: dict[str, int] = defaultdict(int)
+        source_counts: dict[str, int] = defaultdict(int)
+        jobs_by_category_counts: dict[str, int] = defaultdict(int)
         for row in jobs_in_range:
             status_counts[_normalize_job_status(row.status)] += 1
+            urgency_counts[_job_urgency(row)] += 1
+            source_counts[_job_source_channel(row)] += 1
+            jobs_by_category_counts[_service_category_from_name(row.service_type, service_category_by_name)] += 1
+
         dispatch_total = len(jobs_in_range)
         dispatch_performance = [
             DispatchStatusRow(
                 status=key,
                 count=value,
-                percentage=int(round((value / dispatch_total) * 100)) if dispatch_total else 0,
+                percentage=_percent_int(value, dispatch_total),
             )
             for key, value in sorted(status_counts.items(), key=lambda item: item[1], reverse=True)
         ]
-
-        urgency_counts: dict[str, int] = defaultdict(int)
-        source_counts: dict[str, int] = defaultdict(int)
-        for row in jobs_in_range:
-            urgency_counts[_job_urgency(row)] += 1
-            source_counts[_job_source_channel(row)] += 1
-
         jobs_by_urgency = [
             DispatchStatusRow(
                 status=key,
                 count=value,
-                percentage=int(round((value / dispatch_total) * 100)) if dispatch_total else 0,
+                percentage=_percent_int(value, dispatch_total),
             )
             for key, value in sorted(urgency_counts.items(), key=lambda item: item[1], reverse=True)
         ]
@@ -404,16 +482,36 @@ class ReportsService:
         revenue_by_tech: dict = defaultdict(float)
         revenue_by_dealership: dict = defaultdict(float)
         invoice_totals_by_tech: dict = defaultdict(list)
+        revenue_by_date: dict[date, float] = defaultdict(float)
+        completed_revenue_by_date: dict[date, float] = defaultdict(float)
+        revenue_by_category: dict[str, float] = defaultdict(float)
+        completed_jobs_by_category_counts: dict[str, int] = defaultdict(int)
+        completed_job_revenue = 0.0
+
+        for row in completed_jobs_in_range:
+            completed_jobs_by_category_counts[_service_category_from_name(row.service_type, service_category_by_name)] += 1
+
         for invoice in invoices_in_range:
+            invoice_amount = float(invoice.total or 0)
+            created_at = _ensure_utc(invoice.created_at)
+            if created_at is not None:
+                revenue_by_date[created_at.date()] += invoice_amount
+
             primary_job = primary_jobs_by_invoice.get(invoice.id)
             if primary_job is None:
                 continue
-            amount = float(invoice.total or 0)
+
+            category = _service_category_from_name(primary_job.service_type, service_category_by_name)
+            revenue_by_category[category] += invoice_amount
+            if _normalize_job_status(primary_job.status) == "Completed":
+                completed_job_revenue += invoice_amount
+                if created_at is not None:
+                    completed_revenue_by_date[created_at.date()] += invoice_amount
             if primary_job.assigned_tech_id is not None:
-                revenue_by_tech[primary_job.assigned_tech_id] += amount
-                invoice_totals_by_tech[primary_job.assigned_tech_id].append(amount)
+                revenue_by_tech[primary_job.assigned_tech_id] += invoice_amount
+                invoice_totals_by_tech[primary_job.assigned_tech_id].append(invoice_amount)
             if primary_job.dealership_id is not None:
-                revenue_by_dealership[primary_job.dealership_id] += amount
+                revenue_by_dealership[primary_job.dealership_id] += invoice_amount
 
         jobs_by_tech: dict = defaultdict(list)
         for row in jobs_in_range:
@@ -440,7 +538,7 @@ class ReportsService:
             refusals = rejection_count_by_tech.get(row.id, 0)
             total_actions = len(tech_jobs) + refusals
             refusal_rate = round((refusals / total_actions) * 100, 1) if total_actions else 0.0
-            on_time_rate = round(((len(completed) - delays) / len(completed)) * 100, 1) if completed else 0.0
+            completion_rate = round((len(completed) / len(tech_jobs)) * 100, 1) if tech_jobs else 0.0
             tech_revenue = round(float(revenue_by_tech.get(row.id, 0.0)), 2)
 
             tech_rows.append(
@@ -454,7 +552,7 @@ class ReportsService:
                     refusals_count=refusals,
                     revenue_generated=tech_revenue,
                     refusal_rate=refusal_rate,
-                    on_time_rate=on_time_rate,
+                    on_time_rate=completion_rate,
                     total_service_line_value=tech_revenue,
                 )
             )
@@ -573,6 +671,208 @@ class ReportsService:
             )
         invoicing_detail_rows.sort(key=lambda item: item.approved_amount, reverse=True)
 
+        revenue_metrics = RevenueMetrics(
+            total_revenue=round(invoice_total, 2),
+            revenue_from_completed_jobs=round(completed_job_revenue, 2),
+            pending_revenue_from_unpaid_invoices=round(
+                sum(
+                    float(row.total or 0)
+                    for row in invoices_in_range
+                    if _normalize_invoice_state(row.status).lower() in PENDING_PAYMENT_STATES
+                ),
+                2,
+            ),
+            revenue_by_date=[
+                RevenueByDateRow(
+                    date=cursor.isoformat(),
+                    total_revenue=round(revenue_by_date.get(cursor, 0.0), 2),
+                    completed_job_revenue=round(completed_revenue_by_date.get(cursor, 0.0), 2),
+                )
+                for cursor in _iter_dates(from_date, to_date)
+            ],
+            revenue_by_service_category=[
+                RevenueByCategoryRow(
+                    category=category,
+                    revenue=round(amount, 2),
+                    completed_jobs=completed_jobs_by_category_counts.get(category, 0),
+                )
+                for category, amount in sorted(revenue_by_category.items(), key=lambda item: item[1], reverse=True)
+            ],
+        )
+
+        job_completion_analytics = JobCompletionMetrics(
+            total_jobs=len(jobs_in_range),
+            completed_jobs=status_counts.get("Completed", 0),
+            pending_jobs=sum(status_counts.get(key, 0) for key in ["Pending", "Pending Review", "Pending Admin Confirmation", "Scheduled"]),
+            in_progress_jobs=status_counts.get("In Progress", 0) + status_counts.get("Delayed", 0),
+            cancelled_jobs=status_counts.get("Cancelled", 0),
+            average_job_completion_time=_duration_label(avg_completion_minutes),
+            status_breakdown=dispatch_performance,
+        )
+
+        booking_requests_in_range = (
+            self.db.query(BookingRequest)
+            .filter(BookingRequest.created_at >= start_dt, BookingRequest.created_at <= end_dt)
+            .all()
+        )
+        request_category_counts: dict[str, dict[str, int]] = defaultdict(lambda: {"total": 0, "converted": 0})
+        converted_request_count = 0
+        new_request_count = 0
+        cancelled_or_rejected_count = 0
+        for row in booking_requests_in_range:
+            normalized_status = _normalize_request_status(row.status)
+            category = _request_service_category(row, service_catalog_by_id, service_category_by_name)
+            request_category_counts[category]["total"] += 1
+            if normalized_status in REQUEST_NEW_STATUSES:
+                new_request_count += 1
+            if normalized_status in REQUEST_CONVERTED_STATUSES:
+                converted_request_count += 1
+                request_category_counts[category]["converted"] += 1
+            if normalized_status in {"cancelled", "rejected"}:
+                cancelled_or_rejected_count += 1
+
+        customer_request_analytics = CustomerRequestAnalyticsMetrics(
+            total_customer_requests=len(booking_requests_in_range),
+            new_requests=new_request_count,
+            converted_requests=converted_request_count,
+            cancelled_or_rejected_requests=cancelled_or_rejected_count,
+            requests_by_service_category=[
+                CustomerRequestCategoryRow(
+                    category=category,
+                    total_requests=counts["total"],
+                    converted_requests=counts["converted"],
+                )
+                for category, counts in sorted(
+                    request_category_counts.items(),
+                    key=lambda item: (item[1]["total"], item[1]["converted"]),
+                    reverse=True,
+                )
+            ],
+        )
+
+        attendance_sessions_in_range = (
+            self.db.query(TechnicianAttendanceSession)
+            .filter(TechnicianAttendanceSession.clock_in_at >= start_dt, TechnicianAttendanceSession.clock_in_at <= end_dt)
+            .all()
+        )
+        current_attendance_sessions = {
+            row.technician_id: row
+            for row in self.db.query(TechnicianAttendanceSession)
+            .filter(TechnicianAttendanceSession.status.in_(list(ACTIVE_ATTENDANCE_STATUSES)))
+            .all()
+        }
+
+        attendance_by_date_agg: dict[date, dict[str, float]] = defaultdict(
+            lambda: {"clock_ins": 0, "clock_outs": 0, "work_minutes": 0.0, "break_minutes": 0.0}
+        )
+        attendance_by_tech: dict = defaultdict(
+            lambda: {"clock_ins": 0, "clock_outs": 0, "work_minutes": 0.0, "break_minutes": 0.0}
+        )
+        for row in attendance_sessions_in_range:
+            clock_in_at = _ensure_utc(row.clock_in_at)
+            if clock_in_at is None:
+                continue
+            day = clock_in_at.date()
+            attendance_by_date_agg[day]["clock_ins"] += 1
+            attendance_by_date_agg[day]["work_minutes"] += float(row.active_work_minutes or 0)
+            attendance_by_date_agg[day]["break_minutes"] += float(row.break_minutes or 0)
+            if row.clock_out_at is not None:
+                attendance_by_date_agg[day]["clock_outs"] += 1
+
+            attendance_by_tech[row.technician_id]["clock_ins"] += 1
+            attendance_by_tech[row.technician_id]["work_minutes"] += float(row.active_work_minutes or 0)
+            attendance_by_tech[row.technician_id]["break_minutes"] += float(row.break_minutes or 0)
+            if row.clock_out_at is not None:
+                attendance_by_tech[row.technician_id]["clock_outs"] += 1
+
+        technician_attendance_rows: list[AttendanceTechnicianRow] = []
+        attendance_status_counts: dict[str, int] = defaultdict(int)
+        for tech_id, metrics in attendance_by_tech.items():
+            technician = tech_by_id.get(tech_id)
+            status = _normalize_attendance_status(
+                current_attendance_sessions.get(tech_id).status if tech_id in current_attendance_sessions else "clocked_out"
+            )
+            attendance_status_counts[status] += 1
+            technician_attendance_rows.append(
+                AttendanceTechnicianRow(
+                    technician_id=str(tech_id),
+                    technician_name=(technician.name if technician is not None else "Unknown Technician"),
+                    clock_in_records=int(metrics["clock_ins"]),
+                    clock_out_records=int(metrics["clock_outs"]),
+                    total_working_hours=_hours_label(int(metrics["work_minutes"])),
+                    break_duration_hours=_hours_label(int(metrics["break_minutes"])),
+                    attendance_status=status,
+                )
+            )
+        technician_attendance_rows.sort(key=lambda item: item.technician_name.lower())
+
+        attendance_metrics = AttendanceMetrics(
+            clock_in_records=len(attendance_sessions_in_range),
+            clock_out_records=sum(1 for row in attendance_sessions_in_range if row.clock_out_at is not None),
+            total_working_hours=_hours_label(sum(int(row.active_work_minutes or 0) for row in attendance_sessions_in_range)),
+            break_duration_hours=_hours_label(sum(int(row.break_minutes or 0) for row in attendance_sessions_in_range)),
+            attendance_status_breakdown=[
+                DispatchStatusRow(
+                    status=status,
+                    count=count,
+                    percentage=_percent_int(count, len(technician_attendance_rows)),
+                )
+                for status, count in sorted(attendance_status_counts.items(), key=lambda item: item[1], reverse=True)
+            ],
+            attendance_by_date=[
+                AttendanceDailyRow(
+                    date=cursor.isoformat(),
+                    clock_ins=int(attendance_by_date_agg.get(cursor, {}).get("clock_ins", 0)),
+                    clock_outs=int(attendance_by_date_agg.get(cursor, {}).get("clock_outs", 0)),
+                    total_working_hours=_hours_label(int(attendance_by_date_agg.get(cursor, {}).get("work_minutes", 0))),
+                    break_duration_hours=_hours_label(int(attendance_by_date_agg.get(cursor, {}).get("break_minutes", 0))),
+                )
+                for cursor in _iter_dates(from_date, to_date)
+            ],
+            technician_attendance=technician_attendance_rows,
+        )
+
+        service_category_rows: list[ServiceCategoryAnalyticsRow] = []
+        all_service_categories = set(jobs_by_category_counts) | set(request_category_counts) | set(revenue_by_category)
+        for category in all_service_categories:
+            service_category_rows.append(
+                ServiceCategoryAnalyticsRow(
+                    category=category,
+                    jobs_count=jobs_by_category_counts.get(category, 0),
+                    completed_jobs_count=completed_jobs_by_category_counts.get(category, 0),
+                    requests_count=request_category_counts.get(category, {}).get("total", 0),
+                    revenue=round(revenue_by_category.get(category, 0.0), 2),
+                )
+            )
+        service_category_rows.sort(key=lambda item: (item.revenue, item.jobs_count, item.requests_count), reverse=True)
+        service_category_analytics = ServiceCategoryAnalyticsMetrics(categories=service_category_rows)
+
+        payment_status_rows: list[PaymentStatusRow] = [
+            PaymentStatusRow(
+                status=state,
+                count=int(values["count"]),
+                amount=round(float(values["amount"]), 2),
+            )
+            for state, values in sorted(invoice_state_totals.items(), key=lambda item: item[1]["amount"], reverse=True)
+            if state != "Pending Approval"
+        ]
+        total_paid_amount = round(
+            sum(float(row.total or 0) for row in invoices_in_range if _normalize_invoice_state(row.status) == "Paid"),
+            2,
+        )
+        payment_metrics = PaymentMetrics(
+            total_payments_received=sum(1 for row in invoices_in_range if _normalize_invoice_state(row.status) == "Paid"),
+            total_paid_amount=total_paid_amount,
+            pending_payments=sum(
+                1 for row in invoices_in_range if _normalize_invoice_state(row.status).lower() in PENDING_PAYMENT_STATES
+            ),
+            failed_payments=0,
+            payment_amount_by_method=[
+                PaymentMethodRow(method="Unspecified", amount=total_paid_amount)
+            ] if total_paid_amount > 0 else [],
+            payment_status=payment_status_rows,
+        )
+
         return ReportsOverviewResponse(
             generated_at=datetime.now(UTC),
             from_date=start_dt,
@@ -589,4 +889,10 @@ class ReportsService:
             dealership_performance=dealership_rows,
             capacity_planning=capacity_planning,
             invoicing_detail_rows=invoicing_detail_rows,
+            revenue_metrics=revenue_metrics,
+            job_completion_analytics=job_completion_analytics,
+            attendance_metrics=attendance_metrics,
+            customer_request_analytics=customer_request_analytics,
+            service_category_analytics=service_category_analytics,
+            payment_metrics=payment_metrics,
         )

@@ -1,4 +1,3 @@
-import json
 from datetime import datetime, timezone
 from uuid import UUID
 
@@ -10,6 +9,7 @@ from ..core.security import AuthenticatedUser
 from ..repositories.technician_repository import TechnicianRepository
 from ..schemas.technician_profile import TimeOffCreateRequest, TimeOffResponseItem
 from .audit_service import AuditService
+from .notification_service import NotificationService
 
 
 class TechnicianTimeOffService:
@@ -64,25 +64,19 @@ class TechnicianTimeOffService:
             },
         )
 
-        # Optional notification fan-out for admin inbox if the table exists in this deployment.
-        try:
-            self.repo.create_admin_notification_if_supported(
-                {
-                    "message": f"Technician {technician.name} created time off",
-                    "metadata_json": json.dumps(
-                        {
-                            "technician_id": str(technician.id),
-                            "time_off_id": str(row.id),
-                            "entry_type": row.entry_type,
-                            "start_date": row.start_date.isoformat(),
-                            "end_date": row.end_date.isoformat(),
-                        }
-                    ),
-                }
-            )
-        except Exception:
-            # Notification support is optional and must not block core time-off persistence.
-            pass
+        NotificationService(self.db).create_admin_notifications(
+            event_type="technician_time_off_created",
+            title="Technician Time Off",
+            message=f"Technician {technician.name} created time off.",
+            payload={
+                "technician_id": str(technician.id),
+                "time_off_id": str(row.id),
+                "entry_type": row.entry_type,
+                "start_date": row.start_date.isoformat(),
+                "end_date": row.end_date.isoformat(),
+                "href": "/admin/technicians",
+            },
+        )
 
         self.db.commit()
         return TimeOffResponseItem(

@@ -18,6 +18,7 @@ from .job import Job
 from .job_event import JobEvent
 from .job_rejection import JobRejection
 from .job_service import JobService
+from .notification import Notification
 from .priority_rule import PriorityRule
 from .platform_audit_log import PlatformAuditLog
 from .platform_settings import PlatformSettings

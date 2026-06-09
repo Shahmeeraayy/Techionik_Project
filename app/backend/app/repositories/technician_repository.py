@@ -2,7 +2,7 @@ from datetime import date, datetime
 from typing import Any, Dict, Iterable, List, Optional, Sequence
 from uuid import UUID
 
-from sqlalchemy import and_, delete, func, insert, inspect, select, text, update
+from sqlalchemy import and_, delete, func, insert, select, update
 from sqlalchemy.orm import Session
 
 from ..core.passwords import hash_password, is_password_hash
@@ -425,30 +425,6 @@ class TechnicianRepository:
             ).first()
             is not None
         )
-
-    def notifications_table_exists(self) -> bool:
-        bind = self.db.get_bind()
-        return bool(bind is not None and inspect(bind).has_table("notifications"))
-
-    def create_admin_notification_if_supported(self, payload: Dict[str, Any]) -> None:
-        if not self.notifications_table_exists():
-            return
-
-        # Best-effort insert: only executes when a compatible notifications table exists.
-        self.db.execute(
-            text(
-                """
-                INSERT INTO notifications (recipient_role, message, metadata, created_at)
-                VALUES (:recipient_role, :message, :metadata, CURRENT_TIMESTAMP)
-                """
-            ),
-            {
-                "recipient_role": "admin",
-                "message": payload.get("message", "Technician time-off updated"),
-                "metadata": payload.get("metadata_json", "{}"),
-            },
-        )
-        self.db.flush()
 
     def list_email_change_requests(
         self,

@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import List, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class ReportKpis(BaseModel):
@@ -24,7 +24,7 @@ class DispatchOverviewMetrics(BaseModel):
     average_time_to_completion: str
     accepted_rate: float
     refused_rate: float
-    jobs_by_urgency: List[DispatchStatusRow]
+    jobs_by_urgency: List[DispatchStatusRow] = Field(default_factory=list)
 
 
 class IntakeChannelRow(BaseModel):
@@ -44,8 +44,8 @@ class IntakeAnalyticsMetrics(BaseModel):
     total_intake_records: int
     conversion_rate: float
     average_time_to_job_creation: str
-    source_channels: List[IntakeChannelRow]
-    dismissed_reasons: List[IntakeDismissedReasonRow]
+    source_channels: List[IntakeChannelRow] = Field(default_factory=list)
+    dismissed_reasons: List[IntakeDismissedReasonRow] = Field(default_factory=list)
 
 
 class InvoiceStatusRow(BaseModel):
@@ -64,7 +64,7 @@ class InvoiceBlockedReasonRow(BaseModel):
 class InvoicePerformanceMetrics(BaseModel):
     total_invoice_value: float
     average_approval_turnaround_time: str
-    blocked_reasons: List[InvoiceBlockedReasonRow]
+    blocked_reasons: List[InvoiceBlockedReasonRow] = Field(default_factory=list)
 
 
 class TechnicianPerformanceRow(BaseModel):
@@ -90,7 +90,7 @@ class DealershipPerformanceRow(BaseModel):
     invoice_total: float
     attention_flags: int
     job_volume: int = 0
-    most_requested_service_types: List[str] = []
+    most_requested_service_types: List[str] = Field(default_factory=list)
     avg_job_completion_time: str = "0m"
     sla_compliance_rate: float = 0
 
@@ -115,10 +115,10 @@ class UnderstaffedPeriodRow(BaseModel):
 
 
 class CapacityPlanningMetrics(BaseModel):
-    utilization_by_day: List[CapacityUtilizationRow]
-    peak_demand_windows: List[PeakDemandWindowRow]
-    jobs_per_technician_trend: List[CapacityUtilizationRow]
-    understaffed_periods: List[UnderstaffedPeriodRow]
+    utilization_by_day: List[CapacityUtilizationRow] = Field(default_factory=list)
+    peak_demand_windows: List[PeakDemandWindowRow] = Field(default_factory=list)
+    jobs_per_technician_trend: List[CapacityUtilizationRow] = Field(default_factory=list)
+    understaffed_periods: List[UnderstaffedPeriodRow] = Field(default_factory=list)
 
 
 class InvoicingDetailRow(BaseModel):
@@ -126,6 +126,110 @@ class InvoicingDetailRow(BaseModel):
     approved_amount: float
     average_invoice: float
     growth_percentage: Optional[float] = None
+
+
+class RevenueByDateRow(BaseModel):
+    date: str
+    total_revenue: float
+    completed_job_revenue: float
+
+
+class RevenueByCategoryRow(BaseModel):
+    category: str
+    revenue: float
+    completed_jobs: int = 0
+
+
+class RevenueMetrics(BaseModel):
+    total_revenue: float
+    revenue_from_completed_jobs: float
+    pending_revenue_from_unpaid_invoices: float
+    revenue_by_date: List[RevenueByDateRow] = Field(default_factory=list)
+    revenue_by_service_category: List[RevenueByCategoryRow] = Field(default_factory=list)
+
+
+class JobCompletionMetrics(BaseModel):
+    total_jobs: int
+    completed_jobs: int
+    pending_jobs: int
+    in_progress_jobs: int
+    cancelled_jobs: int
+    average_job_completion_time: str
+    status_breakdown: List[DispatchStatusRow] = Field(default_factory=list)
+
+
+class AttendanceDailyRow(BaseModel):
+    date: str
+    clock_ins: int
+    clock_outs: int
+    total_working_hours: float
+    break_duration_hours: float
+
+
+class AttendanceTechnicianRow(BaseModel):
+    technician_id: str
+    technician_name: str
+    clock_in_records: int
+    clock_out_records: int
+    total_working_hours: float
+    break_duration_hours: float
+    attendance_status: str
+
+
+class AttendanceMetrics(BaseModel):
+    clock_in_records: int
+    clock_out_records: int
+    total_working_hours: float
+    break_duration_hours: float
+    attendance_status_breakdown: List[DispatchStatusRow] = Field(default_factory=list)
+    attendance_by_date: List[AttendanceDailyRow] = Field(default_factory=list)
+    technician_attendance: List[AttendanceTechnicianRow] = Field(default_factory=list)
+
+
+class CustomerRequestCategoryRow(BaseModel):
+    category: str
+    total_requests: int
+    converted_requests: int
+
+
+class CustomerRequestAnalyticsMetrics(BaseModel):
+    total_customer_requests: int
+    new_requests: int
+    converted_requests: int
+    cancelled_or_rejected_requests: int
+    requests_by_service_category: List[CustomerRequestCategoryRow] = Field(default_factory=list)
+
+
+class ServiceCategoryAnalyticsRow(BaseModel):
+    category: str
+    jobs_count: int
+    completed_jobs_count: int
+    requests_count: int
+    revenue: float
+
+
+class ServiceCategoryAnalyticsMetrics(BaseModel):
+    categories: List[ServiceCategoryAnalyticsRow] = Field(default_factory=list)
+
+
+class PaymentMethodRow(BaseModel):
+    method: str
+    amount: float
+
+
+class PaymentStatusRow(BaseModel):
+    status: str
+    count: int
+    amount: float
+
+
+class PaymentMetrics(BaseModel):
+    total_payments_received: int
+    total_paid_amount: float
+    pending_payments: int
+    failed_payments: int
+    payment_amount_by_method: List[PaymentMethodRow] = Field(default_factory=list)
+    payment_status: List[PaymentStatusRow] = Field(default_factory=list)
 
 
 class ReportsOverviewResponse(BaseModel):
@@ -138,9 +242,15 @@ class ReportsOverviewResponse(BaseModel):
     dispatch_overview: DispatchOverviewMetrics
     intake_analytics: IntakeAnalyticsMetrics
     invoice_metrics: InvoicePerformanceMetrics
-    dispatch_performance: List[DispatchStatusRow]
-    invoice_performance: List[InvoiceStatusRow]
-    technician_performance: List[TechnicianPerformanceRow]
-    dealership_performance: List[DealershipPerformanceRow]
+    dispatch_performance: List[DispatchStatusRow] = Field(default_factory=list)
+    invoice_performance: List[InvoiceStatusRow] = Field(default_factory=list)
+    technician_performance: List[TechnicianPerformanceRow] = Field(default_factory=list)
+    dealership_performance: List[DealershipPerformanceRow] = Field(default_factory=list)
     capacity_planning: CapacityPlanningMetrics
-    invoicing_detail_rows: List[InvoicingDetailRow]
+    invoicing_detail_rows: List[InvoicingDetailRow] = Field(default_factory=list)
+    revenue_metrics: RevenueMetrics
+    job_completion_analytics: JobCompletionMetrics
+    attendance_metrics: AttendanceMetrics
+    customer_request_analytics: CustomerRequestAnalyticsMetrics
+    service_category_analytics: ServiceCategoryAnalyticsMetrics
+    payment_metrics: PaymentMetrics

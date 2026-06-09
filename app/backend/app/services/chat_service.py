@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 
 from ..core.enums import AuditEntityType, UserRole
 from ..core.security import AuthenticatedUser
+from ..models.admin_user import AdminUser
 from ..models.chat_attachment import ChatAttachment
 from ..models.chat_conversation import ChatConversation
 from ..models.chat_conversation_message import ChatConversationMessage
@@ -29,6 +30,7 @@ from ..schemas.chat import (
 from .audit_service import AuditService
 from .availability_service import AvailabilityService
 from .chat_storage_service import ChatStorageService
+from .notification_service import NotificationService
 
 
 class ChatService:
@@ -38,6 +40,7 @@ class ChatService:
         self.repo = ChatRepository(db)
         self.technician_repo = TechnicianRepository(db)
         self.availability_service = AvailabilityService(db, repository=self.technician_repo)
+        self.notification_service = NotificationService(db)
 
     def _require_technician(self, technician_id: UUID):
         technician = self.repo.get_technician_by_id(technician_id)
@@ -607,6 +610,54 @@ class ChatService:
                 },
             )
 
+    def _resolve_sender_display_name(self) -> str:
+        if self.current_user.role == UserRole.ADMIN:
+            admin_user = self.db.query(AdminUser).filter(AdminUser.id == self.current_user.user_id).first()
+            return (admin_user.full_name if admin_user is not None else None) or "Admin Dispatch"
+        technician = self._require_technician(self.current_user.user_id)
+        return (technician.full_name or technician.name or "Technician").strip()
+
+    def _create_message_notifications(
+        self,
+        *,
+        conversation: ChatConversation,
+        message: ChatConversationMessage,
+    ) -> None:
+        sender_name = self._resolve_sender_display_name()
+        base_payload = {
+            "conversation_id": str(conversation.id),
+            "conversation_type": conversation.conversation_type,
+            "job_id": str(conversation.job_id) if conversation.job_id else None,
+            "job_code": conversation.job.job_code if conversation.job is not None else None,
+            "sender_name": sender_name,
+            "message_id": str(message.id),
+        }
+        if self.current_user.role == UserRole.ADMIN:
+            recipient_user_ids = [member.technician_id for member in self._conversation_members(conversation)]
+            if not recipient_user_ids:
+                recipient_user_ids = [conversation.technician_id]
+            self.notification_service.create_notifications(
+                recipient_role="technician",
+                recipient_user_ids=recipient_user_ids,
+                event_type="new_message",
+                title="New Message",
+                message=f"You received a new message from {sender_name}.",
+                payload={
+                    **base_payload,
+                    "href": f"/tech/chat?conversationId={conversation.id}",
+                },
+            )
+            return
+        self.notification_service.create_admin_notifications(
+            event_type="new_message",
+            title="New Message",
+            message=f"You received a new message from {sender_name}.",
+            payload={
+                **base_payload,
+                "href": f"/admin/chat?conversationId={conversation.id}",
+            },
+        )
+
     def list_admin_conversations(self, search: Optional[str] = None) -> List[AdminChatConversationSummaryResponse]:
         for technician in self.repo.list_technicians():
             self._get_or_create_direct_conversation(technician.id)
@@ -671,6 +722,7 @@ class ChatService:
         message.message_type = self._resolve_message_type(text=payload.text, attachments=stored_attachments)
         self.db.flush()
         self._log_message_events(conversation=conversation, message=message)
+        self._create_message_notifications(conversation=conversation, message=message)
         self.db.commit()
         conversation = self.repo.get_conversation_by_id(conversation.id) or conversation
         message = self.repo.get_message_by_id(message.id) or message

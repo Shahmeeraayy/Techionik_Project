@@ -1,7 +1,8 @@
+import jsPDF from 'jspdf';
 import * as XLSX from 'xlsx';
 
 export type ExportRow = Record<string, unknown>;
-export type ExportFormat = 'csv' | 'excel';
+export type ExportFormat = 'csv' | 'excel' | 'pdf';
 
 export function selectColumnsForExport<T extends ExportRow>(data: T[], selectedColumns: string[]): ExportRow[] {
     if (!Array.isArray(selectedColumns) || selectedColumns.length === 0) {
@@ -103,9 +104,82 @@ export function convertArrayToExcel<T extends object>(data: T[], filename: strin
     XLSX.writeFile(workbook, `${filename}.xlsx`);
 }
 
+export function convertArrayToPdf<T extends object>(data: T[], filename: string) {
+    if (!data || data.length === 0) {
+        alert("No data to export.");
+        return;
+    }
+
+    const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+    const headers = Object.keys(data[0]);
+    const left = 40;
+    const top = 48;
+    const lineHeight = 16;
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const maxWidth = doc.internal.pageSize.getWidth() - left * 2;
+
+    const normalizeValue = (value: unknown): string => {
+        if (value === null || value === undefined) {
+            return '';
+        }
+        if (typeof value === 'boolean') {
+            return value ? 'Yes' : 'No';
+        }
+        if (Array.isArray(value)) {
+            return value.join('; ');
+        }
+        if (typeof value === 'object') {
+            return JSON.stringify(value);
+        }
+        return String(value);
+    };
+
+    let y = top;
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(16);
+    doc.text(filename.replace(/_/g, ' '), left, y);
+    y += 24;
+
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Rows: ${data.length}`, left, y);
+    y += 24;
+
+    for (const [index, row] of data.entries()) {
+        const rowLines = headers.flatMap((header) => {
+            const content = `${header}: ${normalizeValue((row as Record<string, unknown>)[header])}`;
+            return doc.splitTextToSize(content, maxWidth);
+        });
+
+        const requiredHeight = Math.max(lineHeight, rowLines.length * lineHeight) + 10;
+        if (y + requiredHeight > pageHeight - 40) {
+            doc.addPage();
+            y = top;
+        }
+
+        doc.setFont('helvetica', 'bold');
+        doc.text(`Row ${index + 1}`, left, y);
+        y += lineHeight;
+
+        doc.setFont('helvetica', 'normal');
+        for (const line of rowLines) {
+            doc.text(line, left, y);
+            y += lineHeight;
+        }
+
+        y += 8;
+    }
+
+    doc.save(`${filename}.pdf`);
+}
+
 export function exportArrayData<T extends object>(data: T[], filename: string, format: ExportFormat = 'csv') {
     if (format === 'excel') {
         convertArrayToExcel(data, filename);
+        return;
+    }
+    if (format === 'pdf') {
+        convertArrayToPdf(data, filename);
         return;
     }
     convertArrayToCSV(data, filename);

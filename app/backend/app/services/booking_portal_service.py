@@ -6,7 +6,7 @@ from typing import Optional
 from uuid import UUID
 
 from fastapi import HTTPException, status
-from sqlalchemy import case, inspect, text
+from sqlalchemy import case, text
 from sqlalchemy.orm import Session
 
 from urllib.parse import quote
@@ -39,6 +39,7 @@ from ..schemas.booking_portal import (
     BookingRequestAdminUpdatePayload,
 )
 from .job_services_service import JobServicesService
+from .notification_service import NotificationService
 from .tenant_email_identity import ensure_tenant_email_identity
 
 
@@ -488,27 +489,6 @@ class BookingPortalService:
             sequence = 1
         return f"{prefix}{sequence:03d}"
 
-    def _notifications_table_exists(self) -> bool:
-        bind = self.db.get_bind()
-        return bool(bind is not None and inspect(bind).has_table("notifications"))
-
-    def _create_admin_notification(self, message: str, metadata_json: str) -> None:
-        if not self._notifications_table_exists():
-            return
-        self.db.execute(
-            text(
-                """
-                INSERT INTO notifications (recipient_role, message, metadata, created_at)
-                VALUES (:recipient_role, :message, :metadata, CURRENT_TIMESTAMP)
-                """
-            ),
-            {
-                "recipient_role": "admin",
-                "message": message,
-                "metadata": metadata_json,
-            },
-        )
-
     def submit_booking(self, payload: BookingPortalSubmissionRequest) -> BookingPortalSubmissionResponse:
         if payload.website:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Unable to accept this request")
@@ -615,15 +595,16 @@ class BookingPortalService:
         support_email = tenant.support_email or COMPANY_EMAIL
         notification_email = tenant.notification_email or support_email
 
-        self._create_admin_notification(
-            f"New booking request {row.reference_number} from {row.customer_full_name}",
-            (
-                "{"
-                f"\"booking_request_id\":\"{row.id}\","
-                f"\"reference_number\":\"{row.reference_number}\","
-                f"\"source\":\"Booking Portal\""
-                "}"
-            ),
+        NotificationService(self.db).create_admin_notifications(
+            event_type="new_customer_request",
+            title="New Customer Request",
+            message=f"A new customer request has been submitted by {row.customer_full_name}.",
+            payload={
+                "booking_request_id": str(row.id),
+                "reference_number": row.reference_number,
+                "source": "Booking Portal",
+                "href": f"/admin/intake?bookingId={row.id}",
+            },
         )
 
         self.db.commit()
@@ -732,6 +713,7 @@ class BookingPortalService:
         original_tenant_id = self.db.info.get("tenant_id")
         self._set_session_tenant(row.tenant_id)
         updates = payload.model_dump(exclude_unset=True)
+        previous_assigned_technician_id = row.assigned_technician_id
         try:
             assigned_technician = None
             if "assigned_technician_id" in updates and updates["assigned_technician_id"] is not None:
@@ -775,6 +757,22 @@ class BookingPortalService:
                 )
             )
             self._sync_booking_job(row, assigned_technician)
+            if assigned_technician is not None and previous_assigned_technician_id != assigned_technician.id:
+                job_row = self._find_job_for_booking(row)
+                if job_row is not None:
+                    NotificationService(self.db).create_notifications(
+                        recipient_role="technician",
+                        recipient_user_ids=[assigned_technician.id],
+                        event_type="job_assigned",
+                        title="New Job Assigned",
+                        message=f"You have been assigned a new job: {job_row.job_code}.",
+                        payload={
+                            "job_id": str(job_row.id),
+                            "job_code": job_row.job_code,
+                            "booking_request_id": str(row.id),
+                            "href": f"/tech/current-job?jobId={job_row.id}",
+                        },
+                    )
 
             self.db.commit()
             self.db.refresh(row)

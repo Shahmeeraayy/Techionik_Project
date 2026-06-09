@@ -17,6 +17,7 @@ os.environ["DATABASE_URL"] = f"sqlite:///{_TEST_DB_FILE.replace(os.sep, '/')}"
 from app.api.deps import SessionLocal, engine
 from app.main import app
 from app.models.base import Base
+from app.models.booking_request import BookingRequest
 from app.models.dealership import Dealership
 from app.models.invoice import Invoice, InvoiceLineItem
 from app.models.invoice_branding_settings import InvoiceBrandingSettings
@@ -26,6 +27,7 @@ from app.models.priority_rule import PriorityRule
 from app.models.service_catalog import ServiceCatalog
 from app.models.technician import Technician
 from app.models.technician_password_reset_request import TechnicianPasswordResetRequest
+from app.models.technician_tracking import TechnicianAttendanceSession
 
 
 class InvoiceApiTests(unittest.TestCase):
@@ -48,6 +50,8 @@ class InvoiceApiTests(unittest.TestCase):
 
     def setUp(self):
         with SessionLocal() as db:
+            db.query(TechnicianAttendanceSession).delete()
+            db.query(BookingRequest).delete()
             db.query(InvoiceLineItem).delete()
             db.query(JobService).delete()
             db.query(Job).update({"invoice_id": None}, synchronize_session=False)
@@ -112,14 +116,14 @@ class InvoiceApiTests(unittest.TestCase):
             db.refresh(row)
             return row
 
-    def _seed_service_catalog(self, *, name: str, code: str | None = None) -> None:
+    def _seed_service_catalog(self, *, name: str, code: str | None = None, category: str = "General") -> None:
         with SessionLocal() as db:
             db.add(
                 ServiceCatalog(
                     id=uuid4(),
                     code=code or name.upper().replace(" ", "-"),
                     name=name,
-                    category="General",
+                    category=category,
                     default_price=Decimal("100.00"),
                     approval_required=False,
                     status="active",
@@ -747,6 +751,179 @@ class InvoiceApiTests(unittest.TestCase):
         )
         self.assertIsNotNone(pending_row)
         self.assertEqual(pending_row["count"], 1)
+
+    def test_reports_overview_includes_goal_based_reporting_sections(self):
+        dealership = self._seed_dealership()
+        technician = self._seed_technician()
+        self._seed_service_catalog(name="Diagnostics", category="Electrical")
+        now = datetime.now(UTC)
+        report_day = now - timedelta(days=1)
+
+        with SessionLocal() as db:
+            paid_job = Job(
+                id=uuid4(),
+                job_code="SM2-2024-6100",
+                status="COMPLETED",
+                assigned_tech_id=technician.id,
+                dealership_id=dealership.id,
+                customer_name=dealership.name,
+                customer_address=dealership.address,
+                customer_city=dealership.city,
+                customer_state="QC",
+                customer_zip_code=dealership.postal_code,
+                service_type="Diagnostics",
+                hours_worked=Decimal("1.50"),
+                rate=Decimal("100.00"),
+                vehicle="2024 Audi Q5",
+                tax_code="EXEMPT",
+                created_at=report_day,
+                completed_at=report_day + timedelta(hours=2),
+                updated_at=report_day + timedelta(hours=2),
+            )
+            unpaid_job = Job(
+                id=uuid4(),
+                job_code="SM2-2024-6101",
+                status="COMPLETED",
+                assigned_tech_id=technician.id,
+                dealership_id=dealership.id,
+                customer_name=dealership.name,
+                customer_address=dealership.address,
+                customer_city=dealership.city,
+                customer_state="QC",
+                customer_zip_code=dealership.postal_code,
+                service_type="Diagnostics",
+                hours_worked=Decimal("1.00"),
+                rate=Decimal("120.00"),
+                vehicle="2024 Audi A6",
+                tax_code="EXEMPT",
+                created_at=report_day,
+                completed_at=report_day + timedelta(hours=3),
+                updated_at=report_day + timedelta(hours=3),
+            )
+            db.add_all([paid_job, unpaid_job])
+            db.flush()
+
+            paid_invoice = Invoice(
+                id=uuid4(),
+                invoice_number="INV-6100",
+                company_name="NexusOps",
+                company_street_address="123 NexusOps Ave",
+                company_city="Quebec",
+                company_state="QC",
+                company_zip_code="G1A 1A1",
+                company_phone="+1-418-555-0100",
+                company_email="billing@nexusops.com",
+                company_website="https://www.nexusops.com",
+                bill_to_name=dealership.name,
+                bill_to_address=dealership.address,
+                bill_to_city=dealership.city,
+                bill_to_state="QC",
+                bill_to_zip_code=dealership.postal_code,
+                invoice_date=report_day.date(),
+                due_date=(report_day + timedelta(days=15)).date(),
+                subtotal=Decimal("150.00"),
+                sales_tax=Decimal("0.00"),
+                shipping=Decimal("0.00"),
+                total=Decimal("150.00"),
+                status="paid",
+                payment_recorded_at=report_day + timedelta(hours=4),
+                created_at=report_day + timedelta(hours=4),
+                updated_at=report_day + timedelta(hours=4),
+            )
+            unpaid_invoice = Invoice(
+                id=uuid4(),
+                invoice_number="INV-6101",
+                company_name="NexusOps",
+                company_street_address="123 NexusOps Ave",
+                company_city="Quebec",
+                company_state="QC",
+                company_zip_code="G1A 1A1",
+                company_phone="+1-418-555-0100",
+                company_email="billing@nexusops.com",
+                company_website="https://www.nexusops.com",
+                bill_to_name=dealership.name,
+                bill_to_address=dealership.address,
+                bill_to_city=dealership.city,
+                bill_to_state="QC",
+                bill_to_zip_code=dealership.postal_code,
+                invoice_date=report_day.date(),
+                due_date=(report_day + timedelta(days=15)).date(),
+                subtotal=Decimal("120.00"),
+                sales_tax=Decimal("0.00"),
+                shipping=Decimal("0.00"),
+                total=Decimal("120.00"),
+                status="sent",
+                created_at=report_day + timedelta(hours=5),
+                updated_at=report_day + timedelta(hours=5),
+            )
+            db.add_all([paid_invoice, unpaid_invoice])
+            db.flush()
+
+            paid_job.invoice_id = paid_invoice.id
+            unpaid_job.invoice_id = unpaid_invoice.id
+
+            db.add(
+                BookingRequest(
+                    id=uuid4(),
+                    reference_number="BR-6100",
+                    customer_full_name="Jordan Smith",
+                    phone_number="+1-418-555-3333",
+                    email_address="jordan@example.com",
+                    service_name="Diagnostics",
+                    asset_details="2024 Audi Q5",
+                    preferred_time_of_day="morning",
+                    status="JOB_SCHEDULED",
+                    created_at=report_day + timedelta(hours=1),
+                    updated_at=report_day + timedelta(hours=1),
+                )
+            )
+            db.add(
+                TechnicianAttendanceSession(
+                    id=uuid4(),
+                    technician_id=technician.id,
+                    clock_in_at=report_day,
+                    clock_out_at=report_day + timedelta(hours=8),
+                    total_minutes=480,
+                    active_work_minutes=450,
+                    break_minutes=30,
+                    status="clocked_out",
+                    created_at=report_day,
+                    updated_at=report_day + timedelta(hours=8),
+                )
+            )
+            db.commit()
+
+        overview_res = self.client.get(
+            "/admin/reports/overview",
+            params={
+                "from_date": str((date.today() - timedelta(days=7))),
+                "to_date": str(date.today()),
+            },
+            headers=self.auth_header,
+        )
+        self.assertEqual(overview_res.status_code, 200, overview_res.text)
+        payload = overview_res.json()
+
+        self.assertEqual(payload["revenue_metrics"]["total_revenue"], 270.0)
+        self.assertEqual(payload["revenue_metrics"]["pending_revenue_from_unpaid_invoices"], 120.0)
+        self.assertEqual(payload["job_completion_analytics"]["completed_jobs"], 2)
+        self.assertEqual(payload["attendance_metrics"]["clock_in_records"], 1)
+        self.assertEqual(payload["attendance_metrics"]["total_working_hours"], 7.5)
+        self.assertEqual(payload["customer_request_analytics"]["converted_requests"], 1)
+        self.assertEqual(payload["customer_request_analytics"]["total_customer_requests"], 1)
+        self.assertEqual(payload["payment_metrics"]["total_payments_received"], 1)
+        self.assertEqual(payload["payment_metrics"]["pending_payments"], 1)
+        self.assertEqual(payload["payment_metrics"]["total_paid_amount"], 150.0)
+
+        service_row = next(
+            (row for row in payload["service_category_analytics"]["categories"] if row["category"] == "Electrical"),
+            None,
+        )
+        self.assertIsNotNone(service_row)
+        self.assertEqual(service_row["jobs_count"], 2)
+        self.assertEqual(service_row["completed_jobs_count"], 2)
+        self.assertEqual(service_row["requests_count"], 1)
+        self.assertEqual(service_row["revenue"], 270.0)
 
     def test_pending_approval_issues_honor_saved_draft_lines(self):
         dealership = self._seed_dealership()

@@ -1,5 +1,6 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Calendar, ClipboardList, ListChecks, Mail, MapPin, Pencil, Phone, RefreshCw, Search, Wrench } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -64,6 +65,9 @@ const formatBookingLocation = (row: BackendBookingRequest) => {
 };
 
 export default function IntakeQueuePage() {
+  const [searchParams] = useSearchParams();
+  const requestedBookingId = searchParams.get('bookingId');
+  const requestedBookingHandledRef = useRef<string | null>(null);
   const [rows, setRows] = useState<BackendBookingRequest[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -94,6 +98,18 @@ export default function IntakeQueuePage() {
   useEffect(() => {
     void refreshRows();
   }, [refreshRows]);
+
+  useEffect(() => {
+    if (!requestedBookingId || requestedBookingHandledRef.current === requestedBookingId) {
+      return;
+    }
+    const matchedRow = rows.find((row) => row.id === requestedBookingId);
+    if (!matchedRow) {
+      return;
+    }
+    requestedBookingHandledRef.current = requestedBookingId;
+    openEditDialog(matchedRow);
+  }, [requestedBookingId, rows]);
 
   useEffect(() => {
     const token = getStoredAdminToken();

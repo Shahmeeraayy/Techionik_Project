@@ -23,17 +23,12 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   CalendarClock,
-  Bell,
   KeyRound,
-  BellDot,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import {
-  fetchAdminBookingRequests,
   fetchAdminChatUnreadCount,
-  fetchPendingInvoiceApprovalIssues,
-  fetchPendingInvoiceApprovals,
   getStoredAdminToken,
 } from '@/lib/backend-api';
 import {
@@ -49,6 +44,7 @@ import { TechnicianPreviewModal } from '@/components/modals/TechnicianPreviewMod
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { NotificationCenter } from '@/components/notifications/NotificationCenter';
 
 const navItems = [
   { path: '/admin', label: 'Overview', icon: LayoutDashboard },
@@ -360,103 +356,6 @@ function UserMenu() {
   );
 }
 
-function NotificationMenu({
-  unreadChatCount,
-  pendingPasswordResetCount,
-  pendingIntakeCount,
-  pendingInvoiceApprovalCount,
-}: {
-  unreadChatCount: number;
-  pendingPasswordResetCount: number;
-  pendingIntakeCount: number;
-  pendingInvoiceApprovalCount: number;
-}) {
-  const notificationItems = [
-    {
-      title: unreadChatCount > 0 ? `${unreadChatCount} unread message${unreadChatCount === 1 ? '' : 's'}` : 'No unread messages',
-      description: unreadChatCount > 0 ? 'Technician chat needs review' : 'All conversations are up to date',
-      href: '/admin/chat',
-      icon: MessageSquareText,
-      active: unreadChatCount > 0,
-    },
-    {
-      title: pendingPasswordResetCount > 0 ? `${pendingPasswordResetCount} password reset request${pendingPasswordResetCount === 1 ? '' : 's'}` : 'No password reset requests',
-      description: pendingPasswordResetCount > 0 ? 'Technician account action pending' : 'Technician accounts are clear',
-      href: '/admin/accounts',
-      icon: KeyRound,
-      active: pendingPasswordResetCount > 0,
-    },
-    {
-      title: pendingIntakeCount > 0 ? `${pendingIntakeCount} intake request${pendingIntakeCount === 1 ? '' : 's'}` : 'No intake requests',
-      description: pendingIntakeCount > 0 ? 'New customer booking requests need review' : 'Customer booking queue is clear',
-      href: '/admin/intake',
-      icon: Inbox,
-      active: pendingIntakeCount > 0,
-    },
-    {
-      title: pendingInvoiceApprovalCount > 0 ? `${pendingInvoiceApprovalCount} invoice item${pendingInvoiceApprovalCount === 1 ? '' : 's'}` : 'No invoice approvals',
-      description: pendingInvoiceApprovalCount > 0 ? 'Invoices or blockers need admin action' : 'Invoice approval queue is clear',
-      href: '/admin/approvals',
-      icon: FileCheck,
-      active: pendingInvoiceApprovalCount > 0,
-    },
-  ];
-  const activeCount = notificationItems.filter((item) => item.active).length;
-
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <button
-          type="button"
-          aria-label={`Open notifications${activeCount > 0 ? `, ${activeCount} active` : ''}`}
-          className="relative flex h-11 w-11 items-center justify-center rounded-full border border-black/10 bg-white text-slate-700 shadow-[0_14px_34px_rgba(15,23,42,0.08)] transition-all hover:-translate-y-0.5 hover:bg-[#f9fafb] hover:text-slate-950 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-200 dark:shadow-[0_14px_34px_rgba(2,6,23,0.18)] dark:hover:bg-white/[0.08] dark:hover:text-white"
-        >
-          {activeCount > 0 ? <BellDot className="h-5 w-5" /> : <Bell className="h-5 w-5" />}
-          {activeCount > 0 ? (
-            <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full border-2 border-background bg-blue-500 px-1 text-[10px] font-bold text-white">
-              {activeCount}
-            </span>
-          ) : null}
-        </button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="mt-2 w-80 overflow-hidden p-0">
-        <div className="border-b border-border bg-muted/50 px-4 py-3">
-          <p className="text-sm font-semibold text-foreground">Notifications</p>
-          <p className="mt-1 text-xs text-muted-foreground">
-            {activeCount > 0 ? `${activeCount} item${activeCount === 1 ? '' : 's'} need attention` : 'Everything is up to date'}
-          </p>
-        </div>
-
-        <div className="p-2">
-          {notificationItems.map((item) => {
-            const Icon = item.icon;
-
-            return (
-              <DropdownMenuItem key={item.title} asChild>
-                <Link to={item.href} className="flex cursor-pointer items-start gap-3 rounded-xl px-3 py-3">
-                  <span className={cn(
-                    'mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border',
-                    item.active
-                      ? 'border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-cyan-200'
-                      : 'border-border bg-muted text-muted-foreground',
-                  )}>
-                    <Icon className="h-4 w-4" />
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-sm font-semibold text-foreground">{item.title}</span>
-                    <span className="mt-0.5 block text-xs leading-5 text-muted-foreground">{item.description}</span>
-                  </span>
-                  {item.active ? <span className="mt-1.5 h-2 w-2 rounded-full bg-blue-500" /> : null}
-                </Link>
-              </DropdownMenuItem>
-            );
-          })}
-        </div>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-}
-
 export function AdminLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const { pendingTechnicianPasswordResetRequests } = useAuth();
@@ -467,8 +366,6 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
   });
   const [lastUpdated, setLastUpdated] = useState('Updated 2 min ago');
   const [unreadChatCount, setUnreadChatCount] = useState(0);
-  const [pendingIntakeCount, setPendingIntakeCount] = useState(0);
-  const [pendingInvoiceApprovalCount, setPendingInvoiceApprovalCount] = useState(0);
   const hideHeaderRefreshControls = location.pathname.startsWith('/admin');
   const isChatRoute = location.pathname.startsWith('/admin/chat');
 
@@ -518,49 +415,6 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
       window.clearInterval(intervalId);
       window.removeEventListener('sm-chat-unread-count', handleUnreadEvent as EventListener);
       window.removeEventListener('focus', handleFocus);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') {
-      return;
-    }
-
-    const syncOperationalNotifications = async () => {
-      const token = getStoredAdminToken();
-      if (!token) {
-        setPendingIntakeCount(0);
-        setPendingInvoiceApprovalCount(0);
-        return;
-      }
-
-      try {
-        const [bookingRequests, pendingApprovals, approvalIssues] = await Promise.all([
-          fetchAdminBookingRequests(token),
-          fetchPendingInvoiceApprovals(token),
-          fetchPendingInvoiceApprovalIssues(token),
-        ]);
-        setPendingIntakeCount(
-          bookingRequests.filter((row) => row.status === 'RECEIVED' || row.status === 'UNDER_REVIEW').length,
-        );
-        setPendingInvoiceApprovalCount(pendingApprovals.length + approvalIssues.length);
-      } catch {
-        setPendingIntakeCount(0);
-        setPendingInvoiceApprovalCount(0);
-      }
-    };
-
-    void syncOperationalNotifications();
-
-    const handleRefresh = () => { void syncOperationalNotifications(); };
-    const intervalId = window.setInterval(() => { void syncOperationalNotifications(); }, 30000);
-    window.addEventListener('focus', handleRefresh);
-    window.addEventListener('sm-dispatch:admin-refresh', handleRefresh);
-
-    return () => {
-      window.clearInterval(intervalId);
-      window.removeEventListener('focus', handleRefresh);
-      window.removeEventListener('sm-dispatch:admin-refresh', handleRefresh);
     };
   }, []);
 
@@ -682,11 +536,9 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
                 </>
               )}
 
-              <NotificationMenu
-                unreadChatCount={unreadChatCount}
-                pendingPasswordResetCount={pendingTechnicianPasswordResetRequests.length}
-                pendingIntakeCount={pendingIntakeCount}
-                pendingInvoiceApprovalCount={pendingInvoiceApprovalCount}
+              <NotificationCenter
+                token={getStoredAdminToken()}
+                buttonClassName="relative flex h-11 w-11 items-center justify-center rounded-full border border-black/10 bg-white text-slate-700 shadow-[0_14px_34px_rgba(15,23,42,0.08)] transition-all hover:-translate-y-0.5 hover:bg-[#f9fafb] hover:text-slate-950 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-200 dark:shadow-[0_14px_34px_rgba(2,6,23,0.18)] dark:hover:bg-white/[0.08] dark:hover:text-white"
               />
               <UserMenu />
             </div>

@@ -4,7 +4,6 @@ from typing import List, Optional
 from uuid import UUID
 
 from fastapi import HTTPException, status
-from sqlalchemy import inspect, text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -19,6 +18,7 @@ from ..schemas.signup_request import (
     TechnicianSignupRequestResponse,
 )
 from .audit_service import AuditService
+from .notification_service import NotificationService
 
 
 class SignupRequestService:
@@ -28,28 +28,6 @@ class SignupRequestService:
         self.db = db
         self.repo = SignupRequestRepository(db)
         self.technician_repo = TechnicianRepository(db)
-
-    def _notifications_table_exists(self) -> bool:
-        bind = self.db.get_bind()
-        return bool(bind is not None and inspect(bind).has_table("notifications"))
-
-    def _create_admin_notification(self, *, message: str, metadata_json: str) -> None:
-        if not self._notifications_table_exists():
-            return
-
-        self.db.execute(
-            text(
-                """
-                INSERT INTO notifications (recipient_role, message, metadata, created_at)
-                VALUES (:recipient_role, :message, :metadata, CURRENT_TIMESTAMP)
-                """
-            ),
-            {
-                "recipient_role": "admin",
-                "message": message,
-                "metadata": metadata_json,
-            },
-        )
 
     def _resolve_approval_recipient_emails(self) -> list[str]:
         reviewers = self.repo.list_active_signup_reviewers()
@@ -94,16 +72,17 @@ class SignupRequestService:
                 request_id=row.id,
             )
 
-        self._create_admin_notification(
-            message=f"Technician signup request from {row.name} is waiting for approval",
-            metadata_json=json.dumps(
-                {
-                    "signup_request_id": str(row.id),
-                    "email": row.email,
-                    "recipient_emails": recipient_emails,
-                    "source": "technician_signup_request",
-                }
-            ),
+        NotificationService(self.db).create_admin_notifications(
+            event_type="technician_signup_request",
+            title="Technician Signup Request",
+            message=f"Technician signup request from {row.name} is waiting for approval.",
+            payload={
+                "signup_request_id": str(row.id),
+                "email": row.email,
+                "recipient_emails": recipient_emails,
+                "source": "technician_signup_request",
+                "href": "/admin/accounts",
+            },
         )
 
     def _require_signup_reviewer(self, current_user: AuthenticatedUser) -> None:

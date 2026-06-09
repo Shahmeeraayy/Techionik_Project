@@ -20,6 +20,7 @@ from .api.endpoints import (
     auth,
     booking_portal,
     invoices,
+    notifications,
     signup_requests,
     super_admin,
     technician_password_reset_requests,
@@ -128,6 +129,7 @@ app.include_router(admin_reports.router)
 app.include_router(admin_services.router)
 app.include_router(admin_services.catalog_router)
 app.include_router(admin_settings.router)
+app.include_router(notifications.router)
 app.include_router(technician_profile.router)
 app.include_router(technician_chat.router)
 app.include_router(technician_time_off.router)

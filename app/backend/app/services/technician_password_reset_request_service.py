@@ -1,4 +1,3 @@
-import json
 from datetime import datetime, timedelta, timezone
 from typing import List, Optional
 from uuid import UUID
@@ -22,6 +21,7 @@ from ..schemas.technician_password_reset_request import (
     TechnicianPasswordResetRequestStatus,
 )
 from .audit_service import AuditService
+from .notification_service import NotificationService
 
 
 class TechnicianPasswordResetRequestService:
@@ -111,21 +111,17 @@ class TechnicianPasswordResetRequestService:
             },
         )
 
-        try:
-            self.repo.create_admin_notification_if_supported(
-                {
-                    "message": f"Technician {technician.full_name or technician.name} requested a password reset",
-                    "metadata_json": json.dumps(
-                        {
-                            "technician_id": str(technician.id),
-                            "password_reset_request_id": str(row.id),
-                            "email": technician.email,
-                        }
-                    ),
-                }
-            )
-        except Exception:
-            pass
+        NotificationService(self.db).create_admin_notifications(
+            event_type="technician_password_reset_request",
+            title="Password Reset Request",
+            message=f"Technician {technician.full_name or technician.name} requested a password reset.",
+            payload={
+                "technician_id": str(technician.id),
+                "password_reset_request_id": str(row.id),
+                "email": technician.email,
+                "href": "/admin/accounts",
+            },
+        )
 
         self.db.commit()
         return TechnicianPasswordResetRequestNotificationResponse(message=message)

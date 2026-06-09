@@ -25,6 +25,7 @@ from ...schemas.admin_jobs import (
     AdminJobUpdateRequest,
 )
 from ...services.job_services_service import JobServicesService
+from ...services.notification_service import NotificationService
 from ...services.pre_assignment_service import PreAssignmentService
 
 router = APIRouter(
@@ -459,6 +460,21 @@ def update_admin_job_assignment(
                 "technician_name": assigned_technician.name if assigned_technician is not None else None,
             },
         )
+    if assigned_technician is not None and (
+        previous_assigned_technician is None or previous_assigned_technician.id != assigned_technician.id
+    ):
+        NotificationService(db).create_notifications(
+            recipient_role="technician",
+            recipient_user_ids=[assigned_technician.id],
+            event_type="job_assigned",
+            title="New Job Assigned",
+            message=f"You have been assigned a new job: {job_row.job_code}.",
+            payload={
+                "job_id": str(job_row.id),
+                "job_code": job_row.job_code,
+                "href": f"/tech/current-job?jobId={job_row.id}",
+            },
+        )
     db.commit()
     db.refresh(job_row)
 
@@ -488,6 +504,7 @@ def confirm_admin_job(
     if normalized_status in {DispatchJobStatus.CANCELLED, DispatchJobStatus.COMPLETED}:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Completed/cancelled jobs cannot be confirmed")
 
+    previous_assigned_technician_id = job_row.assigned_tech_id
     if job_row.assigned_tech_id is None and job_row.pre_assigned_technician_id is not None:
         job_row.assigned_tech_id = job_row.pre_assigned_technician_id
     elif job_row.assigned_tech_id is None and job_row.pre_assigned_technician_id is None:
@@ -518,6 +535,21 @@ def confirm_admin_job(
                 "technician_name": assigned_technician.name if assigned_technician is not None else None,
             },
         )
+    if job_row.assigned_tech_id is not None and previous_assigned_technician_id != job_row.assigned_tech_id:
+        assigned_technician = db.query(Technician).filter(Technician.id == job_row.assigned_tech_id).first()
+        if assigned_technician is not None:
+            NotificationService(db).create_notifications(
+                recipient_role="technician",
+                recipient_user_ids=[assigned_technician.id],
+                event_type="job_assigned",
+                title="New Job Assigned",
+                message=f"You have been assigned a new job: {job_row.job_code}.",
+                payload={
+                    "job_id": str(job_row.id),
+                    "job_code": job_row.job_code,
+                    "href": f"/tech/current-job?jobId={job_row.id}",
+                },
+            )
 
     db.commit()
     db.refresh(job_row)

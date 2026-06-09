@@ -158,6 +158,7 @@ export default function TechnicianChatPage() {
   const navigate = useNavigate();
   const { techId: previewTechId } = useParams();
   const [searchParams] = useSearchParams();
+  const requestedConversationId = searchParams.get('conversationId');
   const requestedJobId = searchParams.get('jobId');
   const isPreviewMode = Boolean(previewTechId);
   const routeBase = isPreviewMode ? `/admin/tech-preview/${previewTechId}` : '/tech';
@@ -234,6 +235,14 @@ export default function TechnicianChatPage() {
       ? (await fetchAdminChatConversations(token, search.trim() || undefined)).filter((row) => row.technician_id === previewTechId)
       : await fetchTechnicianChatConversations(token, search.trim() || undefined);
     setConversations(next);
+
+    if (requestedConversationId && preserveSelection) {
+      const matchedConversation = next.find((row) => row.id === requestedConversationId);
+      if (matchedConversation) {
+        setSelectedConversationId(matchedConversation.id);
+        return;
+      }
+    }
 
     if (requestedJobId && preserveSelection) {
       const matchedJobConversation = next.find((row) => row.job_id === requestedJobId);

@@ -150,6 +150,7 @@ function getConversationInitials(conversation: BackendAdminChatConversation | nu
 export default function PlatformChatPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const requestedConversationId = searchParams.get('conversationId');
   const requestedJobId = searchParams.get('jobId');
   const [conversations, setConversations] = useState<BackendAdminChatConversation[]>([]);
   const [messages, setMessages] = useState<BackendChatMessage[]>([]);
@@ -249,6 +250,14 @@ export default function PlatformChatPage() {
     const next = await fetchAdminChatConversations(token, search.trim() || undefined);
     setConversations(next);
     syncUnreadBadge(next.reduce((sum, row) => sum + row.unread_count, 0));
+
+    if (requestedConversationId && preserveSelection) {
+      const matchedConversation = next.find((row) => row.id === requestedConversationId);
+      if (matchedConversation) {
+        setSelectedConversationId(matchedConversation.id);
+        return;
+      }
+    }
 
     if (requestedJobId && preserveSelection) {
       const matchedJobConversation = next.find((row) => row.job_id === requestedJobId);
