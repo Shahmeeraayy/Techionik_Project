@@ -1318,9 +1318,9 @@ export default function ReportsPage() {
                   <Skeleton className="h-[300px] w-full bg-white/10" />
                 ) : (
                   <div className="space-y-4">
-                    {(overview?.payment_metrics.payment_breakdown ?? []).length ? (
+                    {(overview?.payment_metrics?.payment_breakdown ?? []).length ? (
                       <div className="space-y-2">
-                        {overview.payment_metrics.payment_breakdown.map((row) => (
+                        {(overview?.payment_metrics?.payment_breakdown ?? []).map((row) => (
                           <div key={row.label} className="rounded-2xl border border-white/8 bg-[rgba(255,255,255,0.03)] p-4">
                             <div className="flex items-center justify-between gap-3">
                               <div>
@@ -1333,9 +1333,9 @@ export default function ReportsPage() {
                         ))}
                       </div>
                     ) : null}
-                    {(overview?.payment_metrics.payment_amount_by_method ?? []).length ? (
+                    {(overview?.payment_metrics?.payment_amount_by_method ?? []).length ? (
                       <div className="space-y-2">
-                        {overview.payment_metrics.payment_amount_by_method.map((row) => (
+                        {(overview?.payment_metrics?.payment_amount_by_method ?? []).map((row) => (
                           <div key={row.method} className="rounded-2xl border border-white/8 bg-[rgba(255,255,255,0.03)] p-4">
                             <div className="flex items-center justify-between gap-3">
                               <div>
