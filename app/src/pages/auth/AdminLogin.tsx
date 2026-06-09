@@ -47,9 +47,16 @@ export default function AdminLoginPage() {
     setIsSubmitting(true);
 
     try {
-      await login(email, password, 'admin', { remember: rememberSession });
-      const destination = from && from.startsWith('/admin') ? from : '/admin';
-      navigate(destination, { replace: true });
+      try {
+        await login(email, password, 'super_admin', { remember: rememberSession });
+        const destination = from && from.startsWith('/super-admin') ? from : '/super-admin';
+        navigate(destination, { replace: true });
+        return;
+      } catch {
+        await login(email, password, 'admin', { remember: rememberSession });
+        const destination = from && from.startsWith('/admin') ? from : '/admin';
+        navigate(destination, { replace: true });
+      }
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'Sign in failed.');
     } finally {
@@ -66,7 +73,7 @@ export default function AdminLoginPage() {
         <div className="mx-auto w-full max-w-xl">
           <div className="inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-cyan-100">
             <ShieldCheck className="h-4 w-4" />
-            NexusOps Admin
+            NexusOps Admin Access
           </div>
 
           <h1 className="mt-7 text-[clamp(2.45rem,5vw,4.35rem)] font-semibold leading-[0.95] tracking-[-0.055em]">
@@ -74,7 +81,7 @@ export default function AdminLoginPage() {
           </h1>
 
           <p className="mt-5 max-w-lg text-base leading-8 text-slate-300">
-            Sign in to manage daily operations.
+            Sign in with admin or Super Admin credentials and NexusOps will open the right portal.
           </p>
 
           <div className="mt-8 grid max-w-lg gap-3">
@@ -101,11 +108,11 @@ export default function AdminLoginPage() {
                 </span>
                 <span>
                   <span className="block text-lg font-bold tracking-[-0.03em]">NexusOps</span>
-                  <span className="block text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">NexusOps Admin</span>
+                  <span className="block text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Unified Login</span>
                 </span>
               </Link>
               <span className="hidden rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs font-semibold text-slate-300 sm:inline-flex">
-                Admin Access
+                Admin / Super Admin
               </span>
             </div>
 
@@ -118,7 +125,7 @@ export default function AdminLoginPage() {
                 Sign in
               </h2>
               <p className="mt-4 text-sm leading-7 text-slate-400">
-                Enter your admin credentials.
+                Enter your organization admin or platform owner credentials.
               </p>
             </div>
 
@@ -229,7 +236,7 @@ export default function AdminLoginPage() {
               <div className="flex items-start gap-3">
                 <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-cyan-200" />
                 <p className="text-sm leading-6 text-slate-400">
-                  Protected access for dispatch leaders, billing teams, and administrators managing daily service operations.
+                  Protected access for platform owners and organization administrators from one login screen.
                 </p>
               </div>
             </div>

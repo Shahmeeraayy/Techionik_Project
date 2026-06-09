@@ -13,7 +13,6 @@ const AdminSignupPage = lazy(() => import('@/pages/auth/AdminSignup'));
 const TechnicianLoginPage = lazy(() => import('@/pages/auth/TechnicianLogin'));
 const TechnicianPasswordResetPage = lazy(() => import('@/pages/auth/TechnicianPasswordReset'));
 const TechnicianSignupPage = lazy(() => import('@/pages/auth/TechnicianSignup'));
-const SuperAdminLoginPage = lazy(() => import('@/pages/super-admin/Login'));
 const MarketingHome = lazy(() => import('@/pages/marketing/Home'));
 const BookingPortalPage = lazy(() => import('@/pages/public/BookingPortal'));
 
@@ -72,7 +71,7 @@ function App() {
 
           {/* Login Portals */}
           <Route path="/login" element={<PublicOnly><AdminLoginPage /></PublicOnly>} />
-          <Route path="/super-admin/login" element={<PublicOnly><SuperAdminLoginPage /></PublicOnly>} />
+          <Route path="/super-admin/login" element={<PublicOnly><AdminLoginPage /></PublicOnly>} />
           <Route path="/admin/login" element={<PublicOnly><AdminLoginPage /></PublicOnly>} />
           <Route path="/admin/signup" element={<PublicOnly><AdminSignupPage /></PublicOnly>} />
           <Route path="/tech/login" element={<PublicOnly><TechnicianLoginPage /></PublicOnly>} />

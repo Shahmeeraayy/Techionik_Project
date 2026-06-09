@@ -1,6 +1,6 @@
 import os
 import unittest
-from datetime import date, timedelta
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 from uuid import uuid4
 
@@ -659,6 +659,76 @@ class InvoiceApiTests(unittest.TestCase):
         pending_res = self.client.get("/invoices/pending-approvals", headers=self.auth_header)
         self.assertEqual(pending_res.status_code, 200, pending_res.text)
         self.assertEqual(len(pending_res.json()), 1)
+
+        overview_res = self.client.get(
+            "/admin/reports/overview",
+            params={
+                "from_date": str(date.today() - timedelta(days=7)),
+                "to_date": str(date.today()),
+            },
+            headers=self.auth_header,
+        )
+        self.assertEqual(overview_res.status_code, 200, overview_res.text)
+        overview_payload = overview_res.json()
+        self.assertEqual(overview_payload["kpis"]["pending_approvals"], 1)
+        pending_row = next(
+            (row for row in overview_payload["invoice_performance"] if row["state"] == "Pending Approval"),
+            None,
+        )
+        self.assertIsNotNone(pending_row)
+        self.assertEqual(pending_row["count"], 1)
+
+    def test_reports_pending_approvals_respect_selected_date_range(self):
+        dealership = self._seed_dealership()
+        technician = self._seed_technician()
+        self._seed_service_catalog(name="Diagnostics")
+        now = datetime.now(UTC)
+        historical_created_at = now - timedelta(days=45)
+        historical_completed_at = now - timedelta(days=40)
+
+        with SessionLocal() as db:
+            db.add(
+                Job(
+                    id=uuid4(),
+                    job_code="SM2-2024-5100",
+                    status="COMPLETED",
+                    assigned_tech_id=technician.id,
+                    dealership_id=dealership.id,
+                    customer_name=dealership.name,
+                    customer_address=dealership.address,
+                    customer_city=dealership.city,
+                    customer_state="QC",
+                    customer_zip_code=dealership.postal_code,
+                    service_type="Diagnostics",
+                    hours_worked=Decimal("1.00"),
+                    rate=Decimal("80.00"),
+                    vehicle="2024 Audi A4",
+                    tax_code="EXEMPT",
+                    created_at=historical_created_at,
+                    completed_at=historical_completed_at,
+                    updated_at=historical_completed_at,
+                )
+            )
+            db.add(
+                Job(
+                    id=uuid4(),
+                    job_code="SM2-2024-5101",
+                    status="COMPLETED",
+                    assigned_tech_id=technician.id,
+                    dealership_id=dealership.id,
+                    customer_name=dealership.name,
+                    customer_address=dealership.address,
+                    customer_city=dealership.city,
+                    customer_state="QC",
+                    customer_zip_code=dealership.postal_code,
+                    service_type="Diagnostics",
+                    hours_worked=Decimal("1.00"),
+                    rate=Decimal("80.00"),
+                    vehicle="2024 Audi A5",
+                    tax_code="EXEMPT",
+                )
+            )
+            db.commit()
 
         overview_res = self.client.get(
             "/admin/reports/overview",

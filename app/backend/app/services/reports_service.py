@@ -206,8 +206,6 @@ class ReportsService:
         all_techs = self.db.query(Technician).order_by(Technician.name.asc()).all()
         tech_by_id = {row.id: row for row in all_techs}
         all_dealerships = self.db.query(Dealership).order_by(Dealership.name.asc()).all()
-        dealership_by_id = {row.id: row for row in all_dealerships}
-
         jobs_in_range = (
             self.db.query(Job)
             .filter(Job.created_at >= start_dt, Job.created_at <= end_dt)
@@ -232,7 +230,13 @@ class ReportsService:
         pending_approval_jobs = sum(
             1
             for job, dealership in pending_approval_rows
-            if _normalize_job_status(job.status) == "Completed" and _is_pending_approval_eligible(job, dealership)
+            if (
+                _normalize_job_status(job.status) == "Completed"
+                and (completed_at := _job_completion_timestamp(job)) is not None
+                and completed_at >= start_dt
+                and completed_at <= end_dt
+                and _is_pending_approval_eligible(job, dealership)
+            )
         )
 
         active_techs = [
