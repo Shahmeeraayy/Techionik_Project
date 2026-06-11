@@ -1896,7 +1896,7 @@ export default function TechniciansPage() {
                                             </div>
 
                                             {profileSummary ? (
-                                                <div className="grid grid-cols-2 lg:grid-cols-5 gap-2">
+                                                <div className="grid grid-cols-2 lg:grid-cols-6 gap-2">
                                                     <ProfileStat
                                                         label="Active Jobs"
                                                         value={String(profileSummary.activeJobs)}
@@ -1906,6 +1906,7 @@ export default function TechniciansPage() {
                                                     <ProfileStat label="Skills" value={String(profileSummary.skillsCount)} />
                                                     <ProfileStat label="Open Days" value={String(profileSummary.openDaysCount)} hint="Per week" />
                                                     <ProfileStat label="Time Off" value={String(profileSummary.timeOffCount)} hint="Upcoming entries" />
+                                                    <ProfileStat label="Documents" value={String(profileSummary.documentsCount)} hint="Licenses/files" />
                                                 </div>
                                             ) : null}
                                         </div>
@@ -1919,11 +1920,81 @@ export default function TechniciansPage() {
                                             <h3 className="mb-4 flex items-center gap-2 text-sm font-bold text-white">
                                                 <Activity className="h-4 w-4" /> Technician Profile
                                             </h3>
-                                            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                                            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
                                                 <ProfileStat label="Email" value={selectedTech.email} valueClassName="text-sm text-white" />
                                                 <ProfileStat label="Phone" value={formatPhoneForDisplay(selectedTech.phone) || 'Not set'} valueClassName="text-sm text-white" />
+                                                <ProfileStat label="Employment" value={EMPLOYMENT_STATUS_LABELS[techDraft.employment_status]} valueClassName="text-sm text-white" />
                                                 <ProfileStat label="Availability" value={selectedTech.effective_availability ? 'Dispatch Ready' : 'Unavailable'} valueClassName={selectedTech.effective_availability ? 'text-emerald-100' : 'text-slate-300'} />
                                                 <ProfileStat label="Account Control" value="Tech Accounts" hint="Activate, suspend, approve, and reset there" valueClassName="text-sm text-white" />
+                                            </div>
+                                        </Card>
+
+                                        <Card className="p-4 border-white/10 bg-white/[0.03] shadow-none">
+                                            <h3 className="mb-4 flex items-center gap-2 text-sm font-bold text-white">
+                                                <UserCog className="h-4 w-4" /> Operations Details
+                                            </h3>
+                                            <div className="grid gap-4 md:grid-cols-2">
+                                                <div className="space-y-2">
+                                                    <Label className="text-xs uppercase tracking-wider text-slate-400">Employment Status</Label>
+                                                    <Select
+                                                        value={techDraft.employment_status}
+                                                        onValueChange={(value) => updateDraft((draft) => ({
+                                                            ...draft,
+                                                            employment_status: value as BackendTechnicianEmploymentStatus,
+                                                        }))}
+                                                    >
+                                                        <SelectTrigger className="h-11 rounded-2xl border-white/10 bg-[#0b1424] text-white">
+                                                            <SelectValue placeholder="Select employment status" />
+                                                        </SelectTrigger>
+                                                        <SelectContent className="border-white/10 bg-[#0b1424] text-slate-100">
+                                                            {EMPLOYMENT_STATUS_OPTIONS.map(([value, label]) => (
+                                                                <SelectItem key={value} value={value}>{label}</SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label className="text-xs uppercase tracking-wider text-slate-400">Emergency Contact Name</Label>
+                                                    <Input
+                                                        data-admin-dark-input="true"
+                                                        style={adminDarkInputStyle}
+                                                        className="h-11 rounded-2xl border-white/10 !text-white placeholder:!text-slate-500"
+                                                        placeholder="e.g. Maria Alvarez"
+                                                        value={techDraft.emergency_contact_name ?? ''}
+                                                        onChange={(event) => updateDraft((draft) => ({
+                                                            ...draft,
+                                                            emergency_contact_name: event.target.value,
+                                                        }))}
+                                                    />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label className="text-xs uppercase tracking-wider text-slate-400">Emergency Contact Phone</Label>
+                                                    <Input
+                                                        data-admin-dark-input="true"
+                                                        style={adminDarkInputStyle}
+                                                        className="h-11 rounded-2xl border-white/10 !text-white placeholder:!text-slate-500"
+                                                        placeholder={phoneExampleFormat}
+                                                        value={techDraft.emergency_contact_phone ?? ''}
+                                                        onChange={(event) => updateDraft((draft) => ({
+                                                            ...draft,
+                                                            emergency_contact_phone: formatUsPhoneInput(event.target.value),
+                                                        }))}
+                                                    />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label className="text-xs uppercase tracking-wider text-slate-400">Relationship</Label>
+                                                    <Input
+                                                        data-admin-dark-input="true"
+                                                        style={adminDarkInputStyle}
+                                                        className="h-11 rounded-2xl border-white/10 !text-white placeholder:!text-slate-500"
+                                                        placeholder="e.g. Spouse, Parent, Friend"
+                                                        value={techDraft.emergency_contact_relationship ?? ''}
+                                                        onChange={(event) => updateDraft((draft) => ({
+                                                            ...draft,
+                                                            emergency_contact_relationship: event.target.value,
+                                                        }))}
+                                                    />
+                                                </div>
                                             </div>
                                         </Card>
 
