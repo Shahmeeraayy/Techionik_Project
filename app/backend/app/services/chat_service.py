@@ -838,7 +838,7 @@ class ChatService:
             actor_id=self.current_user.user_id,
             action="chat.broadcast.sent",
             entity_type=AuditEntityType.CHAT_CONVERSATION.value,
-            entity_id=UUID(int=0),
+            entity_id=messages[0].conversation_id,
             metadata={
                 "recipient_count": len(recipient_ids),
                 "technician_ids": [str(item) for item in recipient_ids],

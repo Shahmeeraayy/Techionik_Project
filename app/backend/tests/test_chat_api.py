@@ -38,6 +38,10 @@ def _tiny_wav_bytes() -> bytes:
     return buffer.getvalue()
 
 
+def _tiny_mp4_bytes() -> bytes:
+    return b"\x00\x00\x00\x18ftypmp42\x00\x00\x00\x00mp42isom" + (b"\x00" * 32)
+
+
 class ChatApiTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -291,6 +295,72 @@ class ChatApiTestCase(unittest.TestCase):
         )
         self.assertEqual(forbidden_status.status_code, 403, forbidden_status.text)
 
+    def test_admin_broadcast_reaches_selected_technicians_only(self):
+        sent = self.client.post(
+            "/admin/chat/broadcast",
+            headers=self.admin_one_headers,
+            json={
+                "text": "Weather delay: check the updated dispatch board.",
+                "technician_ids": [self.tech_one_id, self.tech_two_id],
+            },
+        )
+        self.assertEqual(sent.status_code, 201, sent.text)
+        payload = sent.json()
+        self.assertEqual(len(payload), 2)
+        self.assertTrue(all(row["is_broadcast"] for row in payload))
+        self.assertTrue(all(row["metadata"]["broadcast"] is True for row in payload))
+
+        tech_one_messages = self.client.get("/technicians/me/chat/messages", headers=self.tech_one_headers)
+        self.assertEqual(tech_one_messages.status_code, 200, tech_one_messages.text)
+        self.assertTrue(any(row["text"] == "Weather delay: check the updated dispatch board." for row in tech_one_messages.json()))
+
+        tech_three_messages = self.client.get("/technicians/me/chat/messages", headers=self.tech_three_headers)
+        self.assertEqual(tech_three_messages.status_code, 200, tech_three_messages.text)
+        self.assertFalse(any(row["text"] == "Weather delay: check the updated dispatch board." for row in tech_three_messages.json()))
+
+        forbidden = self.client.post(
+            "/admin/chat/broadcast",
+            headers=self.tech_one_headers,
+            json={"text": "Technicians cannot broadcast."},
+        )
+        self.assertEqual(forbidden.status_code, 403, forbidden.text)
+
+    def test_typing_status_is_member_scoped(self):
+        resolved = self.client.get(
+            f"/admin/chat/jobs/{self.job_one_id}/conversation",
+            headers=self.admin_one_headers,
+        )
+        self.assertEqual(resolved.status_code, 200, resolved.text)
+        conversation_id = resolved.json()["conversation"]["id"]
+
+        started = self.client.post(
+            f"/admin/chat/threads/{conversation_id}/typing",
+            headers=self.admin_one_headers,
+            json={"is_typing": True},
+        )
+        self.assertEqual(started.status_code, 200, started.text)
+
+        visible_to_assigned_tech = self.client.get(
+            f"/technicians/me/chat/threads/{conversation_id}/typing",
+            headers=self.tech_one_headers,
+        )
+        self.assertEqual(visible_to_assigned_tech.status_code, 200, visible_to_assigned_tech.text)
+        self.assertEqual(len(visible_to_assigned_tech.json()["participants"]), 1)
+        self.assertEqual(visible_to_assigned_tech.json()["participants"][0]["role"], "admin")
+
+        hidden_from_unassigned_tech = self.client.get(
+            f"/technicians/me/chat/threads/{conversation_id}/typing",
+            headers=self.tech_two_headers,
+        )
+        self.assertEqual(hidden_from_unassigned_tech.status_code, 403, hidden_from_unassigned_tech.text)
+
+        stopped = self.client.post(
+            f"/admin/chat/threads/{conversation_id}/typing",
+            headers=self.admin_one_headers,
+            json={"is_typing": False},
+        )
+        self.assertEqual(stopped.status_code, 200, stopped.text)
+
     def test_secure_attachment_voice_and_audit_access_are_scoped(self):
         resolved = self.client.get(
             f"/admin/chat/jobs/{self.job_one_id}/conversation",
@@ -301,6 +371,7 @@ class ChatApiTestCase(unittest.TestCase):
 
         pdf_bytes = b"%PDF-1.4\n1 0 obj\n<<>>\nendobj\ntrailer\n<<>>\n%%EOF"
         wav_bytes = _tiny_wav_bytes()
+        video_bytes = _tiny_mp4_bytes()
         send = self.client.post(
             f"/admin/chat/threads/{conversation_id}/messages",
             headers=self.admin_one_headers,
@@ -320,18 +391,26 @@ class ChatApiTestCase(unittest.TestCase):
                         "duration_seconds": 1,
                         "data_url": _data_url("audio/wav", wav_bytes),
                     },
+                    {
+                        "name": "walkaround.mp4",
+                        "mime_type": "video/mp4",
+                        "size_bytes": len(video_bytes),
+                        "data_url": _data_url("video/mp4", video_bytes),
+                    },
                 ],
             },
         )
         self.assertEqual(send.status_code, 201, send.text)
         payload = send.json()
         self.assertEqual(payload["message_type"], "mixed")
-        self.assertEqual(len(payload["attachments"]), 2)
+        self.assertEqual(len(payload["attachments"]), 3)
         self.assertTrue(all(item["preview_url"] for item in payload["attachments"]))
         self.assertTrue(all(item["download_url"] for item in payload["attachments"]))
         self.assertTrue(all(item.get("data_url") in (None, "") for item in payload["attachments"]))
 
         voice_attachment = next(item for item in payload["attachments"] if item["attachment_type"] == "voice")
+        video_attachment = next(item for item in payload["attachments"] if item["attachment_type"] == "video")
+        self.assertEqual(video_attachment["mime_type"], "video/mp4")
         attachment_id = voice_attachment["id"]
         download = self.client.get(
             f"/chat/attachments/{attachment_id}/content",
@@ -339,6 +418,13 @@ class ChatApiTestCase(unittest.TestCase):
         )
         self.assertEqual(download.status_code, 200, download.text)
         self.assertEqual(download.headers["content-type"], "audio/wav")
+
+        video_download = self.client.get(
+            f"/chat/attachments/{video_attachment['id']}/content",
+            headers=self.tech_one_headers,
+        )
+        self.assertEqual(video_download.status_code, 200, video_download.text)
+        self.assertEqual(video_download.headers["content-type"], "video/mp4")
 
         forbidden = self.client.get(
             f"/chat/attachments/{attachment_id}/content",
