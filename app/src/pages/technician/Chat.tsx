@@ -71,10 +71,12 @@ import {
 import {
   fetchAdminChatConversations,
   fetchAdminChatThreadMessages,
+  fetchAdminChatTypingStatus,
   fetchAdminJobChatConversation,
   fetchAdminPinnedChatMessages,
   fetchTechnicianChatConversations,
   fetchTechnicianChatThreadMessages,
+  fetchTechnicianChatTypingStatus,
   fetchPendingChatterLocationRequests,
   fetchTechnicianJobChatConversation,
   fetchTechnicianPinnedChatMessages,
@@ -88,7 +90,9 @@ import {
   type BackendChatAttachment,
   type BackendChatConversation,
   type BackendChatMessage,
+  type BackendChatTypingParticipant,
   type BackendChatterLocationRequest,
+  updateTechnicianChatTypingStatus,
 } from '@/lib/backend-api';
 import { cn } from '@/lib/utils';
 import { captureGps } from '@/lib/attendance-store';
@@ -173,6 +177,7 @@ export default function TechnicianChatPage() {
   const [pendingAttachmentsByConversation, setPendingAttachmentsByConversation] = useState<Record<string, BackendChatAttachment[]>>({});
   const [importantNextMessage, setImportantNextMessage] = useState(false);
   const [notificationEnabled, setNotificationEnabled] = useState(false);
+  const [typingParticipants, setTypingParticipants] = useState<BackendChatTypingParticipant[]>([]);
   const [loadingConversations, setLoadingConversations] = useState(true);
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [workspaceTab, setWorkspaceTab] = useState<ChatWorkspaceTab>('chat');
@@ -181,6 +186,7 @@ export default function TechnicianChatPage() {
   const attachInputRef = useRef<HTMLInputElement | null>(null);
   const sitePhotoInputRef = useRef<HTMLInputElement | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
+  const typingStopTimeoutRef = useRef<number | null>(null);
   const seenMessageIdsRef = useRef<Set<string>>(new Set());
   const {
     isRecording,
@@ -212,6 +218,9 @@ export default function TechnicianChatPage() {
   const selectedLocationRequests = selectedConversationId
     ? locationRequests.filter((request) => request.conversation_id === selectedConversationId)
     : [];
+  const typingLabel = typingParticipants.length > 0
+    ? `${typingParticipants.map((participant) => participant.display_name).join(', ')} ${typingParticipants.length === 1 ? 'is' : 'are'} typing...`
+    : '';
 
   const groupedConversations = useMemo(() => ({
     direct: conversations.filter((conversation) => conversation.channel_kind === 'direct'),
@@ -306,6 +315,43 @@ export default function TechnicianChatPage() {
     }
   };
 
+  const loadTypingStatus = async (conversationId = selectedConversationId) => {
+    if (!token || !conversationId) {
+      setTypingParticipants([]);
+      return;
+    }
+    try {
+      const status = isPreviewMode
+        ? await fetchAdminChatTypingStatus(token, conversationId)
+        : await fetchTechnicianChatTypingStatus(token, conversationId);
+      setTypingParticipants(status.participants);
+    } catch {
+      setTypingParticipants([]);
+    }
+  };
+
+  const updateTypingStatus = async (isTyping: boolean, conversationId = selectedConversationId) => {
+    if (isPreviewMode || !token || !conversationId) return;
+    try {
+      const status = await updateTechnicianChatTypingStatus(token, conversationId, isTyping);
+      setTypingParticipants(status.participants);
+    } catch {
+      // Typing status is best-effort and should not block messaging.
+    }
+  };
+
+  const handleDraftMessageChange = (value: string) => {
+    setDraftMessage(value);
+    if (isPreviewMode || !selectedConversationId) return;
+    void updateTypingStatus(value.trim().length > 0);
+    if (typingStopTimeoutRef.current) {
+      window.clearTimeout(typingStopTimeoutRef.current);
+    }
+    typingStopTimeoutRef.current = window.setTimeout(() => {
+      void updateTypingStatus(false);
+    }, 1800);
+  };
+
   const loadLocationRequests = async () => {
     if (!token || isPreviewMode) {
       setLocationRequests([]);
@@ -358,6 +404,7 @@ export default function TechnicianChatPage() {
       void loadLocationRequests();
       if (selectedConversationId) {
         void loadThread(selectedConversationId, historySearch, true);
+        void loadTypingStatus(selectedConversationId);
       }
     }, 5000);
     const onFocus = () => {
@@ -365,6 +412,7 @@ export default function TechnicianChatPage() {
       void loadLocationRequests();
       if (selectedConversationId) {
         void loadThread(selectedConversationId, historySearch, true);
+        void loadTypingStatus(selectedConversationId);
       }
     };
     window.addEventListener('focus', onFocus);
@@ -384,7 +432,26 @@ export default function TechnicianChatPage() {
   useEffect(() => {
     setWorkspaceTab('chat');
     setImportantNextMessage(false);
+    setTypingParticipants([]);
+    if (typingStopTimeoutRef.current) {
+      window.clearTimeout(typingStopTimeoutRef.current);
+      typingStopTimeoutRef.current = null;
+    }
+    if (selectedConversationId) {
+      void loadTypingStatus(selectedConversationId);
+    }
   }, [selectedConversationId]);
+
+  useEffect(() => {
+    return () => {
+      if (typingStopTimeoutRef.current) {
+        window.clearTimeout(typingStopTimeoutRef.current);
+      }
+      if (selectedConversationId && !isPreviewMode) {
+        void updateTypingStatus(false, selectedConversationId);
+      }
+    };
+  }, [isPreviewMode, selectedConversationId]);
 
   const handleEnableNotifications = async () => {
     if (typeof window === 'undefined' || !('Notification' in window)) {
@@ -443,6 +510,7 @@ export default function TechnicianChatPage() {
     });
 
     setMessages((prev) => [...prev, sent]);
+    void updateTypingStatus(false, conversationId);
     seenMessageIdsRef.current.add(sent.id);
     setDraftMessage((current) => (payload.clearDraft ? '' : current));
     if (payload.clearAttachments ?? true) {
@@ -964,6 +1032,11 @@ export default function TechnicianChatPage() {
                         ))}
                       </div>
                     ) : null}
+                    {typingLabel ? (
+                      <div className="mb-2 px-4 text-xs font-medium text-cyan-700 dark:text-cyan-200">
+                        {typingLabel}
+                      </div>
+                    ) : null}
                     {isRecording || isVoiceProcessing ? (
                       <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1.5 text-xs text-cyan-100">
                         {isRecording ? <Square className="h-3.5 w-3.5 fill-current" /> : <RefreshCw className="h-3.5 w-3.5 animate-spin" />}
@@ -1026,7 +1099,7 @@ export default function TechnicianChatPage() {
                       <div className="min-w-0 flex-1">
                         <Textarea
                           value={draftMessage}
-                          onChange={(event) => setDraftMessage(event.target.value)}
+                          onChange={(event) => handleDraftMessageChange(event.target.value)}
                           onKeyDown={handleComposerKeyDown}
                           placeholder={isPreviewMode ? 'Preview mode is read-only' : 'Write a secure message'}
                           className="min-h-[56px] resize-none rounded-[28px] border border-slate-300 bg-white px-5 py-4 text-slate-900 placeholder:text-slate-400 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-slate-500"

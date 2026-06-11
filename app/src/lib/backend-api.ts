@@ -2201,7 +2201,10 @@ export async function broadcastAdminChatMessage(
     token,
     body: payload,
   });
-  return messages.map((message) => normalizeChatMessage(message, message.conversation_id));
+  return messages.map((message) => {
+    const conversationId: string = message.conversation_id ?? 'broadcast';
+    return normalizeChatMessage(message, conversationId);
+  });
 }
 
 export async function fetchAdminChatTypingStatus(
