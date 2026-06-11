@@ -51,6 +51,7 @@ MIGRATIONS: list[Migration] = [
     Migration("020_postgres_runtime_alignment.sql"),
     Migration("021_notifications_v1.sql"),
     Migration("022_tenant_notification_controls.sql"),
+    Migration("023_technician_profile_v1_alignment.sql"),
 ]
 
 
@@ -151,6 +152,10 @@ def ensure_sqlite_technician_password_column(conn) -> None:
     ensure_column("technicians", "password", "VARCHAR(255)")
     ensure_column("technicians", "full_name", "VARCHAR(255)")
     ensure_column("technicians", "profile_picture_url", "TEXT")
+    ensure_column("technicians", "emergency_contact_name", "VARCHAR(255)")
+    ensure_column("technicians", "emergency_contact_phone", "VARCHAR(50)")
+    ensure_column("technicians", "emergency_contact_relationship", "VARCHAR(128)")
+    ensure_column("technicians", "employment_status", "VARCHAR(32) DEFAULT 'full_time' NOT NULL")
     ensure_column("technicians", "working_days", "TEXT DEFAULT '[]' NOT NULL")
     ensure_column("technicians", "working_hours_start", "TIME")
     ensure_column("technicians", "working_hours_end", "TIME")
@@ -215,6 +220,7 @@ def ensure_multi_tenant_columns(conn) -> None:
         "skills",
         "technician_email_change_requests",
         "technician_password_reset_requests",
+        "technician_documents",
         "technician_skills",
         "technician_time_off",
         "technician_working_hours",

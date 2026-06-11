@@ -81,6 +81,7 @@ import {
     fetchAdminTenantEmailIdentity,
     getStoredAdminToken,
     updateAdminBookingPortalSettings,
+    updateAdminTenantEmailIdentity,
     updateAdminPriorityRule,
     updateAdminInvoiceBrandingSettings,
     type BackendBookingPortalSettings,
@@ -124,6 +125,14 @@ type BillingSubscriptionSettings = {
     renewalDate: string;
     technicianLimit: number;
     locationLimit: number;
+};
+
+type TenantEmailIdentityDraft = {
+    email_domain: string;
+    support_email: string;
+    billing_email: string;
+    invoice_email: string;
+    notification_email: string;
 };
 
 type BookingPortalSettingsState = {
@@ -219,6 +228,14 @@ const DEFAULT_BOOKING_PORTAL_SETTINGS: BookingPortalSettingsState = {
     detailsFieldLabel: '',
 };
 
+const DEFAULT_TENANT_EMAIL_IDENTITY_DRAFT: TenantEmailIdentityDraft = {
+    email_domain: '',
+    support_email: '',
+    billing_email: '',
+    invoice_email: '',
+    notification_email: '',
+};
+
 const mapBackendBookingPortalSettings = (row: BackendBookingPortalSettings): BookingPortalSettingsState => ({
     isEnabled: row.is_enabled,
     estimatedResponseTimeMessage: row.estimated_response_time_message,
@@ -227,6 +244,14 @@ const mapBackendBookingPortalSettings = (row: BackendBookingPortalSettings): Boo
     statusLookupEnabled: row.status_lookup_enabled,
     industryType: row.industry_type,
     detailsFieldLabel: row.details_field_label ?? '',
+});
+
+const mapBackendTenantEmailIdentityToDraft = (row: BackendTenantEmailIdentity | null): TenantEmailIdentityDraft => ({
+    email_domain: row?.email_domain ?? '',
+    support_email: row?.support_email ?? '',
+    billing_email: row?.billing_email ?? '',
+    invoice_email: row?.invoice_email ?? '',
+    notification_email: row?.notification_email ?? '',
 });
 
 const loadStoredObject = <T,>(key: string, fallback: T): T => {
@@ -272,6 +297,8 @@ export default function SettingsPage() {
     const [bookingPortalSettings, setBookingPortalSettings] = useState<BookingPortalSettingsState>(DEFAULT_BOOKING_PORTAL_SETTINGS);
     const [savedBookingPortalSettings, setSavedBookingPortalSettings] = useState<BookingPortalSettingsState>(DEFAULT_BOOKING_PORTAL_SETTINGS);
     const [tenantEmailIdentity, setTenantEmailIdentity] = useState<BackendTenantEmailIdentity | null>(null);
+    const [tenantEmailIdentityDraft, setTenantEmailIdentityDraft] = useState<TenantEmailIdentityDraft>(DEFAULT_TENANT_EMAIL_IDENTITY_DRAFT);
+    const [isSavingTenantEmailIdentity, setIsSavingTenantEmailIdentity] = useState(false);
     const [priorityRules, setPriorityRules] = useState<PriorityRule[]>([]);
     const [dealershipOptions, setDealershipOptions] = useState<DealershipOption[]>([]);
     const [technicianCount, setTechnicianCount] = useState(0);
@@ -334,6 +361,7 @@ export default function SettingsPage() {
             setBookingPortalSettings(DEFAULT_BOOKING_PORTAL_SETTINGS);
             setSavedBookingPortalSettings(DEFAULT_BOOKING_PORTAL_SETTINGS);
             setTenantEmailIdentity(null);
+            setTenantEmailIdentityDraft(DEFAULT_TENANT_EMAIL_IDENTITY_DRAFT);
             return;
         }
 
@@ -417,7 +445,9 @@ export default function SettingsPage() {
                 setSavedBookingPortalSettings(DEFAULT_BOOKING_PORTAL_SETTINGS);
             }
 
-            setTenantEmailIdentity(emailIdentityResult.status === 'fulfilled' ? emailIdentityResult.value : null);
+            const nextTenantEmailIdentity = emailIdentityResult.status === 'fulfilled' ? emailIdentityResult.value : null;
+            setTenantEmailIdentity(nextTenantEmailIdentity);
+            setTenantEmailIdentityDraft(mapBackendTenantEmailIdentityToDraft(nextTenantEmailIdentity));
         } finally {
             setRefreshing(false);
         }
@@ -523,6 +553,32 @@ export default function SettingsPage() {
     const handleSaveNotificationPreferences = () => {
         saveStoredObject(NOTIFICATION_PREFERENCES_STORAGE_KEY, notificationPreferences);
         alert('Notifications saved successfully.');
+    };
+
+    const handleSaveTenantEmailIdentity = async () => {
+        const adminToken = getStoredAdminToken();
+        if (!hasBackendAdminToken || !adminToken) {
+            alert('Admin session is required to save email identity settings.');
+            return;
+        }
+
+        setIsSavingTenantEmailIdentity(true);
+        try {
+            const saved = await updateAdminTenantEmailIdentity(adminToken, {
+                email_domain: tenantEmailIdentityDraft.email_domain.trim() || undefined,
+                support_email: tenantEmailIdentityDraft.support_email.trim() || undefined,
+                billing_email: tenantEmailIdentityDraft.billing_email.trim() || undefined,
+                invoice_email: tenantEmailIdentityDraft.invoice_email.trim() || undefined,
+                notification_email: tenantEmailIdentityDraft.notification_email.trim() || undefined,
+            });
+            setTenantEmailIdentity(saved);
+            setTenantEmailIdentityDraft(mapBackendTenantEmailIdentityToDraft(saved));
+            alert('Email identity saved successfully.');
+        } catch (error) {
+            alert(error instanceof Error ? error.message : 'Unable to save email identity.');
+        } finally {
+            setIsSavingTenantEmailIdentity(false);
+        }
     };
 
     const handleSaveBillingSubscription = () => {
@@ -912,7 +968,112 @@ export default function SettingsPage() {
                             {tenantEmailIdentity?.email_verified ? 'Verified' : 'Demo / Unverified'}
                         </Badge>
                     </div>
-                    <div className="mt-6 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                    <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1.3fr)_minmax(18rem,0.7fr)]">
+                        <div className="rounded-2xl border border-white/8 bg-white/[0.025] p-4">
+                            <div className="grid gap-4 md:grid-cols-2">
+                                <div className="space-y-2 md:col-span-2">
+                                    <Label className="text-sm text-slate-400" htmlFor="tenant-email-domain">
+                                        Custom Domain
+                                    </Label>
+                                    <Input
+                                        id="tenant-email-domain"
+                                        value={tenantEmailIdentityDraft.email_domain}
+                                        onChange={(event) => setTenantEmailIdentityDraft((prev) => ({ ...prev, email_domain: event.target.value }))}
+                                        placeholder="techionik.com"
+                                        style={settingsDarkInputStyle}
+                                        className="border-white/10 text-white placeholder:text-slate-500"
+                                    />
+                                    <p className="text-xs leading-5 text-slate-500">
+                                        This controls the domain used by the generated sender addresses for your workspace.
+                                    </p>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label className="text-sm text-slate-400" htmlFor="tenant-support-email">
+                                        Support Email
+                                    </Label>
+                                    <Input
+                                        id="tenant-support-email"
+                                        value={tenantEmailIdentityDraft.support_email}
+                                        onChange={(event) => setTenantEmailIdentityDraft((prev) => ({ ...prev, support_email: event.target.value }))}
+                                        style={settingsDarkInputStyle}
+                                        className="border-white/10 text-white placeholder:text-slate-500"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label className="text-sm text-slate-400" htmlFor="tenant-billing-email">
+                                        Billing Email
+                                    </Label>
+                                    <Input
+                                        id="tenant-billing-email"
+                                        value={tenantEmailIdentityDraft.billing_email}
+                                        onChange={(event) => setTenantEmailIdentityDraft((prev) => ({ ...prev, billing_email: event.target.value }))}
+                                        style={settingsDarkInputStyle}
+                                        className="border-white/10 text-white placeholder:text-slate-500"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label className="text-sm text-slate-400" htmlFor="tenant-invoice-email">
+                                        Invoice Email
+                                    </Label>
+                                    <Input
+                                        id="tenant-invoice-email"
+                                        value={tenantEmailIdentityDraft.invoice_email}
+                                        onChange={(event) => setTenantEmailIdentityDraft((prev) => ({ ...prev, invoice_email: event.target.value }))}
+                                        style={settingsDarkInputStyle}
+                                        className="border-white/10 text-white placeholder:text-slate-500"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label className="text-sm text-slate-400" htmlFor="tenant-notification-email">
+                                        Notification Email
+                                    </Label>
+                                    <Input
+                                        id="tenant-notification-email"
+                                        value={tenantEmailIdentityDraft.notification_email}
+                                        onChange={(event) => setTenantEmailIdentityDraft((prev) => ({ ...prev, notification_email: event.target.value }))}
+                                        style={settingsDarkInputStyle}
+                                        className="border-white/10 text-white placeholder:text-slate-500"
+                                    />
+                                </div>
+                            </div>
+                            <div className="mt-4 rounded-xl border border-dashed border-white/12 bg-[#080f1c] p-4">
+                                <p className="text-xs leading-5 text-slate-500">
+                                    Changing the custom domain will preserve any custom sender addresses. If an address still matches the old generated pattern, it updates to the new domain automatically.
+                                </p>
+                            </div>
+                            <div className="mt-4 flex flex-wrap items-center gap-3">
+                                <Button
+                                    size="sm"
+                                    className="bg-[#2F8E92] text-white hover:bg-[#267276]"
+                                    onClick={handleSaveTenantEmailIdentity}
+                                    disabled={isSavingTenantEmailIdentity}
+                                >
+                                    {isSavingTenantEmailIdentity ? 'Saving email identity...' : 'Save email identity'}
+                                </Button>
+                                <Badge className={cn(
+                                    'rounded-full px-3 py-1 text-xs font-semibold',
+                                    tenantEmailIdentity?.email_verified ? 'bg-emerald-500/15 text-emerald-200' : 'bg-amber-500/15 text-amber-200',
+                                )}>
+                                    {tenantEmailIdentity?.email_sending_status || 'demo'}
+                                </Badge>
+                            </div>
+                        </div>
+                        <div className="space-y-3">
+                            <div className="rounded-xl border border-white/8 bg-[#080f1c] p-4">
+                                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">Email domain</p>
+                                <p className="mt-2 break-all text-sm text-slate-200">{tenantEmailIdentity?.email_domain || 'tenant.nexusops.app'}</p>
+                            </div>
+                            <div className="rounded-xl border border-white/8 bg-[#080f1c] p-4">
+                                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">Sending status</p>
+                                <p className="mt-2 text-sm font-semibold text-cyan-200">{tenantEmailIdentity?.email_sending_status || 'demo'}</p>
+                            </div>
+                            <div className="rounded-xl border border-white/8 bg-[#080f1c] p-4">
+                                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">Workspace slug</p>
+                                <p className="mt-2 text-sm text-slate-200">{tenantEmailIdentity?.tenant_slug || 'workspace'}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
                         {([
                             ['Billing', tenantEmailIdentity?.billing_email],
                             ['Support', tenantEmailIdentity?.support_email],
@@ -924,20 +1085,6 @@ export default function SettingsPage() {
                                 <p className="mt-2 break-all text-sm font-semibold text-white">{value || 'Loading workspace identity...'}</p>
                             </div>
                         ))}
-                    </div>
-                    <div className="mt-4 grid gap-3 md:grid-cols-3">
-                        <div className="rounded-xl border border-white/8 bg-[#080f1c] p-4">
-                            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">Email domain</p>
-                            <p className="mt-2 break-all text-sm text-slate-200">{tenantEmailIdentity?.email_domain || 'tenant.nexusops.app'}</p>
-                        </div>
-                        <div className="rounded-xl border border-white/8 bg-[#080f1c] p-4">
-                            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">Sending status</p>
-                            <p className="mt-2 text-sm font-semibold text-cyan-200">{tenantEmailIdentity?.email_sending_status || 'demo'}</p>
-                        </div>
-                        <div className="rounded-xl border border-white/8 bg-[#080f1c] p-4">
-                            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">Workspace slug</p>
-                            <p className="mt-2 text-sm text-slate-200">{tenantEmailIdentity?.tenant_slug || 'workspace'}</p>
-                        </div>
                     </div>
                 </div>
 

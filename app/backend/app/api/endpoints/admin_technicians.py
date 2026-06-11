@@ -12,6 +12,9 @@ from ...schemas.technician_profile import (
     AssignmentReadinessResponse,
     SkillCreateRequest,
     SkillResponse,
+    TechnicianDocumentCreateRequest,
+    TechnicianDocumentResponse,
+    TechnicianDocumentUpdateRequest,
     TechnicianCreateRequest,
     TechnicianListItemResponse,
     TechnicianProfileResponse,
@@ -177,6 +180,47 @@ def create_admin_technician_time_off(
     current_user: AuthenticatedUser = Depends(deps.require_roles(UserRole.ADMIN)),
 ):
     return TechnicianAdminService(db, current_user).create_time_off(technician_id, payload)
+
+
+@router.get("/{technician_id}/documents", response_model=List[TechnicianDocumentResponse])
+def list_admin_technician_documents(
+    technician_id: UUID,
+    db: Session = Depends(deps.get_db),
+    current_user: AuthenticatedUser = Depends(deps.require_roles(UserRole.ADMIN)),
+):
+    return TechnicianAdminService(db, current_user).list_documents(technician_id)
+
+
+@router.post("/{technician_id}/documents", response_model=TechnicianDocumentResponse, status_code=201)
+def create_admin_technician_document(
+    technician_id: UUID,
+    payload: TechnicianDocumentCreateRequest,
+    db: Session = Depends(deps.get_db),
+    current_user: AuthenticatedUser = Depends(deps.require_roles(UserRole.ADMIN)),
+):
+    return TechnicianAdminService(db, current_user).create_document(technician_id, payload)
+
+
+@router.put("/{technician_id}/documents/{document_id}", response_model=TechnicianDocumentResponse)
+def update_admin_technician_document(
+    technician_id: UUID,
+    document_id: UUID,
+    payload: TechnicianDocumentUpdateRequest,
+    db: Session = Depends(deps.get_db),
+    current_user: AuthenticatedUser = Depends(deps.require_roles(UserRole.ADMIN)),
+):
+    return TechnicianAdminService(db, current_user).update_document(technician_id, document_id, payload)
+
+
+@router.delete("/{technician_id}/documents/{document_id}", response_model=Dict[str, str])
+def delete_admin_technician_document(
+    technician_id: UUID,
+    document_id: UUID,
+    db: Session = Depends(deps.get_db),
+    current_user: AuthenticatedUser = Depends(deps.require_roles(UserRole.ADMIN)),
+):
+    TechnicianAdminService(db, current_user).delete_document(technician_id, document_id)
+    return {"status": "ok"}
 
 
 @router.delete("/{technician_id}/time-off/{time_off_id}", response_model=Dict[str, str])

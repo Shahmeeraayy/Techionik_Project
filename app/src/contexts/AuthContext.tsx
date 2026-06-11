@@ -275,7 +275,7 @@ function mapBackendTechnicianAccounts(
     name: string;
     email: string;
     phone?: string | null;
-    status: 'active' | 'deactivated';
+    status: 'active' | 'suspended';
   }>,
   previous: TechnicianAccount[],
 ): TechnicianAccount[] {
@@ -1208,7 +1208,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const setTechnicianAccountActive = useCallback(async (id: string, isActive: boolean) => {
     const token = getStoredAdminToken();
     if (token) {
-      await updateAdminTechnician(token, id, { status: isActive ? 'active' : 'deactivated' });
+      await updateAdminTechnician(token, id, { status: isActive ? 'active' : 'suspended' });
       await refreshBackendAdminData();
       if (!isActive && user?.role === 'technician' && user.id === id) {
         setUser(null);

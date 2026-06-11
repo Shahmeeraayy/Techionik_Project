@@ -40,6 +40,7 @@ from .technician_tracking import (
     TechnicianLocationEvent,
 )
 from .technician_email_change_request import TechnicianEmailChangeRequest
+from .technician_document import TechnicianDocument
 from .technician_password_reset_request import TechnicianPasswordResetRequest
 from .tenant_feature_override import TenantFeatureOverride
 from .time_off import TimeOff

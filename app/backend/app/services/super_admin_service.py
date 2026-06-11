@@ -25,6 +25,10 @@ from .tenant_notification_controls import (
     load_tenant_notification_settings,
     serialize_tenant_notification_settings,
 )
+from .tenant_email_identity import (
+    apply_tenant_email_identity_update,
+    serialize_tenant_email_identity,
+)
 from .access_policy_service import AccessPolicyService, PLAN_FEATURE_MATRIX
 
 
@@ -779,23 +783,31 @@ class SuperAdminService:
     ) -> dict[str, Any]:
         self._require_platform_permission(current_user, "tenant.update.platform")
         tenant = self._get_tenant(tenant_id)
+        before_email_identity = serialize_tenant_email_identity(tenant)
         before = {
             "name": tenant.name,
             "industry_type": getattr(tenant, "industry_type", None),
-            "support_email": tenant.support_email,
-            "billing_email": tenant.billing_email,
-            "invoice_email": tenant.invoice_email,
-            "notification_email": tenant.notification_email,
+            "email_domain": before_email_identity["email_domain"],
+            "support_email": before_email_identity["support_email"],
+            "billing_email": before_email_identity["billing_email"],
+            "invoice_email": before_email_identity["invoice_email"],
+            "notification_email": before_email_identity["notification_email"],
         }
 
         if payload.get("name"):
             tenant.name = str(payload["name"]).strip()
         if payload.get("industry_type"):
             tenant.industry_type = str(payload["industry_type"]).strip().lower()
-        for field_name in ("support_email", "billing_email", "invoice_email", "notification_email"):
-            if field_name in payload:
-                value = payload.get(field_name)
-                setattr(tenant, field_name, str(value).strip().lower() if value else None)
+        apply_tenant_email_identity_update(
+            tenant,
+            {
+                key: value
+                for key, value in payload.items()
+                if key in {"email_domain", "support_email", "billing_email", "invoice_email", "notification_email"}
+            },
+        )
+
+        after_email_identity = serialize_tenant_email_identity(tenant)
 
         self._write_platform_audit_log(
             current_user=current_user,
@@ -808,10 +820,11 @@ class SuperAdminService:
             after_value={
                 "name": tenant.name,
                 "industry_type": tenant.industry_type,
-                "support_email": tenant.support_email,
-                "billing_email": tenant.billing_email,
-                "invoice_email": tenant.invoice_email,
-                "notification_email": tenant.notification_email,
+                "email_domain": after_email_identity["email_domain"],
+                "support_email": after_email_identity["support_email"],
+                "billing_email": after_email_identity["billing_email"],
+                "invoice_email": after_email_identity["invoice_email"],
+                "notification_email": after_email_identity["notification_email"],
             },
         )
         self.db.commit()

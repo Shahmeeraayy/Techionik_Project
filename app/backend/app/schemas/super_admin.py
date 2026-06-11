@@ -4,10 +4,13 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
+from ..services.tenant_email_identity import normalize_email_address, normalize_email_domain
+
 
 class SuperAdminTenantProfileUpdatePayload(BaseModel):
     name: str | None = Field(default=None, min_length=1, max_length=255)
     industry_type: str | None = Field(default=None, min_length=2, max_length=64)
+    email_domain: str | None = Field(default=None, max_length=255)
     support_email: EmailStr | None = None
     billing_email: EmailStr | None = None
     invoice_email: EmailStr | None = None
@@ -20,6 +23,18 @@ class SuperAdminTenantProfileUpdatePayload(BaseModel):
             return None
         normalized = value.strip()
         return normalized or None
+
+    @field_validator("email_domain")
+    @classmethod
+    def _normalize_email_domain(cls, value: str | None) -> str | None:
+        return normalize_email_domain(value)
+
+    @field_validator("support_email", "billing_email", "invoice_email", "notification_email")
+    @classmethod
+    def _normalize_optional_email(cls, value: EmailStr | None) -> str | None:
+        if value is None:
+            return None
+        return normalize_email_address(str(value))
 
 
 class SuperAdminTenantNotificationSettingsPayload(BaseModel):

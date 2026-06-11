@@ -5,7 +5,14 @@ from uuid import UUID
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
-from ..core.enums import AuditEntityType, TimeOffEntryType, UserRole
+from ..core.enums import (
+    AuditEntityType,
+    TechnicianDocumentType,
+    TechnicianEmploymentStatus,
+    TechnicianStatus,
+    TimeOffEntryType,
+    UserRole,
+)
 from ..core.passwords import verify_password
 from ..core.security import AuthenticatedUser
 from ..models.technician_email_change_request import TechnicianEmailChangeRequest
@@ -14,6 +21,7 @@ from ..schemas.technician_profile import (
     EmailChangeRequestCreateRequest,
     EmailChangeRequestResponse,
     SkillResponse,
+    TechnicianDocumentResponse,
     TechnicianAvailabilityUpdateRequest,
     TechnicianPasswordChangeRequest,
     TechnicianPasswordChangeResponse,
@@ -39,6 +47,31 @@ class TechnicianProfileService:
         if technician is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Technician not found")
         return technician
+
+    def _normalize_status(self, value: str) -> TechnicianStatus:
+        return TechnicianStatus.SUSPENDED if value == "deactivated" else TechnicianStatus(value)
+
+    def _normalize_employment_status(self, value: str | None) -> TechnicianEmploymentStatus:
+        if not value:
+            return TechnicianEmploymentStatus.FULL_TIME
+        return TechnicianEmploymentStatus(value)
+
+    def _to_document_response(self, row) -> TechnicianDocumentResponse:
+        return TechnicianDocumentResponse(
+            id=row.id,
+            technician_id=row.technician_id,
+            document_name=row.document_name,
+            document_type=TechnicianDocumentType(row.document_type),
+            license_number=row.license_number,
+            expiry_date=row.expiry_date,
+            file_url=row.file_url,
+            uploaded_file_id=row.uploaded_file_id,
+            created_at=row.created_at,
+            updated_at=row.updated_at,
+        )
+
+    def _build_documents(self, technician_id: UUID) -> List[TechnicianDocumentResponse]:
+        return [self._to_document_response(row) for row in self.repo.list_documents(technician_id)]
 
     def _build_weekly_schedule(self, technician_id: UUID) -> List[WeeklyScheduleResponseItem]:
         rows = self.repo.list_weekly_schedule(technician_id)
@@ -115,7 +148,11 @@ class TechnicianProfileService:
             email=technician.email,
             phone=technician.phone,
             profile_picture_url=technician.profile_picture_url,
-            status=technician.status,
+            status=self._normalize_status(technician.status),
+            emergency_contact_name=technician.emergency_contact_name,
+            emergency_contact_phone=technician.emergency_contact_phone,
+            emergency_contact_relationship=technician.emergency_contact_relationship,
+            employment_status=self._normalize_employment_status(technician.employment_status),
             manual_availability=technician.manual_availability,
             effective_availability=self.availability_service.compute_effective_availability(technician_id),
             on_leave_now=self.availability_service.is_on_leave_now(technician_id),
@@ -132,6 +169,7 @@ class TechnicianProfileService:
             skills=skills,
             weekly_schedule=self._build_weekly_schedule(technician_id),
             upcoming_time_off=self._build_time_off_items(technician_id),
+            documents=self._build_documents(technician_id),
         )
 
     def update_profile(self, payload: TechnicianProfileUpdateRequest) -> TechnicianProfileResponse:

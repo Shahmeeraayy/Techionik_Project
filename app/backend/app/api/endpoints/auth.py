@@ -107,7 +107,7 @@ def _verify_technician_credentials(*, email: str, password: str, db: Session):
     if technician is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid technician credentials")
     if technician.status != "active":
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Technician account is deactivated")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Technician account is suspended")
     _assert_tenant_accessible(db, technician.tenant_id)
 
     stored_password = (technician.password or "").strip()

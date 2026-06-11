@@ -46,6 +46,33 @@ class AdminSettingsApiTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200, response.text)
         return response.json()["access_token"]
 
+    def test_admin_can_update_tenant_email_identity_custom_domain(self):
+        token = self._admin_token()
+
+        update_response = self.client.put(
+            "/admin/settings/email-identity",
+            headers={"Authorization": f"Bearer {token}"},
+            json={
+                "email_domain": "techionik-mail.com",
+            },
+        )
+        self.assertEqual(update_response.status_code, 200, update_response.text)
+        payload = update_response.json()
+        self.assertEqual(payload["email_domain"], "techionik-mail.com")
+        self.assertEqual(payload["support_email"], "support@techionik-mail.com")
+        self.assertEqual(payload["billing_email"], "billing@techionik-mail.com")
+        self.assertEqual(payload["invoice_email"], "invoices@techionik-mail.com")
+        self.assertEqual(payload["notification_email"], "notifications@techionik-mail.com")
+
+        refreshed_response = self.client.get(
+            "/admin/settings/email-identity",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        self.assertEqual(refreshed_response.status_code, 200, refreshed_response.text)
+        refreshed_payload = refreshed_response.json()
+        self.assertEqual(refreshed_payload["email_domain"], "techionik-mail.com")
+        self.assertEqual(refreshed_payload["support_email"], "support@techionik-mail.com")
+
     def test_admin_credentials_settings_updates_admin_email_and_password(self):
         token = self._admin_token()
 

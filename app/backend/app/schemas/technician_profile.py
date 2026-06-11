@@ -6,7 +6,12 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, validator
 
-from ..core.enums import TechnicianStatus, TimeOffEntryType
+from ..core.enums import (
+    TechnicianDocumentType,
+    TechnicianEmploymentStatus,
+    TechnicianStatus,
+    TimeOffEntryType,
+)
 
 
 class EmailChangeRequestStatus(str, Enum):
@@ -53,6 +58,20 @@ class SkillCreateRequest(BaseModel):
         return normalized
 
 
+def _normalize_blank(value: Optional[str]) -> Optional[str]:
+    if value is None:
+        return None
+    normalized = value.strip()
+    return normalized or None
+
+
+def _normalize_technician_status(value):
+    raw_value = value.value if hasattr(value, "value") else value
+    if raw_value == "deactivated":
+        return TechnicianStatus.SUSPENDED
+    return value
+
+
 class WeeklyScheduleResponseItem(BaseModel):
     day_of_week: int = Field(..., ge=0, le=6)
     is_enabled: bool
@@ -77,6 +96,22 @@ class TimeOffResponseItem(BaseModel):
         from_attributes = True
 
 
+class TechnicianDocumentResponse(BaseModel):
+    id: UUID
+    technician_id: UUID
+    document_name: str
+    document_type: TechnicianDocumentType
+    license_number: Optional[str] = None
+    expiry_date: Optional[date] = None
+    file_url: Optional[str] = None
+    uploaded_file_id: Optional[str] = None
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
 class TechnicianProfileResponse(BaseModel):
     id: UUID
     name: str
@@ -85,6 +120,10 @@ class TechnicianProfileResponse(BaseModel):
     phone: Optional[str] = None
     profile_picture_url: Optional[str] = None
     status: TechnicianStatus
+    emergency_contact_name: Optional[str] = None
+    emergency_contact_phone: Optional[str] = None
+    emergency_contact_relationship: Optional[str] = None
+    employment_status: TechnicianEmploymentStatus
     manual_availability: bool
     effective_availability: bool
     on_leave_now: bool
@@ -101,6 +140,7 @@ class TechnicianProfileResponse(BaseModel):
     skills: List[SkillResponse]
     weekly_schedule: List[WeeklyScheduleResponseItem]
     upcoming_time_off: List[TimeOffResponseItem]
+    documents: List[TechnicianDocumentResponse] = Field(default_factory=list)
 
 
 class TechnicianListItemResponse(BaseModel):
@@ -111,6 +151,10 @@ class TechnicianListItemResponse(BaseModel):
     phone: Optional[str] = None
     profile_picture_url: Optional[str] = None
     status: TechnicianStatus
+    emergency_contact_name: Optional[str] = None
+    emergency_contact_phone: Optional[str] = None
+    emergency_contact_relationship: Optional[str] = None
+    employment_status: TechnicianEmploymentStatus
     manual_availability: bool
     effective_availability: bool
     on_leave_now: bool
@@ -134,6 +178,10 @@ class TechnicianUpdateRequest(BaseModel):
     phone: Optional[str] = None
     password: Optional[str] = None
     status: Optional[TechnicianStatus] = None
+    emergency_contact_name: Optional[str] = None
+    emergency_contact_phone: Optional[str] = None
+    emergency_contact_relationship: Optional[str] = None
+    employment_status: Optional[TechnicianEmploymentStatus] = None
     manual_availability: Optional[bool] = None
 
     @validator("name")
@@ -156,10 +204,7 @@ class TechnicianUpdateRequest(BaseModel):
 
     @validator("phone")
     def validate_phone(cls, phone: Optional[str]):
-        if phone is None:
-            return None
-        normalized = phone.strip()
-        return normalized or None
+        return _normalize_blank(phone)
 
     @validator("password")
     def validate_password(cls, password: Optional[str]):
@@ -170,6 +215,14 @@ class TechnicianUpdateRequest(BaseModel):
             raise ValueError("password must not be empty")
         return normalized
 
+    @validator("status", pre=True)
+    def validate_status(cls, status_value):
+        return _normalize_technician_status(status_value)
+
+    @validator("emergency_contact_name", "emergency_contact_phone", "emergency_contact_relationship")
+    def validate_emergency_contact(cls, value: Optional[str]):
+        return _normalize_blank(value)
+
 
 class TechnicianCreateRequest(BaseModel):
     name: str = Field(..., min_length=1, max_length=255)
@@ -177,6 +230,10 @@ class TechnicianCreateRequest(BaseModel):
     phone: Optional[str] = Field(default=None, max_length=50)
     password: Optional[str] = Field(default=None, min_length=1, max_length=255)
     status: TechnicianStatus = TechnicianStatus.ACTIVE
+    emergency_contact_name: Optional[str] = Field(default=None, max_length=255)
+    emergency_contact_phone: Optional[str] = Field(default=None, max_length=50)
+    emergency_contact_relationship: Optional[str] = Field(default=None, max_length=128)
+    employment_status: TechnicianEmploymentStatus = TechnicianEmploymentStatus.FULL_TIME
     manual_availability: bool = True
 
     @validator("email")
@@ -195,10 +252,7 @@ class TechnicianCreateRequest(BaseModel):
 
     @validator("phone")
     def validate_phone(cls, phone: Optional[str]):
-        if phone is None:
-            return None
-        normalized = phone.strip()
-        return normalized or None
+        return _normalize_blank(phone)
 
     @validator("password")
     def validate_password_create(cls, password: Optional[str]):
@@ -208,6 +262,51 @@ class TechnicianCreateRequest(BaseModel):
         if not normalized:
             raise ValueError("password must not be empty")
         return normalized
+
+    @validator("status", pre=True)
+    def validate_status_create(cls, status_value):
+        return _normalize_technician_status(status_value)
+
+    @validator("emergency_contact_name", "emergency_contact_phone", "emergency_contact_relationship")
+    def validate_emergency_contact_create(cls, value: Optional[str]):
+        return _normalize_blank(value)
+
+
+class TechnicianDocumentCreateRequest(BaseModel):
+    document_name: str = Field(..., min_length=1, max_length=255)
+    document_type: TechnicianDocumentType
+    license_number: Optional[str] = Field(default=None, max_length=128)
+    expiry_date: Optional[date] = None
+    file_url: Optional[str] = None
+    uploaded_file_id: Optional[str] = Field(default=None, max_length=255)
+
+    @validator("document_name")
+    def validate_document_name(cls, value: str):
+        normalized = value.strip()
+        if not normalized:
+            raise ValueError("document_name must not be empty")
+        return normalized
+
+    @validator("license_number", "file_url", "uploaded_file_id")
+    def validate_optional_text(cls, value: Optional[str]):
+        return _normalize_blank(value)
+
+
+class TechnicianDocumentUpdateRequest(BaseModel):
+    document_name: Optional[str] = Field(default=None, min_length=1, max_length=255)
+    document_type: Optional[TechnicianDocumentType] = None
+    license_number: Optional[str] = Field(default=None, max_length=128)
+    expiry_date: Optional[date] = None
+    file_url: Optional[str] = None
+    uploaded_file_id: Optional[str] = Field(default=None, max_length=255)
+
+    @validator("document_name")
+    def validate_document_name_update(cls, value: Optional[str]):
+        return _normalize_blank(value)
+
+    @validator("license_number", "file_url", "uploaded_file_id")
+    def validate_optional_text_update(cls, value: Optional[str]):
+        return _normalize_blank(value)
 
 
 class TechnicianZoneAssignRequest(BaseModel):

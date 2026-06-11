@@ -18,8 +18,10 @@ from ..models.platform_settings import PlatformSettings
 from ..models.tenant import Tenant, TenantMembership
 from .tenant_email_identity import (
     build_email_identity_for_slug,
+    apply_tenant_email_identity_update,
     ensure_tenant_email_columns,
-    get_tenant_email_identity as resolve_tenant_email_identity,
+    load_tenant_email_identity,
+    serialize_tenant_email_identity,
 )
 from .access_policy_service import AccessPolicyService
 from .super_admin_service import DEFAULT_PLATFORM_SETTINGS, PLATFORM_SETTINGS_KEY
@@ -429,10 +431,30 @@ class AdminCredentialSettingsService:
     def get_tenant_email_identity(self, current_user: AuthenticatedUser) -> dict[str, object]:
         if current_user.tenant_id is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tenant not found")
-        identity = resolve_tenant_email_identity(self.db, current_user.tenant_id)
-        if identity is None:
+        tenant = load_tenant_email_identity(self.db, current_user.tenant_id)
+        if tenant is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tenant not found")
-        return identity
+        self.db.commit()
+        self.db.refresh(tenant)
+        return serialize_tenant_email_identity(tenant)
+
+    def update_tenant_email_identity(
+        self,
+        *,
+        current_user: AuthenticatedUser,
+        payload: dict[str, object],
+    ) -> dict[str, object]:
+        if current_user.tenant_id is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tenant not found")
+
+        tenant = load_tenant_email_identity(self.db, current_user.tenant_id)
+        if tenant is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tenant not found")
+
+        apply_tenant_email_identity_update(tenant, payload)
+        self.db.commit()
+        self.db.refresh(tenant)
+        return serialize_tenant_email_identity(tenant)
 
     def update_admin_user(
         self,

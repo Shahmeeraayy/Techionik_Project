@@ -321,7 +321,7 @@ class ReportsService:
         )
 
         active_techs = [
-            row for row in all_techs if (row.status or "").strip().lower() not in {"deactivated", "inactive"}
+            row for row in all_techs if (row.status or "").strip().lower() not in {"deactivated", "suspended", "inactive"}
         ]
         busy_tech_ids = {
             row.assigned_tech_id

@@ -3,6 +3,8 @@ from typing import Literal, Optional
 
 from pydantic import BaseModel, EmailStr, Field, TypeAdapter, field_validator
 
+from ..services.tenant_email_identity import normalize_email_address, normalize_email_domain
+
 
 _EMAIL_ADAPTER = TypeAdapter(EmailStr)
 
@@ -80,6 +82,26 @@ class TenantEmailIdentityResponse(BaseModel):
     email_domain: str
     email_sending_status: str
     email_verified: bool
+
+
+class TenantEmailIdentityUpdatePayload(BaseModel):
+    email_domain: Optional[str] = Field(default=None, max_length=255)
+    support_email: Optional[EmailStr] = None
+    billing_email: Optional[EmailStr] = None
+    invoice_email: Optional[EmailStr] = None
+    notification_email: Optional[EmailStr] = None
+
+    @field_validator("email_domain")
+    @classmethod
+    def _normalize_email_domain(cls, value: Optional[str]) -> Optional[str]:
+        return normalize_email_domain(value)
+
+    @field_validator("support_email", "billing_email", "invoice_email", "notification_email")
+    @classmethod
+    def _normalize_optional_email(cls, value: Optional[EmailStr]) -> Optional[str]:
+        if value is None:
+            return None
+        return normalize_email_address(str(value))
 
 
 class AdminCredentialSettingsUpdatePayload(BaseModel):

@@ -17,7 +17,24 @@ class PlatformRole(str, Enum):
 
 class TechnicianStatus(str, Enum):
     ACTIVE = "active"
-    DEACTIVATED = "deactivated"
+    SUSPENDED = "suspended"
+
+
+class TechnicianEmploymentStatus(str, Enum):
+    FULL_TIME = "full_time"
+    PART_TIME = "part_time"
+    CONTRACTOR = "contractor"
+    PROBATION = "probation"
+    INACTIVE = "inactive"
+    TERMINATED = "terminated"
+
+
+class TechnicianDocumentType(str, Enum):
+    LICENSE = "license"
+    CERTIFICATION = "certification"
+    INSURANCE = "insurance"
+    BACKGROUND_CHECK = "background_check"
+    OTHER = "other"
 
 
 class DealershipStatus(str, Enum):
@@ -46,6 +63,7 @@ class AuditEntityType(str, Enum):
     TECHNICIAN_SKILL = "technician_skill"
     TECHNICIAN_SCHEDULE = "technician_schedule"
     TECHNICIAN_TIME_OFF = "technician_time_off"
+    TECHNICIAN_DOCUMENT = "technician_document"
     TECHNICIAN_EMAIL_CHANGE_REQUEST = "technician_email_change_request"
     TECHNICIAN_PASSWORD_RESET_REQUEST = "technician_password_reset_request"
     JOB = "job"

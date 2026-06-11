@@ -6,11 +6,21 @@ from fastapi import HTTPException, status
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from ..core.enums import AuditEntityType, TimeOffEntryType, UserRole
+from ..core.enums import (
+    AuditEntityType,
+    TechnicianDocumentType,
+    TechnicianEmploymentStatus,
+    TechnicianStatus,
+    TimeOffEntryType,
+    UserRole,
+)
 from ..core.security import AuthenticatedUser
 from ..repositories.technician_repository import TechnicianRepository
 from ..schemas.technician_profile import (
     AdminTimeOffCreateRequest,
+    TechnicianDocumentCreateRequest,
+    TechnicianDocumentResponse,
+    TechnicianDocumentUpdateRequest,
     SkillResponse,
     SkillCreateRequest,
     TechnicianCreateRequest,
@@ -39,6 +49,31 @@ class TechnicianAdminService:
         if technician is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Technician not found")
         return technician
+
+    def _normalize_status(self, value: str) -> TechnicianStatus:
+        return TechnicianStatus.SUSPENDED if value == "deactivated" else TechnicianStatus(value)
+
+    def _normalize_employment_status(self, value: str | None) -> TechnicianEmploymentStatus:
+        if not value:
+            return TechnicianEmploymentStatus.FULL_TIME
+        return TechnicianEmploymentStatus(value)
+
+    def _to_document_response(self, row) -> TechnicianDocumentResponse:
+        return TechnicianDocumentResponse(
+            id=row.id,
+            technician_id=row.technician_id,
+            document_name=row.document_name,
+            document_type=TechnicianDocumentType(row.document_type),
+            license_number=row.license_number,
+            expiry_date=row.expiry_date,
+            file_url=row.file_url,
+            uploaded_file_id=row.uploaded_file_id,
+            created_at=row.created_at,
+            updated_at=row.updated_at,
+        )
+
+    def _build_documents(self, technician_id: UUID) -> List[TechnicianDocumentResponse]:
+        return [self._to_document_response(row) for row in self.repo.list_documents(technician_id)]
 
     def _build_weekly_schedule(self, technician_id: UUID) -> List[WeeklyScheduleResponseItem]:
         rows = self.repo.list_weekly_schedule(technician_id)
@@ -109,7 +144,11 @@ class TechnicianAdminService:
                     email=technician.email,
                     phone=technician.phone,
                     profile_picture_url=technician.profile_picture_url,
-                    status=technician.status,
+                    status=self._normalize_status(technician.status),
+                    emergency_contact_name=technician.emergency_contact_name,
+                    emergency_contact_phone=technician.emergency_contact_phone,
+                    emergency_contact_relationship=technician.emergency_contact_relationship,
+                    employment_status=self._normalize_employment_status(technician.employment_status),
                     manual_availability=technician.manual_availability,
                     effective_availability=self.availability_service.compute_effective_availability(technician.id),
                     on_leave_now=self.availability_service.is_on_leave_now(technician.id),
@@ -154,7 +193,11 @@ class TechnicianAdminService:
             email=technician.email,
             phone=technician.phone,
             profile_picture_url=technician.profile_picture_url,
-            status=technician.status,
+            status=self._normalize_status(technician.status),
+            emergency_contact_name=technician.emergency_contact_name,
+            emergency_contact_phone=technician.emergency_contact_phone,
+            emergency_contact_relationship=technician.emergency_contact_relationship,
+            employment_status=self._normalize_employment_status(technician.employment_status),
             manual_availability=technician.manual_availability,
             effective_availability=self.availability_service.compute_effective_availability(technician_id),
             on_leave_now=self.availability_service.is_on_leave_now(technician_id),
@@ -173,6 +216,7 @@ class TechnicianAdminService:
             skills=skills,
             weekly_schedule=self._build_weekly_schedule(technician_id),
             upcoming_time_off=self._build_time_off_items(technician_id),
+            documents=self._build_documents(technician_id),
         )
 
     def create_technician(self, payload: TechnicianCreateRequest) -> TechnicianProfileResponse:
@@ -189,6 +233,10 @@ class TechnicianAdminService:
                 password=payload.password,
                 status=status_value,
                 manual_availability=payload.manual_availability,
+                emergency_contact_name=payload.emergency_contact_name,
+                emergency_contact_phone=payload.emergency_contact_phone,
+                emergency_contact_relationship=payload.emergency_contact_relationship,
+                employment_status=payload.employment_status.value,
             )
         except IntegrityError as exc:
             self.db.rollback()
@@ -219,6 +267,10 @@ class TechnicianAdminService:
             return self.get_profile(technician_id)
         if "status" in update_fields and hasattr(update_fields["status"], "value"):
             update_fields["status"] = update_fields["status"].value
+        if update_fields.get("status") == "deactivated":
+            update_fields["status"] = TechnicianStatus.SUSPENDED.value
+        if "employment_status" in update_fields and hasattr(update_fields["employment_status"], "value"):
+            update_fields["employment_status"] = update_fields["employment_status"].value
         if "name" in update_fields:
             update_fields["full_name"] = update_fields["name"]
 
@@ -504,6 +556,87 @@ class TechnicianAdminService:
             created_at=row.created_at,
             cancelled_at=row.cancelled_at,
         )
+
+    def list_documents(self, technician_id: UUID) -> List[TechnicianDocumentResponse]:
+        self._require_technician(technician_id)
+        return self._build_documents(technician_id)
+
+    def create_document(
+        self,
+        technician_id: UUID,
+        payload: TechnicianDocumentCreateRequest,
+    ) -> TechnicianDocumentResponse:
+        self._require_technician(technician_id)
+        row = self.repo.create_document(
+            technician_id,
+            document_name=payload.document_name,
+            document_type=payload.document_type.value,
+            license_number=payload.license_number,
+            expiry_date=payload.expiry_date,
+            file_url=payload.file_url,
+            uploaded_file_id=payload.uploaded_file_id,
+        )
+        AuditService.log_event(
+            self.db,
+            actor_role=UserRole.ADMIN,
+            actor_id=self.current_user.user_id,
+            action="admin.technician.document_created",
+            entity_type=AuditEntityType.TECHNICIAN_DOCUMENT.value,
+            entity_id=row.id,
+            metadata={"technician_id": str(technician_id), "document_type": row.document_type},
+        )
+        self.db.commit()
+        return self._to_document_response(row)
+
+    def update_document(
+        self,
+        technician_id: UUID,
+        document_id: UUID,
+        payload: TechnicianDocumentUpdateRequest,
+    ) -> TechnicianDocumentResponse:
+        self._require_technician(technician_id)
+        row = self.repo.get_document_for_technician(technician_id, document_id)
+        if row is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Technician document not found")
+
+        update_fields = payload.dict(exclude_unset=True)
+        if not update_fields:
+            return self._to_document_response(row)
+        if "document_type" in update_fields and hasattr(update_fields["document_type"], "value"):
+            update_fields["document_type"] = update_fields["document_type"].value
+        row = self.repo.update_document_fields(document_id, update_fields)
+        if row is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Technician document not found")
+
+        AuditService.log_event(
+            self.db,
+            actor_role=UserRole.ADMIN,
+            actor_id=self.current_user.user_id,
+            action="admin.technician.document_updated",
+            entity_type=AuditEntityType.TECHNICIAN_DOCUMENT.value,
+            entity_id=row.id,
+            metadata={"technician_id": str(technician_id), "changes": update_fields},
+        )
+        self.db.commit()
+        return self._to_document_response(row)
+
+    def delete_document(self, technician_id: UUID, document_id: UUID) -> None:
+        self._require_technician(technician_id)
+        row = self.repo.get_document_for_technician(technician_id, document_id)
+        if row is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Technician document not found")
+        if not self.repo.delete_document(document_id):
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Technician document not found")
+        AuditService.log_event(
+            self.db,
+            actor_role=UserRole.ADMIN,
+            actor_id=self.current_user.user_id,
+            action="admin.technician.document_deleted",
+            entity_type=AuditEntityType.TECHNICIAN_DOCUMENT.value,
+            entity_id=document_id,
+            metadata={"technician_id": str(technician_id)},
+        )
+        self.db.commit()
 
     def cancel_time_off(self, technician_id: UUID, time_off_id: UUID) -> None:
         self._require_technician(technician_id)

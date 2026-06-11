@@ -149,6 +149,7 @@ export default function SuperAdminTenantDetailPage() {
   const [profileForm, setProfileForm] = useState({
     name: '',
     industry_type: '',
+    email_domain: '',
     support_email: '',
     billing_email: '',
     invoice_email: '',
@@ -192,6 +193,7 @@ export default function SuperAdminTenantDetailPage() {
       setProfileForm({
         name: nextDetail.tenant.name ?? '',
         industry_type: nextDetail.tenant.industry_type ?? '',
+        email_domain: nextDetail.tenant.email_domain ?? '',
         support_email: nextDetail.tenant.support_email ?? '',
         billing_email: nextDetail.tenant.billing_email ?? '',
         invoice_email: nextDetail.tenant.invoice_email ?? '',
@@ -242,6 +244,7 @@ export default function SuperAdminTenantDetailPage() {
       const next = await updateSuperAdminTenantProfile(token, tenantId, {
         name: profileForm.name.trim() || undefined,
         industry_type: profileForm.industry_type.trim() || undefined,
+        email_domain: profileForm.email_domain.trim() || undefined,
         support_email: profileForm.support_email.trim() || undefined,
         billing_email: profileForm.billing_email.trim() || undefined,
         invoice_email: profileForm.invoice_email.trim() || undefined,
@@ -457,6 +460,10 @@ export default function SuperAdminTenantDetailPage() {
             <div className="space-y-2">
               <Label htmlFor="tenant-industry">Industry Type</Label>
               <Input id="tenant-industry" value={profileForm.industry_type} onChange={(event) => setProfileForm((prev) => ({ ...prev, industry_type: event.target.value }))} className="h-12 rounded-[1rem] border-slate-900/10 bg-[#faf6ef]" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="tenant-email-domain">Custom Domain</Label>
+              <Input id="tenant-email-domain" value={profileForm.email_domain} onChange={(event) => setProfileForm((prev) => ({ ...prev, email_domain: event.target.value }))} className="h-12 rounded-[1rem] border-slate-900/10 bg-[#faf6ef]" placeholder="techionik.com" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="tenant-support-email">Support Email</Label>

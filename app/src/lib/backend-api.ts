@@ -82,7 +82,11 @@ export type BackendTechnicianListItem = {
   email: string;
   phone?: string | null;
   profile_picture_url?: string | null;
-  status: 'active' | 'deactivated';
+  status: 'active' | 'suspended';
+  emergency_contact_name?: string | null;
+  emergency_contact_phone?: string | null;
+  emergency_contact_relationship?: string | null;
+  employment_status: BackendTechnicianEmploymentStatus;
   manual_availability: boolean;
   effective_availability: boolean;
   on_leave_now: boolean;
@@ -98,6 +102,34 @@ export type BackendTechnicianListItem = {
   zones: Array<{ id: string; name: string }>;
   skills: Array<{ id: string; name: string }>;
   current_jobs_count: number;
+};
+
+export type BackendTechnicianEmploymentStatus =
+  | 'full_time'
+  | 'part_time'
+  | 'contractor'
+  | 'probation'
+  | 'inactive'
+  | 'terminated';
+
+export type BackendTechnicianDocumentType =
+  | 'license'
+  | 'certification'
+  | 'insurance'
+  | 'background_check'
+  | 'other';
+
+export type BackendTechnicianDocument = {
+  id: string;
+  technician_id: string;
+  document_name: string;
+  document_type: BackendTechnicianDocumentType;
+  license_number?: string | null;
+  expiry_date?: string | null;
+  file_url?: string | null;
+  uploaded_file_id?: string | null;
+  created_at: string;
+  updated_at: string;
 };
 
 export type BackendSuperAdminMetricSummary = {
@@ -315,7 +347,11 @@ export type BackendTechnicianProfile = {
   email: string;
   phone?: string | null;
   profile_picture_url?: string | null;
-  status: 'active' | 'deactivated';
+  status: 'active' | 'suspended';
+  emergency_contact_name?: string | null;
+  emergency_contact_phone?: string | null;
+  emergency_contact_relationship?: string | null;
+  employment_status: BackendTechnicianEmploymentStatus;
   manual_availability: boolean;
   effective_availability: boolean;
   on_leave_now: boolean;
@@ -346,6 +382,7 @@ export type BackendTechnicianProfile = {
   }>;
   zones: Array<{ id: string; name: string }>;
   skills: Array<{ id: string; name: string }>;
+  documents: BackendTechnicianDocument[];
 };
 
 export type BackendTechnicianCatalogEntry = {
@@ -930,6 +967,14 @@ export type BackendTenantEmailIdentity = {
   email_domain: string;
   email_sending_status: string;
   email_verified: boolean;
+};
+
+export type BackendTenantEmailIdentityUpdatePayload = {
+  email_domain?: string | null;
+  support_email?: string | null;
+  billing_email?: string | null;
+  invoice_email?: string | null;
+  notification_email?: string | null;
 };
 
 export type BackendAdminPasswordChangeResponse = {
@@ -1791,6 +1836,7 @@ export async function updateSuperAdminTenantProfile(
   payload: {
     name?: string;
     industry_type?: string;
+    email_domain?: string | null;
     support_email?: string;
     billing_email?: string;
     invoice_email?: string;
@@ -2194,7 +2240,11 @@ export async function createAdminTechnician(
     email: string;
     phone?: string;
     password?: string;
-    status?: 'active' | 'deactivated';
+    status?: 'active' | 'suspended';
+    emergency_contact_name?: string | null;
+    emergency_contact_phone?: string | null;
+    emergency_contact_relationship?: string | null;
+    employment_status?: BackendTechnicianEmploymentStatus;
     manual_availability?: boolean;
   },
 ): Promise<BackendTechnicianProfile> {
@@ -2219,6 +2269,65 @@ export async function fetchAdminTechnicianProfile(
   technicianId: string,
 ): Promise<BackendTechnicianProfile> {
   return requestJson<BackendTechnicianProfile>(`/admin/technicians/${technicianId}`, {
+    token,
+  });
+}
+
+export async function fetchAdminTechnicianDocuments(
+  token: string,
+  technicianId: string,
+): Promise<BackendTechnicianDocument[]> {
+  return requestJson<BackendTechnicianDocument[]>(`/admin/technicians/${technicianId}/documents`, {
+    token,
+  });
+}
+
+export async function createAdminTechnicianDocument(
+  token: string,
+  technicianId: string,
+  payload: {
+    document_name: string;
+    document_type: BackendTechnicianDocumentType;
+    license_number?: string | null;
+    expiry_date?: string | null;
+    file_url?: string | null;
+    uploaded_file_id?: string | null;
+  },
+): Promise<BackendTechnicianDocument> {
+  return requestJson<BackendTechnicianDocument>(`/admin/technicians/${technicianId}/documents`, {
+    method: 'POST',
+    token,
+    body: payload,
+  });
+}
+
+export async function updateAdminTechnicianDocument(
+  token: string,
+  technicianId: string,
+  documentId: string,
+  payload: {
+    document_name?: string;
+    document_type?: BackendTechnicianDocumentType;
+    license_number?: string | null;
+    expiry_date?: string | null;
+    file_url?: string | null;
+    uploaded_file_id?: string | null;
+  },
+): Promise<BackendTechnicianDocument> {
+  return requestJson<BackendTechnicianDocument>(`/admin/technicians/${technicianId}/documents/${documentId}`, {
+    method: 'PUT',
+    token,
+    body: payload,
+  });
+}
+
+export async function deleteAdminTechnicianDocument(
+  token: string,
+  technicianId: string,
+  documentId: string,
+): Promise<{ status: string }> {
+  return requestJson<{ status: string }>(`/admin/technicians/${technicianId}/documents/${documentId}`, {
+    method: 'DELETE',
     token,
   });
 }
@@ -2465,7 +2574,11 @@ export async function updateAdminTechnician(
     email?: string;
     phone?: string;
     password?: string;
-    status?: 'active' | 'deactivated';
+    status?: 'active' | 'suspended';
+    emergency_contact_name?: string | null;
+    emergency_contact_phone?: string | null;
+    emergency_contact_relationship?: string | null;
+    employment_status?: BackendTechnicianEmploymentStatus;
     manual_availability?: boolean;
   },
 ): Promise<BackendTechnicianListItem> {
@@ -3038,6 +3151,17 @@ export async function fetchAdminTenantEmailIdentity(
 ): Promise<BackendTenantEmailIdentity> {
   return requestJson<BackendTenantEmailIdentity>('/admin/settings/email-identity', {
     token,
+  });
+}
+
+export async function updateAdminTenantEmailIdentity(
+  token: string,
+  payload: BackendTenantEmailIdentityUpdatePayload,
+): Promise<BackendTenantEmailIdentity> {
+  return requestJson<BackendTenantEmailIdentity>('/admin/settings/email-identity', {
+    method: 'PUT',
+    token,
+    body: payload,
   });
 }
 

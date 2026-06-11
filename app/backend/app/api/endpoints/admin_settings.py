@@ -20,6 +20,7 @@ from ...schemas.settings import (
     PriorityRuleCreatePayload,
     PriorityRuleResponse,
     PriorityRuleUpdatePayload,
+    TenantEmailIdentityUpdatePayload,
     TenantEmailIdentityResponse,
 )
 from ...services.admin_credential_settings_service import AdminCredentialSettingsService
@@ -57,6 +58,18 @@ def get_tenant_email_identity(
     current_user: AuthenticatedUser = Depends(deps.require_roles(UserRole.ADMIN)),
 ):
     return AdminCredentialSettingsService(db).get_tenant_email_identity(current_user)
+
+
+@router.put("/email-identity", response_model=TenantEmailIdentityResponse)
+def update_tenant_email_identity(
+    payload: TenantEmailIdentityUpdatePayload,
+    db: Session = Depends(deps.get_db),
+    current_user: AuthenticatedUser = Depends(deps.require_roles(UserRole.ADMIN)),
+):
+    return AdminCredentialSettingsService(db).update_tenant_email_identity(
+        current_user=current_user,
+        payload=payload.model_dump(exclude_none=True),
+    )
 
 
 @router.put("/invoice-branding", response_model=InvoiceBrandingSettingsResponse)

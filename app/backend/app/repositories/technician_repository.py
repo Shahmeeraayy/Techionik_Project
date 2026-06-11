@@ -9,6 +9,7 @@ from ..core.passwords import hash_password, is_password_hash
 from ..models.job import Job
 from ..models.skill import Skill, technician_skills
 from ..models.technician import Technician
+from ..models.technician_document import TechnicianDocument
 from ..models.technician_email_change_request import TechnicianEmailChangeRequest
 from ..models.technician_password_reset_request import TechnicianPasswordResetRequest
 from ..models.time_off import TimeOff
@@ -60,6 +61,10 @@ class TechnicianRepository:
         password: Optional[str],
         status: str,
         manual_availability: bool,
+        emergency_contact_name: Optional[str] = None,
+        emergency_contact_phone: Optional[str] = None,
+        emergency_contact_relationship: Optional[str] = None,
+        employment_status: str = "full_time",
     ) -> Technician:
         normalized_password = password.strip() if password is not None else None
         if normalized_password and not is_password_hash(normalized_password):
@@ -72,11 +77,87 @@ class TechnicianRepository:
             password=normalized_password,
             status=status,
             manual_availability=manual_availability,
+            emergency_contact_name=emergency_contact_name,
+            emergency_contact_phone=emergency_contact_phone,
+            emergency_contact_relationship=emergency_contact_relationship,
+            employment_status=employment_status,
         )
         self.db.add(technician)
         self.db.flush()
         self.db.refresh(technician)
         return technician
+
+    def list_documents(self, technician_id: UUID) -> List[TechnicianDocument]:
+        return (
+            self.db.query(TechnicianDocument)
+            .filter(TechnicianDocument.technician_id == technician_id)
+            .order_by(TechnicianDocument.expiry_date.asc().nullslast(), TechnicianDocument.document_name.asc())
+            .all()
+        )
+
+    def get_document_by_id(self, document_id: UUID) -> Optional[TechnicianDocument]:
+        return self.db.query(TechnicianDocument).filter(TechnicianDocument.id == document_id).first()
+
+    def get_document_for_technician(
+        self,
+        technician_id: UUID,
+        document_id: UUID,
+    ) -> Optional[TechnicianDocument]:
+        return (
+            self.db.query(TechnicianDocument)
+            .filter(
+                TechnicianDocument.id == document_id,
+                TechnicianDocument.technician_id == technician_id,
+            )
+            .first()
+        )
+
+    def create_document(
+        self,
+        technician_id: UUID,
+        *,
+        document_name: str,
+        document_type: str,
+        license_number: Optional[str],
+        expiry_date: Optional[date],
+        file_url: Optional[str],
+        uploaded_file_id: Optional[str],
+    ) -> TechnicianDocument:
+        row = TechnicianDocument(
+            technician_id=technician_id,
+            document_name=document_name,
+            document_type=document_type,
+            license_number=license_number,
+            expiry_date=expiry_date,
+            file_url=file_url,
+            uploaded_file_id=uploaded_file_id,
+        )
+        self.db.add(row)
+        self.db.flush()
+        self.db.refresh(row)
+        return row
+
+    def update_document_fields(
+        self,
+        document_id: UUID,
+        fields: Dict[str, Any],
+    ) -> Optional[TechnicianDocument]:
+        row = self.get_document_by_id(document_id)
+        if row is None:
+            return None
+        for key, value in fields.items():
+            setattr(row, key, value)
+        self.db.flush()
+        self.db.refresh(row)
+        return row
+
+    def delete_document(self, document_id: UUID) -> bool:
+        row = self.get_document_by_id(document_id)
+        if row is None:
+            return False
+        self.db.delete(row)
+        self.db.flush()
+        return True
 
     def update_technician_fields(self, technician_id: UUID, fields: Dict[str, Any]) -> Optional[Technician]:
         technician = self.get_technician_by_id(technician_id)

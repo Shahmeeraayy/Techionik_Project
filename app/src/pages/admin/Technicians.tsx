@@ -80,10 +80,13 @@ import {
     assignAdminTechnicianSkill,
     assignAdminTechnicianZone,
     createAdminTechnician,
+    createAdminTechnicianDocument,
     createAdminTechnicianSkillCatalogEntry,
     createAdminTechnicianTimeOff,
     createAdminTechnicianZoneCatalogEntry,
+    deleteAdminTechnicianDocument,
     deleteAdminTechnicianTimeOff,
+    fetchAdminTechnicianDocuments,
     fetchAdminTechnicianJobsFeed,
     fetchAdminTechnicianProfile,
     fetchAdminTechnicianSkillCatalog,
@@ -93,7 +96,12 @@ import {
     getStoredAdminToken,
     removeAdminTechnicianSkill,
     removeAdminTechnicianZone,
+    updateAdminTechnician,
+    updateAdminTechnicianDocument,
     updateAdminTechnicianWeeklySchedule,
+    type BackendTechnicianDocument,
+    type BackendTechnicianDocumentType,
+    type BackendTechnicianEmploymentStatus,
     type BackendTechnicianCatalogEntry,
     type BackendTechnicianJobFeedItem,
     type BackendTechnicianListItem,
@@ -107,6 +115,16 @@ interface TimeOff {
     start: string;
     end: string;
     reason: string;
+}
+
+interface TechnicianDocument {
+    id: string;
+    document_name: string;
+    document_type: BackendTechnicianDocumentType;
+    license_number?: string;
+    expiry_date?: string;
+    file_url?: string;
+    uploaded_file_id?: string;
 }
 
 interface WorkingHours {
@@ -124,7 +142,11 @@ interface Technician {
     email: string;
     phone: string;
     profile_picture_url?: string;
-    status: 'active' | 'deactivated';
+    status: 'active' | 'suspended';
+    emergency_contact_name?: string;
+    emergency_contact_phone?: string;
+    emergency_contact_relationship?: string;
+    employment_status: BackendTechnicianEmploymentStatus;
     manual_availability: boolean;
     effective_availability: boolean;
     on_leave_now: boolean;
@@ -136,6 +158,7 @@ interface Technician {
     skill_records: Array<{ id: string; name: string }>;
     working_hours: WorkingHours[];
     time_off: TimeOff[];
+    documents: TechnicianDocument[];
     current_jobs_count: number;
     current_assignments: { id: string; job_code: string; status: string; scheduled_at?: string; dealership_name?: string; vehicle_summary?: string }[];
     allowed_actions: string[];
@@ -156,7 +179,7 @@ interface PersistedAuditEvent {
 
 const DEFAULT_ACCOUNT_ZONES = ['Unassigned'];
 const DEFAULT_ACCOUNT_SKILLS = ['General Service'];
-const DEFAULT_ACCOUNT_ACTIONS = ['view_profile', 'edit_tech', 'set_time_off', 'deactivate'];
+const DEFAULT_ACCOUNT_ACTIONS = ['view_profile', 'edit_tech', 'set_time_off', 'suspend'];
 
 const persistTechniciansToStorage = (_techs: Technician[]) => {
     // Intentionally no-op: technician data is sourced from backend only.
@@ -177,6 +200,32 @@ const REAL_HOURS_MON_THU = { start: '08:00', end: '17:00', is_closed: false };
 const REAL_HOURS_FRI = { start: '08:00', end: '15:00', is_closed: false };
 const REAL_HOURS_WEEKEND = { start: '00:00', end: '00:00', is_closed: true };
 const WEEKDAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const;
+const EMPLOYMENT_STATUS_LABELS: Record<BackendTechnicianEmploymentStatus, string> = {
+    full_time: 'Full-time',
+    part_time: 'Part-time',
+    contractor: 'Contractor',
+    probation: 'Probation',
+    inactive: 'Inactive',
+    terminated: 'Terminated',
+};
+const DOCUMENT_TYPE_LABELS: Record<BackendTechnicianDocumentType, string> = {
+    license: 'License',
+    certification: 'Certification',
+    insurance: 'Insurance',
+    background_check: 'Background Check',
+    other: 'Other',
+};
+const DOCUMENT_TYPE_OPTIONS = Object.entries(DOCUMENT_TYPE_LABELS) as Array<[BackendTechnicianDocumentType, string]>;
+const EMPLOYMENT_STATUS_OPTIONS = Object.entries(EMPLOYMENT_STATUS_LABELS) as Array<[BackendTechnicianEmploymentStatus, string]>;
+
+const emptyDocumentDraft = (): Omit<TechnicianDocument, 'id'> => ({
+    document_name: '',
+    document_type: 'license',
+    license_number: '',
+    expiry_date: '',
+    file_url: '',
+    uploaded_file_id: '',
+});
 
 const getRealSchedule = () => [
     { day: 'Mon', ...REAL_HOURS_MON_THU },
@@ -229,6 +278,18 @@ const mapTimeOffEntries = (profile?: BackendTechnicianProfile | null): TimeOff[]
         start: entry.start_date,
         end: entry.end_date,
         reason: entry.reason,
+    })) ?? []
+);
+
+const mapDocumentEntries = (documents?: BackendTechnicianDocument[] | null): TechnicianDocument[] => (
+    documents?.map((entry) => ({
+        id: entry.id,
+        document_name: entry.document_name,
+        document_type: entry.document_type,
+        license_number: entry.license_number ?? '',
+        expiry_date: entry.expiry_date ?? '',
+        file_url: entry.file_url ?? '',
+        uploaded_file_id: entry.uploaded_file_id ?? '',
     })) ?? []
 );
 
@@ -299,7 +360,11 @@ const mergeTechniciansWithAccounts = (
             tech_code: techCode,
             email: account.email,
             phone: formatPhoneForDisplay(account.phone ?? existing?.phone ?? ''),
-            status: account.isActive ? 'active' : 'deactivated',
+            status: account.isActive ? 'active' : 'suspended',
+            emergency_contact_name: existing?.emergency_contact_name ?? '',
+            emergency_contact_phone: existing?.emergency_contact_phone ?? '',
+            emergency_contact_relationship: existing?.emergency_contact_relationship ?? '',
+            employment_status: existing?.employment_status ?? 'full_time',
             manual_availability: existing?.manual_availability ?? account.isActive,
             effective_availability: existing?.effective_availability ?? account.isActive,
             on_leave_now: existing?.on_leave_now ?? false,
@@ -309,6 +374,7 @@ const mergeTechniciansWithAccounts = (
             skill_records: existing?.skill_records ?? [],
             working_hours: existing?.working_hours?.length ? existing.working_hours : getRealSchedule(),
             time_off: existing?.time_off ?? [],
+            documents: existing?.documents ?? [],
             current_jobs_count: existing?.current_jobs_count ?? 0,
             current_assignments: existing?.current_assignments ?? [],
             allowed_actions: existing?.allowed_actions?.length ? existing.allowed_actions : [...DEFAULT_ACCOUNT_ACTIONS],
@@ -329,7 +395,11 @@ const mapBackendTechnician = (item: BackendTechnicianListItem, index: number): T
         email: item.email,
         phone: formatPhoneForDisplay(item.phone ?? ''),
         profile_picture_url: item.profile_picture_url ?? undefined,
-        status: item.status === 'active' ? 'active' : 'deactivated',
+        status: item.status === 'active' ? 'active' : 'suspended',
+        emergency_contact_name: item.emergency_contact_name ?? '',
+        emergency_contact_phone: item.emergency_contact_phone ?? '',
+        emergency_contact_relationship: item.emergency_contact_relationship ?? '',
+        employment_status: item.employment_status ?? 'full_time',
         manual_availability: item.manual_availability,
         effective_availability: item.effective_availability,
         on_leave_now: item.on_leave_now,
@@ -341,6 +411,7 @@ const mapBackendTechnician = (item: BackendTechnicianListItem, index: number): T
         skill_records: item.skills.map((skill) => ({ id: skill.id, name: skill.name })),
         working_hours: getRealSchedule(),
         time_off: [],
+        documents: [],
         current_jobs_count: item.current_jobs_count,
         current_assignments: [],
         allowed_actions: [...DEFAULT_ACCOUNT_ACTIONS],
@@ -426,13 +497,14 @@ export default function TechniciansPage() {
     const [timeOffModalOpen, setTimeOffModalOpen] = useState(false);
     const [addTechModalOpen, setAddTechModalOpen] = useState(false);
     const [editTechModalOpen, setEditTechModalOpen] = useState(false);
-    const [confirmDeactivateOpen, setConfirmDeactivateOpen] = useState(false);
+    const [confirmSuspendOpen, setConfirmSuspendOpen] = useState(false);
     const [exportModalOpen, setExportModalOpen] = useState(false);
 
     // Form States (for creating new tech or time off)
     const [newTechForm, setNewTechForm] = useState({ name: '', email: '', code: '', phone: '', zones: '', skills: '' });
     const [editTechForm, setEditTechForm] = useState({ name: '', code: '', phone: '', zones: '', skills: '' });
     const [timeOffForm, setTimeOffForm] = useState({ start: '', end: '', reason: '' });
+    const [documentForm, setDocumentForm] = useState(emptyDocumentDraft());
     const [newZoneInput, setNewZoneInput] = useState('');
     const [newSkillInput, setNewSkillInput] = useState('');
 
@@ -560,15 +632,25 @@ export default function TechniciansPage() {
     const hasDrawerChanges = useMemo(() => {
         if (!selectedTech || !techDraft) return false;
         return JSON.stringify({
+            emergency_contact_name: selectedTech.emergency_contact_name,
+            emergency_contact_phone: selectedTech.emergency_contact_phone,
+            emergency_contact_relationship: selectedTech.emergency_contact_relationship,
+            employment_status: selectedTech.employment_status,
             zones: selectedTech.zones,
             skills: selectedTech.skills,
             working_hours: selectedTech.working_hours,
             time_off: selectedTech.time_off,
+            documents: selectedTech.documents,
         }) !== JSON.stringify({
+            emergency_contact_name: techDraft.emergency_contact_name,
+            emergency_contact_phone: techDraft.emergency_contact_phone,
+            emergency_contact_relationship: techDraft.emergency_contact_relationship,
+            employment_status: techDraft.employment_status,
             zones: techDraft.zones,
             skills: techDraft.skills,
             working_hours: techDraft.working_hours,
             time_off: techDraft.time_off,
+            documents: techDraft.documents,
         });
     }, [selectedTech, techDraft]);
 
@@ -584,6 +666,7 @@ export default function TechniciansPage() {
             skillsCount: techDraft.skills.length,
             openDaysCount,
             timeOffCount: techDraft.time_off.length,
+            documentsCount: techDraft.documents.length,
         };
     }, [techDraft]);
 
@@ -599,6 +682,10 @@ export default function TechniciansPage() {
         phone: formatPhoneForDisplay(profile.phone ?? tech.phone ?? ''),
         profile_picture_url: profile.profile_picture_url ?? tech.profile_picture_url,
         status: profile.status,
+        emergency_contact_name: profile.emergency_contact_name ?? '',
+        emergency_contact_phone: profile.emergency_contact_phone ?? '',
+        emergency_contact_relationship: profile.emergency_contact_relationship ?? '',
+        employment_status: profile.employment_status ?? 'full_time',
         manual_availability: profile.manual_availability,
         effective_availability: profile.effective_availability,
         on_leave_now: profile.on_leave_now,
@@ -610,6 +697,7 @@ export default function TechniciansPage() {
         skill_records: profile.skills.map((skill) => ({ id: skill.id, name: skill.name })),
         working_hours: mapWeeklySchedule(profile),
         time_off: mapTimeOffEntries(profile),
+        documents: mapDocumentEntries(profile.documents),
         current_jobs_count: jobsFeed ? jobsFeed.length : tech.current_jobs_count,
         current_assignments: jobsFeed
             ? jobsFeed.map((job) => ({
@@ -645,6 +733,7 @@ export default function TechniciansPage() {
         setNewZoneInput('');
         setNewSkillInput('');
         setTimeOffForm({ start: '', end: '', reason: '' });
+        setDocumentForm(emptyDocumentDraft());
         setDrawerOpen(true);
 
         const adminToken = getStoredAdminToken();
@@ -654,13 +743,15 @@ export default function TechniciansPage() {
 
         try {
             setDetailLoading(true);
-            const [profile, jobsFeed, timeOff] = await Promise.all([
+            const [profile, jobsFeed, timeOff, documents] = await Promise.all([
                 fetchAdminTechnicianProfile(adminToken, tech.id),
                 fetchAdminTechnicianJobsFeed(adminToken, tech.id),
                 fetchAdminTechnicianTimeOff(adminToken, tech.id).catch(() => []),
+                fetchAdminTechnicianDocuments(adminToken, tech.id).catch(() => []),
             ]);
             const merged = mergeProfileIntoTechnician(tech, {
                 ...profile,
+                documents: profile.documents?.length ? profile.documents : documents,
                 upcoming_time_off: profile.upcoming_time_off?.length
                     ? profile.upcoming_time_off
                     : timeOff.map((entry) => ({
@@ -689,6 +780,7 @@ export default function TechniciansPage() {
         setNewZoneInput('');
         setNewSkillInput('');
         setTimeOffForm({ start: '', end: '', reason: '' });
+        setDocumentForm(emptyDocumentDraft());
         setTimeOffModalOpen(false);
     };
 
@@ -696,22 +788,39 @@ export default function TechniciansPage() {
         if (!selectedTech || !techDraft || !hasDrawerChanges) return;
 
         const beforeSnapshot = {
+            emergency_contact_name: selectedTech.emergency_contact_name,
+            emergency_contact_phone: selectedTech.emergency_contact_phone,
+            emergency_contact_relationship: selectedTech.emergency_contact_relationship,
+            employment_status: selectedTech.employment_status,
             zones: selectedTech.zones,
             skills: selectedTech.skills,
             working_hours: selectedTech.working_hours,
             time_off: selectedTech.time_off,
+            documents: selectedTech.documents,
         };
         const afterSnapshot = {
+            emergency_contact_name: techDraft.emergency_contact_name,
+            emergency_contact_phone: techDraft.emergency_contact_phone,
+            emergency_contact_relationship: techDraft.emergency_contact_relationship,
+            employment_status: techDraft.employment_status,
             zones: techDraft.zones,
             skills: techDraft.skills,
             working_hours: techDraft.working_hours,
             time_off: techDraft.time_off,
+            documents: techDraft.documents,
         };
 
         const adminToken = getStoredAdminToken();
-        const saved = cloneTech(techDraft);
+        let saved = cloneTech(techDraft);
 
         if (hasBackendAdminToken && adminToken) {
+            await updateAdminTechnician(adminToken, selectedTech.id, {
+                emergency_contact_name: techDraft.emergency_contact_name || null,
+                emergency_contact_phone: techDraft.emergency_contact_phone || null,
+                emergency_contact_relationship: techDraft.emergency_contact_relationship || null,
+                employment_status: techDraft.employment_status,
+            });
+
             const nextZones = techDraft.zone_records;
             const previousZoneIds = new Set(selectedTech.zone_records.map((entry) => entry.id));
             const nextZoneIds = new Set(nextZones.map((entry) => entry.id));
@@ -755,6 +864,36 @@ export default function TechniciansPage() {
                 })),
                 ...deletedTimeOff.map((entry) => deleteAdminTechnicianTimeOff(adminToken, selectedTech.id, entry.id)),
             ]);
+
+            const toDocumentPayload = (entry: TechnicianDocument) => ({
+                document_name: entry.document_name.trim(),
+                document_type: entry.document_type,
+                license_number: entry.license_number?.trim() || null,
+                expiry_date: entry.expiry_date || null,
+                file_url: entry.file_url?.trim() || null,
+                uploaded_file_id: entry.uploaded_file_id?.trim() || null,
+            });
+            const previousDocuments = new Map(selectedTech.documents.map((entry) => [entry.id, entry]));
+            const nextDocumentIds = new Set(techDraft.documents.map((entry) => entry.id));
+            const documentsToCreate = techDraft.documents.filter((entry) => !previousDocuments.has(entry.id));
+            const documentsToDelete = selectedTech.documents.filter((entry) => !nextDocumentIds.has(entry.id));
+            const documentsToUpdate = techDraft.documents.filter((entry) => {
+                const previous = previousDocuments.get(entry.id);
+                if (!previous) return false;
+                return JSON.stringify(toDocumentPayload(entry)) !== JSON.stringify(toDocumentPayload(previous));
+            });
+
+            await Promise.all([
+                ...documentsToCreate.map((entry) => createAdminTechnicianDocument(adminToken, selectedTech.id, toDocumentPayload(entry))),
+                ...documentsToUpdate.map((entry) => updateAdminTechnicianDocument(adminToken, selectedTech.id, entry.id, toDocumentPayload(entry))),
+                ...documentsToDelete.map((entry) => deleteAdminTechnicianDocument(adminToken, selectedTech.id, entry.id)),
+            ]);
+
+            const [profile, jobsFeed] = await Promise.all([
+                fetchAdminTechnicianProfile(adminToken, selectedTech.id),
+                fetchAdminTechnicianJobsFeed(adminToken, selectedTech.id).catch(() => ({ my_jobs: [] })),
+            ]);
+            saved = mergeProfileIntoTechnician(saved, profile, jobsFeed.my_jobs);
         }
 
         setTechs(prev => {
@@ -789,6 +928,7 @@ export default function TechniciansPage() {
             setNewZoneInput('');
             setNewSkillInput('');
             setTimeOffForm({ start: '', end: '', reason: '' });
+            setDocumentForm(emptyDocumentDraft());
             setTimeOffModalOpen(false);
         }
     };
@@ -964,6 +1104,38 @@ export default function TechniciansPage() {
         setTimeOffForm({ start: '', end: '', reason: '' });
     };
 
+    const handleAddDocument = () => {
+        if (!techDraft) return;
+        const documentName = documentForm.document_name.trim();
+        if (!documentName) {
+            alert('Document name is required.');
+            return;
+        }
+        const nextDocument: TechnicianDocument = {
+            id: `doc-${Date.now()}`,
+            document_name: documentName,
+            document_type: documentForm.document_type,
+            license_number: documentForm.license_number?.trim() || '',
+            expiry_date: documentForm.expiry_date || '',
+            file_url: documentForm.file_url?.trim() || '',
+            uploaded_file_id: documentForm.uploaded_file_id?.trim() || '',
+        };
+
+        updateDraft((draft) => ({
+            ...draft,
+            documents: [...draft.documents, nextDocument],
+        }));
+        setDocumentForm(emptyDocumentDraft());
+    };
+
+    const handleRemoveDocument = (documentId: string) => {
+        if (!techDraft) return;
+        updateDraft((draft) => ({
+            ...draft,
+            documents: draft.documents.filter((entry) => entry.id !== documentId),
+        }));
+    };
+
     const handleAddTech = async () => {
         const name = newTechForm.name.trim();
         const email = newTechForm.email.trim().toLowerCase();
@@ -1016,6 +1188,10 @@ export default function TechniciansPage() {
                     email,
                     phone,
                     status: 'active',
+                    emergency_contact_name: '',
+                    emergency_contact_phone: '',
+                    emergency_contact_relationship: '',
+                    employment_status: 'full_time',
                     manual_availability: true,
                     effective_availability: true,
                     on_leave_now: false,
@@ -1025,6 +1201,7 @@ export default function TechniciansPage() {
                     skill_records: [],
                     working_hours: getRealSchedule(),
                     time_off: [],
+                    documents: [],
                     current_jobs_count: 0,
                     current_assignments: [],
                     allowed_actions: [...DEFAULT_ACCOUNT_ACTIONS],
@@ -1079,6 +1256,10 @@ export default function TechniciansPage() {
             email,
             phone,
             status: 'active',
+            emergency_contact_name: '',
+            emergency_contact_phone: '',
+            emergency_contact_relationship: '',
+            employment_status: 'full_time',
             manual_availability: true,
             effective_availability: true,
             on_leave_now: false,
@@ -1088,9 +1269,10 @@ export default function TechniciansPage() {
             skill_records: skills.map((name) => ({ id: name, name })),
             working_hours: getRealSchedule(),
             time_off: [],
+            documents: [],
             current_jobs_count: 0,
             current_assignments: [],
-            allowed_actions: ['view_profile', 'edit_tech', 'set_time_off', 'deactivate']
+                    allowed_actions: ['view_profile', 'edit_tech', 'set_time_off', 'suspend']
         };
 
         setTechs(prev => {
@@ -1190,41 +1372,15 @@ export default function TechniciansPage() {
         setEditTechModalOpen(false);
     };
 
-    const handleToggleStatus = () => {
+    const persistTechnicianStatus = async (nextStatus: Technician['status']) => {
         if (!selectedTech) return;
-        if (hasDrawerChanges) {
-            alert('Save or cancel pending profile changes before changing status.');
-            return;
-        }
-        if (selectedTech.status === 'active') {
-            // Check for active jobs
-            if (selectedTech.current_jobs_count > 0) {
-                alert("Cannot deactivate technician with active assigned jobs.");
-                return;
-            }
-            // Open confirmation for deactivation
-            setConfirmDeactivateOpen(true);
-        } else {
-            // Activate immediately
-            const updated = { ...selectedTech, status: 'active' as const };
-            setTechs(prev => {
-                const next = prev.map(t => t.id === updated.id ? updated : t);
-                persistTechniciansToStorage(next);
-                return next;
-            });
-            setSelectedTech(updated);
-            setTechDraft(cloneTech(updated));
-            appendAuditLog(
-                'technician.status_changed',
-                `Technician ${updated.name} activated`,
-                { tech_id: updated.id, tech_code: updated.tech_code, new_status: 'active' }
-            );
-        }
-    };
+        const updated = { ...selectedTech, status: nextStatus };
+        const adminToken = getStoredAdminToken();
 
-    const confirmDeactivate = () => {
-        if (!selectedTech) return;
-        const updated = { ...selectedTech, status: 'deactivated' as const };
+        if (hasBackendAdminToken && adminToken) {
+            await updateAdminTechnician(adminToken, selectedTech.id, { status: nextStatus });
+        }
+
         setTechs(prev => {
             const next = prev.map(t => t.id === updated.id ? updated : t);
             persistTechniciansToStorage(next);
@@ -1234,11 +1390,33 @@ export default function TechniciansPage() {
         setTechDraft(cloneTech(updated));
         appendAuditLog(
             'technician.status_changed',
-            `Technician ${updated.name} deactivated`,
-            { tech_id: updated.id, tech_code: updated.tech_code, new_status: 'inactive' },
-            'warning'
+            `Technician ${updated.name} ${nextStatus === 'active' ? 'activated' : 'suspended'}`,
+            { tech_id: updated.id, tech_code: updated.tech_code, new_status: nextStatus },
+            nextStatus === 'suspended' ? 'warning' : 'info'
         );
-        setConfirmDeactivateOpen(false);
+    };
+
+    const handleToggleStatus = async () => {
+        if (!selectedTech) return;
+        if (hasDrawerChanges) {
+            alert('Save or cancel pending profile changes before changing status.');
+            return;
+        }
+        if (selectedTech.status === 'active') {
+            if (selectedTech.current_jobs_count > 0) {
+                alert("Cannot suspend technician with active assigned jobs.");
+                return;
+            }
+            setConfirmSuspendOpen(true);
+        } else {
+            await persistTechnicianStatus('active');
+        }
+    };
+
+    const confirmSuspend = async () => {
+        if (!selectedTech) return;
+        await persistTechnicianStatus('suspended');
+        setConfirmSuspendOpen(false);
     };
 
     const getTechnicianExportRows = () => techs.map(t => ({
@@ -1745,7 +1923,7 @@ export default function TechniciansPage() {
                                                 <ProfileStat label="Email" value={selectedTech.email} valueClassName="text-sm text-white" />
                                                 <ProfileStat label="Phone" value={formatPhoneForDisplay(selectedTech.phone) || 'Not set'} valueClassName="text-sm text-white" />
                                                 <ProfileStat label="Availability" value={selectedTech.effective_availability ? 'Dispatch Ready' : 'Unavailable'} valueClassName={selectedTech.effective_availability ? 'text-emerald-100' : 'text-slate-300'} />
-                                                <ProfileStat label="Account Control" value="Tech Accounts" hint="Activate, deactivate, approve, and reset there" valueClassName="text-sm text-white" />
+                                                <ProfileStat label="Account Control" value="Tech Accounts" hint="Activate, suspend, approve, and reset there" valueClassName="text-sm text-white" />
                                             </div>
                                         </Card>
 
@@ -2061,21 +2239,21 @@ export default function TechniciansPage() {
                     onConfirm={handleExport}
                 />
 
-                {/* 8. Deactivate Confirmation Modal */}
-                <Dialog open={confirmDeactivateOpen} onOpenChange={setConfirmDeactivateOpen}>
+                {/* 8. Suspend Confirmation Modal */}
+                <Dialog open={confirmSuspendOpen} onOpenChange={setConfirmSuspendOpen}>
                     <DialogContent className="border-white/10 bg-[linear-gradient(180deg,rgba(9,24,39,0.98),rgba(6,17,29,0.98))] text-slate-100">
                         <DialogHeader>
                             <DialogTitle className="flex items-center gap-2 text-rose-200">
-                                <Shield className="w-5 h-5" /> Deactivate Technician?
+                                <Shield className="w-5 h-5" /> Suspend Technician?
                             </DialogTitle>
                             <DialogDescription className="text-slate-300">
-                                Are you sure you want to deactivate <strong>{selectedTech?.name}</strong>?
+                                Are you sure you want to suspend <strong>{selectedTech?.name}</strong>?
                                 They will no longer be eligible for dispatch assignments.
                             </DialogDescription>
                         </DialogHeader>
                         <DialogFooter>
-                            <Button variant="ghost" className="border border-white/10 !bg-[#0b1424] !text-slate-100 hover:!bg-[#122039] hover:!text-white" onClick={() => setConfirmDeactivateOpen(false)}>Cancel</Button>
-                            <Button variant="destructive" onClick={confirmDeactivate}>Yes, Deactivate</Button>
+                            <Button variant="ghost" className="border border-white/10 !bg-[#0b1424] !text-slate-100 hover:!bg-[#122039] hover:!text-white" onClick={() => setConfirmSuspendOpen(false)}>Cancel</Button>
+                            <Button variant="destructive" onClick={confirmSuspend}>Yes, Suspend</Button>
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>

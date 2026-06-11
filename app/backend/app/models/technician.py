@@ -16,6 +16,10 @@ class Technician(TenantScopedMixin, Base):
     email = Column(String(255), nullable=False, unique=True)
     phone = Column(String(50), nullable=True)
     profile_picture_url = Column(Text, nullable=True)
+    emergency_contact_name = Column(String(255), nullable=True)
+    emergency_contact_phone = Column(String(50), nullable=True)
+    emergency_contact_relationship = Column(String(128), nullable=True)
+    employment_status = Column(String(32), nullable=False, server_default=text("'full_time'"))
     working_days = Column(JSON, nullable=False, server_default=text("'[]'"))
     working_hours_start = Column(Time, nullable=True)
     working_hours_end = Column(Time, nullable=True)
@@ -51,6 +55,11 @@ class Technician(TenantScopedMixin, Base):
         back_populates="technician",
         cascade="all, delete-orphan",
     )
+    documents = relationship(
+        "TechnicianDocument",
+        back_populates="technician",
+        cascade="all, delete-orphan",
+    )
     chat_messages = relationship(
         "ChatMessage",
         back_populates="technician",
@@ -59,8 +68,12 @@ class Technician(TenantScopedMixin, Base):
 
     __table_args__ = (
         CheckConstraint(
-            "status IN ('active','deactivated')",
+            "status IN ('active','suspended')",
             name="technicians_status_chk",
+        ),
+        CheckConstraint(
+            "employment_status IN ('full_time','part_time','contractor','probation','inactive','terminated')",
+            name="technicians_employment_status_chk",
         ),
         CheckConstraint(
             "(working_hours_start IS NULL AND working_hours_end IS NULL) OR "

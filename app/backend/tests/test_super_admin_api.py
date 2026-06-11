@@ -259,6 +259,34 @@ class SuperAdminApiTests(unittest.TestCase):
             self.assertEqual(audit_row.reason, "Updating global platform defaults.")
             self.assertIn("security", audit_row.metadata_json["sensitive_sections"])
 
+    def test_super_admin_can_update_custom_email_domain_for_tenant(self):
+        signup_payload = self._signup_tenant_owner(workspace_slug="email-domain", email="owner@emaildomain.com")
+        super_admin_token = self._super_admin_token()
+
+        update_response = self.client.patch(
+            f"/super-admin/tenants/{signup_payload['tenant_id']}/profile",
+            headers={"Authorization": f"Bearer {super_admin_token}"},
+            json={
+                "email_domain": "techionik-mail.com",
+            },
+        )
+        self.assertEqual(update_response.status_code, 200, update_response.text)
+        tenant_payload = update_response.json()["tenant"]
+        self.assertEqual(tenant_payload["email_domain"], "techionik-mail.com")
+        self.assertEqual(tenant_payload["support_email"], "support@techionik-mail.com")
+        self.assertEqual(tenant_payload["billing_email"], "billing@techionik-mail.com")
+        self.assertEqual(tenant_payload["invoice_email"], "invoices@techionik-mail.com")
+        self.assertEqual(tenant_payload["notification_email"], "notifications@techionik-mail.com")
+
+        admin_response = self.client.get(
+            "/admin/settings/email-identity",
+            headers={"Authorization": f"Bearer {signup_payload['access_token']}"},
+        )
+        self.assertEqual(admin_response.status_code, 200, admin_response.text)
+        admin_identity = admin_response.json()
+        self.assertEqual(admin_identity["email_domain"], "techionik-mail.com")
+        self.assertEqual(admin_identity["support_email"], "support@techionik-mail.com")
+
     def test_super_admin_can_manage_notification_controls_with_audit_log(self):
         signup_payload = self._signup_tenant_owner(workspace_slug="notify-controls", email="owner@notifycontrols.com")
         token = self._super_admin_token()
