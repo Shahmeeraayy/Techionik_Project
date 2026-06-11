@@ -75,6 +75,11 @@ class TechnicianAdminService:
     def _build_documents(self, technician_id: UUID) -> List[TechnicianDocumentResponse]:
         return [self._to_document_response(row) for row in self.repo.list_documents(technician_id)]
 
+    def _payload_fields(self, payload) -> Dict:
+        if hasattr(payload, "model_dump"):
+            return payload.model_dump(exclude_unset=True)
+        return payload.dict(exclude_unset=True)
+
     def _build_weekly_schedule(self, technician_id: UUID) -> List[WeeklyScheduleResponseItem]:
         rows = self.repo.list_weekly_schedule(technician_id)
         by_day: Dict[int, WeeklyScheduleResponseItem] = {
@@ -262,7 +267,7 @@ class TechnicianAdminService:
     def update_technician(self, technician_id: UUID, payload: TechnicianUpdateRequest) -> TechnicianProfileResponse:
         self._require_technician(technician_id)
 
-        update_fields = payload.dict(exclude_unset=True)
+        update_fields = self._payload_fields(payload)
         if not update_fields:
             return self.get_profile(technician_id)
         if "status" in update_fields and hasattr(update_fields["status"], "value"):
@@ -599,7 +604,7 @@ class TechnicianAdminService:
         if row is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Technician document not found")
 
-        update_fields = payload.dict(exclude_unset=True)
+        update_fields = self._payload_fields(payload)
         if not update_fields:
             return self._to_document_response(row)
         if "document_type" in update_fields and hasattr(update_fields["document_type"], "value"):

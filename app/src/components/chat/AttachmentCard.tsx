@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { AudioLines, Download, File, Image as ImageIcon, LoaderCircle } from 'lucide-react';
+import { AudioLines, Download, File, Image as ImageIcon, LoaderCircle, Video } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { type BackendChatAttachment } from '@/lib/backend-api';
@@ -8,6 +8,7 @@ import {
   formatChatAttachmentSize,
   isAudioAttachment,
   isImageAttachment,
+  isVideoAttachment,
 } from '@/lib/chat-attachments';
 
 function getAttachmentIcon(mimeType: string) {
@@ -16,6 +17,9 @@ function getAttachmentIcon(mimeType: string) {
   }
   if (isAudioAttachment(mimeType)) {
     return AudioLines;
+  }
+  if (isVideoAttachment(mimeType)) {
+    return Video;
   }
   return File;
 }
@@ -34,6 +38,7 @@ export function AttachmentCard({
   const [downloading, setDownloading] = useState(false);
   const isImage = isImageAttachment(attachment.mime_type);
   const isAudio = isAudioAttachment(attachment.mime_type);
+  const isVideo = isVideoAttachment(attachment.mime_type);
   const AttachmentIcon = useMemo(() => getAttachmentIcon(attachment.mime_type), [attachment.mime_type]);
   const sizeLabel = formatChatAttachmentSize(attachment.size_bytes);
 
@@ -41,7 +46,7 @@ export function AttachmentCard({
     let objectUrl: string | null = null;
     let cancelled = false;
 
-    if (attachment.data_url || !(attachment.preview_url && token) || (!isImage && !isAudio)) {
+    if (attachment.data_url || !(attachment.preview_url && token) || (!isImage && !isAudio && !isVideo)) {
       return undefined;
     }
 
@@ -69,7 +74,7 @@ export function AttachmentCard({
         URL.revokeObjectURL(objectUrl);
       }
     };
-  }, [attachment.data_url, attachment.preview_url, isAudio, isImage, token]);
+  }, [attachment.data_url, attachment.preview_url, isAudio, isImage, isVideo, token]);
 
   const handleDownload = async () => {
     if (attachment.data_url) {
@@ -120,6 +125,16 @@ export function AttachmentCard({
           ) : (
             <div className="flex h-full items-center justify-center text-slate-300">
               {previewLoading ? <LoaderCircle className="h-6 w-6 animate-spin" /> : <ImageIcon className="h-6 w-6" />}
+            </div>
+          )}
+        </div>
+      ) : isVideo ? (
+        <div className={cn('aspect-video overflow-hidden', chromeClass)}>
+          {previewUrl ? (
+            <video controls preload="metadata" src={previewUrl} className="h-full w-full bg-black object-contain" />
+          ) : (
+            <div className="flex h-full items-center justify-center text-slate-300">
+              {previewLoading ? <LoaderCircle className="h-6 w-6 animate-spin" /> : <Video className="h-6 w-6" />}
             </div>
           )}
         </div>

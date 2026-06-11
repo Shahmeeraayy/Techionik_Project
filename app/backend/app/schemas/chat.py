@@ -72,6 +72,16 @@ class ChatMessageCreateRequest(BaseModel):
         return self
 
 
+class ChatBroadcastCreateRequest(ChatMessageCreateRequest):
+    technician_ids: List[UUID] = Field(default_factory=list)
+    group_conversation_ids: List[UUID] = Field(default_factory=list)
+
+    @field_validator("technician_ids", "group_conversation_ids")
+    @classmethod
+    def dedupe_ids(cls, value: List[UUID]) -> List[UUID]:
+        return list(dict.fromkeys(value))
+
+
 class ChatMessageResponse(BaseModel):
     id: UUID
     conversation_id: UUID
@@ -160,6 +170,23 @@ class ChatPinnedMessagesResponse(BaseModel):
 
 class AdminChatUnreadCountResponse(BaseModel):
     unread_count: int
+
+
+class ChatTypingStatusRequest(BaseModel):
+    is_typing: bool = True
+
+
+class ChatTypingParticipantResponse(BaseModel):
+    user_id: UUID
+    role: str
+    display_name: str
+    conversation_id: UUID
+    updated_at: datetime
+
+
+class ChatTypingStatusResponse(BaseModel):
+    conversation_id: UUID
+    participants: List[ChatTypingParticipantResponse] = Field(default_factory=list)
 
 
 class ChatAuditLogResponse(BaseModel):

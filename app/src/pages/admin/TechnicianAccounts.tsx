@@ -224,7 +224,7 @@ export default function TechnicianAccountsPage() {
     const nextState = !account.isActive;
     const message = nextState
       ? `Activate ${account.name}'s account?`
-      : `Deactivate ${account.name}'s account?`;
+      : `Suspend ${account.name}'s account?`;
 
     if (!window.confirm(message)) {
       return;

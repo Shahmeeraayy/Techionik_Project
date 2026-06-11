@@ -127,6 +127,93 @@ class SignupRequestRoutingApiTests(unittest.TestCase):
         self.assertEqual(payload["user_email"], "tech-login@example.com")
         self.assertEqual(payload["tenant_id"], owner_signup["tenant_id"])
 
+    def test_admin_can_create_technician_with_v1_profile_fields(self):
+        owner_signup = self._signup_owner()
+        owner_token = owner_signup["access_token"]
+
+        create_response = self.client.post(
+            "/admin/technicians",
+            headers={"Authorization": f"Bearer {owner_token}"},
+            json={
+                "name": "Field Tech Complete",
+                "email": "tech-complete@example.com",
+                "phone": "+15550004444",
+                "password": "secret123",
+                "status": "active",
+                "manual_availability": True,
+                "emergency_contact_name": "Avery Complete",
+                "emergency_contact_phone": "+15550004555",
+                "emergency_contact_relationship": "Spouse",
+                "employment_status": "contractor",
+            },
+        )
+
+        self.assertEqual(create_response.status_code, 201, create_response.text)
+        payload = create_response.json()
+        self.assertEqual(payload["status"], "active")
+        self.assertEqual(payload["emergency_contact_name"], "Avery Complete")
+        self.assertEqual(payload["emergency_contact_phone"], "+15550004555")
+        self.assertEqual(payload["emergency_contact_relationship"], "Spouse")
+        self.assertEqual(payload["employment_status"], "contractor")
+
+        profile_response = self.client.get(
+            f"/admin/technicians/{payload['id']}",
+            headers={"Authorization": f"Bearer {owner_token}"},
+        )
+        self.assertEqual(profile_response.status_code, 200, profile_response.text)
+        profile_payload = profile_response.json()
+        self.assertEqual(profile_payload["emergency_contact_name"], "Avery Complete")
+        self.assertEqual(profile_payload["employment_status"], "contractor")
+        self.assertEqual(profile_payload["documents"], [])
+
+    def test_suspended_status_blocks_login_and_legacy_deactivated_maps(self):
+        owner_signup = self._signup_owner()
+        owner_token = owner_signup["access_token"]
+
+        create_response = self.client.post(
+            "/admin/technicians",
+            headers={"Authorization": f"Bearer {owner_token}"},
+            json={
+                "name": "Field Tech Suspended",
+                "email": "tech-suspended@example.com",
+                "phone": "+15550006666",
+                "password": "secret123",
+                "status": "active",
+                "manual_availability": True,
+            },
+        )
+        self.assertEqual(create_response.status_code, 201, create_response.text)
+        technician_id = create_response.json()["id"]
+
+        suspend_response = self.client.put(
+            f"/admin/technicians/{technician_id}",
+            headers={"Authorization": f"Bearer {owner_token}"},
+            json={"status": "deactivated"},
+        )
+        self.assertEqual(suspend_response.status_code, 200, suspend_response.text)
+        self.assertEqual(suspend_response.json()["status"], "suspended")
+
+        blocked_login = self.client.post(
+            "/auth/technician-token",
+            json={"email": "tech-suspended@example.com", "password": "secret123"},
+        )
+        self.assertEqual(blocked_login.status_code, 403, blocked_login.text)
+        self.assertIn("suspended", blocked_login.json()["detail"])
+
+        activate_response = self.client.put(
+            f"/admin/technicians/{technician_id}",
+            headers={"Authorization": f"Bearer {owner_token}"},
+            json={"status": "active"},
+        )
+        self.assertEqual(activate_response.status_code, 200, activate_response.text)
+        self.assertEqual(activate_response.json()["status"], "active")
+
+        login_response = self.client.post(
+            "/auth/technician-token",
+            json={"email": "tech-suspended@example.com", "password": "secret123"},
+        )
+        self.assertEqual(login_response.status_code, 200, login_response.text)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -251,6 +251,7 @@ class ChatRepository:
         body: str | None,
         message_type: str,
         metadata_json: dict | None = None,
+        is_broadcast: bool = False,
     ) -> ChatConversationMessage:
         row = ChatConversationMessage(
             conversation_id=conversation_id,
@@ -260,6 +261,7 @@ class ChatRepository:
             body=body,
             message_type=message_type,
             metadata_json=metadata_json,
+            is_broadcast=is_broadcast,
         )
         self.db.add(row)
         self.db.flush()

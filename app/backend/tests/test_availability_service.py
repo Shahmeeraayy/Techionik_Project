@@ -20,9 +20,9 @@ class AvailabilityServiceTests(unittest.TestCase):
         )
         self.assertTrue(compute_effective_availability_from_inputs(inputs))
 
-    def test_returns_false_when_deactivated(self):
+    def test_returns_false_when_suspended(self):
         inputs = AvailabilityInputs(
-            status="deactivated",
+            status="suspended",
             manual_availability=True,
             schedule_enabled=True,
             start_time=time(8, 0),

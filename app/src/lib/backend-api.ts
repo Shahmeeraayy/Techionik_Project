@@ -529,7 +529,7 @@ export type BackendChatAttachment = {
   name: string;
   mime_type: string;
   size_bytes: number;
-  attachment_type: 'image' | 'document' | 'voice' | string;
+  attachment_type: 'image' | 'document' | 'voice' | 'video' | string;
   duration_seconds?: number | null;
   preview_url?: string | null;
   download_url?: string | null;
@@ -663,6 +663,24 @@ export type BackendChatMessageCreatePayload = {
   text?: string;
   attachments?: BackendChatAttachment[];
   metadata?: BackendChatMessageMetadata | null;
+};
+
+export type BackendChatBroadcastPayload = BackendChatMessageCreatePayload & {
+  technician_ids?: string[];
+  group_conversation_ids?: string[];
+};
+
+export type BackendChatTypingParticipant = {
+  user_id: string;
+  role: 'admin' | 'technician' | string;
+  display_name: string;
+  conversation_id: string;
+  updated_at: string;
+};
+
+export type BackendChatTypingStatus = {
+  conversation_id: string;
+  participants: BackendChatTypingParticipant[];
 };
 
 type RawBackendChatAttachment = Partial<BackendChatAttachment> & Pick<
@@ -2176,12 +2194,32 @@ export async function sendAdminChatMessage(
 
 export async function broadcastAdminChatMessage(
   token: string,
-  payload: BackendChatMessageCreatePayload,
+  payload: BackendChatBroadcastPayload,
 ): Promise<BackendChatMessage[]> {
-  return requestJson<BackendChatMessage[]>('/admin/chat/broadcast', {
+  const messages = await requestJson<RawBackendChatMessage[]>('/admin/chat/broadcast', {
     method: 'POST',
     token,
     body: payload,
+  });
+  return messages.map((message) => normalizeChatMessage(message, message.conversation_id));
+}
+
+export async function fetchAdminChatTypingStatus(
+  token: string,
+  conversationId: string,
+): Promise<BackendChatTypingStatus> {
+  return requestJson<BackendChatTypingStatus>(`/admin/chat/threads/${conversationId}/typing`, { token });
+}
+
+export async function updateAdminChatTypingStatus(
+  token: string,
+  conversationId: string,
+  isTyping: boolean,
+): Promise<BackendChatTypingStatus> {
+  return requestJson<BackendChatTypingStatus>(`/admin/chat/threads/${conversationId}/typing`, {
+    method: 'POST',
+    token,
+    body: { is_typing: isTyping },
   });
 }
 
@@ -2581,8 +2619,8 @@ export async function updateAdminTechnician(
     employment_status?: BackendTechnicianEmploymentStatus;
     manual_availability?: boolean;
   },
-): Promise<BackendTechnicianListItem> {
-  return requestJson<BackendTechnicianListItem>(`/admin/technicians/${technicianId}`, {
+): Promise<BackendTechnicianProfile> {
+  return requestJson<BackendTechnicianProfile>(`/admin/technicians/${technicianId}`, {
     method: 'PUT',
     token,
     body: payload,
@@ -3326,6 +3364,25 @@ export async function fetchTechnicianPinnedChatMessages(
   return {
     items: pinned.items.map((message) => normalizeChatMessage(message, conversationId)),
   };
+}
+
+export async function fetchTechnicianChatTypingStatus(
+  token: string,
+  conversationId: string,
+): Promise<BackendChatTypingStatus> {
+  return requestJson<BackendChatTypingStatus>(`/technicians/me/chat/threads/${conversationId}/typing`, { token });
+}
+
+export async function updateTechnicianChatTypingStatus(
+  token: string,
+  conversationId: string,
+  isTyping: boolean,
+): Promise<BackendChatTypingStatus> {
+  return requestJson<BackendChatTypingStatus>(`/technicians/me/chat/threads/${conversationId}/typing`, {
+    method: 'POST',
+    token,
+    body: { is_typing: isTyping },
+  });
 }
 
 export async function sendTechnicianChatMessage(

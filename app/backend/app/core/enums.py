@@ -104,3 +104,4 @@ class ChatAttachmentType(str, Enum):
     IMAGE = "image"
     DOCUMENT = "document"
     VOICE = "voice"
+    VIDEO = "video"

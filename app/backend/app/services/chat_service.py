@@ -1,6 +1,6 @@
 import json
-from datetime import datetime, timezone
-from typing import List, Optional
+from datetime import datetime, timedelta, timezone
+from typing import ClassVar, List, Optional
 from uuid import UUID, uuid4
 
 from fastapi import HTTPException, status
@@ -20,12 +20,15 @@ from ..schemas.chat import (
     AdminChatUnreadCountResponse,
     ChatAttachmentResponse,
     ChatAuditLogResponse,
+    ChatBroadcastCreateRequest,
     ChatGroupUpsertRequest,
     ChatConversationResolveResponse,
     ChatConversationSummaryResponse,
     ChatMessageCreateRequest,
     ChatMessageResponse,
     ChatPinnedMessagesResponse,
+    ChatTypingParticipantResponse,
+    ChatTypingStatusResponse,
     TechnicianChatConversationSummaryResponse,
 )
 from .audit_service import AuditService
@@ -36,6 +39,9 @@ from .notification_service import NotificationService
 
 
 class ChatService:
+    _typing_status: ClassVar[dict[tuple[UUID, UUID, UUID], dict]] = {}
+    _typing_ttl = timedelta(seconds=8)
+
     def __init__(self, db: Session, current_user: AuthenticatedUser):
         self.db = db
         self.current_user = current_user
@@ -44,10 +50,27 @@ class ChatService:
         self.availability_service = AvailabilityService(db, repository=self.technician_repo)
         self.notification_service = NotificationService(db)
 
+    def _ensure_current_user_can_use_chatter(self) -> None:
+        if self.current_user.role == UserRole.TECHNICIAN:
+            technician = self._require_technician(self.current_user.user_id)
+            if technician.status != "active":
+                raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Suspended technicians cannot use Chatter")
+            return
+        if self.current_user.role == UserRole.ADMIN:
+            admin_user = self.db.query(AdminUser).filter(AdminUser.id == self.current_user.user_id).first()
+            if admin_user is not None and admin_user.status != "active":
+                raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Inactive admins cannot use Chatter")
+
     def _require_technician(self, technician_id: UUID):
         technician = self.repo.get_technician_by_id(technician_id)
         if technician is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Technician not found")
+        return technician
+
+    def _require_active_technician(self, technician_id: UUID):
+        technician = self._require_technician(technician_id)
+        if technician.status != "active":
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Suspended technicians cannot use Chatter")
         return technician
 
     def _require_job(self, job_id: UUID):
@@ -124,7 +147,7 @@ class ChatService:
             text=row.body,
             message_type=row.message_type,
             attachments=[self._attachment_response(item) for item in row.attachments],
-            is_broadcast=False,
+            is_broadcast=row.is_broadcast,
             is_pinned=row.pinned_at is not None,
             pinned_at=row.pinned_at,
             created_at=row.created_at,
@@ -204,7 +227,7 @@ class ChatService:
         return f"job:{job_id}:{technician_id}"
 
     def _get_or_create_direct_conversation(self, technician_id: UUID) -> ChatConversation:
-        technician = self._require_technician(technician_id)
+        technician = self._require_active_technician(technician_id)
         conversation_key = self._build_direct_conversation_key(technician.id)
         row = self.repo.get_conversation_by_key(conversation_key)
         if row is not None:
@@ -248,7 +271,7 @@ class ChatService:
     def create_group_conversation(self, payload: ChatGroupUpsertRequest) -> ChatConversationResolveResponse:
         if self.current_user.role != UserRole.ADMIN:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only admins can create technician groups")
-        technicians = [self._require_technician(technician_id) for technician_id in payload.technician_ids]
+        technicians = [self._require_active_technician(technician_id) for technician_id in payload.technician_ids]
         conversation = self.repo.create_conversation(
             conversation_key=f"group:{uuid4()}",
             conversation_type="direct",
@@ -289,7 +312,7 @@ class ChatService:
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Conversation is not a technician group")
 
         previous_members = {member.technician_id for member in self._conversation_members(conversation)}
-        technicians = [self._require_technician(technician_id) for technician_id in payload.technician_ids]
+        technicians = [self._require_active_technician(technician_id) for technician_id in payload.technician_ids]
         conversation.title = payload.title
         conversation = self._sync_conversation_members(conversation, [technician.id for technician in technicians])
         current_members = {technician.id for technician in technicians}
@@ -691,8 +714,10 @@ class ChatService:
                     )
 
     def list_admin_conversations(self, search: Optional[str] = None) -> List[AdminChatConversationSummaryResponse]:
+        self._ensure_current_user_can_use_chatter()
         for technician in self.repo.list_technicians():
-            self._get_or_create_direct_conversation(technician.id)
+            if technician.status == "active":
+                self._get_or_create_direct_conversation(technician.id)
         rows = self.repo.list_admin_conversations(search=search)
         self.db.flush()
         return [
@@ -708,6 +733,7 @@ class ChatService:
         ]
 
     def list_technician_conversations(self, search: Optional[str] = None) -> List[TechnicianChatConversationSummaryResponse]:
+        self._ensure_current_user_can_use_chatter()
         technician_id = self.current_user.user_id
         self._get_or_create_direct_conversation(technician_id)
         rows = self.repo.list_technician_conversations(technician_id=technician_id, search=search)
@@ -725,6 +751,7 @@ class ChatService:
         ]
 
     def list_conversation_messages(self, conversation_id: UUID, search: Optional[str] = None) -> List[ChatMessageResponse]:
+        self._ensure_current_user_can_use_chatter()
         conversation = self._require_conversation_access(conversation_id)
         now = datetime.now(timezone.utc)
         self.repo.mark_delivered(
@@ -738,6 +765,7 @@ class ChatService:
         return [self._message_response(conversation, row) for row in rows]
 
     def send_conversation_message(self, conversation_id: UUID, payload: ChatMessageCreateRequest) -> ChatMessageResponse:
+        self._ensure_current_user_can_use_chatter()
         conversation = self._require_conversation_access(conversation_id)
         metadata = self._build_message_metadata(conversation=conversation, payload=payload)
         message = self.repo.create_message(
@@ -748,6 +776,7 @@ class ChatService:
             body=payload.text,
             message_type="text",
             metadata_json=metadata,
+            is_broadcast=bool(metadata.get("broadcast")),
         )
         stored_attachments = self._store_attachments(conversation=conversation, message=message, payload=payload)
         message.attachments = stored_attachments
@@ -760,7 +789,66 @@ class ChatService:
         message = self.repo.get_message_by_id(message.id) or message
         return self._message_response(conversation, message)
 
+    def send_broadcast_message(self, payload: ChatBroadcastCreateRequest) -> List[ChatMessageResponse]:
+        self._ensure_current_user_can_use_chatter()
+        if self.current_user.role != UserRole.ADMIN:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only admins can send broadcast announcements")
+
+        recipient_ids = list(payload.technician_ids)
+        for group_conversation_id in payload.group_conversation_ids:
+            group = self._require_admin_conversation_access(group_conversation_id)
+            if self._conversation_channel_kind(group) != "group":
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Broadcast target must be a group conversation")
+            recipient_ids.extend(member.technician_id for member in self._conversation_members(group))
+
+        if not recipient_ids:
+            recipient_ids = [technician.id for technician in self.repo.list_technicians() if technician.status == "active"]
+
+        recipient_ids = list(dict.fromkeys(recipient_ids))
+        if not recipient_ids:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Broadcast requires at least one active technician")
+
+        messages: List[ChatMessageResponse] = []
+        for technician_id in recipient_ids:
+            self._require_active_technician(technician_id)
+            conversation = self._get_or_create_direct_conversation(technician_id)
+            metadata = self._build_message_metadata(conversation=conversation, payload=payload)
+            metadata.update({"kind": metadata.get("kind") or "broadcast", "broadcast": True})
+            message = self.repo.create_message(
+                conversation_id=conversation.id,
+                technician_id=conversation.technician_id,
+                sender_role=self.current_user.role.value,
+                sender_id=self.current_user.user_id,
+                body=payload.text,
+                message_type="text",
+                metadata_json=metadata,
+                is_broadcast=True,
+            )
+            stored_attachments = self._store_attachments(conversation=conversation, message=message, payload=payload)
+            message.attachments = stored_attachments
+            message.message_type = self._resolve_message_type(text=payload.text, attachments=stored_attachments)
+            self.db.flush()
+            self._log_message_events(conversation=conversation, message=message)
+            self._create_message_notifications(conversation=conversation, message=message)
+            messages.append(self._message_response(conversation, self.repo.get_message_by_id(message.id) or message))
+
+        AuditService.log_event(
+            self.db,
+            actor_role=self.current_user.role,
+            actor_id=self.current_user.user_id,
+            action="chat.broadcast.sent",
+            entity_type=AuditEntityType.CHAT_CONVERSATION.value,
+            entity_id=UUID(int=0),
+            metadata={
+                "recipient_count": len(recipient_ids),
+                "technician_ids": [str(item) for item in recipient_ids],
+            },
+        )
+        self.db.commit()
+        return messages
+
     def mark_conversation_read(self, conversation_id: UUID) -> AdminChatUnreadCountResponse:
+        self._ensure_current_user_can_use_chatter()
         conversation = self._require_conversation_access(conversation_id)
         now = datetime.now(timezone.utc)
         changed = self.repo.mark_read(
@@ -911,6 +999,49 @@ class ChatService:
             },
         )
         self.db.commit()
+
+    def update_typing_status(self, conversation_id: UUID, is_typing: bool) -> ChatTypingStatusResponse:
+        self._ensure_current_user_can_use_chatter()
+        conversation = self._require_conversation_access(conversation_id)
+        key = (self.current_user.tenant_id, conversation.id, self.current_user.user_id)
+        if is_typing:
+            self._typing_status[key] = {
+                "role": self.current_user.role.value,
+                "display_name": self._resolve_sender_display_name(),
+                "updated_at": datetime.now(timezone.utc),
+            }
+        else:
+            self._typing_status.pop(key, None)
+        return self.get_typing_status(conversation.id)
+
+    def get_typing_status(self, conversation_id: UUID) -> ChatTypingStatusResponse:
+        self._ensure_current_user_can_use_chatter()
+        conversation = self._require_conversation_access(conversation_id)
+        now = datetime.now(timezone.utc)
+        expired_keys = [
+            key
+            for key, value in self._typing_status.items()
+            if now - value["updated_at"] > self._typing_ttl
+        ]
+        for key in expired_keys:
+            self._typing_status.pop(key, None)
+
+        participants = []
+        for (tenant_id, active_conversation_id, user_id), value in self._typing_status.items():
+            if tenant_id != self.current_user.tenant_id or active_conversation_id != conversation.id:
+                continue
+            if user_id == self.current_user.user_id:
+                continue
+            participants.append(
+                ChatTypingParticipantResponse(
+                    user_id=user_id,
+                    role=value["role"],
+                    display_name=value["display_name"],
+                    conversation_id=conversation.id,
+                    updated_at=value["updated_at"],
+                )
+            )
+        return ChatTypingStatusResponse(conversation_id=conversation.id, participants=participants)
 
     # Backward-compatible direct-conversation methods
     def list_admin_messages(self, technician_id: UUID) -> List[ChatMessageResponse]:

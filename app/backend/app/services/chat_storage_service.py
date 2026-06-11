@@ -175,8 +175,12 @@ class ChatStorageService:
         if content.startswith(b"ID3") or (len(content) > 2 and content[0] == 0xFF and (content[1] & 0xE0) == 0xE0):
             return {"mime_type": "audio/mpeg", "attachment_type": "voice"}
         if len(content) > 12 and content[4:8] == b"ftyp":
+            if claimed_mime_type.startswith("video/") or lower_name.endswith((".mp4", ".webm", ".mov")):
+                return {"mime_type": "video/mp4", "attachment_type": "video"}
             if any(token in content[8:24] for token in (b"M4A", b"isom", b"mp42", b"mp41", b"qt  ")):
                 return {"mime_type": "audio/mp4", "attachment_type": "voice"}
+        if content.startswith(EBML_HEADER) and claimed_mime_type in {"video/webm", "video/x-matroska"}:
+            return {"mime_type": "video/webm", "attachment_type": "video"}
 
         if content.startswith(OLE_HEADER) and lower_name.endswith(".doc"):
             return {"mime_type": "application/msword", "attachment_type": "document"}
@@ -241,6 +245,8 @@ class ChatStorageService:
             "audio/webm": "webm",
             "audio/mpeg": "mp3",
             "audio/mp4": "m4a",
+            "video/mp4": "mp4",
+            "video/webm": "webm",
             "text/plain": "txt",
         }
         extension = mapping.get(mime_type)

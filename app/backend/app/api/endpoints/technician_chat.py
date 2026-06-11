@@ -13,6 +13,8 @@ from ...schemas.chat import (
     ChatMessageCreateRequest,
     ChatMessageResponse,
     ChatPinnedMessagesResponse,
+    ChatTypingStatusRequest,
+    ChatTypingStatusResponse,
     TechnicianChatConversationSummaryResponse,
 )
 from ...services.chat_service import ChatService
@@ -78,6 +80,25 @@ def list_pinned_messages(
     current_user: AuthenticatedUser = Depends(deps.require_roles(UserRole.TECHNICIAN)),
 ):
     return ChatService(db, current_user).list_pinned_messages(conversation_id)
+
+
+@router.get("/threads/{conversation_id}/typing", response_model=ChatTypingStatusResponse)
+def get_thread_typing_status(
+    conversation_id: UUID,
+    db: Session = Depends(deps.get_db),
+    current_user: AuthenticatedUser = Depends(deps.require_roles(UserRole.TECHNICIAN)),
+):
+    return ChatService(db, current_user).get_typing_status(conversation_id)
+
+
+@router.post("/threads/{conversation_id}/typing", response_model=ChatTypingStatusResponse)
+def update_thread_typing_status(
+    conversation_id: UUID,
+    payload: ChatTypingStatusRequest,
+    db: Session = Depends(deps.get_db),
+    current_user: AuthenticatedUser = Depends(deps.require_roles(UserRole.TECHNICIAN)),
+):
+    return ChatService(db, current_user).update_typing_status(conversation_id, payload.is_typing)
 
 
 # Backward-compatible direct chat routes

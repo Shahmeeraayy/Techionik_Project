@@ -165,7 +165,7 @@ class ChatApiTestCase(unittest.TestCase):
         assert response.status_code == 200, response.text
         return response.json()["access_token"]
 
-    def test_admin_list_includes_direct_threads_and_broadcast_is_disabled(self):
+    def test_z_admin_list_includes_direct_threads_and_broadcast_sends_to_active_technicians(self):
         response = self.client.get("/admin/chat/conversations", headers=self.admin_one_headers)
         self.assertEqual(response.status_code, 200, response.text)
         payload = response.json()
@@ -179,7 +179,14 @@ class ChatApiTestCase(unittest.TestCase):
             headers=self.admin_one_headers,
             json={"text": "This should not send."},
         )
-        self.assertEqual(broadcast.status_code, 405, broadcast.text)
+        self.assertEqual(broadcast.status_code, 201, broadcast.text)
+        broadcast_payload = broadcast.json()
+        self.assertEqual(len(broadcast_payload), 3)
+        self.assertEqual(
+            {row["technician_id"] for row in broadcast_payload},
+            {self.tech_one_id, self.tech_two_id, self.tech_three_id},
+        )
+        self.assertTrue(all(row["is_broadcast"] for row in broadcast_payload))
 
     def test_job_chat_enforces_assignment_and_read_receipts(self):
         resolved = self.client.get(

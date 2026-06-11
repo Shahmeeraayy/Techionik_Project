@@ -891,7 +891,7 @@ export default function TechniciansPage() {
 
             const [profile, jobsFeed] = await Promise.all([
                 fetchAdminTechnicianProfile(adminToken, selectedTech.id),
-                fetchAdminTechnicianJobsFeed(adminToken, selectedTech.id).catch(() => ({ my_jobs: [] })),
+                fetchAdminTechnicianJobsFeed(adminToken, selectedTech.id).catch(() => ({ available_jobs: [], my_jobs: [] })),
             ]);
             saved = mergeProfileIntoTechnician(saved, profile, jobsFeed.my_jobs);
         }
@@ -2038,6 +2038,152 @@ export default function TechniciansPage() {
                                                     ))}
                                                 </div>
                                             )}
+                                        </Card>
+
+                                        <Card className="p-4 border-white/10 bg-white/[0.03] shadow-none">
+                                            <div className="mb-4 flex items-center justify-between gap-3">
+                                                <h3 className="flex items-center gap-2 text-sm font-bold text-white">
+                                                    <FileDown className="h-4 w-4" /> Documents & Licenses
+                                                </h3>
+                                                <Badge variant="outline" className="border-white/10 bg-white/[0.03] text-slate-300">
+                                                    {techDraft.documents.length} saved
+                                                </Badge>
+                                            </div>
+
+                                            {techDraft.documents.length === 0 ? (
+                                                <div className="rounded-xl border border-dashed border-white/10 bg-white/[0.02] px-4 py-5 text-sm text-slate-400">
+                                                    No documents or licenses saved yet. Add metadata below to keep this technician's operational records complete.
+                                                </div>
+                                            ) : (
+                                                <div className="space-y-2">
+                                                    {techDraft.documents.map((document) => (
+                                                        <div key={document.id} className="rounded-2xl border border-white/10 bg-white/[0.03] p-3">
+                                                            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                                                                <div className="min-w-0 space-y-1">
+                                                                    <div className="flex flex-wrap items-center gap-2">
+                                                                        <p className="truncate text-sm font-semibold text-white">{document.document_name}</p>
+                                                                        <Badge variant="outline" className="border-cyan-300/20 bg-cyan-300/10 text-cyan-100">
+                                                                            {DOCUMENT_TYPE_LABELS[document.document_type]}
+                                                                        </Badge>
+                                                                    </div>
+                                                                    <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-slate-400">
+                                                                        <span>License: {document.license_number || 'Not set'}</span>
+                                                                        <span>Expiry: {document.expiry_date ? formatDateForUi(document.expiry_date) : 'Not set'}</span>
+                                                                        {document.file_url ? (
+                                                                            <a
+                                                                                href={document.file_url}
+                                                                                target="_blank"
+                                                                                rel="noreferrer"
+                                                                                className="text-cyan-200 underline-offset-4 hover:underline"
+                                                                            >
+                                                                                View file
+                                                                            </a>
+                                                                        ) : null}
+                                                                    </div>
+                                                                </div>
+                                                                <Button
+                                                                    type="button"
+                                                                    variant="ghost"
+                                                                    size="sm"
+                                                                    className="h-8 self-start rounded-xl px-2 text-slate-400 hover:bg-red-400/10 hover:text-red-100"
+                                                                    onClick={() => handleRemoveDocument(document.id)}
+                                                                >
+                                                                    Remove
+                                                                </Button>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+
+                                            <div className="mt-4 rounded-2xl border border-white/10 bg-[#07111f]/70 p-4">
+                                                <div className="grid gap-3 md:grid-cols-2">
+                                                    <div className="space-y-2">
+                                                        <Label className="text-xs uppercase tracking-wider text-slate-400">Document/License Name</Label>
+                                                        <Input
+                                                            data-admin-dark-input="true"
+                                                            style={adminDarkInputStyle}
+                                                            className="h-11 rounded-2xl border-white/10 !text-white placeholder:!text-slate-500"
+                                                            placeholder="e.g. HVAC License"
+                                                            value={documentForm.document_name}
+                                                            onChange={(event) => setDocumentForm((prev) => ({ ...prev, document_name: event.target.value }))}
+                                                        />
+                                                    </div>
+                                                    <div className="space-y-2">
+                                                        <Label className="text-xs uppercase tracking-wider text-slate-400">Type</Label>
+                                                        <Select
+                                                            value={documentForm.document_type}
+                                                            onValueChange={(value) => setDocumentForm((prev) => ({
+                                                                ...prev,
+                                                                document_type: value as BackendTechnicianDocumentType,
+                                                            }))}
+                                                        >
+                                                            <SelectTrigger className="h-11 rounded-2xl border-white/10 bg-[#0b1424] text-white">
+                                                                <SelectValue placeholder="Select document type" />
+                                                            </SelectTrigger>
+                                                            <SelectContent className="border-white/10 bg-[#0b1424] text-slate-100">
+                                                                {DOCUMENT_TYPE_OPTIONS.map(([value, label]) => (
+                                                                    <SelectItem key={value} value={value}>{label}</SelectItem>
+                                                                ))}
+                                                            </SelectContent>
+                                                        </Select>
+                                                    </div>
+                                                    <div className="space-y-2">
+                                                        <Label className="text-xs uppercase tracking-wider text-slate-400">License Number</Label>
+                                                        <Input
+                                                            data-admin-dark-input="true"
+                                                            style={adminDarkInputStyle}
+                                                            className="h-11 rounded-2xl border-white/10 !text-white placeholder:!text-slate-500"
+                                                            placeholder="Optional"
+                                                            value={documentForm.license_number ?? ''}
+                                                            onChange={(event) => setDocumentForm((prev) => ({ ...prev, license_number: event.target.value }))}
+                                                        />
+                                                    </div>
+                                                    <div className="space-y-2">
+                                                        <Label className="text-xs uppercase tracking-wider text-slate-400">Expiry Date</Label>
+                                                        <input
+                                                            data-admin-dark-input="true"
+                                                            className="h-11 w-full rounded-2xl border border-white/10 px-4 text-sm !text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] outline-none placeholder:!text-slate-500 focus:border-cyan-300/40 focus:ring-2 focus:ring-cyan-300/15"
+                                                            style={adminDarkDateInputStyle}
+                                                            type="date"
+                                                            value={documentForm.expiry_date ?? ''}
+                                                            onChange={(event) => setDocumentForm((prev) => ({ ...prev, expiry_date: event.target.value }))}
+                                                        />
+                                                    </div>
+                                                    <div className="space-y-2 md:col-span-2">
+                                                        <Label className="text-xs uppercase tracking-wider text-slate-400">File URL or Uploaded File ID</Label>
+                                                        <div className="grid gap-2 md:grid-cols-2">
+                                                            <Input
+                                                                data-admin-dark-input="true"
+                                                                style={adminDarkInputStyle}
+                                                                className="h-11 rounded-2xl border-white/10 !text-white placeholder:!text-slate-500"
+                                                                placeholder="https://..."
+                                                                value={documentForm.file_url ?? ''}
+                                                                onChange={(event) => setDocumentForm((prev) => ({ ...prev, file_url: event.target.value }))}
+                                                            />
+                                                            <Input
+                                                                data-admin-dark-input="true"
+                                                                style={adminDarkInputStyle}
+                                                                className="h-11 rounded-2xl border-white/10 !text-white placeholder:!text-slate-500"
+                                                                placeholder="Uploaded file ID (optional)"
+                                                                value={documentForm.uploaded_file_id ?? ''}
+                                                                onChange={(event) => setDocumentForm((prev) => ({ ...prev, uploaded_file_id: event.target.value }))}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="mt-3 flex justify-end">
+                                                    <Button
+                                                        type="button"
+                                                        variant="outline"
+                                                        size="sm"
+                                                        className="h-10 rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] px-4 text-slate-100 shadow-[0_14px_34px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.055)] hover:bg-[linear-gradient(180deg,rgba(24,38,64,0.98),rgba(12,20,34,0.98))] hover:text-white"
+                                                        onClick={handleAddDocument}
+                                                    >
+                                                        + Add Document
+                                                    </Button>
+                                                </div>
+                                            </div>
                                         </Card>
 
                                         {/* B) Skills & Zones */}

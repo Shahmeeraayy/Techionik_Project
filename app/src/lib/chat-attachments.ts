@@ -4,7 +4,7 @@ import { buildBackendUrl } from '@/lib/backend-api';
 export const MAX_CHAT_ATTACHMENT_BYTES = 10 * 1024 * 1024;
 export const MAX_CHAT_ATTACHMENTS_PER_MESSAGE = 5;
 export const MAX_CHAT_VOICE_DURATION_SECONDS = 300;
-export const CHAT_ATTACHMENT_ACCEPT = '.pdf,.doc,.docx,.txt,image/*,audio/*';
+export const CHAT_ATTACHMENT_ACCEPT = '.pdf,.doc,.docx,.txt,image/*,audio/*,video/mp4,video/webm';
 
 const VOICE_NOTE_MIME_CANDIDATES = [
   'audio/webm;codecs=opus',
@@ -22,6 +22,10 @@ export function isAudioAttachment(mimeType: string) {
   return mimeType.startsWith('audio/');
 }
 
+export function isVideoAttachment(mimeType: string) {
+  return mimeType.startsWith('video/');
+}
+
 export function isPdfAttachment(mimeType: string) {
   return mimeType === 'application/pdf';
 }
@@ -36,11 +40,12 @@ export function isDocumentAttachment(mimeType: string) {
 export function inferAttachmentType(mimeType: string): BackendChatAttachment['attachment_type'] {
   if (isImageAttachment(mimeType)) return 'image';
   if (isAudioAttachment(mimeType)) return 'voice';
+  if (isVideoAttachment(mimeType)) return 'video';
   return 'document';
 }
 
 export function isSupportedChatAttachment(file: File) {
-  return isImageAttachment(file.type) || isAudioAttachment(file.type) || isDocumentAttachment(file.type);
+  return isImageAttachment(file.type) || isAudioAttachment(file.type) || isVideoAttachment(file.type) || isDocumentAttachment(file.type);
 }
 
 export function getChatAttachmentValidationMessage(file: File) {
@@ -48,7 +53,7 @@ export function getChatAttachmentValidationMessage(file: File) {
     return `${file.name} exceeds the 10MB limit.`;
   }
   if (!isSupportedChatAttachment(file)) {
-    return `${file.name} must be an image, audio, PDF, DOC, DOCX, or text file.`;
+    return `${file.name} must be an image, video, audio, PDF, DOC, DOCX, or text file.`;
   }
   return null;
 }

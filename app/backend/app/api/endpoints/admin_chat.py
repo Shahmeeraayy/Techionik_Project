@@ -11,11 +11,14 @@ from ...schemas.chat import (
     AdminChatConversationSummaryResponse,
     AdminChatUnreadCountResponse,
     ChatAuditLogResponse,
+    ChatBroadcastCreateRequest,
     ChatGroupUpsertRequest,
     ChatConversationResolveResponse,
     ChatMessageCreateRequest,
     ChatMessageResponse,
     ChatPinnedMessagesResponse,
+    ChatTypingStatusRequest,
+    ChatTypingStatusResponse,
 )
 from ...services.chat_service import ChatService
 
@@ -165,9 +168,32 @@ def mark_direct_conversation_read(
     return ChatService(db, current_user).mark_admin_conversation_read(technician_id)
 
 
-@router.post("/broadcast", status_code=status.HTTP_405_METHOD_NOT_ALLOWED)
-def broadcast_message_not_supported():
-    return {"detail": "Broadcast chat is disabled in Chatter V1"}
+@router.post("/broadcast", response_model=List[ChatMessageResponse], status_code=status.HTTP_201_CREATED)
+def broadcast_message(
+    payload: ChatBroadcastCreateRequest,
+    db: Session = Depends(deps.get_db),
+    current_user: AuthenticatedUser = Depends(deps.require_roles(UserRole.ADMIN)),
+):
+    return ChatService(db, current_user).send_broadcast_message(payload)
+
+
+@router.get("/threads/{conversation_id}/typing", response_model=ChatTypingStatusResponse)
+def get_thread_typing_status(
+    conversation_id: UUID,
+    db: Session = Depends(deps.get_db),
+    current_user: AuthenticatedUser = Depends(deps.require_roles(UserRole.ADMIN)),
+):
+    return ChatService(db, current_user).get_typing_status(conversation_id)
+
+
+@router.post("/threads/{conversation_id}/typing", response_model=ChatTypingStatusResponse)
+def update_thread_typing_status(
+    conversation_id: UUID,
+    payload: ChatTypingStatusRequest,
+    db: Session = Depends(deps.get_db),
+    current_user: AuthenticatedUser = Depends(deps.require_roles(UserRole.ADMIN)),
+):
+    return ChatService(db, current_user).update_typing_status(conversation_id, payload.is_typing)
 
 
 @router.get("/unread-count", response_model=AdminChatUnreadCountResponse)

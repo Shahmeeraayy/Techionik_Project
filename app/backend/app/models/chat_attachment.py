@@ -28,7 +28,7 @@ class ChatAttachment(TenantScopedMixin, Base):
 
     __table_args__ = (
         CheckConstraint(
-            "attachment_type IN ('image','document','voice')",
+            "attachment_type IN ('image','document','voice','video')",
             name="chat_attachments_type_chk",
         ),
     )
