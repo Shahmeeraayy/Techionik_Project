@@ -29,7 +29,7 @@ SENSITIVE_PLATFORM_SETTINGS_SECTIONS = {"security", "integrations", "maintenance
 DEFAULT_PLATFORM_SETTINGS: dict[str, Any] = {
     "general": {
         "platform_name": "NexusOps",
-        "support_email": "support@nexusops.com",
+        "support_email": "muhamamd.daniyal@techionik.com",
         "default_timezone": "America/New_York",
         "default_currency": "USD",
         "default_language": "en",
@@ -104,9 +104,9 @@ DEFAULT_PLATFORM_SETTINGS: dict[str, Any] = {
     },
     "email_notifications": {
         "default_sender_name": "NexusOps",
-        "default_sender_email": "no-reply@nexusops.com",
-        "support_email": "support@nexusops.com",
-        "billing_email": "billing@nexusops.com",
+        "default_sender_email": "muhamamd.daniyal@techionik.com",
+        "support_email": "muhamamd.daniyal@techionik.com",
+        "billing_email": "muhamamd.daniyal@techionik.com",
         "provider_status": "not_connected",
         "template_defaults": "standard",
         "notification_rules": "critical_and_billing",
