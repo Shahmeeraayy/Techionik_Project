@@ -17,12 +17,15 @@ from app.main import app
 from app.models.admin_user import AdminUser
 from app.models.audit_log import AuditLog
 from app.models.base import Base
+from app.models.job import Job
+from app.models.notification import Notification
 from app.models.platform_audit_log import PlatformAuditLog
 from app.models.platform_settings import PlatformSettings
 from app.models.platform_user import PlatformUser
 from app.models.technician import Technician
 from app.models.tenant import Tenant, TenantMembership
 from app.models.tenant_feature_override import TenantFeatureOverride
+from app.services.email_service import send_platform_email
 
 
 class SuperAdminApiTests(unittest.TestCase):
@@ -43,6 +46,8 @@ class SuperAdminApiTests(unittest.TestCase):
             conn.execute(PlatformSettings.__table__.delete())
             conn.execute(PlatformAuditLog.__table__.delete())
             conn.execute(AuditLog.__table__.delete())
+            conn.execute(Notification.__table__.delete())
+            conn.execute(Job.__table__.delete())
             conn.execute(TenantMembership.__table__.delete())
             conn.execute(Technician.__table__.delete())
             conn.execute(AdminUser.__table__.delete())
@@ -109,6 +114,28 @@ class SuperAdminApiTests(unittest.TestCase):
         )
         self.assertEqual(response.status_code, 200, response.text)
         return response.json()["access_token"]
+
+    def _seed_job(
+        self,
+        *,
+        tenant_id: str,
+        job_code: str = "SM2-NOTIFY-001",
+        status: str = "pending",
+        assigned_tech_id: str | None = None,
+    ) -> Job:
+        with SessionLocal() as db:
+            row = Job(
+                id=uuid4(),
+                tenant_id=UUID(tenant_id),
+                job_code=job_code,
+                status=status,
+                assigned_tech_id=UUID(assigned_tech_id) if assigned_tech_id else None,
+                source_system="admin_ui",
+            )
+            db.add(row)
+            db.commit()
+            db.refresh(row)
+            return row
 
     def test_super_admin_can_authenticate_and_view_platform_dashboard(self):
         signup_payload = self._signup_tenant_owner()
@@ -231,6 +258,114 @@ class SuperAdminApiTests(unittest.TestCase):
             self.assertEqual(audit_row.action, "platform_settings_updated")
             self.assertEqual(audit_row.reason, "Updating global platform defaults.")
             self.assertIn("security", audit_row.metadata_json["sensitive_sections"])
+
+    def test_super_admin_can_manage_notification_controls_with_audit_log(self):
+        signup_payload = self._signup_tenant_owner(workspace_slug="notify-controls", email="owner@notifycontrols.com")
+        token = self._super_admin_token()
+
+        get_response = self.client.get(
+            f"/super-admin/tenants/{signup_payload['tenant_id']}/notification-settings",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        self.assertEqual(get_response.status_code, 200, get_response.text)
+        settings_payload = get_response.json()
+        self.assertTrue(settings_payload["email_notifications_enabled"])
+        self.assertTrue(settings_payload["in_app_notifications_enabled"])
+        self.assertTrue(settings_payload["browser_push_notifications_enabled"])
+        self.assertTrue(settings_payload["invoice_notifications_enabled"])
+
+        update_response = self.client.put(
+            f"/super-admin/tenants/{signup_payload['tenant_id']}/notification-settings",
+            headers={"Authorization": f"Bearer {token}"},
+            json={
+                "email_notifications_enabled": False,
+                "in_app_notifications_enabled": False,
+                "browser_push_notifications_enabled": False,
+                "invoice_notifications_enabled": False,
+            },
+        )
+        self.assertEqual(update_response.status_code, 200, update_response.text)
+        updated_payload = update_response.json()
+        self.assertFalse(updated_payload["email_notifications_enabled"])
+        self.assertFalse(updated_payload["in_app_notifications_enabled"])
+        self.assertFalse(updated_payload["browser_push_notifications_enabled"])
+        self.assertFalse(updated_payload["invoice_notifications_enabled"])
+
+        with SessionLocal() as db:
+            audit_row = (
+                db.query(PlatformAuditLog)
+                .filter(PlatformAuditLog.module == "notifications")
+                .order_by(PlatformAuditLog.created_at.desc())
+                .first()
+            )
+        self.assertIsNotNone(audit_row)
+        self.assertEqual(audit_row.action, "tenant_notification_settings_updated")
+        self.assertEqual(audit_row.tenant_id, UUID(signup_payload["tenant_id"]))
+        self.assertTrue(audit_row.before_value["email_notifications_enabled"])
+        self.assertFalse(audit_row.after_value["browser_push_notifications_enabled"])
+
+    def test_notification_controls_block_in_app_and_invoice_delivery(self):
+        signup_payload = self._signup_tenant_owner(workspace_slug="notify-enforcement", email="owner@notifyenforcement.com")
+        admin_headers = {"Authorization": f"Bearer {signup_payload['access_token']}"}
+        super_admin_token = self._super_admin_token()
+        technician = self._seed_technician(
+            tenant_id=signup_payload["tenant_id"],
+            email="tech@notifyenforcement.com",
+        )
+        job = self._seed_job(
+            tenant_id=signup_payload["tenant_id"],
+            job_code="SM2-NOTIFY-002",
+        )
+
+        in_app_off_response = self.client.put(
+            f"/super-admin/tenants/{signup_payload['tenant_id']}/notification-settings",
+            headers={"Authorization": f"Bearer {super_admin_token}"},
+            json={
+                "email_notifications_enabled": True,
+                "in_app_notifications_enabled": False,
+                "browser_push_notifications_enabled": True,
+                "invoice_notifications_enabled": True,
+            },
+        )
+        self.assertEqual(in_app_off_response.status_code, 200, in_app_off_response.text)
+
+        assignment_response = self.client.patch(
+            f"/admin/jobs/{job.id}/assignment",
+            headers=admin_headers,
+            json={"assigned_technician_id": str(technician.id)},
+        )
+        self.assertEqual(assignment_response.status_code, 200, assignment_response.text)
+
+        with SessionLocal() as db:
+            notifications = db.query(Notification).all()
+            self.assertEqual(len(notifications), 0)
+
+        invoice_off_response = self.client.put(
+            f"/super-admin/tenants/{signup_payload['tenant_id']}/notification-settings",
+            headers={"Authorization": f"Bearer {super_admin_token}"},
+            json={
+                "email_notifications_enabled": True,
+                "in_app_notifications_enabled": True,
+                "browser_push_notifications_enabled": True,
+                "invoice_notifications_enabled": False,
+            },
+        )
+        self.assertEqual(invoice_off_response.status_code, 200, invoice_off_response.text)
+
+        with SessionLocal() as db:
+            db.info["tenant_id"] = UUID(signup_payload["tenant_id"])
+            delivery_result = send_platform_email(
+                db=db,
+                tenant_id=signup_payload["tenant_id"],
+                to="customer@example.com",
+                from_email="billing@notifyenforcement.com",
+                from_name="Notify Enforcement",
+                reply_to="support@notifyenforcement.com",
+                subject="Invoice test",
+                body="Invoice notification test",
+                notification_kind="invoice",
+            )
+            self.assertEqual(delivery_result.status, "suppressed")
 
     def test_break_glass_access_requires_reason_and_returns_sensitive_sections(self):
         signup_payload = self._signup_tenant_owner(workspace_slug="audit-me", email="owner@auditme.com")

@@ -49,6 +49,8 @@ MIGRATIONS: list[Migration] = [
     Migration("018_job_internal_notes.sql"),
     Migration("019_attendance_live_tracking.sql"),
     Migration("020_postgres_runtime_alignment.sql"),
+    Migration("021_notifications_v1.sql"),
+    Migration("022_tenant_notification_controls.sql"),
 ]
 
 

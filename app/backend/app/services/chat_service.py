@@ -659,6 +659,9 @@ class ChatService:
                         reply_to=COMPANY_EMAIL,
                         subject="New message received",
                         body=f"You received a new message from {sender_name}.",
+                        db=self.db,
+                        tenant_id=self.current_user.tenant_id,
+                        notification_kind="standard",
                     )
             return
 
@@ -682,6 +685,9 @@ class ChatService:
                         reply_to=COMPANY_EMAIL,
                         subject="New message received",
                         body=f"You received a new message from {sender_name}.",
+                        db=self.db,
+                        tenant_id=tenant_id,
+                        notification_kind="standard",
                     )
 
     def list_admin_conversations(self, search: Optional[str] = None) -> List[AdminChatConversationSummaryResponse]:

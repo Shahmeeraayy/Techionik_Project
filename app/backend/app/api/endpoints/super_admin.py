@@ -12,6 +12,8 @@ from ...schemas.super_admin import (
     SuperAdminBreakGlassPayload,
     SuperAdminPlatformSettingsUpdatePayload,
     SuperAdminTenantFeatureUpdatePayload,
+    SuperAdminTenantNotificationSettingsPayload,
+    SuperAdminTenantNotificationSettingsResponse,
     SuperAdminTenantPlanUpdatePayload,
     SuperAdminTenantProfileUpdatePayload,
     SuperAdminTenantStatusUpdatePayload,
@@ -56,6 +58,15 @@ def get_super_admin_tenant_detail(
     return SuperAdminService(db).get_tenant_detail(current_user=current_user, tenant_id=tenant_id)
 
 
+@router.get("/tenants/{tenant_id}/notification-settings", response_model=SuperAdminTenantNotificationSettingsResponse)
+def get_super_admin_tenant_notification_settings(
+    tenant_id: UUID,
+    db: Session = Depends(deps.get_platform_db),
+    current_user: AuthenticatedUser = Depends(deps.require_super_admin()),
+):
+    return SuperAdminService(db).get_tenant_notification_settings(current_user=current_user, tenant_id=tenant_id)
+
+
 @router.patch("/tenants/{tenant_id}/profile")
 def update_super_admin_tenant_profile(
     tenant_id: UUID,
@@ -65,6 +76,22 @@ def update_super_admin_tenant_profile(
     current_user: AuthenticatedUser = Depends(deps.require_super_admin()),
 ):
     return SuperAdminService(db).update_tenant_profile(
+        current_user=current_user,
+        tenant_id=tenant_id,
+        payload=payload.model_dump(exclude_none=True),
+        request=request,
+    )
+
+
+@router.put("/tenants/{tenant_id}/notification-settings", response_model=SuperAdminTenantNotificationSettingsResponse)
+def update_super_admin_tenant_notification_settings(
+    tenant_id: UUID,
+    payload: SuperAdminTenantNotificationSettingsPayload,
+    request: Request,
+    db: Session = Depends(deps.get_platform_db),
+    current_user: AuthenticatedUser = Depends(deps.require_super_admin()),
+):
+    return SuperAdminService(db).update_tenant_notification_settings(
         current_user=current_user,
         tenant_id=tenant_id,
         payload=payload.model_dump(exclude_none=True),

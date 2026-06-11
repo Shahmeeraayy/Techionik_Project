@@ -20,6 +20,11 @@ from ..models.platform_user import PlatformUser
 from ..models.technician import Technician
 from ..models.tenant import Tenant
 from ..models.tenant_feature_override import TenantFeatureOverride
+from .tenant_notification_controls import (
+    get_tenant_notification_settings,
+    load_tenant_notification_settings,
+    serialize_tenant_notification_settings,
+)
 from .access_policy_service import AccessPolicyService, PLAN_FEATURE_MATRIX
 
 
@@ -587,6 +592,51 @@ class SuperAdminService:
             },
             "features": AccessPolicyService.build_feature_access_map(tenant=tenant, overrides=feature_overrides),
             "break_glass_required": True,
+        }
+
+    def get_tenant_notification_settings(self, *, current_user: AuthenticatedUser, tenant_id: UUID) -> dict[str, Any]:
+        self._require_platform_permission(current_user, "tenant.view.all")
+        payload = get_tenant_notification_settings(self.db, tenant_id)
+        if payload is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tenant not found")
+        return payload
+
+    def update_tenant_notification_settings(
+        self,
+        *,
+        current_user: AuthenticatedUser,
+        tenant_id: UUID,
+        payload: dict[str, Any],
+        request: Request | None,
+    ) -> dict[str, Any]:
+        self._require_platform_permission(current_user, "tenant.update.platform")
+        tenant = load_tenant_notification_settings(self.db, tenant_id)
+        if tenant is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tenant not found")
+
+        before = serialize_tenant_notification_settings(tenant)
+        for field_name in before.keys():
+            if field_name in payload:
+                setattr(tenant, field_name, bool(payload[field_name]))
+        after = serialize_tenant_notification_settings(tenant)
+
+        reason = str(payload.get("reason") or "").strip() or None
+        self._write_platform_audit_log(
+            current_user=current_user,
+            request=request,
+            action="tenant_notification_settings_updated",
+            module="notifications",
+            tenant_id=tenant.id,
+            resource_id=str(tenant.id),
+            reason=reason,
+            before_value=before,
+            after_value=after,
+            metadata={"notification_settings": after},
+        )
+        self.db.commit()
+        return {
+            "tenant_id": str(tenant.id),
+            **after,
         }
 
     def get_break_glass_tenant_access(

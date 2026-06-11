@@ -485,6 +485,9 @@ def update_admin_job_assignment(
                 reply_to=COMPANY_EMAIL,
                 subject=f"New job assigned: {job_row.job_code}",
                 body=f"You have been assigned a new job: {job_row.job_code}.",
+                db=db,
+                tenant_id=current_user.tenant_id,
+                notification_kind="standard",
             )
     db.commit()
     db.refresh(job_row)
@@ -569,6 +572,9 @@ def confirm_admin_job(
                     reply_to=COMPANY_EMAIL,
                     subject=f"New job assigned: {job_row.job_code}",
                     body=f"You have been assigned a new job: {job_row.job_code}.",
+                    db=db,
+                    tenant_id=current_user.tenant_id,
+                    notification_kind="standard",
                 )
 
     db.commit()

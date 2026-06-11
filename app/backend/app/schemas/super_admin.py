@@ -22,6 +22,30 @@ class SuperAdminTenantProfileUpdatePayload(BaseModel):
         return normalized or None
 
 
+class SuperAdminTenantNotificationSettingsPayload(BaseModel):
+    email_notifications_enabled: bool = True
+    in_app_notifications_enabled: bool = True
+    browser_push_notifications_enabled: bool = True
+    invoice_notifications_enabled: bool = True
+    reason: str | None = Field(default=None, max_length=1000)
+
+    @field_validator("reason")
+    @classmethod
+    def _normalize_reason(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        normalized = value.strip()
+        return normalized or None
+
+
+class SuperAdminTenantNotificationSettingsResponse(BaseModel):
+    tenant_id: str
+    email_notifications_enabled: bool
+    in_app_notifications_enabled: bool
+    browser_push_notifications_enabled: bool
+    invoice_notifications_enabled: bool
+
+
 class SuperAdminTenantStatusUpdatePayload(BaseModel):
     status: Literal["active", "trial", "payment_pending", "suspended", "archived", "blocked"]
     reason: str | None = Field(default=None, max_length=1000)

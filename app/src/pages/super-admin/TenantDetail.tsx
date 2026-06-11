@@ -30,8 +30,10 @@ import { Textarea } from '@/components/ui/textarea';
 import {
   fetchSuperAdminBreakGlassAccess,
   fetchSuperAdminTenantDetail,
+  fetchSuperAdminTenantNotificationSettings,
   getStoredSuperAdminToken,
   runSuperAdminAccessCheck,
+  updateSuperAdminTenantNotificationSettings,
   updateSuperAdminTenantFeatures,
   updateSuperAdminTenantPlan,
   updateSuperAdminTenantProfile,
@@ -39,8 +41,46 @@ import {
   type BackendSuperAdminAccessCheck,
   type BackendSuperAdminBreakGlassAccess,
   type BackendSuperAdminTenantDetail,
+  type BackendSuperAdminTenantNotificationSettings,
 } from '@/lib/backend-api';
 import { toOrganizationTerminology } from '@/lib/super-admin-terminology';
+
+type NotificationSettingKey = Exclude<keyof BackendSuperAdminTenantNotificationSettings, 'tenant_id'>;
+
+const NOTIFICATION_CONTROL_ROWS: Array<{
+  key: NotificationSettingKey;
+  label: string;
+  description: string;
+}> = [
+  {
+    key: 'email_notifications_enabled',
+    label: 'Email notifications',
+    description: 'Allow organization-wide email delivery for booking updates, chat follow-ups, job alerts, and other outbound notices.',
+  },
+  {
+    key: 'in_app_notifications_enabled',
+    label: 'In-app notifications',
+    description: 'Show notification items inside the in-app notification center for admins and technicians.',
+  },
+  {
+    key: 'browser_push_notifications_enabled',
+    label: 'Browser push notifications',
+    description: 'Allow browser notification permission prompts and push subscription registration for this organization.',
+  },
+  {
+    key: 'invoice_notifications_enabled',
+    label: 'Invoice notifications',
+    description: 'Allow invoice approved, paid, sent, overdue, rejected, and payment-failed notifications.',
+  },
+];
+
+const DEFAULT_NOTIFICATION_SETTINGS: BackendSuperAdminTenantNotificationSettings = {
+  tenant_id: '',
+  email_notifications_enabled: true,
+  in_app_notifications_enabled: true,
+  browser_push_notifications_enabled: true,
+  invoice_notifications_enabled: true,
+};
 
 function prettyLabel(value: string) {
   return value
@@ -99,6 +139,7 @@ export default function SuperAdminTenantDetailPage() {
   const [savingPlan, setSavingPlan] = useState(false);
   const [savingStatus, setSavingStatus] = useState(false);
   const [savingFeatures, setSavingFeatures] = useState(false);
+  const [savingNotificationSettings, setSavingNotificationSettings] = useState(false);
   const [unlockingSensitive, setUnlockingSensitive] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -118,6 +159,7 @@ export default function SuperAdminTenantDetailPage() {
   const [platformStatus, setPlatformStatus] = useState<'active' | 'trial' | 'payment_pending' | 'suspended' | 'archived' | 'blocked'>('trial');
   const [changeReason, setChangeReason] = useState('');
   const [featureDrafts, setFeatureDrafts] = useState<Record<string, { is_enabled: boolean; reason: string }>>({});
+  const [notificationSettings, setNotificationSettings] = useState<BackendSuperAdminTenantNotificationSettings>(DEFAULT_NOTIFICATION_SETTINGS);
 
   const token = getStoredSuperAdminToken();
 
@@ -141,22 +183,26 @@ export default function SuperAdminTenantDetailPage() {
     setError(null);
 
     try {
-      const next = await fetchSuperAdminTenantDetail(token, tenantId);
-      setDetail(next);
+      const [nextDetail, nextNotificationSettings] = await Promise.all([
+        fetchSuperAdminTenantDetail(token, tenantId),
+        fetchSuperAdminTenantNotificationSettings(token, tenantId),
+      ]);
+      setDetail(nextDetail);
+      setNotificationSettings(nextNotificationSettings);
       setProfileForm({
-        name: next.tenant.name ?? '',
-        industry_type: next.tenant.industry_type ?? '',
-        support_email: next.tenant.support_email ?? '',
-        billing_email: next.tenant.billing_email ?? '',
-        invoice_email: next.tenant.invoice_email ?? '',
-        notification_email: next.tenant.notification_email ?? '',
+        name: nextDetail.tenant.name ?? '',
+        industry_type: nextDetail.tenant.industry_type ?? '',
+        support_email: nextDetail.tenant.support_email ?? '',
+        billing_email: nextDetail.tenant.billing_email ?? '',
+        invoice_email: nextDetail.tenant.invoice_email ?? '',
+        notification_email: nextDetail.tenant.notification_email ?? '',
       });
-      setSubscriptionPlan(next.subscription.plan);
-      setSubscriptionStatus(next.subscription.status);
-      setPlatformStatus(next.tenant.platform_status);
+      setSubscriptionPlan(nextDetail.subscription.plan);
+      setSubscriptionStatus(nextDetail.subscription.status);
+      setPlatformStatus(nextDetail.tenant.platform_status);
       setFeatureDrafts(
         Object.fromEntries(
-          next.features.map((feature) => [
+          nextDetail.features.map((feature) => [
             feature.key,
             { is_enabled: feature.enabled, reason: feature.override?.reason ?? '' },
           ]),
@@ -286,6 +332,28 @@ export default function SuperAdminTenantDetailPage() {
       toast.error(message);
     } finally {
       setSavingFeatures(false);
+    }
+  };
+
+  const saveNotificationSettings = async () => {
+    if (!token || !tenantId) return;
+    setSavingNotificationSettings(true);
+    setError(null);
+    try {
+      const next = await updateSuperAdminTenantNotificationSettings(token, tenantId, {
+        email_notifications_enabled: notificationSettings.email_notifications_enabled,
+        in_app_notifications_enabled: notificationSettings.in_app_notifications_enabled,
+        browser_push_notifications_enabled: notificationSettings.browser_push_notifications_enabled,
+        invoice_notifications_enabled: notificationSettings.invoice_notifications_enabled,
+      });
+      setNotificationSettings(next);
+      toast.success('Organization notification controls saved.');
+    } catch (saveError) {
+      const message = saveError instanceof Error ? saveError.message : 'Failed to save organization notification controls.';
+      setError(message);
+      toast.error(message);
+    } finally {
+      setSavingNotificationSettings(false);
     }
   };
 
@@ -476,6 +544,47 @@ export default function SuperAdminTenantDetailPage() {
           </CardContent>
         </Card>
       </div>
+
+      <Card className="rounded-[2rem] border-slate-900/10 bg-white/85">
+        <CardHeader>
+          <CardTitle className="text-2xl tracking-[-0.04em]" style={{ fontFamily: '"Space Grotesk", "Sora", system-ui, sans-serif' }}>
+            Notification Controls
+          </CardTitle>
+          <CardDescription>Set organization-wide delivery controls for email, in-app, browser push, and invoice notifications.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-4 lg:grid-cols-2">
+            {NOTIFICATION_CONTROL_ROWS.map((row) => (
+              <div key={row.key} className="flex items-start justify-between gap-4 rounded-[1.35rem] border border-slate-900/10 bg-[#faf6ef] p-4">
+                <div>
+                  <p className="text-sm font-semibold text-slate-950">{row.label}</p>
+                  <p className="mt-1 text-sm leading-6 text-slate-600">{row.description}</p>
+                </div>
+                <Switch
+                  checked={notificationSettings[row.key]}
+                  onCheckedChange={(checked) => setNotificationSettings((prev) => ({
+                    ...prev,
+                    [row.key]: checked,
+                  }))}
+                />
+              </div>
+            ))}
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3">
+            <Button onClick={saveNotificationSettings} disabled={savingNotificationSettings} className="rounded-full bg-[linear-gradient(135deg,#0f172a,#155e75)] text-white hover:brightness-105">
+              {savingNotificationSettings ? 'Saving controls...' : 'Save notification controls'}
+            </Button>
+            <Badge variant="outline" className="rounded-full border-slate-300 bg-white px-4 py-2 text-slate-700">
+              {NOTIFICATION_CONTROL_ROWS.filter((row) => notificationSettings[row.key]).length} enabled channels
+            </Badge>
+          </div>
+
+          <p className="text-sm leading-7 text-slate-600">
+            These controls are enforced before notifications are created or sent. Browser push is blocked at subscription time, and invoice notifications stop invoice-related delivery across email and in-app channels.
+          </p>
+        </CardContent>
+      </Card>
 
       <Card className="rounded-[2rem] border-slate-900/10 bg-white/85">
         <CardHeader>

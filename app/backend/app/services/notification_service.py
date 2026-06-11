@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime, timezone
 from typing import Any, Iterable, Sequence
 from uuid import UUID
@@ -9,6 +10,10 @@ from ..core.enums import UserRole
 from ..core.security import AuthenticatedUser
 from ..models.admin_user import AdminUser
 from ..models.notification import Notification
+from .tenant_notification_controls import is_tenant_notification_delivery_allowed
+
+
+logger = logging.getLogger(__name__)
 
 
 class NotificationService:
@@ -75,10 +80,26 @@ class NotificationService:
         message: str,
         payload: dict[str, Any] | None = None,
         tenant_id: UUID | None = None,
-    ) -> Notification:
+        notification_kind: str = "standard",
+    ) -> Notification | None:
+        effective_tenant_id = tenant_id or self.tenant_id
+        if not is_tenant_notification_delivery_allowed(
+            self.db,
+            effective_tenant_id,
+            channel="in_app",
+            notification_kind=notification_kind,
+        ):
+            logger.info(
+                "In-app notification suppressed for tenant %s (%s) to %s",
+                effective_tenant_id or "platform",
+                event_type,
+                recipient_user_id,
+            )
+            return None
+
         now = datetime.now(timezone.utc)
         row = Notification(
-            tenant_id=tenant_id or self.tenant_id,
+            tenant_id=effective_tenant_id,
             recipient_user_id=recipient_user_id,
             recipient_role=recipient_role.strip().lower(),
             event_type=event_type.strip().lower(),
@@ -104,20 +125,22 @@ class NotificationService:
         message: str,
         payload: dict[str, Any] | None = None,
         tenant_id: UUID | None = None,
+        notification_kind: str = "standard",
     ) -> list[Notification]:
         rows: list[Notification] = []
         for recipient_user_id in self._dedupe_recipient_ids(recipient_user_ids):
-            rows.append(
-                self.create_notification(
-                    recipient_user_id=recipient_user_id,
-                    recipient_role=recipient_role,
-                    event_type=event_type,
-                    title=title,
-                    message=message,
-                    payload=payload,
-                    tenant_id=tenant_id,
-                )
+            notification = self.create_notification(
+                recipient_user_id=recipient_user_id,
+                recipient_role=recipient_role,
+                event_type=event_type,
+                title=title,
+                message=message,
+                payload=payload,
+                tenant_id=tenant_id,
+                notification_kind=notification_kind,
             )
+            if notification is not None:
+                rows.append(notification)
         return rows
 
     def create_admin_notifications(
@@ -129,6 +152,7 @@ class NotificationService:
         payload: dict[str, Any] | None = None,
         tenant_id: UUID | None = None,
         exclude_user_ids: Iterable[UUID | str | None] | None = None,
+        notification_kind: str = "standard",
     ) -> list[Notification]:
         excluded = {
             UUID(str(item))
@@ -148,6 +172,7 @@ class NotificationService:
             message=message,
             payload=payload,
             tenant_id=tenant_id,
+            notification_kind=notification_kind,
         )
 
     def list_notifications(

@@ -188,6 +188,14 @@ export type BackendSuperAdminTenantDetail = {
   break_glass_required: boolean;
 };
 
+export type BackendSuperAdminTenantNotificationSettings = {
+  tenant_id: string;
+  email_notifications_enabled: boolean;
+  in_app_notifications_enabled: boolean;
+  browser_push_notifications_enabled: boolean;
+  invoice_notifications_enabled: boolean;
+};
+
 export type BackendSuperAdminTenantUser = {
   id: string;
   kind: 'admin' | 'technician';
@@ -1750,6 +1758,31 @@ export async function fetchSuperAdminTenantDetail(
   tenantId: string,
 ): Promise<BackendSuperAdminTenantDetail> {
   return requestJson<BackendSuperAdminTenantDetail>(`/super-admin/tenants/${tenantId}`, { token });
+}
+
+export async function fetchSuperAdminTenantNotificationSettings(
+  token: string,
+  tenantId: string,
+): Promise<BackendSuperAdminTenantNotificationSettings> {
+  return requestJson<BackendSuperAdminTenantNotificationSettings>(`/super-admin/tenants/${tenantId}/notification-settings`, { token });
+}
+
+export async function updateSuperAdminTenantNotificationSettings(
+  token: string,
+  tenantId: string,
+  payload: {
+    email_notifications_enabled: boolean;
+    in_app_notifications_enabled: boolean;
+    browser_push_notifications_enabled: boolean;
+    invoice_notifications_enabled: boolean;
+    reason?: string;
+  },
+): Promise<BackendSuperAdminTenantNotificationSettings> {
+  return requestJson<BackendSuperAdminTenantNotificationSettings>(`/super-admin/tenants/${tenantId}/notification-settings`, {
+    method: 'PUT',
+    token,
+    body: payload,
+  });
 }
 
 export async function updateSuperAdminTenantProfile(

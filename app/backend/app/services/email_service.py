@@ -8,6 +8,9 @@ from email.mime.base import MIMEBase
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from typing import Iterable
+from uuid import UUID
+
+from sqlalchemy.orm import Session
 
 from ..core.config import (
     EMAIL_API_KEY,
@@ -23,6 +26,7 @@ from ..core.config import (
     SMTP_USERNAME,
     get_env,
 )
+from .tenant_notification_controls import is_tenant_notification_delivery_allowed
 
 logger = logging.getLogger(__name__)
 
@@ -172,8 +176,33 @@ def send_platform_email(
     body: str,
     html_body: str | None = None,
     attachments: Iterable[EmailAttachment] | None = None,
+    db: Session | None = None,
+    tenant_id: UUID | str | None = None,
+    notification_kind: str = "standard",
 ) -> PlatformEmailResult:
-    """Send from a tenant-owned NexusOps identity, with safe demo fallback."""
+    """Send from a tenant-owned NexusOps identity, with notification policy and demo fallback."""
+    resolved_tenant_id: UUID | None = None
+    if tenant_id is not None:
+        resolved_tenant_id = UUID(str(tenant_id))
+    elif db is not None:
+        raw_tenant_id = db.info.get("tenant_id")
+        if raw_tenant_id is not None:
+            resolved_tenant_id = UUID(str(raw_tenant_id))
+
+    if db is not None and not is_tenant_notification_delivery_allowed(
+        db,
+        resolved_tenant_id,
+        channel="email",
+        notification_kind=notification_kind,
+    ):
+        logger.info(
+            "Email delivery suppressed for tenant %s (%s) to %s",
+            resolved_tenant_id or "platform",
+            notification_kind,
+            to,
+        )
+        return PlatformEmailResult(status="suppressed", provider="policy", demo_mode=False)
+
     if not EMAIL_ENABLED:
         logger.info("Platform email disabled; queued demo email to %s from %s", to, from_email)
         return PlatformEmailResult(status="queued_demo", provider="demo", demo_mode=True)

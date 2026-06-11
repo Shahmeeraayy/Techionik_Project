@@ -14,7 +14,7 @@ from urllib.parse import quote
 from ..core.config import COMPANY_EMAIL, COMPANY_LOGO_URL, COMPANY_NAME, COMPANY_PHONE, COMPANY_WEBSITE, CUSTOMER_PORTAL_BASE_URL, DEFAULT_TENANT_ID
 from ..core.job_status import DispatchJobStatus, db_status_from_dispatch_status
 from ..core.tenant import get_current_tenant_context
-from .email_service import send_email, send_platform_email
+from .email_service import send_platform_email
 from ..core.security import AuthenticatedUser
 from ..models.admin_credential_settings import AdminCredentialSettings
 from ..models.admin_user import AdminUser
@@ -620,6 +620,9 @@ class BookingPortalService:
             reply_to=support_email,
             subject=customer_subject,
             body=confirmation_body,
+            db=self.db,
+            tenant_id=tenant.id,
+            notification_kind="standard",
         )
         send_platform_email(
             to=admin_email,
@@ -628,6 +631,9 @@ class BookingPortalService:
             reply_to=support_email,
             subject=admin_subject,
             body=admin_body,
+            db=self.db,
+            tenant_id=tenant.id,
+            notification_kind="standard",
         )
 
         # Update outbox status so we have a record of delivery attempts.
@@ -782,7 +788,19 @@ class BookingPortalService:
             self._set_session_tenant(original_tenant_id)
             raise
         self._set_session_tenant(original_tenant_id)
-        send_email(to=row.email_address, subject=email_subject, body=email_body)
+        tenant_row = self._get_tenant_by_id(row.tenant_id)
+        support_email = tenant_row.support_email or COMPANY_EMAIL
+        send_platform_email(
+            to=row.email_address,
+            from_email=support_email,
+            from_name=company_name,
+            reply_to=support_email,
+            subject=email_subject,
+            body=email_body,
+            db=self.db,
+            tenant_id=row.tenant_id,
+            notification_kind="standard",
+        )
         return response
 
     @staticmethod

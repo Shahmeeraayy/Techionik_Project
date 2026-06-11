@@ -1928,9 +1928,12 @@ class InvoiceService:
             body=body,
             html_body=html_body,
             attachments=[pdf_attachment],
+            db=self.db,
+            tenant_id=self.current_user.tenant_id,
+            notification_kind="invoice",
         )
 
-        email_status = "sent" if result.status == "sent" else ("queued_demo" if result.demo_mode else "failed")
+        email_status = result.status
         self.db.add(
             EmailOutbox(
                 recipient_email=recipient,
