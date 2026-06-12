@@ -42,7 +42,6 @@ const EMPTY_DRAFT: EmailIdentityDraft = {
 };
 
 const EMAIL_ADDRESS_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const EMAIL_DOMAIN_PATTERN = /^(?=.{1,253}$)(?!-)(?:[a-z0-9-]+\.)+[a-z]{2,}$/i;
 const DEFAULT_INVOICE_EMAIL_SUBJECT = 'Invoice ${invoice_number} from ${company_name}';
 const DEFAULT_INVOICE_EMAIL_BODY = [
   'Hello ${customer_name},',
@@ -81,7 +80,7 @@ function createDraftFromIdentity(identity: BackendTenantEmailIdentity): EmailIde
 
 function buildPayloadFromDraft(draft: EmailIdentityDraft): BackendTenantEmailIdentityUpdatePayload {
   return {
-    email_domain: draft.email_domain.trim(),
+    email_domain: draft.email_domain.trim() || null,
     support_email: draft.support_email.trim() || null,
     billing_email: draft.billing_email.trim() || null,
     invoice_email: draft.invoice_email.trim() || null,
@@ -133,13 +132,6 @@ function normalizeEmailIdentity(
 
 function validateDraft(draft: EmailIdentityDraft): Partial<Record<keyof EmailIdentityDraft, string>> {
   const errors: Partial<Record<keyof EmailIdentityDraft, string>> = {};
-  const domain = draft.email_domain.trim();
-
-  if (!domain) {
-    errors.email_domain = 'Email domain is required.';
-  } else if (!EMAIL_DOMAIN_PATTERN.test(domain)) {
-    errors.email_domain = 'Enter a valid domain such as mail.nexusops.com.';
-  }
 
   for (const key of ['support_email', 'billing_email', 'invoice_email', 'notification_email'] as const) {
     const value = draft[key].trim();
@@ -371,7 +363,7 @@ export default function SettingsEmailPage() {
     return (
       <div className="grid gap-4 xl:grid-cols-[1.2fr_1fr]">
         <div className="space-y-4">
-          <SectionCard title="Loading email settings..." description="Syncing the domain, routing inboxes, and invoice template.">
+          <SectionCard title="Loading email settings..." description="Syncing routing inboxes and the invoice template.">
             <div className="space-y-4">
               <Skeleton className="h-12 rounded-2xl" />
               <div className="grid gap-3 sm:grid-cols-2">
@@ -398,44 +390,6 @@ export default function SettingsEmailPage() {
             {error}
           </div>
         ) : null}
-
-        <SectionCard
-          title="Domain setup"
-          description="Configure the domain that your outbound mail will use."
-          action={statusBadge}
-        >
-          <FormField
-            label="Email domain"
-            description="Example: mail.nexusops.com"
-            error={fieldErrors.email_domain}
-          >
-            <Input
-              value={draft.email_domain}
-              onChange={(e) => setDraft((current) => ({ ...current, email_domain: e.target.value }))}
-              placeholder="mail.nexusops.com"
-              aria-invalid={Boolean(fieldErrors.email_domain)}
-            />
-          </FormField>
-
-          <div className="grid gap-3 rounded-[24px] border border-border/70 bg-muted/20 p-4 sm:grid-cols-2">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">Tenant</p>
-              <p className="mt-1 text-sm font-medium text-foreground">{currentSettings.tenant_slug || 'workspace'}</p>
-            </div>
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">Company</p>
-              <p className="mt-1 text-sm font-medium text-foreground">{currentSettings.company_name}</p>
-            </div>
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">Sending</p>
-              <p className="mt-1 text-sm font-medium text-foreground">{currentSettings.email_sending_status}</p>
-            </div>
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">Verified</p>
-              <p className="mt-1 text-sm font-medium text-foreground">{currentSettings.email_verified ? 'Yes' : 'No'}</p>
-            </div>
-          </div>
-        </SectionCard>
 
         <SectionCard
           title="Email addresses"
@@ -625,7 +579,7 @@ export default function SettingsEmailPage() {
 
       <SectionCard
         title="Sending status"
-        description="Review the current state of the email pipeline and domain trust."
+        description="Review the current state of the email pipeline and routing inboxes."
       >
         <div className="space-y-4">
           <div className="rounded-[24px] border border-border/70 bg-[linear-gradient(180deg,rgba(15,23,42,0.96),rgba(9,17,31,0.98))] p-5 text-white">
@@ -636,15 +590,11 @@ export default function SettingsEmailPage() {
               {currentSettings.email_sending_status}
             </p>
             <p className="mt-2 text-sm leading-6 text-white/70">
-              Outbound email identity is tied to the chosen domain and routing inboxes.
+              Outbound email identity is tied to the selected routing inboxes.
             </p>
           </div>
 
           <div className="grid gap-3 rounded-[24px] border border-border/70 bg-background/70 p-4">
-            <div className="flex items-center justify-between gap-3">
-              <span className="text-sm text-muted-foreground">Domain</span>
-              <span className="text-sm font-medium text-foreground">{draft.email_domain || 'Not set'}</span>
-            </div>
             <div className="flex items-center justify-between gap-3">
               <span className="text-sm text-muted-foreground">Support route</span>
               <span className="text-sm font-medium text-foreground">{draft.support_email || 'Not set'}</span>
