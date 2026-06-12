@@ -236,16 +236,21 @@ export default function PlatformChatPage() {
     job: filteredConversations.filter((conversation) => conversation.channel_kind === 'job'),
   }), [filteredConversations]);
 
-  const conversationSections = useMemo(() => ([
-    { key: 'direct', label: 'Direct Chats', items: groupedConversations.direct },
-    { key: 'group', label: 'Technician Groups', items: groupedConversations.group },
-    { key: 'job', label: 'Job Chats', items: groupedConversations.job },
-  ]), [groupedConversations]);
-
   const recentConversations = useMemo(
-    () => filteredConversations.filter((conversation) => !favorites.includes(conversation.id)),
+    () => filteredConversations.filter((conversation) => !favorites.includes(conversation.id)).slice(0, 4),
     [favorites, filteredConversations],
   );
+
+  const recentConversationIds = useMemo(
+    () => new Set(recentConversations.map((conversation) => conversation.id)),
+    [recentConversations],
+  );
+
+  const conversationSections = useMemo(() => ([
+    { key: 'direct', label: 'Direct Chats', items: groupedConversations.direct.filter((conversation) => !favorites.includes(conversation.id) && !recentConversationIds.has(conversation.id)) },
+    { key: 'group', label: 'Technician Groups', items: groupedConversations.group.filter((conversation) => !favorites.includes(conversation.id) && !recentConversationIds.has(conversation.id)) },
+    { key: 'job', label: 'Job Chats', items: groupedConversations.job.filter((conversation) => !favorites.includes(conversation.id) && !recentConversationIds.has(conversation.id)) },
+  ]), [favorites, groupedConversations, recentConversationIds]);
 
   const selectedConversationDraft = selectedConversationId ? (draftsByConversation[selectedConversationId] ?? '') : '';
   const selectedConversationPendingAttachments = selectedConversationId

@@ -250,17 +250,22 @@ export default function TechnicianChatPage() {
 
   const filteredConversations = useMemo(() => conversations, [conversations]);
 
+  const recentConversations = useMemo(() => filteredConversations.slice(0, 4), [filteredConversations]);
+
+  const recentConversationIds = useMemo(
+    () => new Set(recentConversations.map((conversation) => conversation.id)),
+    [recentConversations],
+  );
+
   const conversationSections = useMemo<Array<{
     key: string;
     label: string;
     items: BackendChatConversation[];
   }>>(() => ([
-    { key: 'direct', label: 'Direct Chats', items: groupedConversations.direct },
-    { key: 'group', label: 'Technician Groups', items: groupedConversations.group },
-    { key: 'job', label: 'Job Chats', items: groupedConversations.job },
-  ]), [groupedConversations]);
-
-  const recentConversations = useMemo(() => filteredConversations, [filteredConversations]);
+    { key: 'direct', label: 'Direct Chats', items: groupedConversations.direct.filter((conversation) => !recentConversationIds.has(conversation.id)) },
+    { key: 'group', label: 'Technician Groups', items: groupedConversations.group.filter((conversation) => !recentConversationIds.has(conversation.id)) },
+    { key: 'job', label: 'Job Chats', items: groupedConversations.job.filter((conversation) => !recentConversationIds.has(conversation.id)) },
+  ]), [groupedConversations, recentConversationIds]);
 
   const loadConversations = async (search = contactSearch, preserveSelection = true) => {
     if (!token) {
