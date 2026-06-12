@@ -919,89 +919,46 @@ export default function PlatformChatPage() {
               </div>
             </div>
             <ScrollArea className="min-h-0 flex-1">
-              <div className="space-y-3 px-2.5 py-2">
-                {favoriteConversations.length > 0 ? (
-                  <section className="space-y-2">
-                    <div className="px-2 text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-500">
-                      Favorites
-                    </div>
-                    <div className="space-y-2">
-                      {favoriteConversations.map((conversation) => (
-                        <ChatListItem
-                          key={`favorite-${conversation.id}`}
-                          title={conversation.title}
-                          timestamp={formatRelativeChatTime(conversation.last_message_at)}
-                          statusLabel={`${getConversationTypeLabel(conversation)} · ${conversation.channel_kind === 'group'
-                            ? `${conversation.member_count} member${conversation.member_count === 1 ? '' : 's'}`
-                            : conversation.channel_kind === 'job'
-                              ? (conversation.job_status || 'Active job')
-                              : (conversation.technician_status || 'Offline')}`}
-                          statusTone={getConversationPresenceTone(conversation)}
-                          initials={getConversationInitials(conversation)}
-                          avatarUrl={conversation.technician_avatar || undefined}
-                          active={selectedConversationId === conversation.id}
-                          unreadCount={conversation.unread_count}
-                          favorite
-                          onClick={() => setSelectedConversationId(conversation.id)}
-                        />
-                      ))}
-                    </div>
-                  </section>
-                ) : null}
+              <div className="flex min-h-full flex-col gap-3 px-2.5 py-2">
+                <div className="space-y-3">
+                  {favoriteConversations.length > 0 ? (
+                    <section className="space-y-2">
+                      <div className="px-2 text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-500">
+                        Favorites
+                      </div>
+                      <div className="space-y-2">
+                        {favoriteConversations.map((conversation) => (
+                          <ChatListItem
+                            key={`favorite-${conversation.id}`}
+                            title={conversation.title}
+                            timestamp={formatRelativeChatTime(conversation.last_message_at)}
+                            statusLabel={`${getConversationTypeLabel(conversation)} · ${conversation.channel_kind === 'group'
+                              ? `${conversation.member_count} member${conversation.member_count === 1 ? '' : 's'}`
+                              : conversation.channel_kind === 'job'
+                                ? (conversation.job_status || 'Active job')
+                                : (conversation.technician_status || 'Offline')}`}
+                            statusTone={getConversationPresenceTone(conversation)}
+                            initials={getConversationInitials(conversation)}
+                            avatarUrl={conversation.technician_avatar || undefined}
+                            active={selectedConversationId === conversation.id}
+                            unreadCount={conversation.unread_count}
+                            favorite
+                            onClick={() => setSelectedConversationId(conversation.id)}
+                          />
+                        ))}
+                      </div>
+                    </section>
+                  ) : null}
 
-                {recentConversations.length > 0 ? (
-                  <section className="space-y-2">
-                    <div className="px-2 text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-500">
-                      Recent
-                    </div>
-                    <div className="space-y-1">
-                      {recentConversations.slice(0, 6).map((conversation) => (
-                        <ChatListItem
-                          key={`recent-${conversation.id}`}
-                          title={conversation.channel_kind === 'group' ? conversation.title : conversation.technician_name}
-                          timestamp={formatRelativeChatTime(conversation.last_message_at)}
-                          statusLabel={`${getConversationTypeLabel(conversation)} · ${conversation.channel_kind === 'group'
-                            ? `${conversation.member_count} member${conversation.member_count === 1 ? '' : 's'}`
-                            : conversation.channel_kind === 'job'
-                              ? (conversation.job_status || 'Active job')
-                              : (conversation.technician_status || 'Offline')}`}
-                          statusTone={getConversationPresenceTone(conversation)}
-                          initials={getConversationInitials(conversation)}
-                          avatarUrl={conversation.channel_kind === 'group' ? undefined : (conversation.technician_avatar || undefined)}
-                          active={selectedConversationId === conversation.id}
-                          unreadCount={conversation.unread_count}
-                          favorite={favorites.includes(conversation.id)}
-                          onClick={() => setSelectedConversationId(conversation.id)}
-                        />
-                      ))}
-                    </div>
-                  </section>
-                ) : null}
-
-                {loadingConversations ? (
-                  <div className="space-y-2 p-2">
-                    {Array.from({ length: 6 }).map((_, index) => (
-                      <div key={index} className="h-16 animate-pulse rounded-[14px] bg-white/[0.05]" />
-                    ))}
-                  </div>
-                ) : filteredConversations.length === 0 ? (
-                  <div className="px-4 py-10 text-center text-sm text-slate-400">
-                    {contactSearch.trim().length > 0
-                      ? 'No chats matched that search. Try a technician name, group, or job code.'
-                      : activeFilter === 'all'
-                        ? 'No direct chats, technician groups, or job chats have started yet.'
-                        : `No ${activeFilter} conversations are available right now.`}
-                  </div>
-                ) : conversationSections.map((section) => (
-                  section.items.length > 0 ? (
-                    <section key={section.key} className="space-y-2">
-                      <div className="px-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">
-                        {section.label}
+                  {recentConversations.length > 0 ? (
+                    <section className="space-y-2">
+                      <div className="px-2 text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-500">
+                        Recent
                       </div>
                       <div className="space-y-1">
-                        {section.items.map((conversation) => (
+                        {recentConversations.slice(0, 6).map((conversation) => (
                           <ChatListItem
-                            key={conversation.id}
+                            key={`recent-${conversation.id}`}
                             title={conversation.channel_kind === 'group' ? conversation.title : conversation.technician_name}
                             timestamp={formatRelativeChatTime(conversation.last_message_at)}
                             statusLabel={`${getConversationTypeLabel(conversation)} · ${conversation.channel_kind === 'group'
@@ -1020,8 +977,57 @@ export default function PlatformChatPage() {
                         ))}
                       </div>
                     </section>
-                  ) : null
-                ))}
+                  ) : null}
+                </div>
+
+                {loadingConversations ? (
+                  <div className="space-y-2 p-2">
+                    {Array.from({ length: 6 }).map((_, index) => (
+                      <div key={index} className="h-16 animate-pulse rounded-[14px] bg-white/[0.05]" />
+                    ))}
+                  </div>
+                ) : filteredConversations.length === 0 ? (
+                  <div className="px-4 py-10 text-center text-sm text-slate-400">
+                    {contactSearch.trim().length > 0
+                      ? 'No chats matched that search. Try a technician name, group, or job code.'
+                      : activeFilter === 'all'
+                        ? 'No direct chats, technician groups, or job chats have started yet.'
+                        : `No ${activeFilter} conversations are available right now.`}
+                  </div>
+                ) : (
+                  <div className="mt-auto space-y-3">
+                    {conversationSections.map((section) => (
+                      section.items.length > 0 ? (
+                        <section key={section.key} className="space-y-2">
+                          <div className="px-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">
+                            {section.label}
+                          </div>
+                          <div className="space-y-1">
+                            {section.items.map((conversation) => (
+                              <ChatListItem
+                                key={conversation.id}
+                                title={conversation.channel_kind === 'group' ? conversation.title : conversation.technician_name}
+                                timestamp={formatRelativeChatTime(conversation.last_message_at)}
+                                statusLabel={`${getConversationTypeLabel(conversation)} · ${conversation.channel_kind === 'group'
+                                  ? `${conversation.member_count} member${conversation.member_count === 1 ? '' : 's'}`
+                                  : conversation.channel_kind === 'job'
+                                    ? (conversation.job_status || 'Active job')
+                                    : (conversation.technician_status || 'Offline')}`}
+                                statusTone={getConversationPresenceTone(conversation)}
+                                initials={getConversationInitials(conversation)}
+                                avatarUrl={conversation.channel_kind === 'group' ? undefined : (conversation.technician_avatar || undefined)}
+                                active={selectedConversationId === conversation.id}
+                                unreadCount={conversation.unread_count}
+                                favorite={favorites.includes(conversation.id)}
+                                onClick={() => setSelectedConversationId(conversation.id)}
+                              />
+                            ))}
+                          </div>
+                        </section>
+                      ) : null
+                    ))}
+                  </div>
+                )}
               </div>
             </ScrollArea>
           </Card>
