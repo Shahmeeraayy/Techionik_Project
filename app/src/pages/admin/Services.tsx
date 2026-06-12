@@ -88,7 +88,6 @@ interface ServiceItem {
 }
 
 type ServiceStatusFilter = 'all' | 'active' | 'archived';
-type IndustryPresetKey = 'automotive' | 'hvac';
 
 const toNumber = (value: string | number): number => {
     if (typeof value === 'number') return value;
@@ -194,28 +193,6 @@ function metricIconClass(tone: 'cyan' | 'emerald' | 'amber' | 'violet'): string 
         tone === 'violet' && 'border-violet-300/20 bg-violet-300/10 text-violet-100',
     );
 }
-
-const INDUSTRY_PRESETS: Record<IndustryPresetKey, Array<{
-    code: string;
-    name: string;
-    category: string;
-    default_price: number;
-    approval_required?: boolean;
-    notes?: string;
-}>> = {
-    automotive: [
-        { code: 'AUTO-DIAG', name: 'Vehicle Diagnostics', category: 'Diagnostics', default_price: 95, notes: 'Preset automotive diagnostics service.' },
-        { code: 'AUTO-TINT-FRONT', name: 'Front Window Tint', category: 'Window Tint', default_price: 120 },
-        { code: 'AUTO-REMOTE', name: 'Remote Starter Install', category: 'Remote Starter', default_price: 349, approval_required: true },
-        { code: 'AUTO-TRACK', name: 'Vehicle Tracking Install', category: 'Tracking', default_price: 279, approval_required: true },
-    ],
-    hvac: [
-        { code: 'HVAC-TUNEUP', name: 'Seasonal Tune-Up', category: 'Maintenance', default_price: 149 },
-        { code: 'HVAC-DIAG', name: 'System Diagnostic Visit', category: 'Diagnostics', default_price: 119, approval_required: true },
-        { code: 'HVAC-THERMO', name: 'Thermostat Installation', category: 'Installation', default_price: 199 },
-        { code: 'HVAC-FILTER', name: 'Filter Replacement', category: 'Maintenance', default_price: 65 },
-    ],
-};
 
 // --- Mock Data ---
 
@@ -325,8 +302,6 @@ export default function ServicesPage() {
     const [filterStatus, setFilterStatus] = useState<ServiceStatusFilter>('all');
     const [minPrice, setMinPrice] = useState<string>('');
     const [maxPrice, setMaxPrice] = useState<string>('');
-    const [presetIndustry, setPresetIndustry] = useState<IndustryPresetKey>('automotive');
-    const [presetLoading, setPresetLoading] = useState(false);
 
     // Drawers & Modals
     const [selectedService, setSelectedService] = useState<ServiceItem | null>(null);
@@ -589,45 +564,6 @@ export default function ServicesPage() {
         }
     };
 
-    const handleLoadIndustryPreset = async () => {
-        const token = getStoredAdminToken();
-        if (!token) {
-            alert('Admin session is required to load service presets.');
-            return;
-        }
-        const presetRows = INDUSTRY_PRESETS[presetIndustry];
-        const existingCodes = new Set(services.map((service) => service.code.trim().toLowerCase()));
-        const rowsToCreate = presetRows.filter((row) => !existingCodes.has(row.code.trim().toLowerCase()));
-
-        if (rowsToCreate.length === 0) {
-            alert('All preset services are already in the catalog.');
-            return;
-        }
-
-        setPresetLoading(true);
-        try {
-            const createdRows: ServiceItem[] = [];
-            for (const row of rowsToCreate) {
-                const created = await createAdminService(token, {
-                    code: row.code,
-                    name: row.name,
-                    category: row.category,
-                    default_price: row.default_price,
-                    approval_required: row.approval_required ?? false,
-                    notes: row.notes ?? null,
-                });
-                createdRows.push(mapBackendServiceToUi(created));
-            }
-            setServices((current) => [...createdRows, ...current]);
-            alert(`Loaded ${createdRows.length} ${presetIndustry} preset service${createdRows.length === 1 ? '' : 's'}.`);
-        } catch (error) {
-            const detail = error instanceof Error ? error.message : 'Unable to load industry preset';
-            alert(detail);
-        } finally {
-            setPresetLoading(false);
-        }
-    };
-
     return (
         <div className="relative w-full pb-10">
             <div className="pointer-events-none absolute inset-x-0 top-0 h-[380px] rounded-[34px] bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.12),rgba(34,211,238,0)_34%),radial-gradient(circle_at_top_right,rgba(52,211,153,0.08),rgba(52,211,153,0)_30%)]" />
@@ -639,7 +575,7 @@ export default function ServicesPage() {
                     <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] bg-[size:120px_120px] opacity-20" />
                     <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-200/70 to-transparent" />
                     <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(47,142,146,0.14),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(245,158,11,0.12),transparent_26%)]" />
-                    <div className="relative flex flex-col gap-5 p-6 xl:flex-row xl:items-end xl:justify-between xl:p-8">
+                    <div className="relative flex flex-col gap-5 p-6 xl:flex-row xl:items-start xl:justify-between xl:p-8">
                         <div className="max-w-3xl">
                             <div className="inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-100">
                                 <FileText className="h-3.5 w-3.5" />
@@ -649,10 +585,10 @@ export default function ServicesPage() {
                                 Services
                             </h1>
                             <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-300 sm:text-[15px]">
-                                Manage services, rates, and presets.
+                                Manage services and rates.
                             </p>
                         </div>
-                        <div className="w-full max-w-[760px] xl:self-stretch">
+                        <div className="w-full max-w-[860px] xl:self-stretch">
                             <div className="flex h-full flex-col gap-4 xl:items-end xl:justify-between">
                                 <div className="flex flex-wrap items-center justify-end gap-3">
                                     <Button variant="outline" size="sm" onClick={() => void fetchServices()} className="h-10 gap-2 rounded-full border-slate-300 bg-white text-slate-900 hover:bg-slate-50 hover:text-slate-950 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-100 dark:hover:bg-white/[0.08] dark:hover:text-white" disabled={loading}>
@@ -661,26 +597,12 @@ export default function ServicesPage() {
                                     <Button variant="outline" size="sm" onClick={() => setExportModalOpen(true)} className="h-10 gap-2 rounded-full border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]">
                                         <FileDown className="w-4 h-4" /> Export Excel
                                     </Button>
-                                    <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-2 py-1">
-                                        <Select value={presetIndustry} onValueChange={(value) => setPresetIndustry(value as IndustryPresetKey)}>
-                                            <SelectTrigger className="h-8 w-[148px] border-0 bg-transparent text-slate-100 shadow-none">
-                                                <SelectValue placeholder="Preset" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="automotive">Automotive</SelectItem>
-                                                <SelectItem value="hvac">HVAC</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                        <Button variant="ghost" size="sm" onClick={() => void handleLoadIndustryPreset()} disabled={presetLoading} className="h-8 rounded-full px-3 text-slate-100 hover:bg-white/[0.08]">
-                                            {presetLoading ? 'Loading...' : 'Load Preset'}
-                                        </Button>
-                                    </div>
                                     <Button size="sm" onClick={handleOpenAddModal} className="h-10 gap-2 rounded-full bg-[#2F8E92] px-5 text-white shadow-[0_12px_30px_rgba(47,142,146,0.28)] hover:bg-[#267276]">
                                         <Plus className="w-4 h-4" /> Add Service
                                     </Button>
                                 </div>
-                                <div className="flex w-full flex-col gap-3 xl:max-w-[720px]">
-                                    <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
+                                <div className="flex w-full flex-col gap-3 xl:max-w-[860px]">
+                                    <div className="flex flex-col gap-4 xl:flex-row xl:items-center">
                                         <div className="relative min-w-0 flex-1">
                                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                                             <Input
@@ -690,9 +612,9 @@ export default function ServicesPage() {
                                                 onChange={e => setSearchQuery(e.target.value)}
                                             />
                                         </div>
-                                        <div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-2 lg:flex lg:w-auto lg:items-center">
+                                        <div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-2 xl:flex xl:w-auto xl:items-center">
                                             <Select value={filterCategory} onValueChange={(value) => setFilterCategory(value as BusinessCategoryFilter)}>
-                                                <SelectTrigger className="h-11 w-full border-white/10 bg-white/[0.04] text-slate-100 lg:w-[230px]">
+                                                <SelectTrigger className="h-11 w-full border-white/10 bg-white/[0.04] text-slate-100 xl:w-[230px]">
                                                     <SelectValue placeholder="Business Category" />
                                                 </SelectTrigger>
                                                 <SelectContent>
@@ -708,7 +630,7 @@ export default function ServicesPage() {
                                             </Select>
 
                                             <Select value={filterStatus} onValueChange={(value) => setFilterStatus(value as ServiceStatusFilter)}>
-                                                <SelectTrigger className="h-11 w-full border-white/10 bg-white/[0.04] text-slate-100 lg:w-[150px]">
+                                                <SelectTrigger className="h-11 w-full border-white/10 bg-white/[0.04] text-slate-100 xl:w-[150px]">
                                                     <SelectValue placeholder="Status" />
                                                 </SelectTrigger>
                                                 <SelectContent>
@@ -720,7 +642,7 @@ export default function ServicesPage() {
 
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>
-                                                    <Button variant="outline" className="h-11 w-full justify-start border-white/10 bg-white/[0.04] text-slate-100 hover:bg-white/[0.08] lg:w-[180px]">
+                                                    <Button variant="outline" className="h-11 w-full justify-start border-white/10 bg-white/[0.04] text-slate-100 hover:bg-white/[0.08] xl:w-[180px]">
                                                         Prices
                                                     </Button>
                                                 </DropdownMenuTrigger>
