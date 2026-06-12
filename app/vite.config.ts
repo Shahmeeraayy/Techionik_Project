@@ -27,7 +27,6 @@ export default defineConfig({
           if (!id.includes('node_modules')) return undefined;
           if (id.includes('node_modules/react/') || id.includes('node_modules/react-dom/') || id.includes('node_modules/scheduler/')) return 'vendor-react';
           if (id.includes('react-router') || id.includes('@remix-run/router')) return 'vendor-router';
-          if (id.includes('recharts')) return 'vendor-charts';
           if (id.includes('xlsx')) return 'vendor-xlsx';
           if (id.includes('jspdf')) return 'vendor-jspdf';
           if (id.includes('html2canvas')) return 'vendor-html2canvas';
