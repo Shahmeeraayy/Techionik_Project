@@ -6,6 +6,7 @@ const TECHNICIAN_TOKEN_STORAGE_KEY = 'sm_dispatch_technician_access_token';
 export const AUTH_SESSION_INVALID_EVENT = 'nexusops:auth-session-invalid';
 const API_URL_ENV_KEYS = ['VITE_API_URL', 'VITE_BACKEND_URL'] as const;
 const LOCAL_API_FALLBACK = 'http://127.0.0.1:8000';
+const PRODUCTION_API_FALLBACK = 'https://ubuntu-pc-system-product-name.taildcdc0d.ts.net/api/techionik-backend';
 
 type RequestMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
@@ -1449,10 +1450,7 @@ function getApiBaseUrl(): string {
   }
 
   if (!normalized) {
-    console.error(
-      `Missing ${API_URL_ENV_KEYS.join(' or ')}. Configure the frontend API base URL before making backend requests.`,
-    );
-    throw new Error('API URL not configured');
+    return PRODUCTION_API_FALLBACK;
   }
 
   return normalized;

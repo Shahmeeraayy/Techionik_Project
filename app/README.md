@@ -8,6 +8,7 @@ This template provides a minimal setup to get React working in Vite with HMR and
 - Backend API runs on `http://localhost:8000` (`uvicorn app.main:app --reload --port 8000` in `backend/`).
 - Vite proxy forwards `/auth`, `/admin`, and `/technician` to the backend target.
 - Optional frontend env override: set `VITE_API_URL` in `.env` (the app also accepts `VITE_BACKEND_URL` for backward compatibility).
+- Production fallback: if no frontend API env is set outside localhost, the app uses `https://ubuntu-pc-system-product-name.taildcdc0d.ts.net/api/techionik-backend`.
 
 Currently, two official plugins are available:
 
