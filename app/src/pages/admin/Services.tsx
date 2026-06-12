@@ -652,30 +652,111 @@ export default function ServicesPage() {
                                 Manage services, rates, and presets.
                             </p>
                         </div>
-                        <div className="flex flex-wrap items-center justify-end gap-3">
-                            <Button variant="outline" size="sm" onClick={() => void fetchServices()} className="h-10 gap-2 rounded-full border-slate-300 bg-white text-slate-900 hover:bg-slate-50 hover:text-slate-950 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-100 dark:hover:bg-white/[0.08] dark:hover:text-white" disabled={loading}>
-                                <RefreshCw className={cn('w-4 h-4 text-blue-600 dark:text-cyan-200', loading && 'animate-spin')} /> Refresh
-                            </Button>
-                            <Button variant="outline" size="sm" onClick={() => setExportModalOpen(true)} className="h-10 gap-2 rounded-full border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]">
-                                <FileDown className="w-4 h-4" /> Export Excel
-                            </Button>
-                            <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-2 py-1">
-                                <Select value={presetIndustry} onValueChange={(value) => setPresetIndustry(value as IndustryPresetKey)}>
-                                    <SelectTrigger className="h-8 w-[148px] border-0 bg-transparent text-slate-100 shadow-none">
-                                        <SelectValue placeholder="Preset" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="automotive">Automotive</SelectItem>
-                                        <SelectItem value="hvac">HVAC</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                                <Button variant="ghost" size="sm" onClick={() => void handleLoadIndustryPreset()} disabled={presetLoading} className="h-8 rounded-full px-3 text-slate-100 hover:bg-white/[0.08]">
-                                    {presetLoading ? 'Loading...' : 'Load Preset'}
-                                </Button>
+                        <div className="w-full max-w-[760px] xl:self-stretch">
+                            <div className="flex h-full flex-col gap-4 xl:items-end xl:justify-between">
+                                <div className="flex flex-wrap items-center justify-end gap-3">
+                                    <Button variant="outline" size="sm" onClick={() => void fetchServices()} className="h-10 gap-2 rounded-full border-slate-300 bg-white text-slate-900 hover:bg-slate-50 hover:text-slate-950 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-100 dark:hover:bg-white/[0.08] dark:hover:text-white" disabled={loading}>
+                                        <RefreshCw className={cn('w-4 h-4 text-blue-600 dark:text-cyan-200', loading && 'animate-spin')} /> Refresh
+                                    </Button>
+                                    <Button variant="outline" size="sm" onClick={() => setExportModalOpen(true)} className="h-10 gap-2 rounded-full border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]">
+                                        <FileDown className="w-4 h-4" /> Export Excel
+                                    </Button>
+                                    <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-2 py-1">
+                                        <Select value={presetIndustry} onValueChange={(value) => setPresetIndustry(value as IndustryPresetKey)}>
+                                            <SelectTrigger className="h-8 w-[148px] border-0 bg-transparent text-slate-100 shadow-none">
+                                                <SelectValue placeholder="Preset" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="automotive">Automotive</SelectItem>
+                                                <SelectItem value="hvac">HVAC</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                        <Button variant="ghost" size="sm" onClick={() => void handleLoadIndustryPreset()} disabled={presetLoading} className="h-8 rounded-full px-3 text-slate-100 hover:bg-white/[0.08]">
+                                            {presetLoading ? 'Loading...' : 'Load Preset'}
+                                        </Button>
+                                    </div>
+                                    <Button size="sm" onClick={handleOpenAddModal} className="h-10 gap-2 rounded-full bg-[#2F8E92] px-5 text-white shadow-[0_12px_30px_rgba(47,142,146,0.28)] hover:bg-[#267276]">
+                                        <Plus className="w-4 h-4" /> Add Service
+                                    </Button>
+                                </div>
+                                <div className="flex w-full flex-col gap-3 xl:max-w-[720px]">
+                                    <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
+                                        <div className="relative min-w-0 flex-1">
+                                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                            <Input
+                                                placeholder="Search by service name, category, code, or SKU..."
+                                                className="h-11 rounded-full border-white/10 bg-white/[0.04] pl-9 text-slate-100 placeholder:text-slate-500 transition-all focus:bg-white/[0.06]"
+                                                value={searchQuery}
+                                                onChange={e => setSearchQuery(e.target.value)}
+                                            />
+                                        </div>
+                                        <div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-2 lg:flex lg:w-auto lg:items-center">
+                                            <Select value={filterCategory} onValueChange={(value) => setFilterCategory(value as BusinessCategoryFilter)}>
+                                                <SelectTrigger className="h-11 w-full border-white/10 bg-white/[0.04] text-slate-100 lg:w-[230px]">
+                                                    <SelectValue placeholder="Business Category" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="all">All Business Categories</SelectItem>
+                                                    <SelectItem value="ppf">PPF</SelectItem>
+                                                    <SelectItem value="window_tint">Window Tint</SelectItem>
+                                                    <SelectItem value="engine_immobilizers">Engine immobilizers</SelectItem>
+                                                    <SelectItem value="remote_starters">Remote starters</SelectItem>
+                                                    <SelectItem value="vehicle_tracking_systems">Vehicle tracking systems</SelectItem>
+                                                    <SelectItem value="windshield_repair">Windshield repair</SelectItem>
+                                                    <SelectItem value="windshield_replacement">Windshield replacement</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+
+                                            <Select value={filterStatus} onValueChange={(value) => setFilterStatus(value as ServiceStatusFilter)}>
+                                                <SelectTrigger className="h-11 w-full border-white/10 bg-white/[0.04] text-slate-100 lg:w-[150px]">
+                                                    <SelectValue placeholder="Status" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="all">All Status</SelectItem>
+                                                    <SelectItem value="active">Active</SelectItem>
+                                                    <SelectItem value="archived">Archived</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button variant="outline" className="h-11 w-full justify-start border-white/10 bg-white/[0.04] text-slate-100 hover:bg-white/[0.08] lg:w-[180px]">
+                                                        Prices
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent align="start" className="w-[var(--radix-dropdown-menu-trigger-width)] min-w-0 border-white/10 bg-[#091827] p-3 text-slate-100">
+                                                    <div className="space-y-2">
+                                                        <Label className="text-xs text-slate-400">Min Price</Label>
+                                                        <Input
+                                                            type="number"
+                                                            min="0"
+                                                            step="0.01"
+                                                            placeholder="Min Price"
+                                                            data-admin-dark-input="true"
+                                                            className="[color-scheme:dark]"
+                                                            value={minPrice}
+                                                            onChange={(e) => setMinPrice(e.target.value)}
+                                                        />
+                                                    </div>
+                                                    <div className="space-y-2 mt-3">
+                                                        <Label className="text-xs text-slate-400">Max Price</Label>
+                                                        <Input
+                                                            type="number"
+                                                            min="0"
+                                                            step="0.01"
+                                                            placeholder="Max Price"
+                                                            data-admin-dark-input="true"
+                                                            className="[color-scheme:dark]"
+                                                            value={maxPrice}
+                                                            onChange={(e) => setMaxPrice(e.target.value)}
+                                                        />
+                                                    </div>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            <Button size="sm" onClick={handleOpenAddModal} className="h-10 gap-2 rounded-full bg-[#2F8E92] px-5 text-white shadow-[0_12px_30px_rgba(47,142,146,0.28)] hover:bg-[#267276]">
-                                <Plus className="w-4 h-4" /> Add Service
-                            </Button>
                         </div>
                     </div>
                 </section>
@@ -759,82 +840,6 @@ export default function ServicesPage() {
                                 <Badge variant="outline" className="border-cyan-300/20 bg-cyan-300/10 px-3 py-1 text-cyan-100">
                                     {filteredServices.length} visible
                                 </Badge>
-                            </div>
-                        </div>
-
-                        <div className="mt-5 flex flex-col gap-4 lg:flex-row lg:items-center">
-                            <div className="relative min-w-0 flex-1">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                                <Input
-                                    placeholder="Search by service name, category, code, or SKU..."
-                                    className="h-11 rounded-full border-white/10 bg-white/[0.04] pl-9 text-slate-100 placeholder:text-slate-500 transition-all focus:bg-white/[0.06]"
-                                    value={searchQuery}
-                                    onChange={e => setSearchQuery(e.target.value)}
-                                />
-                            </div>
-                            <div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-2 lg:flex lg:w-auto lg:items-center">
-                                <Select value={filterCategory} onValueChange={(value) => setFilterCategory(value as BusinessCategoryFilter)}>
-                                    <SelectTrigger className="h-11 w-full border-white/10 bg-white/[0.04] text-slate-100 lg:w-[230px]">
-                                        <SelectValue placeholder="Business Category" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">All Business Categories</SelectItem>
-                                        <SelectItem value="ppf">PPF</SelectItem>
-                                        <SelectItem value="window_tint">Window Tint</SelectItem>
-                                        <SelectItem value="engine_immobilizers">Engine immobilizers</SelectItem>
-                                        <SelectItem value="remote_starters">Remote starters</SelectItem>
-                                        <SelectItem value="vehicle_tracking_systems">Vehicle tracking systems</SelectItem>
-                                        <SelectItem value="windshield_repair">Windshield repair</SelectItem>
-                                        <SelectItem value="windshield_replacement">Windshield replacement</SelectItem>
-                                    </SelectContent>
-                                </Select>
-
-                                <Select value={filterStatus} onValueChange={(value) => setFilterStatus(value as ServiceStatusFilter)}>
-                                    <SelectTrigger className="h-11 w-full border-white/10 bg-white/[0.04] text-slate-100 lg:w-[150px]">
-                                        <SelectValue placeholder="Status" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">All Status</SelectItem>
-                                        <SelectItem value="active">Active</SelectItem>
-                                        <SelectItem value="archived">Archived</SelectItem>
-                                    </SelectContent>
-                                </Select>
-
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <Button variant="outline" className="h-11 w-full justify-start border-white/10 bg-white/[0.04] text-slate-100 hover:bg-white/[0.08] lg:w-[180px]">
-                                            Prices
-                                        </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="start" className="w-[var(--radix-dropdown-menu-trigger-width)] min-w-0 border-white/10 bg-[#091827] p-3 text-slate-100">
-                                        <div className="space-y-2">
-                                            <Label className="text-xs text-slate-400">Min Price</Label>
-                                            <Input
-                                                type="number"
-                                                min="0"
-                                                step="0.01"
-                                                placeholder="Min Price"
-                                                data-admin-dark-input="true"
-                                                className="[color-scheme:dark]"
-                                                value={minPrice}
-                                                onChange={(e) => setMinPrice(e.target.value)}
-                                            />
-                                        </div>
-                                        <div className="space-y-2 mt-3">
-                                            <Label className="text-xs text-slate-400">Max Price</Label>
-                                            <Input
-                                                type="number"
-                                                min="0"
-                                                step="0.01"
-                                                placeholder="Max Price"
-                                                data-admin-dark-input="true"
-                                                className="[color-scheme:dark]"
-                                                value={maxPrice}
-                                                onChange={(e) => setMaxPrice(e.target.value)}
-                                            />
-                                        </div>
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
                             </div>
                         </div>
                     </div>

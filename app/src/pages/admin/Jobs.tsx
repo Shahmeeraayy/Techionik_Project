@@ -2128,34 +2128,92 @@ export default function JobsPage() {
                         </div>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-3 xl:justify-end">
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-10 gap-2 rounded-2xl border-black/8 bg-white px-4 text-slate-700 shadow-none hover:bg-slate-50 hover:text-slate-900 dark:border-white/8 dark:bg-white/[0.04] dark:text-slate-100 dark:hover:bg-white/[0.08] dark:hover:text-white"
-                            onClick={() => refreshJobs({ showErrorToast: true, background: false })}
-                            disabled={loading}
-                        >
-                            <RefreshCw className={cn('h-4 w-4 text-slate-500 dark:text-slate-300', loading && 'animate-spin')} />
-                            Refresh
-                        </Button>
-                        <Button
-                            size="sm"
-                            className="h-10 gap-2 rounded-2xl bg-slate-900 px-4 text-white shadow-[0_14px_32px_rgba(15,23,42,0.16)] hover:bg-slate-800 dark:bg-gradient-to-r dark:from-[#0ca6a6] dark:to-[#149fcb] dark:shadow-[0_14px_32px_rgba(12,166,166,0.2)] dark:hover:from-[#11b5b5] dark:hover:to-[#1aaedf]"
-                            onClick={() => setCreateJobOpen(true)}
-                        >
-                            <Plus className="h-4 w-4" />
-                            New Job
-                        </Button>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-10 gap-2 rounded-2xl border-black/8 bg-white px-4 text-slate-700 shadow-none hover:bg-slate-50 hover:text-slate-900 dark:border-white/8 dark:bg-white/[0.04] dark:text-slate-100 dark:hover:bg-white/[0.08] dark:hover:text-white"
-                            onClick={() => setExportModalOpen(true)}
-                        >
-                            <Download className="h-4 w-4 text-slate-500 dark:text-slate-300" />
-                            Export Excel
-                        </Button>
+                    <div className="w-full max-w-[900px] xl:self-stretch">
+                        <div className="flex h-full flex-col gap-4 xl:items-end xl:justify-between">
+                            <div className="flex flex-wrap items-center gap-3 xl:justify-end">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-10 gap-2 rounded-2xl border-black/8 bg-white px-4 text-slate-700 shadow-none hover:bg-slate-50 hover:text-slate-900 dark:border-white/8 dark:bg-white/[0.04] dark:text-slate-100 dark:hover:bg-white/[0.08] dark:hover:text-white"
+                                    onClick={() => refreshJobs({ showErrorToast: true, background: false })}
+                                    disabled={loading}
+                                >
+                                    <RefreshCw className={cn('h-4 w-4 text-slate-500 dark:text-slate-300', loading && 'animate-spin')} />
+                                    Refresh
+                                </Button>
+                                <Button
+                                    size="sm"
+                                    className="h-10 gap-2 rounded-2xl bg-slate-900 px-4 text-white shadow-[0_14px_32px_rgba(15,23,42,0.16)] hover:bg-slate-800 dark:bg-gradient-to-r dark:from-[#0ca6a6] dark:to-[#149fcb] dark:shadow-[0_14px_32px_rgba(12,166,166,0.2)] dark:hover:from-[#11b5b5] dark:hover:to-[#1aaedf]"
+                                    onClick={() => setCreateJobOpen(true)}
+                                >
+                                    <Plus className="h-4 w-4" />
+                                    New Job
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-10 gap-2 rounded-2xl border-black/8 bg-white px-4 text-slate-700 shadow-none hover:bg-slate-50 hover:text-slate-900 dark:border-white/8 dark:bg-white/[0.04] dark:text-slate-100 dark:hover:bg-white/[0.08] dark:hover:text-white"
+                                    onClick={() => setExportModalOpen(true)}
+                                >
+                                    <Download className="h-4 w-4 text-slate-500 dark:text-slate-300" />
+                                    Export Excel
+                                </Button>
+                            </div>
+
+                            <div className="flex w-full flex-col gap-3 xl:max-w-[860px]">
+                                <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-end">
+                                    <div className="relative min-w-0 flex-1">
+                                        <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500 dark:text-slate-500" />
+                                        <Input
+                                            placeholder="Search jobs, locations, technicians, or services..."
+                                            className="h-11 rounded-2xl border-slate-200 bg-slate-50 pl-10 text-slate-900 placeholder:text-slate-400 shadow-none transition-all focus-visible:border-slate-300 focus-visible:bg-white focus-visible:ring-slate-200 dark:border-white/8 dark:bg-white/[0.035] dark:text-white dark:placeholder:text-slate-500 dark:focus-visible:border-cyan-300/30 dark:focus-visible:ring-cyan-300/12"
+                                            value={searchQuery}
+                                            onChange={(e) => setSearchQuery(e.target.value)}
+                                        />
+                                    </div>
+
+                                    <div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-2 lg:flex lg:w-auto lg:items-center">
+                                        <Select value={urgencyFilter} onValueChange={setUrgencyFilter}>
+                                            <SelectTrigger className="h-11 w-full rounded-2xl border-slate-200 bg-white text-slate-900 shadow-none sm:w-[165px] dark:border-white/8 dark:bg-white/[0.035] dark:text-white">
+                                                <div className="flex items-center gap-2">
+                                                    <Clock className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400" />
+                                                    <SelectValue placeholder="Urgency" />
+                                                </div>
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="all">All Urgency</SelectItem>
+                                                <SelectItem value="critical">Critical</SelectItem>
+                                                <SelectItem value="high">High</SelectItem>
+                                                <SelectItem value="normal">Medium</SelectItem>
+                                                <SelectItem value="low">Low</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+
+                                        <div className="relative w-full lg:w-[175px]">
+                                            <Calendar className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-500 dark:text-slate-400" />
+                                            <Input
+                                                type="date"
+                                                value={dateFilter}
+                                                onChange={(event) => setDateFilter(event.target.value)}
+                                                className="h-11 w-full rounded-2xl border-slate-200 bg-white pl-9 text-slate-900 shadow-none dark:border-white/8 dark:bg-white/[0.035] dark:text-white"
+                                                aria-label="Filter by date"
+                                            />
+                                        </div>
+
+                                        {(urgencyFilter !== 'all' || statusFilter !== 'all' || dateFilter || searchQuery || activeQuickFilter !== null) && (
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={clearFilters}
+                                                className="h-11 rounded-2xl border border-rose-200 bg-rose-50 px-3 text-rose-700 hover:bg-rose-100 hover:text-rose-800 dark:border-rose-300/15 dark:bg-rose-400/10 dark:text-rose-100 dark:hover:bg-rose-400/15 dark:hover:text-white"
+                                            >
+                                                <X className="mr-1 h-4 w-4" /> Clear
+                                            </Button>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -2425,59 +2483,7 @@ export default function JobsPage() {
                 <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-slate-900/20 to-transparent dark:via-cyan-200/60" />
                 <div className="absolute inset-x-0 top-0 h-10 bg-gradient-to-r from-slate-100 via-transparent to-slate-50 pointer-events-none dark:from-[#2F8E92]/5 dark:to-blue-500/4" />
                 <div className="relative space-y-3 p-4 md:p-5">
-                    <div className="grid gap-3 lg:grid-cols-[minmax(280px,1fr)_auto] lg:items-center">
-                        <div className="relative min-w-0">
-                            <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500 dark:text-slate-500" />
-                            <Input
-                                placeholder="Search jobs, locations, technicians, or services..."
-                                className="h-11 rounded-2xl border-slate-200 bg-slate-50 pl-10 text-slate-900 placeholder:text-slate-400 shadow-none transition-all focus-visible:border-slate-300 focus-visible:bg-white focus-visible:ring-slate-200 dark:border-white/8 dark:bg-white/[0.035] dark:text-white dark:placeholder:text-slate-500 dark:focus-visible:border-cyan-300/30 dark:focus-visible:ring-cyan-300/12"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                            />
-                        </div>
-
-                        <div className="flex flex-wrap items-center gap-2">
-                            <Select value={urgencyFilter} onValueChange={setUrgencyFilter}>
-                                <SelectTrigger className="h-11 w-full rounded-2xl border-slate-200 bg-white text-slate-900 shadow-none sm:w-[165px] dark:border-white/8 dark:bg-white/[0.035] dark:text-white">
-                                    <div className="flex items-center gap-2">
-                                        <Clock className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400" />
-                                        <SelectValue placeholder="Urgency" />
-                                    </div>
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="all">All Urgency</SelectItem>
-                                    <SelectItem value="critical">Critical</SelectItem>
-                                    <SelectItem value="high">High</SelectItem>
-                                    <SelectItem value="normal">Medium</SelectItem>
-                                    <SelectItem value="low">Low</SelectItem>
-                                </SelectContent>
-                            </Select>
-
-                            <div className="relative w-full sm:w-[175px]">
-                                <Calendar className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-500 dark:text-slate-400" />
-                                <Input
-                                    type="date"
-                                    value={dateFilter}
-                                    onChange={(event) => setDateFilter(event.target.value)}
-                                    className="h-11 w-full rounded-2xl border-slate-200 bg-white pl-9 text-slate-900 shadow-none dark:border-white/8 dark:bg-white/[0.035] dark:text-white"
-                                    aria-label="Filter by date"
-                                />
-                            </div>
-
-                            {(urgencyFilter !== 'all' || statusFilter !== 'all' || dateFilter || searchQuery || activeQuickFilter !== null) && (
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={clearFilters}
-                                    className="h-11 rounded-2xl border border-rose-200 bg-rose-50 px-3 text-rose-700 hover:bg-rose-100 hover:text-rose-800 dark:border-rose-300/15 dark:bg-rose-400/10 dark:text-rose-100 dark:hover:bg-rose-400/15 dark:hover:text-white"
-                                >
-                                    <X className="mr-1 h-4 w-4" /> Clear
-                                </Button>
-                            )}
-                        </div>
-                    </div>
-
-                    <div className="flex flex-col gap-3 border-t border-slate-200 pt-3 dark:border-white/8 xl:flex-row xl:items-center xl:justify-between">
+                    <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
                         <div className="flex min-w-0 flex-wrap items-center gap-2">
                             {statusFilterOptions.map((option) => (
                                 <Button

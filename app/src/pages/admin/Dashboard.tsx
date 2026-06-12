@@ -155,21 +155,6 @@ function metricQueueClasses(tone: DashboardCardTone): string {
   return 'text-slate-600 dark:text-cyan-200/80';
 }
 
-function alertPanelClasses(tone: DashboardAlert['tone']): string {
-  return cn(
-    'rounded-[22px] border px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]',
-    tone === 'critical' && 'border-rose-200 bg-rose-50/80 dark:border-rose-400/20 dark:bg-rose-400/10',
-    tone === 'warning' && 'border-amber-200 bg-amber-50/80 dark:border-amber-400/20 dark:bg-amber-400/10',
-    tone === 'info' && 'border-emerald-200 bg-emerald-50/80 dark:border-emerald-400/20 dark:bg-emerald-400/10',
-  );
-}
-
-function alertIconClasses(tone: DashboardAlert['tone']): string {
-  if (tone === 'critical') return 'text-rose-600 dark:text-rose-200';
-  if (tone === 'warning') return 'text-amber-600 dark:text-amber-200';
-  return 'text-emerald-600 dark:text-emerald-200';
-}
-
 function activityBadgeClasses(tone: ActivityRow['tone']): string {
   return cn(
     'border text-[11px] font-semibold uppercase tracking-[0.18em]',
@@ -213,28 +198,7 @@ function buildSnapshot(input: {
     { id: 'active-locations', label: 'Active Locations', value: activeLocationsCount, icon: Building2, tone: 'blue', navigateTo: '/admin/dealerships' },
   ];
 
-  const awaitingReassignmentCount = jobs.filter((job) => (
-    !job.assigned_technician_id
-    && ['pending', 'delayed', 'cancelled'].includes(job.status)
-  )).length;
-  const blockedOver24hCount = invoices.filter((invoice) => {
-    const dueDate = new Date(invoice.due_date).getTime();
-    return invoice.status === 'overdue' && Date.now() - dueDate > 24 * 60 * 60 * 1000;
-  }).length;
-  const alerts: DashboardAlert[] = [
-    {
-      id: 'refused-jobs',
-      title: 'Jobs awaiting reassignment',
-      description: `${awaitingReassignmentCount} unassigned pending/refused job(s) need a technician assignment.`,
-      tone: awaitingReassignmentCount > 0 ? 'critical' : 'info',
-    },
-    {
-      id: 'blocked-invoices',
-      title: 'Invoices blocked for more than 24 hours',
-      description: `${blockedOver24hCount} invoice(s) are overdue and still unresolved.`,
-      tone: blockedOver24hCount > 0 ? 'warning' : 'info',
-    },
-  ];
+  const alerts: DashboardAlert[] = [];
 
   const activity = jobs
     .slice()
@@ -562,29 +526,13 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div className="relative border-t border-white/10 px-6 py-5 xl:px-8">
-            {error ? (
+          {error ? (
+            <div className="relative border-t border-white/10 px-6 py-5 xl:px-8">
               <div className="rounded-[22px] border border-rose-400/20 bg-rose-400/10 px-4 py-4 text-sm text-rose-100">
                 {error}
               </div>
-            ) : (
-              <div className="grid gap-3 lg:grid-cols-3">
-                {snapshot?.alerts.map((alert) => (
-                  <div key={alert.id} className={alertPanelClasses(alert.tone)}>
-                    <div className="flex items-start gap-3">
-                      {alert.tone === 'critical' ? <AlertCircle className={cn('mt-0.5 h-5 w-5', alertIconClasses(alert.tone))} /> : null}
-                      {alert.tone === 'warning' ? <AlertTriangle className={cn('mt-0.5 h-5 w-5', alertIconClasses(alert.tone))} /> : null}
-                      {alert.tone === 'info' ? <CheckCircle2 className={cn('mt-0.5 h-5 w-5', alertIconClasses(alert.tone))} /> : null}
-                      <div>
-                        <p className="text-sm font-semibold text-white">{alert.title}</p>
-                        <p className="mt-1 text-sm leading-6 text-slate-300">{alert.description}</p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+            </div>
+          ) : null}
         </section>
 
         <section>

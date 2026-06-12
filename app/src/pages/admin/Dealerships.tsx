@@ -1090,25 +1090,6 @@ export default function DealershipsPage() {
                     </Card>
                 </div>
 
-            {/* 2. Filter Bar */}
-            <Card className={sectionCardClass}>
-                <div className={sectionHeaderClass}>
-                <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
-                    <div>
-                        <h2 className="text-base font-semibold text-white">Location Filters</h2>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-2">
-                        <Badge variant="outline" className="border-emerald-300/20 bg-emerald-300/10 px-3 py-1 text-emerald-100">
-                            Active {activeCount}
-                        </Badge>
-                        <Badge variant="outline" className="border-white/10 bg-white/[0.04] px-3 py-1 text-slate-300">
-                            Inactive {inactiveCount}
-                        </Badge>
-                    </div>
-                </div>
-                </div>
-            </Card>
-
             {/* 3. Dealerships Table */}
             <Card className={cn(sectionCardClass, 'flex-1 flex flex-col')}>
                 <div className={cn(sectionHeaderClass, 'flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between')}>
