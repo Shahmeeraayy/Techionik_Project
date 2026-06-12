@@ -26,11 +26,13 @@ import {
   type BackendTenantEmailIdentity,
   type BackendInvoiceBrandingSettings,
 } from '@/lib/backend-api';
+import { safeParseJSON, safeSetItem } from '@/lib/storage';
 import {
   BILLING_SUBSCRIPTION_STORAGE_KEY,
   COMPANY_PROFILE_SETTINGS_STORAGE_KEY,
   DEFAULT_BILLING_SUBSCRIPTION,
   DEFAULT_COMPANY_PROFILE_EXTRAS,
+  EMAIL_IDENTITY_STORAGE_KEY,
   DEFAULT_NOTIFICATION_PREFERENCES,
   loadSettingsObject,
   NOTIFICATION_PREFERENCES_STORAGE_KEY,
@@ -94,6 +96,7 @@ const normalizeInvoiceBranding = (branding: BackendInvoiceBrandingSettings): Inv
 
 export function SettingsWorkspaceProvider({ children }: { children: ReactNode }) {
   const { hasBackendAdminToken } = useAuth();
+  const cachedEmailIdentity = safeParseJSON<BackendTenantEmailIdentity | null>(EMAIL_IDENTITY_STORAGE_KEY, null);
   const [workspace, setWorkspace] = useState<SettingsWorkspaceState>({
     loading: true,
     refreshing: false,
@@ -103,7 +106,7 @@ export function SettingsWorkspaceProvider({ children }: { children: ReactNode })
     companyExtras: loadSettingsObject(COMPANY_PROFILE_SETTINGS_STORAGE_KEY, DEFAULT_COMPANY_PROFILE_EXTRAS),
     notificationPreferences: loadSettingsObject(NOTIFICATION_PREFERENCES_STORAGE_KEY, DEFAULT_NOTIFICATION_PREFERENCES),
     billingSubscription: loadSettingsObject(BILLING_SUBSCRIPTION_STORAGE_KEY, DEFAULT_BILLING_SUBSCRIPTION),
-    emailIdentity: null,
+    emailIdentity: cachedEmailIdentity,
     bookingPortalSettings: DEFAULT_BOOKING_PORTAL_SETTINGS,
     dealerships: [],
     priorityRules: [],
@@ -117,6 +120,7 @@ export function SettingsWorkspaceProvider({ children }: { children: ReactNode })
     const localCompanyExtras = loadSettingsObject(COMPANY_PROFILE_SETTINGS_STORAGE_KEY, DEFAULT_COMPANY_PROFILE_EXTRAS);
     const localNotificationPreferences = loadSettingsObject(NOTIFICATION_PREFERENCES_STORAGE_KEY, DEFAULT_NOTIFICATION_PREFERENCES);
     const localBillingSubscription = loadSettingsObject(BILLING_SUBSCRIPTION_STORAGE_KEY, DEFAULT_BILLING_SUBSCRIPTION);
+    const localEmailIdentity = safeParseJSON<BackendTenantEmailIdentity | null>(EMAIL_IDENTITY_STORAGE_KEY, null);
     const adminToken = getStoredAdminToken();
 
     if (!hasBackendAdminToken || !adminToken) {
@@ -129,7 +133,7 @@ export function SettingsWorkspaceProvider({ children }: { children: ReactNode })
         companyExtras: localCompanyExtras,
         notificationPreferences: localNotificationPreferences,
         billingSubscription: localBillingSubscription,
-        emailIdentity: null,
+        emailIdentity: localEmailIdentity,
         bookingPortalSettings: DEFAULT_BOOKING_PORTAL_SETTINGS,
         dealerships: [],
         priorityRules: [],
@@ -169,9 +173,17 @@ export function SettingsWorkspaceProvider({ children }: { children: ReactNode })
       brandingResult.status === 'fulfilled'
         ? normalizeInvoiceBranding(brandingResult.value)
         : localInvoiceBranding;
+    const nextEmailIdentity =
+      emailIdentityResult.status === 'fulfilled'
+        ? emailIdentityResult.value
+        : localEmailIdentity;
 
     if (brandingResult.status === 'fulfilled') {
       saveInvoiceCompanyProfile(nextInvoiceBranding);
+    }
+
+    if (emailIdentityResult.status === 'fulfilled') {
+      safeSetItem(EMAIL_IDENTITY_STORAGE_KEY, JSON.stringify(emailIdentityResult.value));
     }
 
     setWorkspace({
@@ -183,7 +195,7 @@ export function SettingsWorkspaceProvider({ children }: { children: ReactNode })
       companyExtras: localCompanyExtras,
       notificationPreferences: localNotificationPreferences,
       billingSubscription: localBillingSubscription,
-      emailIdentity: emailIdentityResult.status === 'fulfilled' ? emailIdentityResult.value : null,
+      emailIdentity: nextEmailIdentity,
       bookingPortalSettings:
         bookingPortalResult.status === 'fulfilled'
           ? bookingPortalResult.value

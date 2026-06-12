@@ -3,6 +3,7 @@ import { safeParseJSON, safeSetItem } from '@/lib/storage';
 export const COMPANY_PROFILE_SETTINGS_STORAGE_KEY = 'sm_dispatch_company_profile_settings';
 export const NOTIFICATION_PREFERENCES_STORAGE_KEY = 'sm_dispatch_notification_preferences';
 export const BILLING_SUBSCRIPTION_STORAGE_KEY = 'sm_dispatch_billing_subscription_settings';
+export const EMAIL_IDENTITY_STORAGE_KEY = 'sm_dispatch_settings_email_identity_cache';
 
 export type CompanyProfileExtras = {
   industryType: string;
@@ -67,4 +68,3 @@ export function saveSettingsObject<T>(key: string, value: T): void {
 
   safeSetItem(key, JSON.stringify(value));
 }
-

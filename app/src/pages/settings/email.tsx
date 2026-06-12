@@ -1,13 +1,24 @@
 import { useEffect, useMemo, useState } from 'react';
+import { RefreshCw, Save } from 'lucide-react';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Skeleton } from '@/components/ui/skeleton';
 import { SectionCard } from '@/components/settings/SectionCard';
 import { FormField } from '@/components/settings/FormField';
 import { useSettingsWorkspace } from '@/components/settings/WorkspaceProvider';
+import { EMAIL_IDENTITY_STORAGE_KEY } from '@/components/settings/storage';
 import { settingsControlButtonClass } from '@/components/settings/visual';
-import { getStoredAdminToken, updateAdminTenantEmailIdentity } from '@/lib/backend-api';
+import {
+  fetchAdminTenantEmailIdentity,
+  getStoredAdminToken,
+  updateAdminTenantEmailIdentity,
+  type BackendTenantEmailIdentity,
+  type BackendTenantEmailIdentityUpdatePayload,
+} from '@/lib/backend-api';
+import { cn } from '@/lib/utils';
+import { safeParseJSON, safeSetItem } from '@/lib/storage';
 
 type EmailIdentityDraft = {
   email_domain: string;
@@ -17,7 +28,7 @@ type EmailIdentityDraft = {
   notification_email: string;
 };
 
-const DEFAULT_DRAFT: EmailIdentityDraft = {
+const EMPTY_DRAFT: EmailIdentityDraft = {
   email_domain: '',
   support_email: '',
   billing_email: '',
@@ -25,98 +36,278 @@ const DEFAULT_DRAFT: EmailIdentityDraft = {
   notification_email: '',
 };
 
+const EMAIL_ADDRESS_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const EMAIL_DOMAIN_PATTERN = /^(?=.{1,253}$)(?!-)(?:[a-z0-9-]+\.)+[a-z]{2,}$/i;
+
+function createDraftFromIdentity(identity: BackendTenantEmailIdentity): EmailIdentityDraft {
+  return {
+    email_domain: identity.email_domain ?? '',
+    support_email: identity.support_email ?? '',
+    billing_email: identity.billing_email ?? '',
+    invoice_email: identity.invoice_email ?? '',
+    notification_email: identity.notification_email ?? '',
+  };
+}
+
+function buildPayloadFromDraft(draft: EmailIdentityDraft): BackendTenantEmailIdentityUpdatePayload {
+  return {
+    email_domain: draft.email_domain.trim(),
+    support_email: draft.support_email.trim() || null,
+    billing_email: draft.billing_email.trim() || null,
+    invoice_email: draft.invoice_email.trim() || null,
+    notification_email: draft.notification_email.trim() || null,
+  };
+}
+
+function buildLocalIdentityFromDraft(
+  draft: EmailIdentityDraft,
+  fallback: BackendTenantEmailIdentity,
+): BackendTenantEmailIdentity {
+  return {
+    ...fallback,
+    email_domain: draft.email_domain.trim(),
+    support_email: draft.support_email.trim(),
+    billing_email: draft.billing_email.trim(),
+    invoice_email: draft.invoice_email.trim(),
+    notification_email: draft.notification_email.trim(),
+  };
+}
+
+function normalizeEmailIdentity(
+  value: Partial<BackendTenantEmailIdentity> | null | undefined,
+  fallback: BackendTenantEmailIdentity,
+): BackendTenantEmailIdentity {
+  return {
+    tenant_id: typeof value?.tenant_id === 'string' ? value.tenant_id : fallback.tenant_id,
+    company_name: typeof value?.company_name === 'string' ? value.company_name : fallback.company_name,
+    tenant_slug: typeof value?.tenant_slug === 'string' ? value.tenant_slug : fallback.tenant_slug,
+    support_email: typeof value?.support_email === 'string' ? value.support_email : fallback.support_email,
+    billing_email: typeof value?.billing_email === 'string' ? value.billing_email : fallback.billing_email,
+    invoice_email: typeof value?.invoice_email === 'string' ? value.invoice_email : fallback.invoice_email,
+    notification_email: typeof value?.notification_email === 'string' ? value.notification_email : fallback.notification_email,
+    email_domain: typeof value?.email_domain === 'string' ? value.email_domain : fallback.email_domain,
+    email_sending_status: typeof value?.email_sending_status === 'string' ? value.email_sending_status : fallback.email_sending_status,
+    email_verified: typeof value?.email_verified === 'boolean' ? value.email_verified : fallback.email_verified,
+  };
+}
+
+function validateDraft(draft: EmailIdentityDraft): Partial<Record<keyof EmailIdentityDraft, string>> {
+  const errors: Partial<Record<keyof EmailIdentityDraft, string>> = {};
+  const domain = draft.email_domain.trim();
+
+  if (!domain) {
+    errors.email_domain = 'Email domain is required.';
+  } else if (!EMAIL_DOMAIN_PATTERN.test(domain)) {
+    errors.email_domain = 'Enter a valid domain such as mail.nexusops.com.';
+  }
+
+  for (const key of ['support_email', 'billing_email', 'invoice_email', 'notification_email'] as const) {
+    const value = draft[key].trim();
+    if (value && !EMAIL_ADDRESS_PATTERN.test(value)) {
+      errors[key] = 'Enter a valid email address or leave this blank.';
+    }
+  }
+
+  return errors;
+}
+
+function createFallbackEmailIdentity(workspace: ReturnType<typeof useSettingsWorkspace>): BackendTenantEmailIdentity {
+  const current = workspace.emailIdentity;
+  const sharedEmail = workspace.invoiceBranding.email || '';
+
+  return {
+    tenant_id: current?.tenant_id || 'workspace',
+    company_name: current?.company_name || workspace.invoiceBranding.name || 'NexusOps',
+    tenant_slug: current?.tenant_slug || 'workspace',
+    support_email: current?.support_email || sharedEmail,
+    billing_email: current?.billing_email || sharedEmail,
+    invoice_email: current?.invoice_email || sharedEmail,
+    notification_email: current?.notification_email || sharedEmail,
+    email_domain: current?.email_domain || '',
+    email_sending_status: current?.email_sending_status || 'not configured',
+    email_verified: current?.email_verified ?? false,
+  };
+}
+
 export default function SettingsEmailPage() {
   const workspace = useSettingsWorkspace();
-  const [draft, setDraft] = useState<EmailIdentityDraft>(DEFAULT_DRAFT);
+  const [settings, setSettings] = useState<BackendTenantEmailIdentity | null>(null);
+  const [savedSettings, setSavedSettings] = useState<BackendTenantEmailIdentity | null>(null);
+  const [draft, setDraft] = useState<EmailIdentityDraft>(EMPTY_DRAFT);
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [connectionState, setConnectionState] = useState<'backend' | 'cache'>('cache');
+  const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof EmailIdentityDraft, string>>>({});
 
-  useEffect(() => {
+  const fallbackSettings = useMemo(
+    () => createFallbackEmailIdentity(workspace),
+    [workspace.emailIdentity, workspace.invoiceBranding.email, workspace.invoiceBranding.name],
+  );
+
+  const currentSettings = settings ?? fallbackSettings;
+  const isLive = connectionState === 'backend';
+
+  const statusBadge = useMemo(() => (
+    <div className="flex flex-wrap items-center gap-2">
+      <Badge
+        variant="outline"
+        className={cn(
+          'rounded-full',
+          isLive
+            ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
+            : 'border-slate-400/40 bg-muted/30 text-muted-foreground',
+        )}
+      >
+        {isLive ? 'Live API' : 'Cached copy'}
+      </Badge>
+      <Badge variant="outline" className="rounded-full">
+        {currentSettings.email_sending_status}
+      </Badge>
+      <Badge variant="outline" className="rounded-full">
+        {currentSettings.email_verified ? 'Verified' : 'Unverified'}
+      </Badge>
+    </div>
+  ), [currentSettings.email_sending_status, currentSettings.email_verified, isLive]);
+
+  const loadSettings = async () => {
     if (workspace.loading) {
       return;
     }
 
-    setDraft({
-      email_domain: workspace.emailIdentity?.email_domain ?? '',
-      support_email: workspace.emailIdentity?.support_email ?? '',
-      billing_email: workspace.emailIdentity?.billing_email ?? '',
-      invoice_email: workspace.emailIdentity?.invoice_email ?? '',
-      notification_email: workspace.emailIdentity?.notification_email ?? '',
-    });
-  }, [workspace.emailIdentity, workspace.loading, workspace.lastRefreshedAt]);
+    setLoading(true);
+    setError(null);
+    setFieldErrors({});
 
-  const statusBadge = useMemo(() => {
-    const sendingStatus = workspace.emailIdentity?.email_sending_status ?? 'not configured';
-    const verified = workspace.emailIdentity?.email_verified ?? false;
-
-    return (
-      <div className="flex flex-wrap items-center gap-2">
-        <Badge
-          variant="outline"
-          className="rounded-full"
-        >
-          {sendingStatus}
-        </Badge>
-        <Badge
-          variant="outline"
-          className="rounded-full"
-        >
-          {verified ? 'Verified' : 'Unverified'}
-        </Badge>
-      </div>
-    );
-  }, [workspace.emailIdentity]);
-
-  const handleSave = async () => {
-    if (!draft.email_domain.trim()) {
-      toast.error('Email domain is required.');
-      return;
-    }
-
-    if (!workspace.canUseBackend) {
-      toast.error('Connect an admin token to save email settings.');
-      return;
-    }
+    const cachedSettings = safeParseJSON<BackendTenantEmailIdentity | null>(EMAIL_IDENTITY_STORAGE_KEY, null);
+    const cachedOrFallback = normalizeEmailIdentity(cachedSettings, fallbackSettings);
+    setSettings(cachedOrFallback);
+    setSavedSettings(cachedOrFallback);
+    setDraft(createDraftFromIdentity(cachedOrFallback));
+    setConnectionState(workspace.canUseBackend && !cachedSettings ? 'backend' : 'cache');
 
     const token = getStoredAdminToken();
-    if (!token) {
-      toast.error('Admin token not found.');
+    if (!workspace.canUseBackend || !token) {
+      setLoading(false);
       return;
     }
 
-    setSaving(true);
     try {
-      await updateAdminTenantEmailIdentity(token, {
-        email_domain: draft.email_domain.trim(),
-        support_email: draft.support_email.trim() || null,
-        billing_email: draft.billing_email.trim() || null,
-        invoice_email: draft.invoice_email.trim() || null,
-        notification_email: draft.notification_email.trim() || null,
-      });
-      await workspace.refresh();
-      toast.success('Email settings saved.');
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to save email settings.');
+      const response = await fetchAdminTenantEmailIdentity(token);
+      const normalized = normalizeEmailIdentity(response, cachedOrFallback);
+      setSettings(normalized);
+      setSavedSettings(normalized);
+      setDraft(createDraftFromIdentity(normalized));
+      setConnectionState('backend');
+      safeSetItem(EMAIL_IDENTITY_STORAGE_KEY, JSON.stringify(normalized));
+    } catch (loadError) {
+      setConnectionState('cache');
+      setError(loadError instanceof Error ? loadError.message : 'Failed to load email settings.');
     } finally {
-      setSaving(false);
+      setLoading(false);
     }
   };
 
-  if (workspace.loading) {
+  useEffect(() => {
+    void loadSettings();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [workspace.canUseBackend, workspace.loading, workspace.lastRefreshedAt]);
+
+  const handleReset = () => {
+    if (!savedSettings) {
+      return;
+    }
+
+    setDraft(createDraftFromIdentity(savedSettings));
+    setFieldErrors({});
+    setError(null);
+    toast.success('Email draft reset.');
+  };
+
+  const handleSave = async () => {
+    const nextFieldErrors = validateDraft(draft);
+    setFieldErrors(nextFieldErrors);
+    if (Object.keys(nextFieldErrors).length > 0) {
+      toast.error('Please fix the highlighted email fields.');
+      return;
+    }
+
+    const nextPayload = buildPayloadFromDraft(draft);
+    const nextLocalIdentity = buildLocalIdentityFromDraft(draft, currentSettings);
+
+    setSaving(true);
+    setError(null);
+
+    const token = getStoredAdminToken();
+    if (workspace.canUseBackend && token) {
+      try {
+        const response = await updateAdminTenantEmailIdentity(token, nextPayload);
+        const normalized = normalizeEmailIdentity(response, nextLocalIdentity);
+        safeSetItem(EMAIL_IDENTITY_STORAGE_KEY, JSON.stringify(normalized));
+        setSettings(normalized);
+        setSavedSettings(normalized);
+        setDraft(createDraftFromIdentity(normalized));
+        setConnectionState('backend');
+        void workspace.refresh();
+        toast.success('Email settings saved.');
+      } catch (saveError) {
+        const normalized = nextLocalIdentity;
+        safeSetItem(EMAIL_IDENTITY_STORAGE_KEY, JSON.stringify(normalized));
+        setSettings(normalized);
+        setSavedSettings(normalized);
+        setDraft(createDraftFromIdentity(normalized));
+        setConnectionState('cache');
+        void workspace.refresh();
+        const message = saveError instanceof Error ? saveError.message : 'Failed to save email settings.';
+        setError(message);
+        toast.error(message);
+      } finally {
+        setSaving(false);
+      }
+      return;
+    }
+
+    safeSetItem(EMAIL_IDENTITY_STORAGE_KEY, JSON.stringify(nextLocalIdentity));
+    setSettings(nextLocalIdentity);
+    setSavedSettings(nextLocalIdentity);
+    setDraft(createDraftFromIdentity(nextLocalIdentity));
+    setConnectionState('cache');
+    void workspace.refresh();
+    setSaving(false);
+    toast.success('Email settings saved locally.');
+  };
+
+  if (workspace.loading || loading) {
     return (
-      <div className="grid gap-4 lg:grid-cols-2">
-        <SectionCard title="Loading email settings..." description="Please wait while the email identity is loaded.">
-          <div className="space-y-3">
-            <div className="h-14 animate-pulse rounded-2xl bg-muted" />
-            <div className="h-14 animate-pulse rounded-2xl bg-muted" />
-          </div>
-        </SectionCard>
+      <div className="grid gap-4 xl:grid-cols-[1.2fr_1fr]">
+        <div className="space-y-4">
+          <SectionCard title="Loading email settings..." description="Syncing the domain and routing inboxes.">
+            <div className="space-y-4">
+              <Skeleton className="h-12 rounded-2xl" />
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Skeleton className="h-24 rounded-[24px]" />
+                <Skeleton className="h-24 rounded-[24px]" />
+                <Skeleton className="h-24 rounded-[24px]" />
+                <Skeleton className="h-24 rounded-[24px]" />
+              </div>
+            </div>
+          </SectionCard>
+          <Skeleton className="h-[360px] rounded-[28px]" />
+        </div>
+        <Skeleton className="h-[560px] rounded-[28px]" />
       </div>
     );
   }
 
   return (
-    <div className="grid gap-4 lg:grid-cols-[1.2fr_1fr]">
+    <div className="grid gap-4 xl:grid-cols-[1.2fr_1fr]">
       <div className="space-y-4">
+        {error ? (
+          <div className="rounded-[1.4rem] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+            {error}
+          </div>
+        ) : null}
+
         <SectionCard
           title="Domain setup"
           description="Configure the domain that your outbound mail will use."
@@ -125,38 +316,32 @@ export default function SettingsEmailPage() {
           <FormField
             label="Email domain"
             description="Example: mail.nexusops.com"
+            error={fieldErrors.email_domain}
           >
             <Input
               value={draft.email_domain}
               onChange={(e) => setDraft((current) => ({ ...current, email_domain: e.target.value }))}
               placeholder="mail.nexusops.com"
+              aria-invalid={Boolean(fieldErrors.email_domain)}
             />
           </FormField>
 
           <div className="grid gap-3 rounded-[24px] border border-border/70 bg-muted/20 p-4 sm:grid-cols-2">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">Tenant</p>
-              <p className="mt-1 text-sm font-medium text-foreground">
-                {workspace.emailIdentity?.tenant_slug || 'workspace'}
-              </p>
+              <p className="mt-1 text-sm font-medium text-foreground">{currentSettings.tenant_slug || 'workspace'}</p>
             </div>
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">Company</p>
-              <p className="mt-1 text-sm font-medium text-foreground">
-                {workspace.emailIdentity?.company_name || workspace.invoiceBranding.name}
-              </p>
+              <p className="mt-1 text-sm font-medium text-foreground">{currentSettings.company_name}</p>
             </div>
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">Sending</p>
-              <p className="mt-1 text-sm font-medium text-foreground">
-                {workspace.emailIdentity?.email_sending_status || 'Not configured'}
-              </p>
+              <p className="mt-1 text-sm font-medium text-foreground">{currentSettings.email_sending_status}</p>
             </div>
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">Verified</p>
-              <p className="mt-1 text-sm font-medium text-foreground">
-                {workspace.emailIdentity?.email_verified ? 'Yes' : 'No'}
-              </p>
+              <p className="mt-1 text-sm font-medium text-foreground">{currentSettings.email_verified ? 'Yes' : 'No'}</p>
             </div>
           </div>
         </SectionCard>
@@ -165,40 +350,69 @@ export default function SettingsEmailPage() {
           title="Email addresses"
           description="Route support, billing, invoice, and notification mail to the right inbox."
           footer={
-            <div className="flex w-full items-center justify-end gap-2">
+            <div className="flex w-full flex-wrap items-center justify-end gap-2">
               <Button
                 type="button"
                 variant="ghost"
-                className={`rounded-full ${settingsControlButtonClass}`}
-                onClick={() => setDraft({
-                  email_domain: workspace.emailIdentity?.email_domain ?? '',
-                  support_email: workspace.emailIdentity?.support_email ?? '',
-                  billing_email: workspace.emailIdentity?.billing_email ?? '',
-                  invoice_email: workspace.emailIdentity?.invoice_email ?? '',
-                  notification_email: workspace.emailIdentity?.notification_email ?? '',
-                })}
+                className={cn('rounded-full', settingsControlButtonClass)}
+                onClick={() => void loadSettings()}
+                disabled={saving}
+              >
+                <RefreshCw className="h-4 w-4" />
+                Refresh
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                className={cn('rounded-full', settingsControlButtonClass)}
+                onClick={handleReset}
                 disabled={saving}
               >
                 Reset
               </Button>
-              <Button type="button" className="rounded-full" onClick={() => void handleSave()} disabled={saving || !workspace.canUseBackend}>
+              <Button type="button" className="rounded-full" onClick={() => void handleSave()} disabled={saving}>
+                <Save className="h-4 w-4" />
                 {saving ? 'Saving...' : 'Save email settings'}
               </Button>
             </div>
           }
         >
           <div className="grid gap-5 md:grid-cols-2">
-            <FormField label="Support email">
-              <Input value={draft.support_email} onChange={(e) => setDraft((current) => ({ ...current, support_email: e.target.value }))} placeholder="support@nexusops.com" />
+            <FormField label="Support email" description="Shared support inbox for customer requests." error={fieldErrors.support_email}>
+              <Input
+                type="email"
+                value={draft.support_email}
+                onChange={(e) => setDraft((current) => ({ ...current, support_email: e.target.value }))}
+                placeholder="support@nexusops.com"
+                aria-invalid={Boolean(fieldErrors.support_email)}
+              />
             </FormField>
-            <FormField label="Billing email">
-              <Input value={draft.billing_email} onChange={(e) => setDraft((current) => ({ ...current, billing_email: e.target.value }))} placeholder="billing@nexusops.com" />
+            <FormField label="Billing email" description="Used for invoices and payment notices." error={fieldErrors.billing_email}>
+              <Input
+                type="email"
+                value={draft.billing_email}
+                onChange={(e) => setDraft((current) => ({ ...current, billing_email: e.target.value }))}
+                placeholder="billing@nexusops.com"
+                aria-invalid={Boolean(fieldErrors.billing_email)}
+              />
             </FormField>
-            <FormField label="Invoice email">
-              <Input value={draft.invoice_email} onChange={(e) => setDraft((current) => ({ ...current, invoice_email: e.target.value }))} placeholder="invoice@nexusops.com" />
+            <FormField label="Invoice email" description="Copies invoice receipts to this inbox." error={fieldErrors.invoice_email}>
+              <Input
+                type="email"
+                value={draft.invoice_email}
+                onChange={(e) => setDraft((current) => ({ ...current, invoice_email: e.target.value }))}
+                placeholder="invoice@nexusops.com"
+                aria-invalid={Boolean(fieldErrors.invoice_email)}
+              />
             </FormField>
-            <FormField label="Notification email">
-              <Input value={draft.notification_email} onChange={(e) => setDraft((current) => ({ ...current, notification_email: e.target.value }))} placeholder="notifications@nexusops.com" />
+            <FormField label="Notification email" description="Receives deliverability and system updates." error={fieldErrors.notification_email}>
+              <Input
+                type="email"
+                value={draft.notification_email}
+                onChange={(e) => setDraft((current) => ({ ...current, notification_email: e.target.value }))}
+                placeholder="notifications@nexusops.com"
+                aria-invalid={Boolean(fieldErrors.notification_email)}
+              />
             </FormField>
           </div>
         </SectionCard>
@@ -214,7 +428,7 @@ export default function SettingsEmailPage() {
               Current status
             </p>
             <p className="mt-2 text-3xl font-semibold tracking-[-0.05em]">
-              {workspace.emailIdentity?.email_sending_status || 'Not configured'}
+              {currentSettings.email_sending_status}
             </p>
             <p className="mt-2 text-sm leading-6 text-white/70">
               Outbound email identity is tied to the chosen domain and routing inboxes.
