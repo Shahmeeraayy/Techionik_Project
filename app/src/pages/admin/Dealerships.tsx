@@ -1052,7 +1052,6 @@ export default function DealershipsPage() {
                 <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
                     <div>
                         <h2 className="text-base font-semibold text-white">Location Filters</h2>
-                        <p className="mt-1 text-sm text-slate-300">Search locations by name, city, phone, email, and current operational status.</p>
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
                         <Badge variant="outline" className="border-emerald-300/20 bg-emerald-300/10 px-3 py-1 text-emerald-100">

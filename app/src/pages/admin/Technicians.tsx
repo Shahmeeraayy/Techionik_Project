@@ -1541,14 +1541,7 @@ export default function TechniciansPage() {
                     </div>
                 </section>
 
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                    <Card className="overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-[0_18px_54px_rgba(15,23,42,0.07)] dark:border-cyan-400/15 dark:bg-[linear-gradient(180deg,rgba(12,36,55,0.96),rgba(8,24,39,0.96))] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-                        <div className="p-5">
-                            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500 dark:text-slate-400">Total Technicians</p>
-                            <p className="mt-3 text-[2.15rem] font-semibold leading-none tracking-[-0.06em] text-slate-950 dark:text-white">{totalTechCount}</p>
-                            <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">Workforce profiles</p>
-                        </div>
-                    </Card>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
                     <Card className="overflow-hidden rounded-[24px] border border-emerald-200 bg-emerald-50/70 shadow-[0_18px_54px_rgba(15,23,42,0.06)] dark:border-emerald-400/15 dark:bg-[linear-gradient(180deg,rgba(10,37,45,0.96),rgba(7,25,31,0.96))] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
                         <div className="p-5">
                             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700/70 dark:text-slate-400">Available</p>

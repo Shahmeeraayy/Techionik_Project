@@ -8,6 +8,7 @@ import { AdminLayout } from '@/layouts/AdminLayout';
 import { SuperAdminLayout } from '@/layouts/SuperAdminLayout';
 import { SiteMotion } from '@/components/motion/SiteMotion';
 import { HomeRoute, PublicOnly, RequireRole } from '@/components/auth/RouteGuards';
+const SettingsLayout = lazy(() => import('@/components/settings/Layout'));
 const AdminLoginPage = lazy(() => import('@/pages/auth/AdminLogin'));
 const AdminSignupPage = lazy(() => import('@/pages/auth/AdminSignup'));
 const TechnicianLoginPage = lazy(() => import('@/pages/auth/TechnicianLogin'));
@@ -26,11 +27,20 @@ const TechnicianAccountsPage = lazy(() => import('@/pages/admin/TechnicianAccoun
 const DealershipsPage = lazy(() => import('@/pages/admin/Dealerships'));
 const ServicesPage = lazy(() => import('@/pages/admin/Services'));
 const ReportsPage = lazy(() => import('@/pages/admin/Reports'));
-const SettingsPage = lazy(() => import('@/pages/admin/Settings'));
 const InvoiceHistoryPage = lazy(() => import('@/pages/admin/InvoiceHistory'));
 const PlatformChatPage = lazy(() => import('@/pages/admin/PlatformChat'));
 const TechnicianPreview = lazy(() => import('@/pages/admin/TechnicianPreview'));
 const AdminAttendancePage = lazy(() => import('@/pages/admin/Attendance'));
+
+const SettingsGeneralPage = lazy(() => import('@/pages/settings'));
+const SettingsProfilePage = lazy(() => import('@/pages/settings/profile'));
+const SettingsNotificationsPage = lazy(() => import('@/pages/settings/notifications'));
+const SettingsEmailPage = lazy(() => import('@/pages/settings/email'));
+const SettingsBookingPage = lazy(() => import('@/pages/settings/booking'));
+const SettingsBillingPage = lazy(() => import('@/pages/settings/billing'));
+const SettingsLocationsPage = lazy(() => import('@/pages/settings/locations'));
+const SettingsRankingPage = lazy(() => import('@/pages/settings/ranking'));
+const SettingsIntegrationsPage = lazy(() => import('@/pages/settings/integrations'));
 
 const AvailableJobsPage = lazy(() => import('@/pages/technician/AvailableJobs'));
 const MyJobsPage = lazy(() => import('@/pages/technician/MyJobs'));
@@ -77,6 +87,28 @@ function App() {
           <Route path="/tech/login" element={<PublicOnly><TechnicianLoginPage /></PublicOnly>} />
           <Route path="/tech/signup" element={<PublicOnly><TechnicianSignupPage /></PublicOnly>} />
           <Route path="/tech/reset-password/:requestId" element={<TechnicianPasswordResetPage />} />
+
+          <Route
+            path="/settings/*"
+            element={
+              <RequireRole role="admin">
+                <SettingsLayout>
+                  <Routes>
+                    <Route index element={<SettingsGeneralPage />} />
+                    <Route path="profile" element={<SettingsProfilePage />} />
+                    <Route path="notifications" element={<SettingsNotificationsPage />} />
+                    <Route path="email" element={<SettingsEmailPage />} />
+                    <Route path="booking" element={<SettingsBookingPage />} />
+                    <Route path="billing" element={<SettingsBillingPage />} />
+                    <Route path="locations" element={<SettingsLocationsPage />} />
+                    <Route path="ranking" element={<SettingsRankingPage />} />
+                    <Route path="integrations" element={<SettingsIntegrationsPage />} />
+                    <Route path="*" element={<Navigate to="/settings" replace />} />
+                  </Routes>
+                </SettingsLayout>
+              </RequireRole>
+            }
+          />
 
           <Route
             path="/super-admin/*"
@@ -220,7 +252,7 @@ function App() {
                     <Route path="services" element={<ServicesPage />} />
                     <Route path="reports" element={<ReportsPage />} />
                     <Route path="attendance" element={<AdminAttendancePage />} />
-                    <Route path="settings" element={<SettingsPage />} />
+                    <Route path="settings/*" element={<Navigate to="/settings" replace />} />
                   </Routes>
                 </AdminLayout>
               </RequireRole>

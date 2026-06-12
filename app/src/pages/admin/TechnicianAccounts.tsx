@@ -394,21 +394,7 @@ export default function TechnicianAccountsPage() {
           </div>
         </section>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <Card className={metricCardClass('cyan')}>
-            <div className="p-5">
-              <div className="flex items-start justify-between gap-3">
-                <div className="space-y-2">
-                  <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Total Accounts</p>
-                  <p className="mt-3 text-[2.15rem] font-semibold leading-none tracking-[-0.06em] text-white">{technicianAccounts.length}</p>
-                  <p className="text-sm text-slate-300">Technician sign-in accounts tracked</p>
-                </div>
-                <div className={metricIconClass('cyan')}>
-                  <UserCog className="w-5 h-5" />
-                </div>
-              </div>
-            </div>
-          </Card>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
           <Card className={metricCardClass('emerald')}>
             <div className="p-5">
               <div className="flex items-start justify-between gap-3">
@@ -511,22 +497,6 @@ export default function TechnicianAccountsPage() {
       </Card>
 
       <Card className={sectionCardClass}>
-        <div className={sectionHeaderClass}>
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-            <div>
-              <h2 className="flex items-center gap-2 text-base font-semibold text-white">
-                <UserCog className="w-4 h-4 text-cyan-200" />
-                Technician Account Console
-              </h2>
-              <p className="mt-1 text-sm text-slate-300">
-                Security and access management for technician credentials, invites, and account lifecycle state.
-              </p>
-            </div>
-            <Badge variant="outline" className="rounded-full border-white/10 bg-white/[0.04] px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-slate-300">
-              {filteredAccounts.length} visible
-            </Badge>
-          </div>
-        </div>
         <div className="overflow-hidden rounded-[20px] border border-white/8 bg-black/10">
           <div className="border-b border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.025),rgba(255,255,255,0))] px-6 py-5">
             <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
@@ -538,9 +508,6 @@ export default function TechnicianAccountsPage() {
                     {filteredPendingPasswordResetRequests.length}
                   </Badge>
                 </div>
-                <p className="text-sm text-slate-300">
-                  Technician-initiated password reset requests appear here for admin follow-up and reset-link delivery.
-                </p>
               </div>
               <Badge variant="outline" className="w-fit rounded-full border-white/10 bg-white/[0.04] px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-slate-300">
                 {filteredPendingPasswordResetRequests.length} reset pending
@@ -627,9 +594,6 @@ export default function TechnicianAccountsPage() {
           <div className="flex items-start justify-between gap-3 border-b border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0))] px-6 py-5">
             <div className="space-y-2">
               <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Account Board</div>
-              <div className="text-sm text-slate-200">
-                All active and suspended technician accounts with edit, invite, reset, and access controls.
-              </div>
             </div>
             <Badge variant="outline" className="rounded-full border-white/10 bg-white/[0.04] px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-slate-300">
               {filteredAccounts.length} visible

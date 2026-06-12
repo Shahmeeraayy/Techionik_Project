@@ -78,7 +78,7 @@ function Sidebar({
 }) {
   const location = useLocation();
   const activeItem = location.pathname;
-  const settingsActive = activeItem === '/admin/settings' || activeItem.startsWith('/admin/settings');
+  const settingsActive = activeItem.startsWith('/settings') || activeItem === '/admin/settings' || activeItem.startsWith('/admin/settings');
 
   return (
     <>
@@ -196,7 +196,7 @@ function Sidebar({
 
         <div className={cn('mt-auto border-t border-border p-4', isCollapsed ? 'lg:flex lg:justify-center lg:p-2' : '')}>
           <Link
-            to="/admin/settings"
+            to="/settings"
             onClick={onClose}
             title="Settings"
             data-sidebar-settings="true"

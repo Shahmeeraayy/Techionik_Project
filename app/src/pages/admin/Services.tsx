@@ -841,22 +841,6 @@ export default function ServicesPage() {
                 </Card>
 
                 <Card className={cn(sectionCardClass, 'flex-1 flex flex-col')}>
-                <div className={cn(sectionHeaderClass, 'flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between')}>
-                    <div>
-                        <h2 className="text-base font-semibold text-white">Service Catalogue</h2>
-                        <p className="mt-1 text-sm text-slate-300">
-                            Browse active and archived services and open item detail for maintenance actions.
-                        </p>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-2">
-                        <Badge variant="outline" className="border-emerald-300/20 bg-emerald-300/10 px-3 py-1 text-emerald-100">
-                            {activeServicesCount} active
-                        </Badge>
-                        <Badge variant="outline" className="border-white/10 bg-white/[0.04] px-3 py-1 text-slate-300">
-                            {archivedServicesCount} archived
-                        </Badge>
-                    </div>
-                </div>
                 {loading ? (
                     <div className="p-4 space-y-4">
                         {Array.from({ length: 5 }).map((_, i) => (

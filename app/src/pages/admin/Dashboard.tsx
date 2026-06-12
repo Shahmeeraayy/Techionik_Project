@@ -221,8 +221,6 @@ function buildSnapshot(input: {
     const dueDate = new Date(invoice.due_date).getTime();
     return invoice.status === 'overdue' && Date.now() - dueDate > 24 * 60 * 60 * 1000;
   }).length;
-  const techNoRecentAcceptCount = technicians.filter((tech) => !tech.on_leave_now && tech.current_jobs_count === 0).length;
-
   const alerts: DashboardAlert[] = [
     {
       id: 'refused-jobs',
@@ -235,12 +233,6 @@ function buildSnapshot(input: {
       title: 'Invoices blocked for more than 24 hours',
       description: `${blockedOver24hCount} invoice(s) are overdue and still unresolved.`,
       tone: blockedOver24hCount > 0 ? 'warning' : 'info',
-    },
-    {
-      id: 'slow-tech-response',
-      title: 'Technicians without recent acceptance',
-      description: `${techNoRecentAcceptCount} technician(s) have no active job assignment yet.`,
-      tone: techNoRecentAcceptCount > 0 ? 'warning' : 'info',
     },
   ];
 
