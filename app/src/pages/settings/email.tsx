@@ -182,7 +182,6 @@ export default function SettingsEmailPage() {
   const [draft, setDraft] = useState<EmailIdentityDraft>(EMPTY_DRAFT);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [connectionState, setConnectionState] = useState<'backend' | 'cache'>('cache');
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof EmailIdentityDraft, string>>>({});
 
@@ -192,29 +191,6 @@ export default function SettingsEmailPage() {
   );
 
   const currentSettings = settings ?? fallbackSettings;
-  const isLive = connectionState === 'backend';
-
-  const statusBadge = useMemo(() => (
-    <div className="flex flex-wrap items-center gap-2">
-      <Badge
-        variant="outline"
-        className={cn(
-          'rounded-full',
-          isLive
-            ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
-            : 'border-slate-400/40 bg-muted/30 text-muted-foreground',
-        )}
-      >
-        {isLive ? 'Live API' : 'Cached copy'}
-      </Badge>
-      <Badge variant="outline" className="rounded-full">
-        {currentSettings.email_sending_status}
-      </Badge>
-      <Badge variant="outline" className="rounded-full">
-        {currentSettings.email_verified ? 'Verified' : 'Unverified'}
-      </Badge>
-    </div>
-  ), [currentSettings.email_sending_status, currentSettings.email_verified, isLive]);
 
   const loadSettings = async () => {
     if (workspace.loading) {
@@ -230,7 +206,6 @@ export default function SettingsEmailPage() {
     setSettings(cachedOrFallback);
     setSavedSettings(cachedOrFallback);
     setDraft(createDraftFromIdentity(cachedOrFallback));
-    setConnectionState(workspace.canUseBackend && !cachedSettings ? 'backend' : 'cache');
 
     const token = getStoredAdminToken();
     if (!workspace.canUseBackend || !token) {
@@ -244,10 +219,8 @@ export default function SettingsEmailPage() {
       setSettings(normalized);
       setSavedSettings(normalized);
       setDraft(createDraftFromIdentity(normalized));
-      setConnectionState('backend');
       safeSetItem(EMAIL_IDENTITY_STORAGE_KEY, JSON.stringify(normalized));
     } catch (loadError) {
-      setConnectionState('cache');
       setError(loadError instanceof Error ? loadError.message : 'Failed to load email settings.');
     } finally {
       setLoading(false);
@@ -329,7 +302,6 @@ export default function SettingsEmailPage() {
         setSettings(normalized);
         setSavedSettings(normalized);
         setDraft(createDraftFromIdentity(normalized));
-        setConnectionState('backend');
         void workspace.refresh();
         toast.success('Email settings saved.');
       } catch (saveError) {
@@ -338,7 +310,6 @@ export default function SettingsEmailPage() {
         setSettings(normalized);
         setSavedSettings(normalized);
         setDraft(createDraftFromIdentity(normalized));
-        setConnectionState('cache');
         void workspace.refresh();
         const message = saveError instanceof Error ? saveError.message : 'Failed to save email settings.';
         setError(message);
@@ -353,7 +324,6 @@ export default function SettingsEmailPage() {
     setSettings(nextLocalIdentity);
     setSavedSettings(nextLocalIdentity);
     setDraft(createDraftFromIdentity(nextLocalIdentity));
-    setConnectionState('cache');
     void workspace.refresh();
     setSaving(false);
     toast.success('Email settings saved locally.');
@@ -361,221 +331,216 @@ export default function SettingsEmailPage() {
 
   if (workspace.loading || loading) {
     return (
-      <div className="grid gap-4 xl:grid-cols-[1.2fr_1fr]">
-        <div className="space-y-4">
-          <SectionCard title="Loading email settings..." description="Syncing routing inboxes and the invoice template.">
-            <div className="space-y-4">
-              <Skeleton className="h-12 rounded-2xl" />
-              <div className="grid gap-3 sm:grid-cols-2">
-                <Skeleton className="h-24 rounded-[24px]" />
-                <Skeleton className="h-24 rounded-[24px]" />
-                <Skeleton className="h-24 rounded-[24px]" />
-                <Skeleton className="h-24 rounded-[24px]" />
-              </div>
+      <div className="space-y-4">
+        <SectionCard title="Loading email settings..." description="Syncing routing inboxes and the invoice template.">
+          <div className="space-y-4">
+            <Skeleton className="h-12 rounded-2xl" />
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Skeleton className="h-24 rounded-[24px]" />
+              <Skeleton className="h-24 rounded-[24px]" />
+              <Skeleton className="h-24 rounded-[24px]" />
+              <Skeleton className="h-24 rounded-[24px]" />
             </div>
-          </SectionCard>
-          <Skeleton className="h-[360px] rounded-[28px]" />
-          <Skeleton className="h-[520px] rounded-[28px]" />
-        </div>
-        <Skeleton className="h-[560px] rounded-[28px]" />
+          </div>
+        </SectionCard>
+        <Skeleton className="h-[360px] rounded-[28px]" />
+        <Skeleton className="h-[520px] rounded-[28px]" />
       </div>
     );
   }
 
   return (
-    <div className="grid gap-4 xl:grid-cols-[1.2fr_1fr]">
-      <div className="space-y-4">
-        {error ? (
-          <div className="rounded-[1.4rem] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-            {error}
-          </div>
-        ) : null}
+    <div className="space-y-4">
+      {error ? (
+        <div className="rounded-[1.4rem] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+          {error}
+        </div>
+      ) : null}
 
-        <SectionCard
-          title="Email addresses"
-          description="Route support, billing, invoice, and notification mail to the right inbox."
-          footer={
-            <div className="flex w-full flex-wrap items-center justify-end gap-2">
+      <SectionCard
+        title="Email addresses"
+        description="Route support, billing, invoice, and notification mail to the right inbox."
+        footer={
+          <div className="flex w-full flex-wrap items-center justify-end gap-2">
+            <Button
+              type="button"
+              variant="ghost"
+              className={cn('rounded-full', settingsControlButtonClass)}
+              onClick={() => void loadSettings()}
+              disabled={saving}
+            >
+              <RefreshCw className="h-4 w-4" />
+              Refresh
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              className={cn('rounded-full', settingsControlButtonClass)}
+              onClick={handleReset}
+              disabled={saving}
+            >
+              Reset
+            </Button>
+            <Button type="button" className="rounded-full" onClick={() => void handleSave()} disabled={saving}>
+              <Save className="h-4 w-4" />
+              {saving ? 'Saving...' : 'Save email settings'}
+            </Button>
+          </div>
+        }
+      >
+        <div className="grid gap-5 md:grid-cols-2">
+          <FormField label="Support email" description="Shared support inbox for customer requests." error={fieldErrors.support_email}>
+            <Input
+              type="email"
+              value={draft.support_email}
+              onChange={(e) => setDraft((current) => ({ ...current, support_email: e.target.value }))}
+              placeholder="support@nexusops.com"
+              aria-invalid={Boolean(fieldErrors.support_email)}
+            />
+          </FormField>
+          <FormField label="Billing email" description="Used for invoices and payment notices." error={fieldErrors.billing_email}>
+            <Input
+              type="email"
+              value={draft.billing_email}
+              onChange={(e) => setDraft((current) => ({ ...current, billing_email: e.target.value }))}
+              placeholder="billing@nexusops.com"
+              aria-invalid={Boolean(fieldErrors.billing_email)}
+            />
+          </FormField>
+          <FormField label="Invoice email" description="Copies invoice receipts to this inbox." error={fieldErrors.invoice_email}>
+            <Input
+              type="email"
+              value={draft.invoice_email}
+              onChange={(e) => setDraft((current) => ({ ...current, invoice_email: e.target.value }))}
+              placeholder="invoice@nexusops.com"
+              aria-invalid={Boolean(fieldErrors.invoice_email)}
+            />
+          </FormField>
+          <FormField label="Notification email" description="Receives deliverability and system updates." error={fieldErrors.notification_email}>
+            <Input
+              type="email"
+              value={draft.notification_email}
+              onChange={(e) => setDraft((current) => ({ ...current, notification_email: e.target.value }))}
+              placeholder="notifications@nexusops.com"
+              aria-invalid={Boolean(fieldErrors.notification_email)}
+            />
+          </FormField>
+        </div>
+      </SectionCard>
+
+      <SectionCard
+        title="Invoice email template"
+        description="Generate and edit the subject and body used when invoice emails are sent."
+        action={
+          <Badge variant="outline" className="rounded-full">
+            <Wand2 className="mr-1.5 h-3.5 w-3.5" />
+            Editable draft
+          </Badge>
+        }
+        footer={
+          <div className="flex w-full flex-wrap items-center justify-between gap-3">
+            <p className="text-xs leading-5 text-muted-foreground">
+              Template changes are saved with the email settings action above.
+            </p>
+            <div className="flex flex-wrap items-center gap-2">
               <Button
                 type="button"
                 variant="ghost"
                 className={cn('rounded-full', settingsControlButtonClass)}
-                onClick={() => void loadSettings()}
+                onClick={handleGenerateInvoiceTemplate}
                 disabled={saving}
               >
-                <RefreshCw className="h-4 w-4" />
-                Refresh
+                <Wand2 className="h-4 w-4" />
+                Generate template
               </Button>
               <Button
                 type="button"
                 variant="ghost"
                 className={cn('rounded-full', settingsControlButtonClass)}
-                onClick={handleReset}
+                onClick={handleResetInvoiceTemplate}
                 disabled={saving}
               >
-                Reset
+                <RotateCcw className="h-4 w-4" />
+                Reset template
               </Button>
               <Button type="button" className="rounded-full" onClick={() => void handleSave()} disabled={saving}>
                 <Save className="h-4 w-4" />
-                {saving ? 'Saving...' : 'Save email settings'}
+                {saving ? 'Saving...' : 'Save template'}
               </Button>
             </div>
-          }
-        >
-          <div className="grid gap-5 md:grid-cols-2">
-            <FormField label="Support email" description="Shared support inbox for customer requests." error={fieldErrors.support_email}>
-              <Input
-                type="email"
-                value={draft.support_email}
-                onChange={(e) => setDraft((current) => ({ ...current, support_email: e.target.value }))}
-                placeholder="support@nexusops.com"
-                aria-invalid={Boolean(fieldErrors.support_email)}
-              />
-            </FormField>
-            <FormField label="Billing email" description="Used for invoices and payment notices." error={fieldErrors.billing_email}>
-              <Input
-                type="email"
-                value={draft.billing_email}
-                onChange={(e) => setDraft((current) => ({ ...current, billing_email: e.target.value }))}
-                placeholder="billing@nexusops.com"
-                aria-invalid={Boolean(fieldErrors.billing_email)}
-              />
-            </FormField>
-            <FormField label="Invoice email" description="Copies invoice receipts to this inbox." error={fieldErrors.invoice_email}>
-              <Input
-                type="email"
-                value={draft.invoice_email}
-                onChange={(e) => setDraft((current) => ({ ...current, invoice_email: e.target.value }))}
-                placeholder="invoice@nexusops.com"
-                aria-invalid={Boolean(fieldErrors.invoice_email)}
-              />
-            </FormField>
-            <FormField label="Notification email" description="Receives deliverability and system updates." error={fieldErrors.notification_email}>
-              <Input
-                type="email"
-                value={draft.notification_email}
-                onChange={(e) => setDraft((current) => ({ ...current, notification_email: e.target.value }))}
-                placeholder="notifications@nexusops.com"
-                aria-invalid={Boolean(fieldErrors.notification_email)}
-              />
-            </FormField>
           </div>
-        </SectionCard>
+        }
+      >
+        <div className="grid gap-5 xl:grid-cols-[minmax(0,1.4fr)_minmax(320px,0.9fr)]">
+          <div className="space-y-5">
+            <FormField
+              label="Template subject"
+              description="Used as the email subject line when an invoice is sent."
+              error={fieldErrors.invoice_email_subject}
+            >
+              <Input
+                value={draft.invoice_email_subject}
+                onChange={(e) => setDraft((current) => ({ ...current, invoice_email_subject: e.target.value }))}
+                placeholder="Invoice ${invoice_number} from ${company_name}"
+                maxLength={255}
+                aria-invalid={Boolean(fieldErrors.invoice_email_subject)}
+              />
+            </FormField>
 
-        <SectionCard
-          title="Invoice email template"
-          description="Generate and edit the subject and body used when invoice emails are sent."
-          action={
-            <Badge variant="outline" className="rounded-full">
-              <Wand2 className="mr-1.5 h-3.5 w-3.5" />
-              Editable draft
-            </Badge>
-          }
-          footer={
-            <div className="flex w-full flex-wrap items-center justify-between gap-3">
-              <p className="text-xs leading-5 text-muted-foreground">
-                Template changes are saved with the email settings action above.
-              </p>
-              <div className="flex flex-wrap items-center gap-2">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  className={cn('rounded-full', settingsControlButtonClass)}
-                  onClick={handleGenerateInvoiceTemplate}
-                  disabled={saving}
-                >
-                  <Wand2 className="h-4 w-4" />
-                  Generate template
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  className={cn('rounded-full', settingsControlButtonClass)}
-                  onClick={handleResetInvoiceTemplate}
-                  disabled={saving}
-                >
-                  <RotateCcw className="h-4 w-4" />
-                  Reset template
-                </Button>
-                <Button type="button" className="rounded-full" onClick={() => void handleSave()} disabled={saving}>
-                  <Save className="h-4 w-4" />
-                  {saving ? 'Saving...' : 'Save template'}
-                </Button>
-              </div>
-            </div>
-          }
-        >
-          <div className="grid gap-5 xl:grid-cols-[minmax(0,1.2fr)_minmax(280px,0.8fr)]">
-            <div className="space-y-5">
-              <FormField
-                label="Template subject"
-                description="Used as the email subject line when an invoice is sent."
-                error={fieldErrors.invoice_email_subject}
-              >
-                <Input
-                  value={draft.invoice_email_subject}
-                  onChange={(e) => setDraft((current) => ({ ...current, invoice_email_subject: e.target.value }))}
-                  placeholder="Invoice ${invoice_number} from ${company_name}"
-                  maxLength={255}
-                  aria-invalid={Boolean(fieldErrors.invoice_email_subject)}
-                />
-              </FormField>
+            <FormField
+              label="Template body"
+              description="Write the invoice message with placeholder tags for invoice and customer data."
+              error={fieldErrors.invoice_email_body}
+            >
+              <Textarea
+                value={draft.invoice_email_body}
+                onChange={(e) => setDraft((current) => ({ ...current, invoice_email_body: e.target.value }))}
+                placeholder="Hello ${customer_name},"
+                className="min-h-80 rounded-[22px] font-mono text-sm leading-6"
+                maxLength={5000}
+                aria-invalid={Boolean(fieldErrors.invoice_email_body)}
+              />
+            </FormField>
 
-              <FormField
-                label="Template body"
-                description="Write the invoice message with placeholder tags for invoice and customer data."
-                error={fieldErrors.invoice_email_body}
-              >
-                <Textarea
-                  value={draft.invoice_email_body}
-                  onChange={(e) => setDraft((current) => ({ ...current, invoice_email_body: e.target.value }))}
-                  placeholder="Hello ${customer_name},"
-                  className="min-h-80 rounded-[22px] font-mono text-sm leading-6"
-                  maxLength={5000}
-                  aria-invalid={Boolean(fieldErrors.invoice_email_body)}
-                />
-              </FormField>
+            <p className="text-xs leading-5 text-muted-foreground">
+              Available tags: <code>${'{customer_name}'}</code>, <code>${'{company_name}'}</code>, <code>${'{invoice_number}'}</code>, <code>${'{invoice_date}'}</code>, <code>${'{due_date}'}</code>, <code>${'{invoice_total}'}</code>, <code>${'{billing_address}'}</code>, <code>${'{line_items_summary}'}</code>, <code>${'{reply_to_email}'}</code>, <code>${'{billing_email}'}</code>
+            </p>
+          </div>
 
-              <p className="text-xs leading-5 text-muted-foreground">
-                Available tags: <code>${'{customer_name}'}</code>, <code>${'{company_name}'}</code>, <code>${'{invoice_number}'}</code>, <code>${'{invoice_date}'}</code>, <code>${'{due_date}'}</code>, <code>${'{invoice_total}'}</code>, <code>${'{billing_address}'}</code>, <code>${'{line_items_summary}'}</code>, <code>${'{reply_to_email}'}</code>, <code>${'{billing_email}'}</code>
-              </p>
-            </div>
-
-            <div className="space-y-4">
-              <div className="rounded-[24px] border border-border/70 bg-background/70 p-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">Preview</p>
-                <div className="mt-3 rounded-[20px] border border-border/60 bg-muted/20 p-4">
-                  <p className="text-sm font-semibold text-foreground">{draft.invoice_email_subject || 'Invoice subject preview'}</p>
-                  <div className="mt-4 whitespace-pre-wrap text-sm leading-6 text-muted-foreground">
-                    {draft.invoice_email_body || 'Your invoice template body appears here.'}
-                  </div>
+          <div className="space-y-4">
+            <div className="rounded-[24px] border border-border/70 bg-background/70 p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">Preview</p>
+              <div className="mt-3 rounded-[20px] border border-border/60 bg-muted/20 p-4">
+                <p className="text-sm font-semibold text-foreground">{draft.invoice_email_subject || 'Invoice subject preview'}</p>
+                <div className="mt-4 whitespace-pre-wrap text-sm leading-6 text-muted-foreground">
+                  {draft.invoice_email_body || 'Your invoice template body appears here.'}
                 </div>
               </div>
+            </div>
 
-              <div className="rounded-[24px] border border-border/70 bg-[linear-gradient(180deg,rgba(15,23,42,0.95),rgba(9,17,31,0.98))] p-4 text-white">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/55">Template scope</p>
-                <p className="mt-2 text-sm leading-6 text-white/75">
-                  This template is rendered by the invoice send flow, so the final email can be personalized with invoice numbers, totals, due dates, and customer details.
-                </p>
-                <div className="mt-4 grid gap-2 text-xs text-white/70">
-                  <div className="flex items-center justify-between gap-3">
-                    <span>Subject line</span>
-                    <span className="font-medium text-white">Enabled</span>
-                  </div>
-                  <div className="flex items-center justify-between gap-3">
-                    <span>Body editor</span>
-                    <span className="font-medium text-white">Enabled</span>
-                  </div>
-                  <div className="flex items-center justify-between gap-3">
-                    <span>Invoice send flow</span>
-                    <span className="font-medium text-emerald-300">Connected</span>
-                  </div>
+            <div className="rounded-[24px] border border-border/70 bg-[linear-gradient(180deg,rgba(15,23,42,0.95),rgba(9,17,31,0.98))] p-4 text-white">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/55">Template scope</p>
+              <p className="mt-2 text-sm leading-6 text-white/75">
+                This template is rendered by the invoice send flow, so the final email can be personalized with invoice numbers, totals, due dates, and customer details.
+              </p>
+              <div className="mt-4 grid gap-2 text-xs text-white/70">
+                <div className="flex items-center justify-between gap-3">
+                  <span>Subject line</span>
+                  <span className="font-medium text-white">Enabled</span>
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <span>Body editor</span>
+                  <span className="font-medium text-white">Enabled</span>
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <span>Invoice send flow</span>
+                  <span className="font-medium text-emerald-300">Connected</span>
                 </div>
               </div>
             </div>
           </div>
-        </SectionCard>
-      </div>
+        </div>
+      </SectionCard>
 
       <SectionCard
         title="Sending status"
