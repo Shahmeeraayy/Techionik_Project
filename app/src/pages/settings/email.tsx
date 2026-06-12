@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { SectionCard } from '@/components/settings/SectionCard';
 import { FormField } from '@/components/settings/FormField';
 import { useSettingsWorkspace } from '@/components/settings/WorkspaceProvider';
+import { settingsControlButtonClass } from '@/components/settings/visual';
 import { getStoredAdminToken, updateAdminTenantEmailIdentity } from '@/lib/backend-api';
 
 type EmailIdentityDraft = {
@@ -165,13 +166,19 @@ export default function SettingsEmailPage() {
           description="Route support, billing, invoice, and notification mail to the right inbox."
           footer={
             <div className="flex w-full items-center justify-end gap-2">
-              <Button type="button" variant="outline" className="rounded-full" onClick={() => setDraft({
-                email_domain: workspace.emailIdentity?.email_domain ?? '',
-                support_email: workspace.emailIdentity?.support_email ?? '',
-                billing_email: workspace.emailIdentity?.billing_email ?? '',
-                invoice_email: workspace.emailIdentity?.invoice_email ?? '',
-                notification_email: workspace.emailIdentity?.notification_email ?? '',
-              })} disabled={saving}>
+              <Button
+                type="button"
+                variant="ghost"
+                className={`rounded-full ${settingsControlButtonClass}`}
+                onClick={() => setDraft({
+                  email_domain: workspace.emailIdentity?.email_domain ?? '',
+                  support_email: workspace.emailIdentity?.support_email ?? '',
+                  billing_email: workspace.emailIdentity?.billing_email ?? '',
+                  invoice_email: workspace.emailIdentity?.invoice_email ?? '',
+                  notification_email: workspace.emailIdentity?.notification_email ?? '',
+                })}
+                disabled={saving}
+              >
                 Reset
               </Button>
               <Button type="button" className="rounded-full" onClick={() => void handleSave()} disabled={saving || !workspace.canUseBackend}>
@@ -241,4 +248,3 @@ export default function SettingsEmailPage() {
     </div>
   );
 }
-

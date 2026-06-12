@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SectionCard } from '@/components/settings/SectionCard';
 import { useSettingsWorkspace } from '@/components/settings/WorkspaceProvider';
+import { settingsControlButtonClass } from '@/components/settings/visual';
 import { useTheme } from '@/components/theme-provider';
 import { cn } from '@/lib/utils';
 
@@ -99,13 +100,13 @@ export default function SettingsGeneralPage() {
               <Button
                 key={option.value}
                 type="button"
-                variant={isActive ? 'default' : 'outline'}
+                variant={isActive ? 'default' : 'ghost'}
                 onClick={() => setTheme(option.value)}
                 className={cn(
                   'h-auto justify-start rounded-[24px] px-4 py-4 text-left',
                   isActive
                     ? 'bg-[linear-gradient(135deg,#0f172a,#155e75)] text-white shadow-[0_18px_40px_rgba(15,23,42,0.18)]'
-                    : 'bg-background/70',
+                    : settingsControlButtonClass,
                 )}
               >
                 <span
@@ -146,4 +147,3 @@ export default function SettingsGeneralPage() {
     </div>
   );
 }
-

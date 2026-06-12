@@ -10,6 +10,7 @@ import { SectionCard } from '@/components/settings/SectionCard';
 import { FormField } from '@/components/settings/FormField';
 import { ToggleSwitch } from '@/components/settings/ToggleSwitch';
 import { useSettingsWorkspace } from '@/components/settings/WorkspaceProvider';
+import { settingsControlButtonClass, settingsSelectTriggerClass } from '@/components/settings/visual';
 import { getStoredAdminToken, updateAdminBookingPortalSettings } from '@/lib/backend-api';
 
 type BookingPortalDraft = {
@@ -140,8 +141,8 @@ export default function SettingsBookingPage() {
             <div className="flex w-full items-center justify-end gap-2">
               <Button
                 type="button"
-                variant="outline"
-                className="rounded-full"
+                variant="ghost"
+                className={`rounded-full ${settingsControlButtonClass}`}
                 onClick={() =>
                   setDraft({
                     enabled: workspace.bookingPortalSettings.is_enabled,
@@ -187,7 +188,7 @@ export default function SettingsBookingPage() {
                   }))
                 }
               >
-                <SelectTrigger>
+                <SelectTrigger className={settingsSelectTriggerClass}>
                   <SelectValue placeholder="Select an industry" />
                 </SelectTrigger>
                 <SelectContent>
@@ -248,11 +249,11 @@ export default function SettingsBookingPage() {
               <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">Public booking URL</p>
               <div className="mt-2 flex flex-wrap items-center gap-2">
                 <p className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">{bookingUrl}</p>
-                <Button type="button" variant="outline" size="sm" className="rounded-full" onClick={() => void copyText(bookingUrl, 'Booking URL')}>
+                <Button type="button" variant="ghost" size="sm" className={`rounded-full ${settingsControlButtonClass}`} onClick={() => void copyText(bookingUrl, 'Booking URL')}>
                   <Copy className="h-4 w-4" />
                   Copy
                 </Button>
-                <Button type="button" variant="ghost" size="sm" className="rounded-full" asChild>
+                <Button type="button" variant="ghost" size="sm" className={`rounded-full ${settingsControlButtonClass}`} asChild>
                   <a href={bookingUrl} target="_blank" rel="noreferrer">
                     <ExternalLink className="h-4 w-4" />
                     Open
@@ -265,7 +266,7 @@ export default function SettingsBookingPage() {
               <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">Status lookup URL</p>
               <div className="mt-2 flex flex-wrap items-center gap-2">
                 <p className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">{bookingStatusUrl}</p>
-                <Button type="button" variant="outline" size="sm" className="rounded-full" onClick={() => void copyText(bookingStatusUrl, 'Status URL')}>
+                <Button type="button" variant="ghost" size="sm" className={`rounded-full ${settingsControlButtonClass}`} onClick={() => void copyText(bookingStatusUrl, 'Status URL')}>
                   <Copy className="h-4 w-4" />
                   Copy
                 </Button>

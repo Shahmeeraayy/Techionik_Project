@@ -17,6 +17,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useSettingsWorkspace } from './WorkspaceProvider';
+import { settingsControlButtonClass } from './visual';
 
 type SettingsNavItem = {
   path: string;
@@ -177,7 +178,7 @@ export function SettingsSidebar({ onNavigate, className }: SettingsSidebarProps)
       </nav>
 
       <div className="border-t border-white/10 p-4">
-        <Button asChild variant="outline" className="w-full justify-start rounded-2xl">
+        <Button asChild variant="ghost" className={cn('w-full justify-start rounded-2xl', settingsControlButtonClass)}>
           <Link to="/admin" onClick={onNavigate}>
             <Settings2 className="h-4 w-4" />
             Back to dashboard
@@ -187,4 +188,3 @@ export function SettingsSidebar({ onNavigate, className }: SettingsSidebarProps)
     </div>
   );
 }
-

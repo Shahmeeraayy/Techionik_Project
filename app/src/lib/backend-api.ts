@@ -999,6 +999,42 @@ export type BackendTenantEmailIdentityUpdatePayload = {
   notification_email?: string | null;
 };
 
+export type BackendAdminBillingSettings = {
+  plan_name: string;
+  monthly_price: string;
+  renewal_date: string;
+  subscription_status: 'trial' | 'paid' | 'payment_pending' | 'past_due' | 'cancelled' | 'failed';
+  technician_limit: number;
+  location_limit: number;
+  billing_provider?: string | null;
+  manage_url?: string | null;
+  updated_at?: string | null;
+};
+
+export type BackendAdminIntegrationSettingsItem = {
+  key: string;
+  name: string;
+  description: string;
+  status: 'connected' | 'available' | 'planned' | 'error' | 'disabled';
+  provider?: string | null;
+  manage_url?: string | null;
+  last_synced_at?: string | null;
+};
+
+export type BackendAdminIntegrationPartner = {
+  id: string;
+  name: string;
+  status: 'active' | 'inactive' | 'pending';
+  category?: string | null;
+  notes?: string | null;
+};
+
+export type BackendAdminIntegrationSettings = {
+  integrations: BackendAdminIntegrationSettingsItem[];
+  partners: BackendAdminIntegrationPartner[];
+  updated_at?: string | null;
+};
+
 export type BackendAdminPasswordChangeResponse = {
   status: string;
   admin_email: string;
@@ -3307,6 +3343,44 @@ export async function updateAdminTenantEmailIdentity(
   payload: BackendTenantEmailIdentityUpdatePayload,
 ): Promise<BackendTenantEmailIdentity> {
   return requestJson<BackendTenantEmailIdentity>('/admin/settings/email-identity', {
+    method: 'PUT',
+    token,
+    body: payload,
+  });
+}
+
+export async function fetchAdminBillingSettings(
+  token: string,
+): Promise<BackendAdminBillingSettings> {
+  return requestJson<BackendAdminBillingSettings>('/admin/settings/billing', {
+    token,
+  });
+}
+
+export async function updateAdminBillingSettings(
+  token: string,
+  payload: BackendAdminBillingSettings,
+): Promise<BackendAdminBillingSettings> {
+  return requestJson<BackendAdminBillingSettings>('/admin/settings/billing', {
+    method: 'PUT',
+    token,
+    body: payload,
+  });
+}
+
+export async function fetchAdminIntegrationSettings(
+  token: string,
+): Promise<BackendAdminIntegrationSettings> {
+  return requestJson<BackendAdminIntegrationSettings>('/admin/settings/integrations', {
+    token,
+  });
+}
+
+export async function updateAdminIntegrationSettings(
+  token: string,
+  payload: BackendAdminIntegrationSettings,
+): Promise<BackendAdminIntegrationSettings> {
+  return requestJson<BackendAdminIntegrationSettings>('/admin/settings/integrations', {
     method: 'PUT',
     token,
     body: payload,

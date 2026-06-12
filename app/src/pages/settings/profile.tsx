@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { SectionCard } from '@/components/settings/SectionCard';
 import { FormField } from '@/components/settings/FormField';
 import { useSettingsWorkspace } from '@/components/settings/WorkspaceProvider';
+import { settingsControlButtonClass, settingsSelectTriggerClass } from '@/components/settings/visual';
 import {
   COMPANY_PROFILE_SETTINGS_STORAGE_KEY,
   DEFAULT_COMPANY_PROFILE_EXTRAS,
@@ -203,8 +204,8 @@ export default function SettingsProfilePage() {
           <div className="flex w-full items-center justify-end gap-2">
             <Button
               type="button"
-              variant="outline"
-              className="rounded-full"
+              variant="ghost"
+              className={`rounded-full ${settingsControlButtonClass}`}
               onClick={() => {
                 setForm({
                   companyName: workspace.invoiceBranding.name,
@@ -236,7 +237,7 @@ export default function SettingsProfilePage() {
           </FormField>
           <FormField label="Industry">
             <Select value={form.industryType} onValueChange={(value) => setForm((current) => ({ ...current, industryType: value }))}>
-              <SelectTrigger>
+              <SelectTrigger className={settingsSelectTriggerClass}>
                 <SelectValue placeholder="Select an industry" />
               </SelectTrigger>
               <SelectContent>
@@ -307,7 +308,7 @@ export default function SettingsProfilePage() {
             </div>
             <FormField label="Logo file">
               <div className="flex items-center gap-3">
-                <Button type="button" variant="outline" className="rounded-full" asChild>
+                <Button type="button" variant="ghost" className={`rounded-full ${settingsControlButtonClass}`} asChild>
                   <label className="cursor-pointer">
                     <Upload className="h-4 w-4" />
                     Choose file
@@ -317,7 +318,7 @@ export default function SettingsProfilePage() {
                 <Button
                   type="button"
                   variant="ghost"
-                  className="rounded-full"
+                  className={`rounded-full ${settingsControlButtonClass}`}
                   onClick={() => setForm((current) => ({ ...current, logoUrl: '' }))}
                 >
                   Remove
@@ -377,4 +378,3 @@ export default function SettingsProfilePage() {
     </div>
   );
 }
-

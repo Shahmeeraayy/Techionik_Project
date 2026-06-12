@@ -6,6 +6,7 @@ import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 import { SettingsSidebar, settingsNavItems } from './Sidebar';
 import { SettingsWorkspaceProvider, useSettingsWorkspace } from './WorkspaceProvider';
+import { settingsControlButtonClass, settingsIconButtonClass } from './visual';
 
 function SettingsLayoutShell({ children }: { children: ReactNode }) {
   const location = useLocation();
@@ -37,7 +38,13 @@ function SettingsLayoutShell({ children }: { children: ReactNode }) {
         <div className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-none border-0 bg-background/60 lg:rounded-[32px] lg:border lg:border-border/70 lg:shadow-[0_24px_80px_rgba(15,23,42,0.08)] lg:backdrop-blur-xl">
           <header className="sticky top-0 z-20 flex items-center justify-between gap-4 border-b border-border/70 bg-background/85 px-4 py-4 backdrop-blur-xl lg:px-6">
             <div className="flex min-w-0 items-center gap-3">
-              <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setMobileOpen(true)} aria-label="Open settings navigation">
+              <Button
+                variant="ghost"
+                size="icon"
+                className={cn('lg:hidden', settingsIconButtonClass)}
+                onClick={() => setMobileOpen(true)}
+                aria-label="Open settings navigation"
+              >
                 <Menu className="h-5 w-5" />
               </Button>
               <div className="min-w-0">
@@ -49,16 +56,16 @@ function SettingsLayoutShell({ children }: { children: ReactNode }) {
 
             <div className="flex items-center gap-2">
               <Button
-                variant="outline"
+                variant="ghost"
                 size="sm"
                 onClick={() => void workspace.refresh()}
                 disabled={workspace.refreshing}
-                className="rounded-full"
+                className={cn('rounded-full', settingsControlButtonClass)}
               >
                 <RefreshCw className={cn('h-4 w-4', workspace.refreshing && 'animate-spin')} />
                 {workspace.refreshing ? 'Refreshing' : 'Refresh'}
               </Button>
-              <Button variant="outline" size="sm" asChild className="rounded-full">
+              <Button variant="ghost" size="sm" asChild className={cn('rounded-full', settingsControlButtonClass)}>
                 <Link to="/admin">
                   <ArrowLeft className="h-4 w-4" />
                   Dashboard
@@ -98,4 +105,3 @@ export default function SettingsLayout({ children }: { children: ReactNode }) {
     </SettingsWorkspaceProvider>
   );
 }
-

@@ -11,6 +11,7 @@ import { DataTable } from '@/components/settings/DataTable';
 import { FormField } from '@/components/settings/FormField';
 import { SectionCard } from '@/components/settings/SectionCard';
 import { useSettingsWorkspace } from '@/components/settings/WorkspaceProvider';
+import { settingsControlButtonClass, settingsIconButtonClass, settingsSelectTriggerClass } from '@/components/settings/visual';
 import {
   createAdminDealership,
   getStoredAdminToken,
@@ -242,14 +243,14 @@ export default function SettingsLocationsPage() {
                 </td>
                 <td className="px-4 py-4 text-right">
                   <div className="inline-flex items-center gap-1">
-                    <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(location)} title="Edit location">
+                    <Button type="button" variant="ghost" size="icon" className={`h-8 w-8 ${settingsIconButtonClass}`} onClick={() => openEdit(location)} title="Edit location">
                       <Pencil className="h-4 w-4" />
                     </Button>
                     <Button
                       type="button"
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8"
+                      className={`h-8 w-8 ${settingsIconButtonClass}`}
                       onClick={() => void handleArchive(location)}
                       title={location.status === 'active' ? 'Archive location' : 'Restore location'}
                       disabled={saving}
@@ -300,7 +301,7 @@ export default function SettingsLocationsPage() {
             </FormField>
             <FormField label="Status">
               <Select value={draft.status} onValueChange={(value) => setDraft((current) => ({ ...current, status: value as LocationDraft['status'] }))}>
-                <SelectTrigger>
+                <SelectTrigger className={settingsSelectTriggerClass}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -319,7 +320,7 @@ export default function SettingsLocationsPage() {
           </div>
 
           <DialogFooter>
-            <Button type="button" variant="outline" className="rounded-full" onClick={() => setOpen(false)}>
+            <Button type="button" variant="ghost" className={`rounded-full ${settingsControlButtonClass}`} onClick={() => setOpen(false)}>
               Cancel
             </Button>
             <Button type="button" className="rounded-full" onClick={() => void handleSave()} disabled={saving}>

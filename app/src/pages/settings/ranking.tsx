@@ -10,6 +10,7 @@ import { DataTable } from '@/components/settings/DataTable';
 import { FormField } from '@/components/settings/FormField';
 import { SectionCard } from '@/components/settings/SectionCard';
 import { useSettingsWorkspace } from '@/components/settings/WorkspaceProvider';
+import { settingsControlButtonClass, settingsIconButtonClass, settingsSelectTriggerClass } from '@/components/settings/visual';
 import {
   createAdminPriorityRule,
   deleteAdminPriorityRule,
@@ -268,10 +269,10 @@ export default function SettingsRankingPage() {
                   </td>
                   <td className="px-4 py-4 text-right">
                     <div className="inline-flex items-center gap-1">
-                      <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(rule)} title="Edit rule">
+                      <Button type="button" variant="ghost" size="icon" className={`h-8 w-8 ${settingsIconButtonClass}`} onClick={() => openEdit(rule)} title="Edit rule">
                         <Pencil className="h-4 w-4" />
                       </Button>
-                      <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => void handleDelete(rule)} title="Delete rule" disabled={saving}>
+                      <Button type="button" variant="ghost" size="icon" className={`h-8 w-8 ${settingsIconButtonClass}`} onClick={() => void handleDelete(rule)} title="Delete rule" disabled={saving}>
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
@@ -301,7 +302,7 @@ export default function SettingsRankingPage() {
             </FormField>
             <FormField label="Location">
               <Select value={draft.dealershipId} onValueChange={(value) => setDraft((current) => ({ ...current, dealershipId: value }))}>
-                <SelectTrigger>
+                <SelectTrigger className={settingsSelectTriggerClass}>
                   <SelectValue placeholder="Select a location" />
                 </SelectTrigger>
                 <SelectContent>
@@ -318,7 +319,7 @@ export default function SettingsRankingPage() {
                 value={draft.serviceId || 'any'}
                 onValueChange={(value) => setDraft((current) => ({ ...current, serviceId: value === 'any' ? '' : value }))}
               >
-                <SelectTrigger>
+                <SelectTrigger className={settingsSelectTriggerClass}>
                   <SelectValue placeholder="Any service" />
                 </SelectTrigger>
                 <SelectContent>
@@ -333,7 +334,7 @@ export default function SettingsRankingPage() {
             </FormField>
             <FormField label="Target urgency">
               <Select value={draft.targetUrgency} onValueChange={(value) => setDraft((current) => ({ ...current, targetUrgency: value as RuleDraft['targetUrgency'] }))}>
-                <SelectTrigger>
+                <SelectTrigger className={settingsSelectTriggerClass}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -375,7 +376,7 @@ export default function SettingsRankingPage() {
           </div>
 
           <DialogFooter>
-            <Button type="button" variant="outline" className="rounded-full" onClick={() => setOpen(false)}>
+            <Button type="button" variant="ghost" className={`rounded-full ${settingsControlButtonClass}`} onClick={() => setOpen(false)}>
               Cancel
             </Button>
             <Button type="button" className="rounded-full" onClick={() => void handleSave()} disabled={saving}>
