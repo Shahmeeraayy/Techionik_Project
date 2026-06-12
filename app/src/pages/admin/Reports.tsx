@@ -591,7 +591,7 @@ export default function ReportsPage() {
           <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] bg-[size:120px_120px] opacity-20" />
           <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-200/70 to-transparent" />
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(47,142,146,0.14),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(245,158,11,0.12),transparent_26%)]" />
-          <div className="relative flex flex-col gap-5 p-6 xl:flex-row xl:items-end xl:justify-between xl:p-8">
+          <div className="relative flex flex-col gap-5 p-6 xl:flex-row xl:items-start xl:justify-between xl:p-8">
             <div className="max-w-3xl">
               <div className="inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-100">
                 <FileBarChart className="h-3.5 w-3.5" />
@@ -600,122 +600,119 @@ export default function ReportsPage() {
               <h1 className="mt-5 text-[2.35rem] font-semibold leading-none tracking-[-0.06em] text-white md:text-[2.8rem]">
                 Reporting Dashboard
               </h1>
-              <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-300 sm:text-[15px]">
-                Revenue, jobs, technician productivity, attendance, invoices, requests, service categories, and payments in one admin reporting surface.
-              </p>
             </div>
-            <div className="flex flex-wrap items-center gap-3">
-              <Badge variant="outline" className="border-cyan-300/20 bg-cyan-300/10 px-3 py-1 text-cyan-100">
-                {QUICK_RANGE_LABEL[quickRange]}
-              </Badge>
-              <span className="rounded-full border border-white/10 bg-[rgba(255,255,255,0.04)] px-3 py-2 text-xs text-slate-300">
-                Range: {activeRangeLabel}
-              </span>
-              <span className="rounded-full border border-white/10 bg-[rgba(255,255,255,0.04)] px-3 py-2 text-xs text-slate-300">
-                Last updated: {lastUpdated ? lastUpdated.toLocaleTimeString() : '--'}
-              </span>
+            <div className="w-full max-w-[1120px] xl:self-stretch">
+              <div className="flex h-full flex-col gap-4 xl:items-end xl:justify-between">
+                <div className="flex flex-wrap items-center gap-3 xl:justify-end">
+                  <Badge variant="outline" className="border-cyan-300/20 bg-cyan-300/10 px-3 py-1 text-cyan-100">
+                    {QUICK_RANGE_LABEL[quickRange]}
+                  </Badge>
+                  <span className="rounded-full border border-white/10 bg-[rgba(255,255,255,0.04)] px-3 py-2 text-xs text-slate-300">
+                    Range: {activeRangeLabel}
+                  </span>
+                  <span className="rounded-full border border-white/10 bg-[rgba(255,255,255,0.04)] px-3 py-2 text-xs text-slate-300">
+                    Last updated: {lastUpdated ? lastUpdated.toLocaleTimeString() : '--'}
+                  </span>
+                </div>
+
+                <div className="grid w-full grid-cols-1 gap-4 xl:grid-cols-[220px_minmax(320px,440px)_190px_auto] xl:items-end">
+                  <div className="space-y-2">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Quick Range</p>
+                    <Select value={quickRange} onValueChange={(value) => handleQuickRangeChange(value as QuickRange)}>
+                      <SelectTrigger className="h-11 rounded-2xl border-white/10 bg-[#0b1424] text-slate-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                        <SelectValue placeholder="Range" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Object.entries(QUICK_RANGE_LABEL).map(([value, label]) => (
+                          <SelectItem key={value} value={value}>
+                            {label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Custom Range</p>
+                    <div className="grid min-h-11 grid-cols-1 items-center gap-2 rounded-2xl border border-white/10 bg-[#0b1424] px-3 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] sm:grid-cols-[minmax(135px,1fr)_auto_minmax(135px,1fr)]">
+                      <Input
+                        type="date"
+                        value={fromDate}
+                        onChange={(event) => setFromDate(event.target.value)}
+                        style={reportDarkInputStyle}
+                        className="h-8 min-w-0 border-0 px-1 text-xs text-slate-100 shadow-none focus-visible:ring-0"
+                      />
+                      <span className="hidden items-center gap-1 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400 sm:flex">
+                        <Calendar className="h-3.5 w-3.5" />
+                        to
+                      </span>
+                      <Input
+                        type="date"
+                        value={toDate}
+                        onChange={(event) => setToDate(event.target.value)}
+                        style={reportDarkInputStyle}
+                        className="h-8 min-w-0 border-0 px-1 text-xs text-slate-100 shadow-none focus-visible:ring-0"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Export Format</p>
+                    <Select value={exportFormat} onValueChange={(value) => setExportFormat(value as ExportFormat)}>
+                      <SelectTrigger className="h-11 rounded-2xl border-white/10 bg-[#0b1424] text-slate-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                        <SelectValue placeholder="Format" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Object.entries(EXPORT_FORMAT_LABEL).map(([value, label]) => (
+                          <SelectItem key={value} value={value}>
+                            {label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="flex flex-wrap items-center justify-start gap-2 xl:justify-end">
+                    <Button
+                      size="sm"
+                      className="h-11 rounded-full bg-slate-950 px-5 text-white shadow-[0_12px_30px_rgba(15,23,42,0.18)] hover:bg-slate-800 dark:bg-[#2F8E92] dark:shadow-[0_12px_30px_rgba(47,142,146,0.28)] dark:hover:bg-[#267276]"
+                      onClick={handleRefresh}
+                      disabled={!canRunRange || loading}
+                    >
+                      {loading ? 'Applying...' : 'Apply Filters'}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-11 gap-2 rounded-full border-white/10 bg-[rgba(255,255,255,0.03)] text-slate-100 shadow-sm hover:bg-[rgba(255,255,255,0.08)]"
+                      onClick={handleExport}
+                      disabled={!overview || loading || activeExportRows.length === 0}
+                    >
+                      <Download className="h-4 w-4" />
+                      Export {EXPORT_FORMAT_LABEL[exportFormat]}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-11 gap-2 rounded-full border-white/10 bg-[rgba(255,255,255,0.03)] text-slate-100 shadow-sm hover:bg-[rgba(255,255,255,0.08)]"
+                      onClick={handleRefresh}
+                      disabled={!canRunRange || loading}
+                    >
+                      <RefreshCw className={cn('h-4 w-4 text-cyan-200', loading && 'animate-spin')} />
+                      Refresh
+                    </Button>
+                  </div>
+                </div>
+
+                {!canRunRange ? (
+                  <p className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs text-rose-700 dark:border-rose-400/20 dark:bg-rose-400/10 dark:text-rose-200">
+                    Start date must be on or before end date.
+                  </p>
+                ) : null}
+              </div>
             </div>
           </div>
         </section>
-
-        <Card className={sectionCardClass}>
-          <div className={sectionHeaderClass}>
-            <div className="grid grid-cols-1 gap-4 xl:grid-cols-[220px_minmax(320px,440px)_190px_auto] xl:items-end">
-              <div className="space-y-2">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Quick Range</p>
-                <Select value={quickRange} onValueChange={(value) => handleQuickRangeChange(value as QuickRange)}>
-                  <SelectTrigger className="h-11 rounded-2xl border-white/10 bg-[#0b1424] text-slate-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-                    <SelectValue placeholder="Range" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(QUICK_RANGE_LABEL).map(([value, label]) => (
-                      <SelectItem key={value} value={value}>
-                        {label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Custom Range</p>
-                <div className="grid min-h-11 grid-cols-1 items-center gap-2 rounded-2xl border border-white/10 bg-[#0b1424] px-3 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] sm:grid-cols-[minmax(135px,1fr)_auto_minmax(135px,1fr)]">
-                  <Input
-                    type="date"
-                    value={fromDate}
-                    onChange={(event) => setFromDate(event.target.value)}
-                    style={reportDarkInputStyle}
-                    className="h-8 min-w-0 border-0 px-1 text-xs text-slate-100 shadow-none focus-visible:ring-0"
-                  />
-                  <span className="hidden items-center gap-1 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400 sm:flex">
-                    <Calendar className="h-3.5 w-3.5" />
-                    to
-                  </span>
-                  <Input
-                    type="date"
-                    value={toDate}
-                    onChange={(event) => setToDate(event.target.value)}
-                    style={reportDarkInputStyle}
-                    className="h-8 min-w-0 border-0 px-1 text-xs text-slate-100 shadow-none focus-visible:ring-0"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Export Format</p>
-                <Select value={exportFormat} onValueChange={(value) => setExportFormat(value as ExportFormat)}>
-                  <SelectTrigger className="h-11 rounded-2xl border-white/10 bg-[#0b1424] text-slate-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-                    <SelectValue placeholder="Format" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(EXPORT_FORMAT_LABEL).map(([value, label]) => (
-                      <SelectItem key={value} value={value}>
-                        {label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex flex-wrap items-center justify-start gap-2 xl:justify-end">
-                <Button
-                  size="sm"
-                  className="h-11 rounded-full bg-slate-950 px-5 text-white shadow-[0_12px_30px_rgba(15,23,42,0.18)] hover:bg-slate-800 dark:bg-[#2F8E92] dark:shadow-[0_12px_30px_rgba(47,142,146,0.28)] dark:hover:bg-[#267276]"
-                  onClick={handleRefresh}
-                  disabled={!canRunRange || loading}
-                >
-                  {loading ? 'Applying...' : 'Apply Filters'}
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-11 gap-2 rounded-full border-white/10 bg-[rgba(255,255,255,0.03)] text-slate-100 shadow-sm hover:bg-[rgba(255,255,255,0.08)]"
-                  onClick={handleExport}
-                  disabled={!overview || loading || activeExportRows.length === 0}
-                >
-                  <Download className="h-4 w-4" />
-                  Export {EXPORT_FORMAT_LABEL[exportFormat]}
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-11 gap-2 rounded-full border-white/10 bg-[rgba(255,255,255,0.03)] text-slate-100 shadow-sm hover:bg-[rgba(255,255,255,0.08)]"
-                  onClick={handleRefresh}
-                  disabled={!canRunRange || loading}
-                >
-                  <RefreshCw className={cn('h-4 w-4 text-cyan-200', loading && 'animate-spin')} />
-                  Refresh
-                </Button>
-              </div>
-            </div>
-
-            {!canRunRange ? (
-              <p className="mt-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs text-rose-700 dark:border-rose-400/20 dark:bg-rose-400/10 dark:text-rose-200">
-                Start date must be on or before end date.
-              </p>
-            ) : null}
-          </div>
-        </Card>
 
         {error ? (
           <Card className="rounded-[24px] border border-rose-400/20 bg-rose-400/10 p-4 text-sm text-rose-200">
