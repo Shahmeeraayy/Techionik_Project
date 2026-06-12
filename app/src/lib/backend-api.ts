@@ -541,6 +541,9 @@ export type BackendChatMessageMetadata = Record<string, unknown> & {
   kind?: string;
   action?: string;
   important?: boolean;
+  reply_to_message_id?: string | null;
+  reply_to_sender_name?: string | null;
+  reply_to_text?: string | null;
   latitude?: number;
   longitude?: number;
   accuracy?: number | null;

@@ -8,7 +8,7 @@ import type {
 export type ChatQuickFilter = 'all' | 'unread' | 'direct' | 'group' | 'job' | 'pinned';
 export type ChatInsightTab = 'overview' | 'files' | 'pins' | 'members';
 export type ChatWorkspaceTab = 'chat' | 'shared';
-export type ChatSharedTab = 'files' | 'links';
+export type ChatSharedTab = 'files' | 'photos' | 'links' | 'important';
 
 export type SharedConversationAttachment = BackendChatAttachment & {
   created_at: string;
@@ -26,6 +26,15 @@ export type SharedConversationLink = {
   title: string;
   domain: string;
   url: string;
+};
+
+export type ChatMessageGroup = {
+  key: string;
+  dateLabel: string;
+  senderId: string;
+  senderRole: BackendChatMessage['sender_role'];
+  senderName: string;
+  messages: BackendChatMessage[];
 };
 
 export function getChatMessageMetadata(message: BackendChatMessage): BackendChatMessageMetadata {
@@ -165,6 +174,60 @@ export function buildSharedConversationAttachments(
   return shared.sort((left, right) => (
     new Date(right.created_at).getTime() - new Date(left.created_at).getTime()
   ));
+}
+
+export function buildSharedConversationPhotos(
+  messages: BackendChatMessage[],
+): SharedConversationAttachment[] {
+  return buildSharedConversationAttachments(messages).filter((attachment) => (
+    attachment.attachment_type === 'image'
+    || attachment.mime_type.toLowerCase().startsWith('image/')
+  ));
+}
+
+export function buildImportantConversationMessages(
+  messages: BackendChatMessage[],
+): BackendChatMessage[] {
+  return [...messages]
+    .filter((message) => isImportantChatMessage(message) || message.is_pinned)
+    .sort((left, right) => new Date(right.created_at).getTime() - new Date(left.created_at).getTime());
+}
+
+export function groupChatMessages(
+  messages: BackendChatMessage[],
+  getSenderName: (message: BackendChatMessage) => string,
+): ChatMessageGroup[] {
+  const sorted = [...messages].sort((left, right) => (
+    new Date(left.created_at).getTime() - new Date(right.created_at).getTime()
+  ));
+  const groups: ChatMessageGroup[] = [];
+
+  for (const message of sorted) {
+    const dateLabel = formatMessageDayLabel(message.created_at);
+    const senderName = getSenderName(message);
+    const previous = groups[groups.length - 1];
+
+    if (
+      previous
+      && previous.senderRole === message.sender_role
+      && previous.senderId === message.sender_id
+      && previous.dateLabel === dateLabel
+    ) {
+      previous.messages.push(message);
+      continue;
+    }
+
+    groups.push({
+      key: `${dateLabel}:${message.sender_role}:${message.sender_id}:${message.id}`,
+      dateLabel,
+      senderId: message.sender_id,
+      senderRole: message.sender_role,
+      senderName,
+      messages: [message],
+    });
+  }
+
+  return groups;
 }
 
 function normalizeLinkCandidate(candidate: string): string | null {

@@ -13,6 +13,7 @@ import {
   Upload,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { AttachmentCard } from '@/components/chat/AttachmentCard';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -26,7 +27,9 @@ import {
 } from '@/components/ui/dropdown-menu';
 import {
   buildSharedConversationAttachments,
+  buildSharedConversationPhotos,
   buildSharedConversationLinks,
+  buildImportantConversationMessages,
   formatSharedConversationTimestamp,
   type ChatSharedTab,
   type SharedConversationAttachment,
@@ -146,7 +149,9 @@ export function SharedConversationPanel({
 
   const messageById = useMemo(() => new Map(messages.map((message) => [message.id, message])), [messages]);
   const sharedFiles = useMemo(() => buildSharedConversationAttachments(messages), [messages]);
+  const sharedPhotos = useMemo(() => buildSharedConversationPhotos(messages), [messages]);
   const sharedLinks = useMemo(() => buildSharedConversationLinks(messages), [messages]);
+  const importantMessages = useMemo(() => buildImportantConversationMessages(messages), [messages]);
 
   const filteredFiles = useMemo(() => sharedFiles.filter((attachment) => {
     const message = messageById.get(attachment.message_id);
@@ -161,7 +166,25 @@ export function SharedConversationPanel({
       context,
       formatSharedConversationTimestamp(attachment.created_at),
     ]);
-  }), [conversation, messageById, searchQuery, sharedFiles, viewerRole]);
+  }).filter((attachment) => (
+    attachment.attachment_type !== 'image'
+    && !attachment.mime_type.toLowerCase().startsWith('image/')
+  )), [conversation, messageById, searchQuery, sharedFiles, viewerRole]);
+
+  const filteredPhotos = useMemo(() => sharedPhotos.filter((attachment) => {
+    const message = messageById.get(attachment.message_id);
+    const senderLabel = getConversationSenderLabel(viewerRole, conversation, attachment.sender_role);
+    const context = message?.text?.trim() || '';
+    return matchesSearch(searchQuery, [
+      attachment.name,
+      attachment.mime_type,
+      getAttachmentKindLabel(attachment),
+      formatChatAttachmentSize(attachment.size_bytes),
+      senderLabel,
+      context,
+      formatSharedConversationTimestamp(attachment.created_at),
+    ]);
+  }), [conversation, messageById, searchQuery, sharedPhotos, viewerRole]);
 
   const filteredLinks = useMemo(() => sharedLinks.filter((link) => {
     const message = messageById.get(link.message_id);
@@ -176,6 +199,16 @@ export function SharedConversationPanel({
       formatSharedConversationTimestamp(link.created_at),
     ]);
   }), [conversation, messageById, searchQuery, sharedLinks, viewerRole]);
+
+  const filteredImportantMessages = useMemo(() => importantMessages.filter((message) => {
+    const senderLabel = getConversationSenderLabel(viewerRole, conversation, message.sender_role);
+    return matchesSearch(searchQuery, [
+      message.text ?? '',
+      senderLabel,
+      message.message_type,
+      formatSharedConversationTimestamp(message.created_at),
+    ]);
+  }), [conversation, importantMessages, searchQuery, viewerRole]);
 
   const handlePreviewAttachment = async (attachment: SharedConversationAttachment) => {
     try {
@@ -429,7 +462,9 @@ export function SharedConversationPanel({
   };
 
   const fileCount = filteredFiles.length;
+  const photoCount = filteredPhotos.length;
   const linkCount = filteredLinks.length;
+  const importantCount = filteredImportantMessages.length;
 
   return (
     <Tabs
@@ -443,9 +478,9 @@ export function SharedConversationPanel({
             <div className="inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-100">
               Shared
             </div>
-            <h3 className="text-xl font-semibold tracking-[-0.04em] text-white">Files &amp; Links</h3>
+            <h3 className="text-xl font-semibold tracking-[-0.04em] text-white">Shared Content</h3>
             <p className="max-w-2xl text-sm leading-6 text-slate-400">
-              Tenant-scoped files and links from this conversation. Secure previews and downloads stay permission checked.
+              Tenant-scoped files, photos, links, and important messages from this conversation. Secure previews and downloads stay permission checked.
             </p>
           </div>
 
@@ -454,7 +489,13 @@ export function SharedConversationPanel({
               {fileCount} files
             </Badge>
             <Badge variant="outline" className="border-white/10 bg-white/[0.03] px-3 py-2 text-slate-100">
+              {photoCount} photos
+            </Badge>
+            <Badge variant="outline" className="border-white/10 bg-white/[0.03] px-3 py-2 text-slate-100">
               {linkCount} links
+            </Badge>
+            <Badge variant="outline" className="border-white/10 bg-white/[0.03] px-3 py-2 text-slate-100">
+              {importantCount} important
             </Badge>
             <Button
               type="button"
@@ -484,8 +525,14 @@ export function SharedConversationPanel({
             <TabsTrigger value="files" className="h-9 rounded-full px-4 text-sm text-slate-300 data-[state=active]:bg-cyan-300 data-[state=active]:text-slate-950">
               Files
             </TabsTrigger>
+            <TabsTrigger value="photos" className="h-9 rounded-full px-4 text-sm text-slate-300 data-[state=active]:bg-cyan-300 data-[state=active]:text-slate-950">
+              Photos
+            </TabsTrigger>
             <TabsTrigger value="links" className="h-9 rounded-full px-4 text-sm text-slate-300 data-[state=active]:bg-cyan-300 data-[state=active]:text-slate-950">
               Links
+            </TabsTrigger>
+            <TabsTrigger value="important" className="h-9 rounded-full px-4 text-sm text-slate-300 data-[state=active]:bg-cyan-300 data-[state=active]:text-slate-950">
+              Important
             </TabsTrigger>
           </TabsList>
         </div>
@@ -513,6 +560,37 @@ export function SharedConversationPanel({
         </ScrollArea>
       </TabsContent>
 
+      <TabsContent value="photos" className="mt-0 flex min-h-0 flex-1 flex-col">
+        <ScrollArea className="min-h-0 flex-1">
+          <div className="px-5 py-5">
+            {filteredPhotos.length > 0 ? (
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                {filteredPhotos.map((attachment) => (
+                  <AttachmentCard
+                    key={attachment.id}
+                    attachment={attachment}
+                    token={token}
+                    tone="dark"
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="flex min-h-[260px] flex-col items-center justify-center rounded-[26px] border border-dashed border-white/10 bg-white/[0.02] px-6 py-12 text-center">
+                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-white/[0.05]">
+                  <ImageIcon className="h-8 w-8 text-slate-500" />
+                </div>
+                <h4 className="text-lg font-semibold text-white">
+                  {searchQuery ? 'No shared photos matched your search' : 'No photos have been shared yet'}
+                </h4>
+                <p className="mt-2 max-w-lg text-sm leading-6 text-slate-400">
+                  Photos attached to messages will appear here as secure, permission-checked previews.
+                </p>
+              </div>
+            )}
+          </div>
+        </ScrollArea>
+      </TabsContent>
+
       <TabsContent value="links" className="mt-0 flex min-h-0 flex-1 flex-col">
         <ScrollArea className="min-h-0 flex-1">
           <div className="space-y-3 px-5 py-5">
@@ -528,6 +606,53 @@ export function SharedConversationPanel({
                 </h4>
                 <p className="mt-2 max-w-lg text-sm leading-6 text-slate-400">
                   Links pasted into a message will appear here with open and copy actions for fast follow-up.
+                </p>
+              </div>
+            )}
+          </div>
+        </ScrollArea>
+      </TabsContent>
+
+      <TabsContent value="important" className="mt-0 flex min-h-0 flex-1 flex-col">
+        <ScrollArea className="min-h-0 flex-1">
+          <div className="space-y-3 px-5 py-5">
+            {filteredImportantMessages.length > 0 ? (
+              filteredImportantMessages.map((message) => {
+                const senderLabel = getConversationSenderLabel(viewerRole, conversation, message.sender_role);
+                return (
+                  <div key={message.id} className="rounded-[24px] border border-white/10 bg-white/[0.03] p-4 shadow-[0_12px_30px_rgba(0,0,0,0.16)]">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="min-w-0 space-y-2">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Badge className="rounded-full bg-amber-300/15 text-amber-100">
+                            Important
+                          </Badge>
+                          {message.is_pinned ? (
+                            <Badge variant="outline" className="border-cyan-300/20 bg-cyan-300/10 text-[10px] text-cyan-100">
+                              Pinned
+                            </Badge>
+                          ) : null}
+                        </div>
+                        <p className="text-sm font-semibold text-white">{senderLabel}</p>
+                        <p className="line-clamp-3 text-sm leading-6 text-slate-300">
+                          {message.text || message.attachments[0]?.name || 'Important message'}
+                        </p>
+                        <p className="text-xs text-slate-500">{formatSharedConversationTimestamp(message.created_at)}</p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="flex min-h-[260px] flex-col items-center justify-center rounded-[26px] border border-dashed border-white/10 bg-white/[0.02] px-6 py-12 text-center">
+                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-white/[0.05]">
+                  <Upload className="h-8 w-8 text-slate-500" />
+                </div>
+                <h4 className="text-lg font-semibold text-white">
+                  {searchQuery ? 'No important messages matched your search' : 'No important messages yet'}
+                </h4>
+                <p className="mt-2 max-w-lg text-sm leading-6 text-slate-400">
+                  Star or pin operational messages to keep them easy to find here.
                 </p>
               </div>
             )}

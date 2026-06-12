@@ -35,9 +35,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { AttachmentCard } from '@/components/chat/AttachmentCard';
-import { StructuredMessageCard } from '@/components/chat/StructuredMessageCard';
-import { SharedConversationPanel } from '@/components/chat/SharedConversationPanel';
+import { ChatContextPanel } from '@/components/chat/ChatContextPanel';
+import { ChatListItem } from '@/components/chat/ChatListItem';
+import { ChatMessageTimeline } from '@/components/chat/ChatMessageTimeline';
+import { useAuth } from '@/contexts/AuthContext';
 import { useVoiceNoteRecorder } from '@/hooks/use-voice-note-recorder';
 import {
   CHAT_ATTACHMENT_ACCEPT,
@@ -151,6 +152,7 @@ function getConversationInitials(conversation: BackendAdminChatConversation | nu
 
 export default function PlatformChatPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [searchParams] = useSearchParams();
   const requestedConversationId = searchParams.get('conversationId');
   const requestedJobId = searchParams.get('jobId');
@@ -165,6 +167,7 @@ export default function PlatformChatPage() {
   const [contactSearch, setContactSearch] = useState('');
   const [historySearch, setHistorySearch] = useState('');
   const [draftMessage, setDraftMessage] = useState('');
+  const [replyTarget, setReplyTarget] = useState<BackendChatMessage | null>(null);
   const [pendingAttachmentsByConversation, setPendingAttachmentsByConversation] = useState<Record<string, BackendChatAttachment[]>>({});
   const [showGroupComposer, setShowGroupComposer] = useState(false);
   const [groupTitle, setGroupTitle] = useState('');
@@ -542,6 +545,15 @@ export default function PlatformChatPage() {
 
   const buildOutgoingMetadata = (metadata?: Record<string, unknown> | null) => {
     const next = metadata ? { ...metadata } : {};
+    if (replyTarget) {
+      next.reply_to_message_id = replyTarget.id;
+      next.reply_to_sender_name = replyTarget.sender_role === 'admin'
+        ? 'Admin Dispatch'
+        : (selectedConversation?.channel_kind === 'group'
+          ? (selectedConversation.title || 'Technician Group')
+          : (selectedConversation?.technician_name || 'Technician'));
+      next.reply_to_text = replyTarget.text || replyTarget.attachments[0]?.name || '';
+    }
     if (importantNextMessage) {
       next.important = true;
       if (!next.kind) {
@@ -590,6 +602,7 @@ export default function PlatformChatPage() {
     if (payload.clearAttachments ?? true) {
       clearPendingAttachments(conversationId);
     }
+    setReplyTarget(null);
     setImportantNextMessage(false);
     seenMessageIdsRef.current.add(sent.id);
     await loadConversations(contactSearch, true);
@@ -750,6 +763,17 @@ export default function PlatformChatPage() {
     setImportantNextMessage((prev) => !prev);
   };
 
+  const handleReplyToMessage = (message: BackendChatMessage) => {
+    setReplyTarget(message);
+    setImportantNextMessage(false);
+  };
+
+  const handleMarkImportantMessage = (message: BackendChatMessage) => {
+    setReplyTarget(message);
+    setImportantNextMessage(true);
+    toast.info('The next reply will be marked important.');
+  };
+
   const handleOpenJob = (jobId: string) => {
     navigate(`/admin/jobs/${encodeURIComponent(jobId)}`);
   };
@@ -779,7 +803,7 @@ export default function PlatformChatPage() {
     <div className="relative flex min-h-0 w-full flex-1 flex-col overflow-hidden">
       <div className="pointer-events-none absolute inset-x-0 top-0 h-28 rounded-[34px] bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.12),rgba(34,211,238,0)_34%),radial-gradient(circle_at_top_right,rgba(52,211,153,0.08),rgba(52,211,153,0)_30%)]" />
       <div className="relative flex min-h-0 flex-1 flex-col gap-4">
-        <section className="grid min-h-0 flex-1 gap-4 xl:grid-cols-[320px_minmax(0,1fr)]">
+        <section className="grid min-h-0 flex-1 gap-4 xl:grid-cols-[320px_minmax(0,1fr)_360px]">
             <Card className="flex min-h-0 flex-col overflow-hidden rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(9,24,39,0.96),rgba(6,17,29,0.96))] shadow-[0_24px_80px_rgba(0,0,0,0.28)]">
               <div className="shrink-0 border-b border-white/8 p-5">
                 <div className="space-y-3">
@@ -888,25 +912,18 @@ export default function PlatformChatPage() {
                     </div>
                     <div className="space-y-2">
                       {favoriteConversations.map((conversation) => (
-                        <button
+                        <ChatListItem
                           key={`favorite-${conversation.id}`}
-                          type="button"
+                          title={conversation.title}
+                          preview={conversation.last_message_preview || getConversationTypeLabel(conversation)}
+                          timestamp={formatRelativeChatTime(conversation.last_message_at)}
+                          initials={getConversationInitials(conversation)}
+                          avatarUrl={conversation.technician_avatar || undefined}
+                          active={selectedConversationId === conversation.id}
+                          unreadCount={conversation.unread_count}
+                          favorite
                           onClick={() => setSelectedConversationId(conversation.id)}
-                          className={cn(
-                            'flex w-full items-center justify-between gap-3 rounded-2xl border px-3 py-3 text-left transition',
-                            selectedConversationId === conversation.id
-                              ? 'border-amber-300/25 bg-amber-300/10'
-                              : 'border-white/10 bg-white/[0.03] hover:bg-white/[0.05]',
-                          )}
-                        >
-                          <div className="min-w-0">
-                            <p className="truncate text-sm font-semibold text-white">{conversation.title}</p>
-                            <p className="mt-1 truncate text-xs text-slate-400">
-                              {conversation.last_message_preview || getConversationTypeLabel(conversation)}
-                            </p>
-                          </div>
-                          <Star className="h-4 w-4 fill-current text-amber-300" />
-                        </button>
+                        />
                       ))}
                     </div>
                   </section>
@@ -934,85 +951,18 @@ export default function PlatformChatPage() {
                       </div>
                       <div className="space-y-1">
                         {section.items.map((conversation) => (
-                          <button
+                          <ChatListItem
                             key={conversation.id}
-                            type="button"
+                            title={conversation.channel_kind === 'group' ? conversation.title : conversation.technician_name}
+                            preview={conversation.last_message_preview || (conversation.channel_kind === 'group' ? conversation.member_names.join(', ') : conversation.title)}
+                            timestamp={formatRelativeChatTime(conversation.last_message_at)}
+                            initials={getConversationInitials(conversation)}
+                            avatarUrl={conversation.channel_kind === 'group' ? undefined : (conversation.technician_avatar || undefined)}
+                            active={selectedConversationId === conversation.id}
+                            unreadCount={conversation.unread_count}
+                            favorite={favorites.includes(conversation.id)}
                             onClick={() => setSelectedConversationId(conversation.id)}
-                            className={cn(
-                              'flex w-full items-start gap-3 rounded-2xl border px-3 py-3 text-left transition',
-                              selectedConversationId === conversation.id
-                                ? 'border-cyan-300/20 bg-cyan-300/10'
-                                : 'border-transparent bg-white/[0.02] hover:border-white/10 hover:bg-white/[0.04]',
-                            )}
-                          >
-                            <Avatar className="h-11 w-11 border border-white/10">
-                              <AvatarImage
-                                src={conversation.channel_kind === 'group' ? undefined : (conversation.technician_avatar || undefined)}
-                                alt={conversation.channel_kind === 'group' ? conversation.title : conversation.technician_name}
-                              />
-                              <AvatarFallback className="bg-white/[0.06] text-slate-100">
-                                {getConversationInitials(conversation)}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div className="min-w-0 flex-1 space-y-1">
-                              <div className="flex items-center justify-between gap-2">
-                                <p className="truncate text-sm font-semibold text-white">
-                                  {conversation.channel_kind === 'group' ? conversation.title : conversation.technician_name}
-                                </p>
-                                <span className="shrink-0 text-xs text-slate-500" title={conversation.last_message_at ?? undefined}>
-                                  {formatConversationClock(conversation.last_message_at)}
-                                </span>
-                              </div>
-                              <div className="flex flex-wrap items-center gap-2">
-                                {favorites.includes(conversation.id) ? (
-                                  <Badge variant="outline" className="h-5 border-amber-300/20 bg-amber-300/10 px-2 text-[10px] text-amber-100">
-                                    <Star className="mr-1 h-3 w-3 fill-current" />
-                                    Favorite
-                                  </Badge>
-                                ) : null}
-                                {conversation.channel_kind === 'group' ? (
-                                  <Badge variant="outline" className="h-5 border-cyan-300/20 bg-cyan-300/10 px-2 text-[10px] text-cyan-100">
-                                    <Users className="mr-1 h-3 w-3" />
-                                    {conversation.member_count} techs
-                                  </Badge>
-                                ) : (
-                                  <Badge variant="outline" className="h-5 border-white/10 bg-white/[0.03] px-2 text-[10px] text-slate-300">
-                                    {conversation.technician_status}
-                                  </Badge>
-                                )}
-                                <Badge variant="outline" className={cn(
-                                  'h-5 px-2 text-[10px]',
-                                  conversation.channel_kind === 'job'
-                                    ? 'border-emerald-300/20 bg-emerald-300/10 text-emerald-100'
-                                    : conversation.channel_kind === 'group'
-                                      ? 'border-cyan-300/20 bg-cyan-300/10 text-cyan-100'
-                                      : 'border-slate-300/20 bg-slate-300/10 text-slate-200',
-                                )}>
-                                  {conversation.channel_kind === 'job'
-                                    ? conversation.job_code || 'Job thread'
-                                    : conversation.channel_kind === 'group'
-                                      ? 'Technician Group'
-                                      : 'Dispatch'}
-                                </Badge>
-                                {conversation.unread_count > 0 ? (
-                                  <Badge className="h-5 min-w-5 justify-center rounded-full bg-cyan-400 px-1.5 text-[10px] text-slate-950">
-                                    {conversation.unread_count}
-                                  </Badge>
-                                ) : null}
-                              </div>
-                              <div className="flex items-center gap-2 text-[11px] text-slate-500">
-                                <span>{getConversationTypeLabel(conversation)}</span>
-                                <span>&middot;</span>
-                                <span>{formatRelativeChatTime(conversation.last_message_at)}</span>
-                              </div>
-                              <p className="truncate text-sm text-slate-400">
-                                {conversation.last_message_preview
-                                  || (conversation.channel_kind === 'group'
-                                    ? conversation.member_names.join(', ')
-                                    : conversation.title)}
-                              </p>
-                            </div>
-                          </button>
+                          />
                         ))}
                       </div>
                     </section>
@@ -1103,368 +1053,265 @@ export default function PlatformChatPage() {
               </div>
             </div>
 
-            <div className="shrink-0 border-b border-white/8 px-5 py-4">
-              <div className="inline-flex h-11 rounded-full border border-white/10 bg-white/[0.04] p-1">
-                <button
-                  type="button"
-                  onClick={() => setWorkspaceTab('chat')}
-                  className={cn(
-                    'h-9 rounded-full px-4 text-sm transition',
-                    workspaceTab === 'chat'
-                      ? 'bg-cyan-300 text-slate-950'
-                      : 'text-slate-300 hover:bg-white/[0.06] hover:text-white',
+            <div className="flex min-h-0 flex-1 flex-col bg-[linear-gradient(180deg,rgba(238,247,248,0.03),rgba(255,255,255,0.01))]">
+              <ScrollArea className="min-h-0 flex-1">
+                <div className="space-y-4 px-5 py-6">
+                  {loadingMessages ? (
+                    Array.from({ length: 4 }).map((_, index) => (
+                      <div
+                        key={index}
+                        className={cn(
+                          'h-16 w-[65%] animate-pulse rounded-[24px] bg-white/[0.05]',
+                          index % 2 === 0 ? 'ml-0' : 'ml-auto',
+                        )}
+                      />
+                    ))
+                  ) : messages.length === 0 ? (
+                    <div className="flex min-h-[320px] flex-col items-center justify-center py-12 text-center">
+                      <div className="mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-white/[0.05]">
+                        <MessageCircleMore className="h-10 w-10 text-slate-500" />
+                      </div>
+                      <h3 className="text-xl font-semibold text-white">
+                        {historySearch.trim() ? 'No messages matched this search' : 'No messages yet'}
+                      </h3>
+                      <p className="mt-2 max-w-md text-sm leading-7 text-slate-400">
+                        {historySearch.trim()
+                          ? 'Try a different keyword, sender, or job code.'
+                          : 'Send a message, attach a file, or record a voice note to start this secure conversation.'}
+                      </p>
+                    </div>
+                  ) : (
+                    <ChatMessageTimeline
+                      messages={messages}
+                      conversation={selectedConversation}
+                      token={token}
+                      viewerRole="admin"
+                      outgoingRole="admin"
+                      getSenderLabel={(message) => (
+                        message.sender_role === 'admin'
+                          ? 'Admin Dispatch'
+                          : (selectedConversation?.channel_kind === 'group'
+                            ? (selectedConversation.title || 'Technician Group')
+                            : (selectedConversation?.technician_name || 'Technician'))
+                      )}
+                      onOpenJob={handleOpenJob}
+                      onReply={handleReplyToMessage}
+                      onTogglePin={handleTogglePin}
+                      onMarkImportant={handleMarkImportantMessage}
+                    />
                   )}
-                >
-                  Chat
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setWorkspaceTab('shared')}
-                  className={cn(
-                    'h-9 rounded-full px-4 text-sm transition',
-                    workspaceTab === 'shared'
-                      ? 'bg-cyan-300 text-slate-950'
-                      : 'text-slate-300 hover:bg-white/[0.06] hover:text-white',
-                  )}
-                >
-                  Shared
-                </button>
-              </div>
-            </div>
+                  <div ref={bottomRef} />
+                </div>
+              </ScrollArea>
 
-            {workspaceTab === 'chat' ? (
-              <>
-                {pinnedMessages.length > 0 ? (
-                  <div className="shrink-0 border-b border-white/8 px-5 py-4">
-                    <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-white">
-                      <Pin className="h-4 w-4 text-cyan-300" />
-                      Pinned Messages
-                    </div>
-                    <div className="flex gap-3 overflow-x-auto pb-1">
-                      {pinnedMessages.map((message) => (
-                        <div key={`pin-${message.id}`} className="min-w-[260px] rounded-2xl border border-cyan-300/15 bg-cyan-300/10 p-3 text-sm text-cyan-50">
-                          <p className="line-clamp-3 leading-6">{message.text || message.attachments[0]?.name || 'Pinned secure attachment'}</p>
-                          <p className="mt-2 text-[11px] text-cyan-200/80">
-                            {new Date(message.created_at).toLocaleString()}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
+              <div className="shrink-0 border-t border-white/8 bg-[rgba(6,17,29,0.9)] p-5">
+                {typingLabel ? (
+                  <div className="mb-2 px-4 text-xs font-medium text-cyan-200">
+                    {typingLabel}
                   </div>
                 ) : null}
-
-                <div className="flex min-h-0 flex-1 flex-col bg-[linear-gradient(180deg,rgba(238,247,248,0.03),rgba(255,255,255,0.01))]">
-                  <ScrollArea className="min-h-0 flex-1">
-                    <div className="space-y-4 px-5 py-6">
-                      {loadingMessages ? (
-                        Array.from({ length: 4 }).map((_, index) => (
-                          <div
-                            key={index}
-                            className={cn(
-                              'h-16 w-[65%] animate-pulse rounded-[24px] bg-white/[0.05]',
-                              index % 2 === 0 ? 'ml-0' : 'ml-auto',
-                            )}
-                          />
-                        ))
-                      ) : messages.length === 0 ? (
-                        <div className="flex min-h-[320px] flex-col items-center justify-center py-12 text-center">
-                          <div className="mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-white/[0.05]">
-                            <MessageCircleMore className="h-10 w-10 text-slate-500" />
-                          </div>
-                          <h3 className="text-xl font-semibold text-white">No messages yet</h3>
-                          <p className="mt-2 max-w-md text-sm leading-7 text-slate-400">
-                            Send a message, attach a file, or record a voice note to start this secure conversation.
-                          </p>
-                        </div>
-                      ) : messages.map((message, index) => (
-                        <div key={message.id} className="space-y-4">
-                          {shouldRenderMessageDayDivider(messages, index) ? (
-                            <div className="flex items-center gap-3 py-1">
-                              <div className="h-px flex-1 bg-white/8" />
-                              <span className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-[11px] font-medium uppercase tracking-[0.18em] text-slate-400">
-                                {formatMessageDayLabel(message.created_at)}
-                              </span>
-                              <div className="h-px flex-1 bg-white/8" />
-                            </div>
-                          ) : null}
-                          <div className={cn('flex', message.sender_role === 'admin' ? 'justify-end' : 'justify-start')}>
-                            <div className="max-w-[82%] space-y-2">
-                              <p className={cn(
-                                'px-1 text-[11px] font-semibold uppercase tracking-[0.18em]',
-                                message.sender_role === 'admin' ? 'text-right text-slate-500' : 'text-left text-slate-400',
-                              )}>
-                                {message.sender_role === 'admin' ? 'Admin Dispatch' : (selectedConversation?.technician_name || 'Technician')}
-                              </p>
-                              <div
-                                className={cn(
-                                  'rounded-[24px] border px-4 py-3 shadow-[0_10px_25px_rgba(0,0,0,0.14)]',
-                                  message.sender_role === 'admin'
-                                    ? 'border-white/10 bg-white text-slate-900'
-                                    : 'border-white/10 bg-[#070f11] text-white',
-                                  isImportantChatMessage(message) && 'ring-1 ring-amber-300/30',
-                                )}
-                              >
-                                <div className="mb-2 flex items-center justify-between gap-3">
-                                  <div className="flex items-center gap-2">
-                                    {message.is_pinned ? <Pin className="h-3.5 w-3.5 text-cyan-400" /> : null}
-                                    {message.conversation_type === 'job' && message.job_id ? (
-                                      <Badge variant="outline" className="border-emerald-300/20 bg-emerald-300/10 text-[10px] text-emerald-100">
-                                        {selectedConversation?.job_code || 'Job'}
-                                      </Badge>
-                                    ) : null}
-                                    {message.attachments.some((attachment) => attachment.attachment_type === 'voice') ? (
-                                      <Badge variant="outline" className="border-cyan-300/20 bg-cyan-300/10 text-[10px] text-cyan-100">
-                                        Voice note
-                                      </Badge>
-                                    ) : null}
-                                  </div>
-                                  <button
-                                    type="button"
-                                    onClick={() => void handleTogglePin(message)}
-                                    className={cn(
-                                      'rounded-full p-1 transition',
-                                      message.sender_role === 'admin'
-                                        ? 'text-slate-500 hover:bg-slate-100 hover:text-slate-900'
-                                        : 'text-slate-500 hover:bg-white/[0.08] hover:text-white',
-                                    )}
-                                    aria-label={message.is_pinned ? 'Unpin message' : 'Pin message'}
-                                  >
-                                    <Pin className="h-3.5 w-3.5" />
-                                  </button>
-                                </div>
-                                <StructuredMessageCard
-                                  message={message}
-                                  conversation={selectedConversation}
-                                  viewerRole="admin"
-                                  tone={message.sender_role === 'admin' ? 'light' : 'dark'}
-                                  onOpenJob={handleOpenJob}
-                                />
-                                {message.text && (!message.metadata?.kind || message.metadata.kind === 'important' || message.metadata.kind === 'site_photo') ? (
-                                  <p className="text-sm leading-6">{message.text}</p>
-                                ) : null}
-                                {message.attachments.length > 0 ? (
-                                  <div className={cn(
-                                    'mt-3 grid gap-2',
-                                    message.attachments.length === 1
-                                      ? 'grid-cols-1'
-                                      : message.attachments.length === 2
-                                        ? 'grid-cols-2'
-                                        : 'grid-cols-3',
-                                  )}>
-                                    {message.attachments.map((attachment) => (
-                                      <AttachmentCard
-                                        key={attachment.id}
-                                        attachment={attachment}
-                                        token={token}
-                                        tone={message.sender_role === 'admin' ? 'light' : 'dark'}
-                                      />
-                                    ))}
-                                  </div>
-                                ) : null}
-                              </div>
-                              <div className={cn(
-                                'flex items-center gap-2 px-1 text-xs text-slate-500',
-                                message.sender_role === 'admin' ? 'justify-end' : 'justify-start',
-                              )}>
-                                <span>{formatConversationClock(message.created_at)}</span>
-                                {message.sender_role === 'admin' ? formatMessageStatus(message) : null}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                      <div ref={bottomRef} />
+                {replyTarget ? (
+                  <div className="mb-3 flex items-start justify-between gap-3 rounded-3xl border border-cyan-300/20 bg-cyan-300/10 px-4 py-3 text-xs text-cyan-50">
+                    <div className="min-w-0">
+                      <p className="font-semibold">Replying to {replyTarget.sender_role === 'admin' ? 'Admin Dispatch' : (selectedConversation?.technician_name || 'Technician')}</p>
+                      <p className="mt-1 line-clamp-2 text-cyan-100/80">
+                        {replyTarget.text || replyTarget.attachments[0]?.name || 'Message'}
+                      </p>
                     </div>
-                  </ScrollArea>
-
-                  <div className="shrink-0 border-t border-white/8 bg-[rgba(6,17,29,0.9)] p-5">
-                    {typingLabel ? (
-                      <div className="mb-2 px-4 text-xs font-medium text-cyan-200">
-                        {typingLabel}
-                      </div>
-                    ) : null}
-                    {selectedConversationPendingAttachments.length > 0 ? (
-                      <div className="mb-3 flex flex-wrap gap-2">
-                        {selectedConversationPendingAttachments.map((attachment) => (
-                          <div key={attachment.id} className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-slate-200">
-                            <span>{attachment.name}</span>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                if (!selectedConversationId) {
-                                  return;
-                                }
-                                setPendingAttachmentsByConversation((prev) => {
-                                  const current = prev[selectedConversationId] ?? [];
-                                  const next = current.filter((item) => item.id !== attachment.id);
-                                  if (next.length === 0) {
-                                    const nextState = { ...prev };
-                                    delete nextState[selectedConversationId];
-                                    return nextState;
-                                  }
-                                  return {
-                                    ...prev,
-                                    [selectedConversationId]: next,
-                                  };
-                                });
-                              }}
-                              className="rounded-full p-0.5 text-slate-400 hover:bg-white/[0.08] hover:text-white"
-                            >
-                              <X className="h-3 w-3" />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    ) : null}
-
-                    {isRecording || isVoiceProcessing ? (
-                      <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1.5 text-xs text-cyan-100">
-                        {isRecording ? <Square className="h-3.5 w-3.5 fill-current" /> : <RefreshCw className="h-3.5 w-3.5 animate-spin" />}
-                        <span>
-                          {isRecording
-                            ? `Recording voice note ${formatVoiceRecordingDuration(recordingSeconds)}`
-                            : 'Securing voice note...'}
-                        </span>
-                      </div>
-                    ) : null}
-
-                    {importantNextMessage ? (
-                      <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-amber-300/20 bg-amber-300/10 px-3 py-1.5 text-xs font-medium text-amber-100">
-                        <Star className="h-3.5 w-3.5 fill-current" />
-                        Important next message
+                    <button
+                      type="button"
+                      onClick={() => setReplyTarget(null)}
+                      className="rounded-full p-1 text-cyan-100/80 hover:bg-cyan-100/10 hover:text-white"
+                      aria-label="Clear reply target"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                ) : null}
+                {selectedConversationPendingAttachments.length > 0 ? (
+                  <div className="mb-3 flex flex-wrap gap-2">
+                    {selectedConversationPendingAttachments.map((attachment) => (
+                      <div key={attachment.id} className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-slate-200">
+                        <span>{attachment.name}</span>
                         <button
                           type="button"
-                          onClick={toggleImportantNextMessage}
-                          className="rounded-full p-0.5 text-amber-100/80 hover:bg-amber-200/10 hover:text-amber-50"
-                          aria-label="Clear important message flag"
+                          onClick={() => {
+                            if (!selectedConversationId) {
+                              return;
+                            }
+                            setPendingAttachmentsByConversation((prev) => {
+                              const current = prev[selectedConversationId] ?? [];
+                              const next = current.filter((item) => item.id !== attachment.id);
+                              if (next.length === 0) {
+                                const nextState = { ...prev };
+                                delete nextState[selectedConversationId];
+                                return nextState;
+                              }
+                              return {
+                                ...prev,
+                                [selectedConversationId]: next,
+                              };
+                            });
+                          }}
+                          className="rounded-full p-0.5 text-slate-400 hover:bg-white/[0.08] hover:text-white"
                         >
                           <X className="h-3 w-3" />
                         </button>
                       </div>
-                    ) : null}
+                    ))}
+                  </div>
+                ) : null}
 
-                    <div className="flex items-end gap-3">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="icon"
-                            className="h-12 w-12 shrink-0 rounded-full border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
-                            disabled={!selectedConversationId || isVoiceProcessing}
-                            aria-label="Attachment actions"
-                          >
-                            <Paperclip className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="start" className="border-white/10 bg-[#091827] text-slate-100">
-                          <DropdownMenuItem onSelect={() => handleOpenAttachFiles()} disabled={!selectedConversationId || isVoiceProcessing}>
-                            <Paperclip className="h-4 w-4" />
-                            Attach File
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onSelect={() => handleOpenSitePhotoPicker()} disabled={!selectedConversationId || isVoiceProcessing}>
-                            <ImageIcon className="h-4 w-4" />
-                            Upload Site Photo
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onSelect={() => void handleShareLiveLocation()} disabled={!selectedConversationId || isVoiceProcessing}>
-                            <MapPin className="h-4 w-4" />
-                            Send Live Location
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onSelect={() => void handleRequestLocation()} disabled={!selectedConversation || selectedConversation.channel_kind === 'group' || requestingLocation || isVoiceProcessing}>
-                            <MapPin className="h-4 w-4" />
-                            Request Location
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onSelect={() => void handleRequestStatusUpdate()} disabled={!selectedConversation || selectedConversation.channel_kind === 'group' || isVoiceProcessing}>
-                            <MessageCircleMore className="h-4 w-4" />
-                            Request Status Update
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onSelect={() => void handleShareJobDetails()} disabled={!selectedConversation || selectedConversation.channel_kind !== 'job' || isVoiceProcessing}>
-                            <BriefcaseBusiness className="h-4 w-4" />
-                            Share Job Details
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator className="bg-white/10" />
-                          <DropdownMenuCheckboxItem
-                            checked={importantNextMessage}
-                            onCheckedChange={() => toggleImportantNextMessage()}
-                            disabled={!selectedConversationId || isVoiceProcessing}
-                          >
-                            <Star className="h-4 w-4" />
-                            Mark as Important
-                          </DropdownMenuCheckboxItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                      <div className="min-w-0 flex-1">
-                        <Textarea
-                          value={draftMessage}
-                          onChange={(event) => handleDraftMessageChange(event.target.value)}
-                          onKeyDown={handleComposerKeyDown}
-                          placeholder={selectedConversationId ? 'Write a secure message' : 'Select a thread to start chatting'}
-                          className="min-h-[56px] resize-none rounded-[28px] border-white/10 bg-white/[0.04] px-5 py-4 text-white placeholder:text-slate-500"
-                          disabled={!selectedConversationId || isVoiceProcessing}
-                        />
-                      </div>
+                {isRecording || isVoiceProcessing ? (
+                  <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1.5 text-xs text-cyan-100">
+                    {isRecording ? <Square className="h-3.5 w-3.5 fill-current" /> : <RefreshCw className="h-3.5 w-3.5 animate-spin" />}
+                    <span>
+                      {isRecording
+                        ? `Recording voice note ${formatVoiceRecordingDuration(recordingSeconds)}`
+                        : 'Securing voice note...'}
+                    </span>
+                  </div>
+                ) : null}
+
+                {importantNextMessage ? (
+                  <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-amber-300/20 bg-amber-300/10 px-3 py-1.5 text-xs font-medium text-amber-100">
+                    <Star className="h-3.5 w-3.5 fill-current" />
+                    Important next message
+                    <button
+                      type="button"
+                      onClick={toggleImportantNextMessage}
+                      className="rounded-full p-0.5 text-amber-100/80 hover:bg-amber-200/10 hover:text-amber-50"
+                      aria-label="Clear important message flag"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ) : null}
+
+                <div className="flex items-end gap-3">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
                       <Button
                         type="button"
                         variant="outline"
                         size="icon"
-                        onClick={() => {
-                          if (isRecording) {
-                            stopRecording();
-                          } else {
-                            void startRecording();
-                          }
-                        }}
-                        className={cn(
-                          'h-12 w-12 shrink-0 rounded-full border text-slate-100',
-                          isRecording
-                            ? 'border-red-400/40 bg-red-500/15 hover:bg-red-500/25'
-                            : 'border-white/10 bg-white/[0.03] hover:bg-white/[0.08]',
-                        )}
-                        disabled={!selectedConversationId || isVoiceProcessing || !voiceRecordingSupported}
-                        aria-label={isRecording ? 'Stop recording voice note' : 'Record voice note'}
+                        className="h-12 w-12 shrink-0 rounded-full border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
+                        disabled={!selectedConversationId || isVoiceProcessing}
+                        aria-label="Attachment actions"
                       >
-                        {isRecording ? <Square className="h-4 w-4 fill-current" /> : <Mic className="h-4 w-4" />}
+                        <Paperclip className="h-4 w-4" />
                       </Button>
-                      <Button
-                        type="button"
-                        onClick={() => void handleSend()}
-                        className="h-12 w-12 shrink-0 rounded-full bg-[#070f11] text-white shadow-[0_12px_30px_rgba(0,0,0,0.3)] hover:bg-[#0b1418]"
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start" className="border-white/10 bg-[#091827] text-slate-100">
+                      <DropdownMenuItem onSelect={() => handleOpenAttachFiles()} disabled={!selectedConversationId || isVoiceProcessing}>
+                        <Paperclip className="h-4 w-4" />
+                        Attach File
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onSelect={() => handleOpenSitePhotoPicker()} disabled={!selectedConversationId || isVoiceProcessing}>
+                        <ImageIcon className="h-4 w-4" />
+                        Upload Site Photo
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onSelect={() => void handleShareLiveLocation()} disabled={!selectedConversationId || isVoiceProcessing}>
+                        <MapPin className="h-4 w-4" />
+                        Send Live Location
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onSelect={() => void handleRequestLocation()} disabled={!selectedConversation || selectedConversation.channel_kind === 'group' || requestingLocation || isVoiceProcessing}>
+                        <MapPin className="h-4 w-4" />
+                        Request Location
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onSelect={() => void handleRequestStatusUpdate()} disabled={!selectedConversation || selectedConversation.channel_kind === 'group' || isVoiceProcessing}>
+                        <MessageCircleMore className="h-4 w-4" />
+                        Request Status Update
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onSelect={() => void handleShareJobDetails()} disabled={!selectedConversation || selectedConversation.channel_kind !== 'job' || isVoiceProcessing}>
+                        <BriefcaseBusiness className="h-4 w-4" />
+                        Share Job Details
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator className="bg-white/10" />
+                      <DropdownMenuCheckboxItem
+                        checked={importantNextMessage}
+                        onCheckedChange={() => toggleImportantNextMessage()}
                         disabled={!selectedConversationId || isVoiceProcessing}
                       >
-                        <Send className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    <input
-                      ref={attachInputRef}
-                      type="file"
-                      accept={CHAT_ATTACHMENT_ACCEPT}
-                      multiple
-                      className="hidden"
-                      onChange={(event) => void handleFileSelection(event, 'attach')}
-                    />
-                    <input
-                      ref={sitePhotoInputRef}
-                      type="file"
-                      accept="image/*"
-                      capture="environment"
-                      multiple
-                      className="hidden"
-                      onChange={(event) => void handleFileSelection(event, 'site_photo')}
+                        <Star className="h-4 w-4" />
+                        Mark as Important
+                      </DropdownMenuCheckboxItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  <div className="min-w-0 flex-1">
+                    <Textarea
+                      value={draftMessage}
+                      onChange={(event) => handleDraftMessageChange(event.target.value)}
+                      onKeyDown={handleComposerKeyDown}
+                      placeholder={selectedConversationId ? 'Write a secure message' : 'Select a thread to start chatting'}
+                      className="min-h-[56px] resize-none rounded-[28px] border-white/10 bg-white/[0.04] px-5 py-4 text-white placeholder:text-slate-500"
+                      disabled={!selectedConversationId || isVoiceProcessing}
                     />
                   </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => {
+                      if (isRecording) {
+                        stopRecording();
+                      } else {
+                        void startRecording();
+                      }
+                    }}
+                    className={cn(
+                      'h-12 w-12 shrink-0 rounded-full border text-slate-100',
+                      isRecording
+                        ? 'border-red-400/40 bg-red-500/15 hover:bg-red-500/25'
+                        : 'border-white/10 bg-white/[0.03] hover:bg-white/[0.08]',
+                    )}
+                    disabled={!selectedConversationId || isVoiceProcessing || !voiceRecordingSupported}
+                    aria-label={isRecording ? 'Stop recording voice note' : 'Record voice note'}
+                  >
+                    {isRecording ? <Square className="h-4 w-4 fill-current" /> : <Mic className="h-4 w-4" />}
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={() => void handleSend()}
+                    className="h-12 w-12 shrink-0 rounded-full bg-[#070f11] text-white shadow-[0_12px_30px_rgba(0,0,0,0.3)] hover:bg-[#0b1418]"
+                    disabled={!selectedConversationId || isVoiceProcessing}
+                  >
+                    <Send className="h-4 w-4" />
+                  </Button>
                 </div>
-              </>
-            ) : (
-              <SharedConversationPanel
+                <input
+                  ref={attachInputRef}
+                  type="file"
+                  accept={CHAT_ATTACHMENT_ACCEPT}
+                  multiple
+                  className="hidden"
+                  onChange={(event) => void handleFileSelection(event, 'attach')}
+                />
+                <input
+                  ref={sitePhotoInputRef}
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  multiple
+                  className="hidden"
+                  onChange={(event) => void handleFileSelection(event, 'site_photo')}
+                />
+              </div>
+            </div>
+            </Card>
+
+            <div className="hidden min-h-0 xl:block">
+              <ChatContextPanel
                 conversation={selectedConversation}
                 messages={messages}
                 token={token}
                 viewerRole="admin"
+                currentUserName={user?.name ?? null}
                 canUpload={Boolean(selectedConversationId && !isVoiceProcessing)}
                 onUploadFiles={handleOpenAttachFiles}
+                className="h-full"
               />
-            )}
-          </Card>
+            </div>
 
         </section>
       </div>
