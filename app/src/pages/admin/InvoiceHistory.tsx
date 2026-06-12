@@ -715,49 +715,121 @@ export default function InvoiceHistoryPage() {
                 <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-slate-900/20 to-transparent dark:via-cyan-300/70" />
                 <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(15,23,42,0.05),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(245,158,11,0.05),transparent_26%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(47,142,146,0.14),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(245,158,11,0.12),transparent_26%)]" />
                 <div className="relative flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
-                    <div className="max-w-3xl space-y-4">
-                        <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-[#0b1424] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-                            <Sparkles className="h-3.5 w-3.5 text-cyan-200" />
-                            Billing archive
-                        </div>
-                        <div className="space-y-3">
-                            <h1 className="text-[2.35rem] font-semibold leading-none tracking-[-0.06em] text-slate-900 dark:text-white md:text-[2.8rem]" style={displayFontStyle}>
-                                Invoice History
-                            </h1>
-                            <p className="max-w-2xl text-sm leading-7 text-slate-600 dark:text-slate-300 md:text-[15px]" style={bodyFontStyle}>
-                                Search, resend, download, and update invoices.
-                            </p>
-                        </div>
-                        <div className="flex flex-wrap items-center gap-2">
-                            <Badge variant="outline" className="h-9 rounded-full border-cyan-300/20 bg-cyan-300/10 px-3 text-cyan-100">
-                                <Activity className="mr-1.5 h-3.5 w-3.5" />
-                                {filteredHistory.length} records
-                            </Badge>
-                            <Badge variant="outline" className="h-9 rounded-full border-emerald-300/20 bg-emerald-300/10 px-3 text-emerald-100">
-                                <Send className="mr-1.5 h-3.5 w-3.5 text-emerald-200" />
-                                {sentCount} sent
-                            </Badge>
-                        </div>
+                    <div className="max-w-3xl">
+                        <h1 className="text-[2.35rem] font-semibold leading-none tracking-[-0.06em] text-slate-900 dark:text-white md:text-[2.8rem]" style={displayFontStyle}>
+                            Invoice History
+                        </h1>
                     </div>
-                    <div className="flex flex-wrap items-center gap-3 xl:justify-end">
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => void fetchHistory()}
-                            className="h-11 gap-2 rounded-2xl border-white/10 bg-[#0b1424] px-4 text-slate-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] hover:bg-[#122039] hover:text-white"
-                        >
-                            <RefreshCw className={cn('h-4 w-4 text-slate-500 dark:text-slate-300', loading && 'animate-spin')} />
-                            Refresh
-                        </Button>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-11 gap-2 rounded-2xl border-white/10 bg-[#0b1424] px-4 text-slate-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] hover:bg-[#122039] hover:text-white"
-                            onClick={() => setExportModalOpen(true)}
-                        >
-                            <Download className="h-4 w-4 text-slate-500 dark:text-slate-300" />
-                            Export Excel
-                        </Button>
+                    <div className="w-full max-w-[1120px] xl:self-stretch">
+                        <div className="flex h-full flex-col gap-4 xl:items-end xl:justify-between">
+                            <div className="flex flex-wrap items-center gap-3 xl:justify-end">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => void fetchHistory()}
+                                    className="h-11 gap-2 rounded-2xl border-white/10 bg-[#0b1424] px-4 text-slate-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] hover:bg-[#122039] hover:text-white"
+                                >
+                                    <RefreshCw className={cn('h-4 w-4 text-slate-500 dark:text-slate-300', loading && 'animate-spin')} />
+                                    Refresh
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-11 gap-2 rounded-2xl border-white/10 bg-[#0b1424] px-4 text-slate-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] hover:bg-[#122039] hover:text-white"
+                                    onClick={() => setExportModalOpen(true)}
+                                >
+                                    <Download className="h-4 w-4 text-slate-500 dark:text-slate-300" />
+                                    Export Excel
+                                </Button>
+                            </div>
+
+                            <div className="flex w-full flex-col gap-3 xl:ml-auto xl:max-w-[1120px]">
+                                <div className="flex flex-col gap-4 xl:flex-row xl:items-center">
+                                    <div className="relative min-w-0 flex-1">
+                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-slate-500" />
+                                        <Input
+                                            placeholder="Search by invoice ID, job ID, location, or technician..."
+                                            className="h-11 rounded-2xl border-white/10 bg-[#0b1424] pl-9 text-white placeholder:text-slate-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] focus-visible:border-cyan-300/35 focus-visible:ring-cyan-300/15"
+                                            value={searchQuery}
+                                            onChange={(e) => setSearchQuery(e.target.value)}
+                                        />
+                                    </div>
+                                    <div className="flex flex-wrap items-center gap-2">
+                                        <Select value={filterStatus} onValueChange={(value) => setFilterStatus(value as InvoiceStatusFilter)}>
+                                            <SelectTrigger className="h-11 w-full rounded-2xl border-white/10 bg-[#0b1424] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] sm:w-[170px]">
+                                                <SelectValue placeholder="Status" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="all">All Statuses</SelectItem>
+                                                <SelectItem value="draft">Draft</SelectItem>
+                                                <SelectItem value="approved">Approved</SelectItem>
+                                                <SelectItem value="sent">Sent</SelectItem>
+                                                <SelectItem value="paid">Paid</SelectItem>
+                                                <SelectItem value="void">Void</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                        <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-[#0b1424] p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                                            {([
+                                                ['today', 'Today'],
+                                                ['week', 'This week'],
+                                                ['month', 'This month'],
+                                                ['year', 'This year'],
+                                            ] as const).map(([value, label]) => (
+                                                <Button
+                                                    key={value}
+                                                    type="button"
+                                                    variant="ghost"
+                                                    className={cn(
+                                                        'h-9 rounded-xl px-3 text-xs text-slate-300 hover:bg-white/[0.06] hover:text-white',
+                                                        quickRange === value && 'bg-cyan-300/12 text-cyan-100',
+                                                    )}
+                                                    onClick={() => setQuickRange(quickRange === value ? 'none' : value)}
+                                                >
+                                                    {label}
+                                                </Button>
+                                            ))}
+                                        </div>
+                                        <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-[#0b1424] px-3 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                                            <Calendar className="h-4 w-4 text-slate-400" />
+                                            <span className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">From</span>
+                                            <Input
+                                                type="date"
+                                                value={fromDate}
+                                                onChange={(e) => {
+                                                    setQuickRange('none');
+                                                    setFromDate(e.target.value);
+                                                }}
+                                                className="h-8 w-[138px] border-0 bg-transparent px-0 text-white shadow-none focus-visible:ring-0"
+                                            />
+                                        </div>
+                                        <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-[#0b1424] px-3 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                                            <Calendar className="h-4 w-4 text-slate-400" />
+                                            <span className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">To</span>
+                                            <Input
+                                                type="date"
+                                                value={toDate}
+                                                onChange={(e) => {
+                                                    setQuickRange('none');
+                                                    setToDate(e.target.value);
+                                                }}
+                                                className="h-8 w-[138px] border-0 bg-transparent px-0 text-white shadow-none focus-visible:ring-0"
+                                            />
+                                        </div>
+                                        {(searchQuery || filterStatus !== 'all' || quickRange !== 'none' || fromDate || toDate) ? (
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={clearFilters}
+                                                className="h-11 rounded-2xl px-3 text-rose-200 hover:bg-rose-400/10 hover:text-rose-100"
+                                            >
+                                                <AlertTriangle className="mr-1 h-4 w-4" />
+                                                Clear
+                                            </Button>
+                                        ) : null}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -794,97 +866,6 @@ export default function InvoiceHistoryPage() {
                         </div>
                     );
                 })}
-            </div>
-
-            <div className="relative overflow-hidden rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(8,23,38,0.98),rgba(7,18,31,0.98))] shadow-[0_28px_90px_rgba(0,0,0,0.3)]">
-                <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-200/60 to-transparent" />
-                <div className="pointer-events-none absolute inset-x-0 top-0 h-14 bg-gradient-to-r from-[#2F8E92]/6 via-transparent to-blue-500/5" />
-                <div className="relative p-4 md:p-5">
-                    <div className="flex flex-col gap-4 xl:flex-row xl:items-center">
-                        <div className="relative min-w-0 flex-1">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-slate-500" />
-                            <Input
-                                placeholder="Search by invoice ID, job ID, location, or technician..."
-                                className="h-11 rounded-2xl border-white/10 bg-[#0b1424] pl-9 text-white placeholder:text-slate-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] focus-visible:border-cyan-300/35 focus-visible:ring-cyan-300/15"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                            />
-                        </div>
-                        <div className="flex flex-wrap items-center gap-2">
-                            <Select value={filterStatus} onValueChange={(value) => setFilterStatus(value as InvoiceStatusFilter)}>
-                                <SelectTrigger className="h-11 w-full rounded-2xl border-white/10 bg-[#0b1424] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] sm:w-[170px]">
-                                    <SelectValue placeholder="Status" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="all">All Statuses</SelectItem>
-                                    <SelectItem value="draft">Draft</SelectItem>
-                                    <SelectItem value="approved">Approved</SelectItem>
-                                    <SelectItem value="sent">Sent</SelectItem>
-                                    <SelectItem value="paid">Paid</SelectItem>
-                                    <SelectItem value="void">Void</SelectItem>
-                                </SelectContent>
-                            </Select>
-                            <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-[#0b1424] p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-                                {([
-                                    ['today', 'Today'],
-                                    ['week', 'This week'],
-                                    ['month', 'This month'],
-                                    ['year', 'This year'],
-                                ] as const).map(([value, label]) => (
-                                    <Button
-                                        key={value}
-                                        type="button"
-                                        variant="ghost"
-                                        className={cn(
-                                            'h-9 rounded-xl px-3 text-xs text-slate-300 hover:bg-white/[0.06] hover:text-white',
-                                            quickRange === value && 'bg-cyan-300/12 text-cyan-100',
-                                        )}
-                                        onClick={() => setQuickRange(quickRange === value ? 'none' : value)}
-                                    >
-                                        {label}
-                                    </Button>
-                                ))}
-                            </div>
-                            <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-[#0b1424] px-3 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-                                <Calendar className="h-4 w-4 text-slate-400" />
-                                <span className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">From</span>
-                                <Input
-                                    type="date"
-                                    value={fromDate}
-                                    onChange={(e) => {
-                                        setQuickRange('none');
-                                        setFromDate(e.target.value);
-                                    }}
-                                    className="h-8 w-[138px] border-0 bg-transparent px-0 text-white shadow-none focus-visible:ring-0"
-                                />
-                            </div>
-                            <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-[#0b1424] px-3 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-                                <Calendar className="h-4 w-4 text-slate-400" />
-                                <span className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">To</span>
-                                <Input
-                                    type="date"
-                                    value={toDate}
-                                    onChange={(e) => {
-                                        setQuickRange('none');
-                                        setToDate(e.target.value);
-                                    }}
-                                    className="h-8 w-[138px] border-0 bg-transparent px-0 text-white shadow-none focus-visible:ring-0"
-                                />
-                            </div>
-                            {(searchQuery || filterStatus !== 'all' || quickRange !== 'none' || fromDate || toDate) ? (
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={clearFilters}
-                                    className="h-11 rounded-2xl px-3 text-rose-200 hover:bg-rose-400/10 hover:text-rose-100"
-                                >
-                                    <AlertTriangle className="mr-1 h-4 w-4" />
-                                    Clear
-                                </Button>
-                            ) : null}
-                        </div>
-                    </div>
-                </div>
             </div>
 
             <div className="relative flex min-h-[540px] flex-1 flex-col overflow-hidden rounded-[32px] border border-white/10 bg-[linear-gradient(180deg,rgba(8,22,39,0.98),rgba(5,15,28,0.99))] shadow-[0_34px_110px_rgba(0,0,0,0.34)]">
