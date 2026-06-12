@@ -415,7 +415,6 @@ export default function InvoiceApprovalsPage() {
     const manualInvoiceOptions = useMemo(
         () => (
             [...invoices]
-                .filter((invoice) => (invoice.technician_name || '').trim().length > 0)
                 .sort((a, b) => a.job_code.localeCompare(b.job_code))
         ),
         [invoices],
@@ -615,13 +614,11 @@ export default function InvoiceApprovalsPage() {
 
     const openManualInvoiceDialog = () => {
         const firstReadyInvoice = manualInvoiceOptions[0] ?? null;
-        if (!firstReadyInvoice) {
-            alert('No completed jobs with technician details are ready for invoice creation yet.');
-            return;
-        }
         resetManualInvoiceForm();
-        setManualSourceJobId(firstReadyInvoice.job_id);
-        setManualBillToDraft(toPendingApprovalBillToDraft(firstReadyInvoice));
+        if (firstReadyInvoice) {
+            setManualSourceJobId(firstReadyInvoice.job_id);
+            setManualBillToDraft(toPendingApprovalBillToDraft(firstReadyInvoice));
+        }
         setManualInvoiceOpen(true);
     };
 
@@ -664,14 +661,6 @@ export default function InvoiceApprovalsPage() {
             alert('Admin session missing. Please login again.');
             return;
         }
-        if (!selectedManualInvoice) {
-            alert('Select a completed job before creating an invoice.');
-            return;
-        }
-        if (!(selectedManualInvoice.technician_name || '').trim()) {
-            alert('The selected job is missing technician details. Assign a technician first.');
-            return;
-        }
         const recipientEmail = manualRecipientEmail.trim();
         if (!recipientEmail) {
             alert('Add a recipient email before creating and sending this invoice.');
@@ -693,10 +682,15 @@ export default function InvoiceApprovalsPage() {
             return;
         }
 
+        const selectedJobId = manualSourceJobId.trim();
+        const sourceInvoice = selectedJobId
+            ? manualInvoiceOptions.find((invoice) => invoice.job_id === selectedJobId) ?? null
+            : null;
+
         setIsCreatingManualInvoice(true);
         try {
             const createdInvoice = await createInvoice(adminToken, {
-                dispatch_job_ids: [selectedManualInvoice.job_id],
+                ...(selectedJobId ? { dispatch_job_ids: [selectedJobId] } : {}),
                 replace_dispatch_line_items: true,
                 line_items: manualServices.map((service) => ({
                     product_service: service.name.trim(),
@@ -710,7 +704,9 @@ export default function InvoiceApprovalsPage() {
                 status: 'sent',
                 shipping: 0,
                 customer_message: manualCustomerMessage.trim() || undefined,
-                approval_note: `Invoice created by admin for ${recipientEmail} from ${selectedManualInvoice.job_code}.`,
+                approval_note: selectedJobId
+                    ? `Invoice created by admin for ${recipientEmail}${sourceInvoice?.job_code ? ` from ${sourceInvoice.job_code}.` : '.'}`
+                    : `Invoice created by admin for ${recipientEmail}.`,
                 send_email_to: recipientEmail,
                 bill_to: {
                     name: manualBillToDraft.name.trim(),
@@ -1059,7 +1055,7 @@ export default function InvoiceApprovalsPage() {
                                     size="sm"
                                     className="h-11 gap-2 rounded-2xl bg-[linear-gradient(135deg,#4f7cff,#22d3ee)] px-4 font-semibold text-white shadow-[0_18px_42px_rgba(79,124,255,0.24)] hover:brightness-105"
                                     onClick={openManualInvoiceDialog}
-                                    disabled={manualInvoiceOptions.length === 0}
+                                    disabled={isCreatingManualInvoice}
                                 >
                                     <Plus className="h-4 w-4" />
                                     Create Invoice
@@ -1102,10 +1098,10 @@ export default function InvoiceApprovalsPage() {
                     <DialogHeader className="border-b border-white/10 px-6 py-5">
                         <DialogTitle className="flex items-center gap-2 text-xl tracking-[-0.03em] sm:text-2xl" style={displayFontStyle}>
                             <Mail className="h-5 w-5 text-cyan-200" />
-                            Create job-linked invoice
+                            Create invoice
                         </DialogTitle>
                         <DialogDescription className="max-w-2xl text-sm leading-6 text-slate-400">
-                            Select a completed job with technician details, then override the line items before sending.
+                            Link a completed job if one is available, or build a standalone invoice from scratch and send it immediately.
                         </DialogDescription>
                     </DialogHeader>
 
@@ -1115,31 +1111,37 @@ export default function InvoiceApprovalsPage() {
                                 <div className="grid gap-4 xl:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.9fr)]">
                                     <div className="space-y-1.5">
                                         <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Source Job</div>
-                                        <Label htmlFor="manual-source-job" className="text-slate-200">Completed job</Label>
-                                        <Select value={manualSourceJobId} onValueChange={handleSelectManualJob}>
-                                            <SelectTrigger id="manual-source-job" className="h-11 rounded-2xl border-white/10 bg-[#0b1424] text-white">
-                                                <SelectValue placeholder="Select a completed job" />
-                                            </SelectTrigger>
-                                            <SelectContent className="border-white/10 bg-[#0b1424] text-white">
-                                                {manualInvoiceOptions.map((invoice) => (
-                                                    <SelectItem key={invoice.job_id} value={invoice.job_id}>
-                                                        {invoice.job_code} - {invoice.dealership_name}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
+                                        <Label htmlFor="manual-source-job" className="text-slate-200">Optional linked job</Label>
+                                        {manualInvoiceOptions.length > 0 ? (
+                                            <Select value={manualSourceJobId} onValueChange={handleSelectManualJob}>
+                                                <SelectTrigger id="manual-source-job" className="h-11 rounded-2xl border-white/10 bg-[#0b1424] text-white">
+                                                    <SelectValue placeholder="Select a completed job" />
+                                                </SelectTrigger>
+                                                <SelectContent className="border-white/10 bg-[#0b1424] text-white">
+                                                    {manualInvoiceOptions.map((invoice) => (
+                                                        <SelectItem key={invoice.job_id} value={invoice.job_id}>
+                                                            {invoice.job_code} - {invoice.dealership_name}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        ) : (
+                                            <div className="rounded-2xl border border-white/10 bg-[#0b1424] px-4 py-3 text-sm text-slate-300">
+                                                No completed jobs are ready to link. You can still create a standalone invoice by filling in the bill-to and line items below.
+                                            </div>
+                                        )}
                                         <p className="text-xs leading-5 text-cyan-100/80">
-                                            Invoices now require a linked job and assigned technician before they can be sent.
+                                            Linking a completed job is optional. If you do, the bill-to details will prefill automatically.
                                         </p>
                                     </div>
                                     <div className="grid gap-3 sm:grid-cols-2">
                                         <div className="rounded-2xl border border-white/10 bg-[#0b1424] p-4">
                                             <div className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">Technician</div>
-                                            <div className="mt-2 text-sm text-white">{selectedManualInvoice?.technician_name?.trim() || 'Not assigned'}</div>
+                                            <div className="mt-2 text-sm text-white">{selectedManualInvoice?.technician_name?.trim() || 'Optional'}</div>
                                         </div>
                                         <div className="rounded-2xl border border-white/10 bg-[#0b1424] p-4">
                                             <div className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">Service Summary</div>
-                                            <div className="mt-2 text-sm text-white">{selectedManualInvoice?.service_summary || '-'}</div>
+                                            <div className="mt-2 text-sm text-white">{selectedManualInvoice?.service_summary || 'Manual invoice'}</div>
                                         </div>
                                     </div>
                                 </div>
@@ -1225,7 +1227,7 @@ export default function InvoiceApprovalsPage() {
                                 <div className="flex flex-wrap items-center justify-between gap-3">
                                     <div>
                                         <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Line Items</div>
-                                        <p className="mt-1 text-sm text-slate-400">Add the services, quantities, rates, and tax rate for this job-linked invoice.</p>
+                                        <p className="mt-1 text-sm text-slate-400">Add the services, quantities, rates, and tax rate for this invoice.</p>
                                     </div>
                                     <Button
                                         type="button"
