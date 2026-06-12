@@ -827,24 +827,6 @@ export default function ServicesPage() {
                     </div>
                 </div>
 
-                <Card className={sectionCardClass}>
-                    <div className={sectionHeaderClass}>
-                        <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
-                            <div>
-                                <h2 className="text-base font-semibold text-white">Catalogue Filters</h2>
-                                <p className="mt-1 text-sm text-slate-300">
-                                    Narrow the service catalogue by category, status, or unit price range.
-                                </p>
-                            </div>
-                            <div className="flex flex-wrap items-center gap-2">
-                                <Badge variant="outline" className="border-cyan-300/20 bg-cyan-300/10 px-3 py-1 text-cyan-100">
-                                    {filteredServices.length} visible
-                                </Badge>
-                            </div>
-                        </div>
-                    </div>
-                </Card>
-
                 <Card className={cn(sectionCardClass, 'flex-1 flex flex-col')}>
                 {loading ? (
                     <div className="p-4 space-y-4">
