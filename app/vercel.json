@@ -1,5 +1,9 @@
 {
   "rewrites": [
+    {
+      "source": "/api/techionik-backend/:path*",
+      "destination": "https://ubuntu-pc-system-product-name.taildcdc0d.ts.net/api/techionik-backend/:path*"
+    },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }

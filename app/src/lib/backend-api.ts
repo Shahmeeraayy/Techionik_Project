@@ -6,7 +6,7 @@ const TECHNICIAN_TOKEN_STORAGE_KEY = 'sm_dispatch_technician_access_token';
 export const AUTH_SESSION_INVALID_EVENT = 'nexusops:auth-session-invalid';
 const API_URL_ENV_KEYS = ['VITE_API_URL', 'VITE_BACKEND_URL'] as const;
 const LOCAL_API_FALLBACK = 'http://127.0.0.1:8000';
-const PRODUCTION_API_FALLBACK = 'https://ubuntu-pc-system-product-name.taildcdc0d.ts.net/api/techionik-backend';
+const PRODUCTION_API_FALLBACK = '/api/techionik-backend';
 
 type RequestMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
@@ -1431,6 +1431,97 @@ export type BackendReportsOverview = {
   payment_metrics: BackendPaymentMetrics;
 };
 
+function normalizeReportsOverview(raw: Partial<BackendReportsOverview> | null | undefined): BackendReportsOverview {
+  const kpis: BackendReportsKpis = raw?.kpis ?? {
+    jobs_created: 0,
+    jobs_completed: 0,
+    avg_completion_minutes: 0,
+    technician_utilization: 0,
+    invoice_total: 0,
+    pending_approvals: 0,
+  };
+  const revenueMetrics: BackendRevenueMetrics = raw?.revenue_metrics ?? {
+    total_revenue: 0,
+    revenue_from_completed_jobs: 0,
+    pending_revenue_from_unpaid_invoices: 0,
+    revenue_by_date: [],
+    revenue_by_service_category: [],
+  };
+  const jobCompletionAnalytics: BackendJobCompletionAnalytics = raw?.job_completion_analytics ?? {
+    total_jobs: 0,
+    completed_jobs: 0,
+    pending_jobs: 0,
+    in_progress_jobs: 0,
+    cancelled_jobs: 0,
+    average_job_completion_time: '0m',
+    status_breakdown: [],
+  };
+  const attendanceMetrics: BackendAttendanceMetrics = raw?.attendance_metrics ?? {
+    clock_in_records: 0,
+    clock_out_records: 0,
+    total_working_hours: 0,
+    break_duration_hours: 0,
+    attendance_status_breakdown: [],
+    attendance_by_date: [],
+    technician_attendance: [],
+  };
+  const customerRequestAnalytics: BackendCustomerRequestAnalytics = raw?.customer_request_analytics ?? {
+    total_customer_requests: 0,
+    new_requests: 0,
+    converted_requests: 0,
+    cancelled_or_rejected_requests: 0,
+    requests_by_service_category: [],
+  };
+  const serviceCategoryAnalytics: BackendServiceCategoryAnalytics = raw?.service_category_analytics ?? {
+    categories: [],
+  };
+  const paymentMetrics: BackendPaymentMetrics = raw?.payment_metrics ?? {
+    total_payments_received: 0,
+    total_paid_amount: 0,
+    pending_payments: 0,
+    failed_payments: 0,
+    payment_amount_by_method: [],
+    payment_status: [],
+    payment_breakdown: [],
+  };
+
+  return {
+    generated_at: raw?.generated_at ?? new Date().toISOString(),
+    from_date: raw?.from_date ?? new Date().toISOString(),
+    to_date: raw?.to_date ?? new Date().toISOString(),
+    current_period_invoice_count: raw?.current_period_invoice_count ?? 0,
+    revenue_delta: raw?.revenue_delta ?? 0,
+    kpis,
+    dispatch_overview: raw?.dispatch_overview,
+    intake_analytics: raw?.intake_analytics,
+    invoice_metrics: raw?.invoice_metrics,
+    dispatch_performance: raw?.dispatch_performance ?? [],
+    invoice_performance: raw?.invoice_performance ?? [],
+    technician_performance: (raw?.technician_performance ?? []).map((row) => ({
+      ...row,
+      refusal_rate: row.refusal_rate ?? 0,
+      on_time_rate: row.on_time_rate ?? 0,
+      total_service_line_value: row.total_service_line_value ?? 0,
+      work_hours: row.work_hours ?? 0,
+    })),
+    dealership_performance: (raw?.dealership_performance ?? []).map((row) => ({
+      ...row,
+      job_volume: row.job_volume ?? 0,
+      most_requested_service_types: row.most_requested_service_types ?? [],
+      avg_job_completion_time: row.avg_job_completion_time ?? '0m',
+      sla_compliance_rate: row.sla_compliance_rate ?? 0,
+    })),
+    capacity_planning: raw?.capacity_planning,
+    invoicing_detail_rows: raw?.invoicing_detail_rows ?? [],
+    revenue_metrics: revenueMetrics,
+    job_completion_analytics: jobCompletionAnalytics,
+    attendance_metrics: attendanceMetrics,
+    customer_request_analytics: customerRequestAnalytics,
+    service_category_analytics: serviceCategoryAnalytics,
+    payment_metrics: paymentMetrics,
+  };
+}
+
 function getApiBaseUrl(): string {
   const rawValue = API_URL_ENV_KEYS
     .map((key) => import.meta.env[key])
@@ -1444,8 +1535,23 @@ function getApiBaseUrl(): string {
       hostname === '127.0.0.1' ||
       hostname === '::1';
 
-    if (isLocalHost && !normalized) {
-      return LOCAL_API_FALLBACK;
+    if (isLocalHost) {
+      return normalized || LOCAL_API_FALLBACK;
+    }
+
+    if (normalized) {
+      if (normalized.startsWith('/')) {
+        return normalized;
+      }
+
+      try {
+        const candidateUrl = new URL(normalized);
+        if (candidateUrl.origin === window.location.origin) {
+          return normalized;
+        }
+      } catch {
+        // Fall through to the production proxy path when the configured URL is cross-origin.
+      }
     }
   }
 
@@ -3636,7 +3742,8 @@ export async function fetchAdminReportsOverview(
   if (params?.from_date) search.set('from_date', params.from_date);
   if (params?.to_date) search.set('to_date', params.to_date);
   const suffix = search.toString() ? `?${search.toString()}` : '';
-  return requestJson<BackendReportsOverview>(`/admin/reports/overview${suffix}`, { token });
+  const payload = await requestJson<Partial<BackendReportsOverview>>(`/admin/reports/overview${suffix}`, { token });
+  return normalizeReportsOverview(payload);
 }
 
 export type BackendDeviceLogPayload = {

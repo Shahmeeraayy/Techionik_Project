@@ -11,6 +11,12 @@ export default defineConfig({
   base: '/',
   server: {
     proxy: {
+      '/api/techionik-backend': {
+        target: 'http://127.0.0.1:8001',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace(/^\/api\/techionik-backend/, ''),
+      },
       '/api': {
         target: 'http://127.0.0.1:8001',
         changeOrigin: true,
