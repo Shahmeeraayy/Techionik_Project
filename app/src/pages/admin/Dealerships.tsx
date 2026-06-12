@@ -932,71 +932,115 @@ export default function DealershipsPage() {
                                 Manage service locations and contacts.
                             </p>
                         </div>
-                        <div className="flex flex-wrap items-center justify-end gap-3">
-                            <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-slate-300">
-                                Last updated: {lastSuccessfulFetchAt ? lastSuccessfulFetchAt.toLocaleTimeString() : 'Never'}
-                            </span>
-                            <Button variant="outline" size="sm" onClick={fetchDealerships} disabled={loading} className="h-10 gap-2 rounded-full border-slate-300 bg-white text-slate-900 hover:bg-slate-50 hover:text-slate-950 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-100 dark:hover:bg-white/[0.08] dark:hover:text-white">
-                                <RefreshCw className={cn("w-4 h-4 text-blue-600 dark:text-cyan-200", loading && "animate-spin")} />
-                                Refresh
-                            </Button>
-                            <Button variant="outline" size="sm" onClick={() => setExportModalOpen(true)} className="h-10 gap-2 rounded-full border-slate-300 bg-white text-slate-900 hover:bg-slate-50 hover:text-slate-950 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-100 dark:hover:bg-white/[0.08] dark:hover:text-white">
-                                <FileDown className="w-4 h-4" /> Export
-                            </Button>
-                            <Dialog open={addModalOpen} onOpenChange={setAddModalOpen}>
-                                <DialogTrigger asChild>
-                                    <Button size="sm" className="h-10 gap-2 rounded-full border border-blue-600 bg-blue-600 px-5 text-white shadow-[0_12px_30px_rgba(37,99,235,0.22)] hover:bg-blue-700 hover:text-white dark:border-[#7db0ff]/40 dark:bg-[#2F8E92] dark:shadow-[0_12px_30px_rgba(47,142,146,0.28)] dark:hover:bg-[#267276]">
-                                        <Plus className="w-4 h-4" /> Add Location
+                        <div className="w-full max-w-[680px] xl:self-stretch">
+                            <div className="flex h-full flex-col gap-4 xl:items-end xl:justify-between">
+                                <div className="flex flex-wrap items-center justify-end gap-3">
+                                    <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-slate-300">
+                                        Last updated: {lastSuccessfulFetchAt ? lastSuccessfulFetchAt.toLocaleTimeString() : 'Never'}
+                                    </span>
+                                    <Button variant="outline" size="sm" onClick={fetchDealerships} disabled={loading} className="h-10 gap-2 rounded-full border-slate-300 bg-white text-slate-900 hover:bg-slate-50 hover:text-slate-950 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-100 dark:hover:bg-white/[0.08] dark:hover:text-white">
+                                        <RefreshCw className={cn("w-4 h-4 text-blue-600 dark:text-cyan-200", loading && "animate-spin")} />
+                                        Refresh
                                     </Button>
-                                </DialogTrigger>
-                        <DialogContent className="sm:max-w-xl border-white/10 bg-[linear-gradient(180deg,rgba(9,24,39,0.98),rgba(6,17,29,0.98))] text-slate-100">
-                            <DialogHeader>
-                                <DialogTitle className="text-white">Add New Location</DialogTitle>
-                                <DialogDescription className="text-slate-300">Create a new location profile for dispatch and billing workflows.</DialogDescription>
-                            </DialogHeader>
-                            <div className="space-y-4 py-2">
-                                <div className="space-y-2">
-                                    <Label className="text-slate-200">Location Name <span className="text-rose-300">*</span></Label>
-                                    <Input className="h-12 rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(10,18,32,0.96),rgba(8,14,26,0.96))] text-white placeholder:text-slate-500" placeholder="e.g. Metro Ford" value={addForm.name} onChange={e => setAddForm({ ...addForm, name: e.target.value })} />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label className="text-slate-200">Phone <span className="text-rose-300">*</span></Label>
-                                    <Input
-                                        className="h-12 rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(10,18,32,0.96),rgba(8,14,26,0.96))] text-white placeholder:text-slate-500"
-                                        placeholder={phoneExampleFormat}
-                                        value={addForm.phone}
-                                        onChange={e => setAddForm({ ...addForm, phone: formatUsPhoneInput(e.target.value) })}
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label className="text-slate-200">Email <span className="text-rose-300">*</span></Label>
-                                    <Input className="h-12 rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(10,18,32,0.96),rgba(8,14,26,0.96))] text-white placeholder:text-slate-500" placeholder="e.g. info@location.com" value={addForm.email} onChange={e => setAddForm({ ...addForm, email: e.target.value })} />
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <Label className="text-slate-200">City</Label>
-                                        <Input className="h-12 rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(10,18,32,0.96),rgba(8,14,26,0.96))] text-white placeholder:text-slate-500" placeholder="e.g. Quebec" value={addForm.city} onChange={e => setAddForm({ ...addForm, city: e.target.value })} />
+                                    <Button variant="outline" size="sm" onClick={() => setExportModalOpen(true)} className="h-10 gap-2 rounded-full border-slate-300 bg-white text-slate-900 hover:bg-slate-50 hover:text-slate-950 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-100 dark:hover:bg-white/[0.08] dark:hover:text-white">
+                                        <FileDown className="w-4 h-4" /> Export
+                                    </Button>
+                                    <Dialog open={addModalOpen} onOpenChange={setAddModalOpen}>
+                                        <DialogTrigger asChild>
+                                            <Button size="sm" className="h-10 gap-2 rounded-full border border-blue-600 bg-blue-600 px-5 text-white shadow-[0_12px_30px_rgba(37,99,235,0.22)] hover:bg-blue-700 hover:text-white dark:border-[#7db0ff]/40 dark:bg-[#2F8E92] dark:shadow-[0_12px_30px_rgba(47,142,146,0.28)] dark:hover:bg-[#267276]">
+                                                <Plus className="w-4 h-4" /> Add Location
+                                            </Button>
+                                        </DialogTrigger>
+                                <DialogContent className="sm:max-w-xl border-white/10 bg-[linear-gradient(180deg,rgba(9,24,39,0.98),rgba(6,17,29,0.98))] text-slate-100">
+                                    <DialogHeader>
+                                        <DialogTitle className="text-white">Add New Location</DialogTitle>
+                                        <DialogDescription className="text-slate-300">Create a new location profile for dispatch and billing workflows.</DialogDescription>
+                                    </DialogHeader>
+                                    <div className="space-y-4 py-2">
+                                        <div className="space-y-2">
+                                            <Label className="text-slate-200">Location Name <span className="text-rose-300">*</span></Label>
+                                            <Input className="h-12 rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(10,18,32,0.96),rgba(8,14,26,0.96))] text-white placeholder:text-slate-500" placeholder="e.g. Metro Ford" value={addForm.name} onChange={e => setAddForm({ ...addForm, name: e.target.value })} />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label className="text-slate-200">Phone <span className="text-rose-300">*</span></Label>
+                                            <Input
+                                                className="h-12 rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(10,18,32,0.96),rgba(8,14,26,0.96))] text-white placeholder:text-slate-500"
+                                                placeholder={phoneExampleFormat}
+                                                value={addForm.phone}
+                                                onChange={e => setAddForm({ ...addForm, phone: formatUsPhoneInput(e.target.value) })}
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label className="text-slate-200">Email <span className="text-rose-300">*</span></Label>
+                                            <Input className="h-12 rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(10,18,32,0.96),rgba(8,14,26,0.96))] text-white placeholder:text-slate-500" placeholder="e.g. info@location.com" value={addForm.email} onChange={e => setAddForm({ ...addForm, email: e.target.value })} />
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <Label className="text-slate-200">City</Label>
+                                                <Input className="h-12 rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(10,18,32,0.96),rgba(8,14,26,0.96))] text-white placeholder:text-slate-500" placeholder="e.g. Quebec" value={addForm.city} onChange={e => setAddForm({ ...addForm, city: e.target.value })} />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label className="text-slate-200">Postal Code</Label>
+                                                <Input className="h-12 rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(10,18,32,0.96),rgba(8,14,26,0.96))] text-white placeholder:text-slate-500" placeholder="e.g. G1X 3X4" value={addForm.postal_code} onChange={e => setAddForm({ ...addForm, postal_code: e.target.value })} />
+                                            </div>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label className="text-slate-200">Address</Label>
+                                            <Input className="h-12 rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(10,18,32,0.96),rgba(8,14,26,0.96))] text-white placeholder:text-slate-500" placeholder="e.g. 123 Main St" value={addForm.address} onChange={e => setAddForm({ ...addForm, address: e.target.value })} />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label className="text-slate-200">Notes</Label>
+                                            <Textarea className="rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(10,18,32,0.96),rgba(8,14,26,0.96))] text-white placeholder:text-slate-500" placeholder="Access codes, preferred hours, etc." value={addForm.notes} onChange={e => setAddForm({ ...addForm, notes: e.target.value })} />
+                                        </div>
                                     </div>
-                                    <div className="space-y-2">
-                                        <Label className="text-slate-200">Postal Code</Label>
-                                        <Input className="h-12 rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(10,18,32,0.96),rgba(8,14,26,0.96))] text-white placeholder:text-slate-500" placeholder="e.g. G1X 3X4" value={addForm.postal_code} onChange={e => setAddForm({ ...addForm, postal_code: e.target.value })} />
+                                    <DialogFooter>
+                                        <Button variant="outline" className="h-11 rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] px-5 text-slate-100 shadow-[0_14px_34px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.055)] hover:bg-[linear-gradient(180deg,rgba(24,38,64,0.98),rgba(12,20,34,0.98))] hover:text-white" onClick={() => setAddModalOpen(false)}>Cancel</Button>
+                                        <Button onClick={handleAddDealership} className="h-11 rounded-2xl border border-[#7db0ff]/40 bg-[linear-gradient(135deg,#4f7cff,#22d3ee)] px-5 text-white shadow-[0_16px_34px_rgba(79,124,255,0.22)] hover:brightness-105">Add Location</Button>
+                                    </DialogFooter>
+                                </DialogContent>
+                            </Dialog>
+                                </div>
+                                <div className="flex w-full flex-col gap-3 xl:max-w-[620px]">
+                                    <div className="relative w-full">
+                                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                                        <Input
+                                            placeholder="Search by location name, contact name, phone, email, or city..."
+                                            className="h-11 rounded-full border-white/10 bg-white/[0.04] pl-9 text-slate-100 placeholder:text-slate-500 transition-all focus:bg-white/[0.06]"
+                                            value={searchQuery}
+                                            onChange={e => setSearchQuery(e.target.value)}
+                                        />
                                     </div>
-                                </div>
-                                <div className="space-y-2">
-                                    <Label className="text-slate-200">Address</Label>
-                                    <Input className="h-12 rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(10,18,32,0.96),rgba(8,14,26,0.96))] text-white placeholder:text-slate-500" placeholder="e.g. 123 Main St" value={addForm.address} onChange={e => setAddForm({ ...addForm, address: e.target.value })} />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label className="text-slate-200">Notes</Label>
-                                    <Textarea className="rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(10,18,32,0.96),rgba(8,14,26,0.96))] text-white placeholder:text-slate-500" placeholder="Access codes, preferred hours, etc." value={addForm.notes} onChange={e => setAddForm({ ...addForm, notes: e.target.value })} />
+                                    <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+                                        <Select value={filterStatus} onValueChange={setFilterStatus}>
+                                            <SelectTrigger className="h-11 w-full border-white/10 bg-white/[0.04] text-slate-100 sm:w-[160px]">
+                                                <SelectValue placeholder="Status" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="all">All Status</SelectItem>
+                                                <SelectItem value="active">Active</SelectItem>
+                                                <SelectItem value="inactive">Inactive</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+
+                                        <Select value={filterCity} onValueChange={setFilterCity}>
+                                            <SelectTrigger className="h-11 w-full border-white/10 bg-white/[0.04] text-slate-100 sm:w-[190px]">
+                                                <div className="flex items-center gap-2">
+                                                    <Building2 className="w-4 h-4" />
+                                                    <SelectValue placeholder="City" />
+                                                </div>
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="all">All Cities</SelectItem>
+                                                {cityFilterOptions.map((city) => (
+                                                    <SelectItem key={city} value={city}>
+                                                        {city}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
                                 </div>
                             </div>
-                            <DialogFooter>
-                                <Button variant="outline" className="h-11 rounded-2xl border-white/10 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] px-5 text-slate-100 shadow-[0_14px_34px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.055)] hover:bg-[linear-gradient(180deg,rgba(24,38,64,0.98),rgba(12,20,34,0.98))] hover:text-white" onClick={() => setAddModalOpen(false)}>Cancel</Button>
-                                <Button onClick={handleAddDealership} className="h-11 rounded-2xl border border-[#7db0ff]/40 bg-[linear-gradient(135deg,#4f7cff,#22d3ee)] px-5 text-white shadow-[0_16px_34px_rgba(79,124,255,0.22)] hover:brightness-105">Add Location</Button>
-                            </DialogFooter>
-                        </DialogContent>
-                    </Dialog>
                         </div>
                     </div>
                 </section>
@@ -1060,46 +1104,6 @@ export default function DealershipsPage() {
                         <Badge variant="outline" className="border-white/10 bg-white/[0.04] px-3 py-1 text-slate-300">
                             Inactive {inactiveCount}
                         </Badge>
-                    </div>
-                </div>
-                <div className="mt-5 flex flex-col lg:flex-row gap-4 items-center">
-                    <div className="relative flex-1 w-full lg:w-auto min-w-0 lg:min-w-[300px]">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                        <Input
-                            placeholder="Search by location name, contact name, phone, email, or city..."
-                            className="h-11 rounded-full border-white/10 bg-white/[0.04] pl-9 text-slate-100 placeholder:text-slate-500 transition-all focus:bg-white/[0.06]"
-                            value={searchQuery}
-                            onChange={e => setSearchQuery(e.target.value)}
-                        />
-                    </div>
-                    <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
-                        <Select value={filterStatus} onValueChange={setFilterStatus}>
-                            <SelectTrigger className="h-11 w-full sm:w-[140px] border-white/10 bg-white/[0.04] text-slate-100">
-                                <SelectValue placeholder="Status" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">All Status</SelectItem>
-                                <SelectItem value="active">Active</SelectItem>
-                                <SelectItem value="inactive">Inactive</SelectItem>
-                            </SelectContent>
-                        </Select>
-
-                        <Select value={filterCity} onValueChange={setFilterCity}>
-                            <SelectTrigger className="h-11 w-full sm:w-[180px] border-white/10 bg-white/[0.04] text-slate-100">
-                                <div className="flex items-center gap-2">
-                                    <Building2 className="w-4 h-4" />
-                                    <SelectValue placeholder="City" />
-                                </div>
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">All Cities</SelectItem>
-                                {cityFilterOptions.map((city) => (
-                                    <SelectItem key={city} value={city}>
-                                        {city}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
                     </div>
                 </div>
                 </div>

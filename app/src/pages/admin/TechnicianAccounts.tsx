@@ -350,46 +350,70 @@ export default function TechnicianAccountsPage() {
                 Manage technician access.
               </p>
             </div>
-            <div className="flex flex-wrap items-center gap-3">
-              <Badge variant="outline" className={cn(
-                'px-3 py-1 text-xs',
-                isRefreshing
-                  ? 'border-cyan-300/20 bg-cyan-300/10 text-cyan-100'
-                  : syncError
-                    ? 'border-rose-300/20 bg-rose-300/10 text-rose-100'
-                    : 'border-emerald-300/20 bg-emerald-300/10 text-emerald-100'
-              )}>
-                {isRefreshing ? 'Syncing data...' : syncError ? 'Sync failed' : 'Data synced'}
-              </Badge>
-              <Button
-                type="button"
-                size="sm"
-                onClick={() => {
-                  setCreateError(null);
-                  setCreateForm({
-                    name: '',
-                    email: '',
-                    phone: '',
-                    password: '',
-                  });
-                  setCreateDialogOpen(true);
-                }}
-                className="h-10 gap-2 rounded-full border border-[#7db0ff]/40 bg-[linear-gradient(135deg,#4f7cff,#22d3ee)] text-white shadow-[0_16px_34px_rgba(79,124,255,0.22)] hover:brightness-105"
-              >
-                <Power className="h-4 w-4" />
-                Create Technician
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => { void runSync(); }}
-                disabled={isRefreshing}
-                className="h-10 gap-2 rounded-full border-slate-300 bg-white text-slate-900 hover:bg-slate-50 hover:text-slate-950 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-100 dark:hover:bg-white/[0.08] dark:hover:text-white"
-              >
-                <RefreshCw className={cn('w-4 h-4 text-blue-600 dark:text-cyan-200', isRefreshing && 'animate-spin')} />
-                Refresh
-              </Button>
+            <div className="w-full max-w-[560px] xl:self-stretch">
+              <div className="flex h-full flex-col gap-4 xl:items-end xl:justify-between">
+                <div className="relative w-full max-w-[460px]">
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  <Input
+                    placeholder="Search by name, email, or phone"
+                    value={searchQuery}
+                    onChange={(event) => setSearchQuery(event.target.value)}
+                    className="h-11 rounded-full border-white/10 bg-white/[0.04] pl-9 text-slate-100 placeholder:text-slate-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
+                  />
+                </div>
+                <div className="flex flex-wrap items-center gap-3 xl:justify-end">
+                  <Badge variant="outline" className={cn(
+                    'px-3 py-1 text-xs',
+                    isRefreshing
+                      ? 'border-cyan-300/20 bg-cyan-300/10 text-cyan-100'
+                      : syncError
+                        ? 'border-rose-300/20 bg-rose-300/10 text-rose-100'
+                        : 'border-emerald-300/20 bg-emerald-300/10 text-emerald-100'
+                  )}>
+                    {isRefreshing ? 'Syncing data...' : syncError ? 'Sync failed' : 'Data synced'}
+                  </Badge>
+                  {hasSearchQuery ? (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setSearchQuery('')}
+                      className="h-10 rounded-full border border-white/10 px-3 text-slate-300 hover:bg-white/[0.06] hover:text-white"
+                    >
+                      Clear Search
+                    </Button>
+                  ) : null}
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={() => {
+                      setCreateError(null);
+                      setCreateForm({
+                        name: '',
+                        email: '',
+                        phone: '',
+                        password: '',
+                      });
+                      setCreateDialogOpen(true);
+                    }}
+                    className="h-10 gap-2 rounded-full border border-[#7db0ff]/40 bg-[linear-gradient(135deg,#4f7cff,#22d3ee)] text-white shadow-[0_16px_34px_rgba(79,124,255,0.22)] hover:brightness-105"
+                  >
+                    <Power className="h-4 w-4" />
+                    Create Technician
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => { void runSync(); }}
+                    disabled={isRefreshing}
+                    className="h-10 gap-2 rounded-full border-slate-300 bg-white text-slate-900 hover:bg-slate-50 hover:text-slate-950 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-100 dark:hover:bg-white/[0.08] dark:hover:text-white"
+                  >
+                    <RefreshCw className={cn('w-4 h-4 text-blue-600 dark:text-cyan-200', isRefreshing && 'animate-spin')} />
+                    Refresh
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
         </section>
@@ -441,16 +465,7 @@ export default function TechnicianAccountsPage() {
 
       <Card className={sectionCardClass}>
         <div className={sectionHeaderClass}>
-        <div className="relative max-w-md">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-          <Input
-            placeholder="Search by name, email, or phone"
-            value={searchQuery}
-            onChange={(event) => setSearchQuery(event.target.value)}
-            className="h-11 rounded-full border-white/10 bg-white/[0.04] pl-9 text-slate-100 placeholder:text-slate-500"
-          />
-        </div>
-        <div className="mt-3 flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Badge
             variant="outline"
             className={
@@ -466,17 +481,6 @@ export default function TechnicianAccountsPage() {
           <Badge variant="outline" className="border-white/10 bg-white/[0.04] text-slate-300">
             Showing {filteredAccounts.length} accounts | {inactiveCount} suspended | {filteredPendingPasswordResetRequests.length} reset pending
           </Badge>
-          {hasSearchQuery ? (
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => setSearchQuery('')}
-              className="h-7 px-2 text-slate-400 hover:text-slate-200"
-            >
-              Clear Search
-            </Button>
-          ) : null}
           {syncError ? (
             <>
               <span className="text-xs text-rose-300">{syncError}</span>
