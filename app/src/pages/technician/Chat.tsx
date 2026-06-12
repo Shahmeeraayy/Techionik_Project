@@ -25,7 +25,6 @@ import {
   Square,
   Users,
   X,
-  Plus,
 } from 'lucide-react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -1064,62 +1063,20 @@ export default function TechnicianChatPage() {
                     ) : null}
 
                     <div className="flex items-end gap-3">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={handleOpenAttachFiles}
-                        className="tech-chat-attach-button h-12 w-12 shrink-0 rounded-full border border-slate-300 bg-white text-slate-700 shadow-sm hover:bg-slate-100 hover:text-slate-950 disabled:bg-slate-100 disabled:text-slate-400 dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(15,23,42,0.98),rgba(8,12,20,0.98))] dark:text-slate-100 dark:shadow-[0_12px_30px_rgba(0,0,0,0.24)] dark:hover:bg-[linear-gradient(180deg,rgba(24,38,64,0.98),rgba(12,20,34,0.98))] dark:hover:text-white"
-                        disabled={isPreviewMode || !selectedConversationId || isVoiceProcessing}
-                      >
-                        <Paperclip className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => {
-                          if (isRecording) {
-                            stopRecording();
-                          } else {
-                            void startRecording();
-                          }
-                        }}
-                        className={cn(
-                          'h-12 w-12 shrink-0 rounded-full border shadow-sm',
-                          isRecording
-                            ? 'border-red-400/50 bg-red-500/15 text-red-100 hover:bg-red-500/25'
-                            : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100 hover:text-slate-950 dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(15,23,42,0.98),rgba(8,12,20,0.98))] dark:text-slate-100 dark:hover:bg-[linear-gradient(180deg,rgba(24,38,64,0.98),rgba(12,20,34,0.98))] dark:hover:text-white',
-                        )}
-                        disabled={isPreviewMode || !selectedConversationId || isVoiceProcessing || !voiceRecordingSupported}
-                        aria-label={isRecording ? 'Stop recording voice note' : 'Record voice note'}
-                      >
-                        {isRecording ? <Square className="h-4 w-4 fill-current" /> : <Mic className="h-4 w-4" />}
-                      </Button>
-                      <div className="min-w-0 flex-1">
-                        <Textarea
-                          value={draftMessage}
-                          onChange={(event) => handleDraftMessageChange(event.target.value)}
-                          onKeyDown={handleComposerKeyDown}
-                          placeholder={isPreviewMode ? 'Preview mode is read-only' : 'Write a secure message'}
-                          className="min-h-[56px] resize-none rounded-[28px] border border-slate-300 bg-white px-5 py-4 text-slate-900 placeholder:text-slate-400 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-slate-500"
-                          disabled={isPreviewMode || !selectedConversationId || isVoiceProcessing}
-                        />
-                      </div>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button
                             type="button"
                             variant="ghost"
                             size="icon"
-                            className="h-12 w-12 shrink-0 rounded-full border border-slate-300 bg-white text-slate-700 shadow-sm hover:bg-slate-100 hover:text-slate-950 disabled:bg-slate-100 disabled:text-slate-400 dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(15,23,42,0.98),rgba(8,12,20,0.98))] dark:text-slate-100 dark:shadow-[0_12px_30px_rgba(0,0,0,0.24)] dark:hover:bg-[linear-gradient(180deg,rgba(24,38,64,0.98),rgba(12,20,34,0.98))] dark:hover:text-white"
+                            className="tech-chat-attach-button h-12 w-12 shrink-0 rounded-full border border-slate-300 bg-white text-slate-700 shadow-sm hover:bg-slate-100 hover:text-slate-950 disabled:bg-slate-100 disabled:text-slate-400 dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(15,23,42,0.98),rgba(8,12,20,0.98))] dark:text-slate-100 dark:shadow-[0_12px_30px_rgba(0,0,0,0.24)] dark:hover:bg-[linear-gradient(180deg,rgba(24,38,64,0.98),rgba(12,20,34,0.98))] dark:hover:text-white"
                             disabled={isPreviewMode || !selectedConversationId || isVoiceProcessing}
-                            aria-label="More actions"
+                            aria-label="Attachment actions"
                           >
-                            <Plus className="h-4 w-4" />
+                            <Paperclip className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="border-white/10 bg-[#091827] text-slate-100">
+                        <DropdownMenuContent align="start" className="border-white/10 bg-[#091827] text-slate-100">
                           <DropdownMenuItem onSelect={() => handleOpenAttachFiles()} disabled={isPreviewMode || !selectedConversationId || isVoiceProcessing}>
                             <Paperclip className="h-4 w-4" />
                             Attach File
@@ -1147,6 +1104,38 @@ export default function TechnicianChatPage() {
                           </DropdownMenuCheckboxItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
+                      <div className="min-w-0 flex-1">
+                        <Textarea
+                          value={draftMessage}
+                          onChange={(event) => handleDraftMessageChange(event.target.value)}
+                          onKeyDown={handleComposerKeyDown}
+                          placeholder={isPreviewMode ? 'Preview mode is read-only' : 'Write a secure message'}
+                          className="min-h-[56px] resize-none rounded-[28px] border border-slate-300 bg-white px-5 py-4 text-slate-900 placeholder:text-slate-400 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-slate-500"
+                          disabled={isPreviewMode || !selectedConversationId || isVoiceProcessing}
+                        />
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          if (isRecording) {
+                            stopRecording();
+                          } else {
+                            void startRecording();
+                          }
+                        }}
+                        className={cn(
+                          'h-12 w-12 shrink-0 rounded-full border shadow-sm',
+                          isRecording
+                            ? 'border-red-400/50 bg-red-500/15 text-red-100 hover:bg-red-500/25'
+                            : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100 hover:text-slate-950 dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(15,23,42,0.98),rgba(8,12,20,0.98))] dark:text-slate-100 dark:hover:bg-[linear-gradient(180deg,rgba(24,38,64,0.98),rgba(12,20,34,0.98))] dark:hover:text-white',
+                        )}
+                        disabled={isPreviewMode || !selectedConversationId || isVoiceProcessing || !voiceRecordingSupported}
+                        aria-label={isRecording ? 'Stop recording voice note' : 'Record voice note'}
+                      >
+                        {isRecording ? <Square className="h-4 w-4 fill-current" /> : <Mic className="h-4 w-4" />}
+                      </Button>
                       <Button
                         type="button"
                         onClick={() => void handleSend()}

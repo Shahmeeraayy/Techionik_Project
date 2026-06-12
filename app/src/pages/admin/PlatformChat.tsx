@@ -17,7 +17,6 @@ import {
   Square,
   Users,
   X,
-  Plus,
 } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -1345,48 +1344,6 @@ export default function PlatformChatPage() {
                     ) : null}
 
                     <div className="flex items-end gap-3">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        onClick={handleOpenAttachFiles}
-                        className="h-12 w-12 shrink-0 rounded-full border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
-                        disabled={!selectedConversationId || isVoiceProcessing}
-                      >
-                        <Paperclip className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        onClick={() => {
-                          if (isRecording) {
-                            stopRecording();
-                          } else {
-                            void startRecording();
-                          }
-                        }}
-                        className={cn(
-                          'h-12 w-12 shrink-0 rounded-full border text-slate-100',
-                          isRecording
-                            ? 'border-red-400/40 bg-red-500/15 hover:bg-red-500/25'
-                            : 'border-white/10 bg-white/[0.03] hover:bg-white/[0.08]',
-                        )}
-                        disabled={!selectedConversationId || isVoiceProcessing || !voiceRecordingSupported}
-                        aria-label={isRecording ? 'Stop recording voice note' : 'Record voice note'}
-                      >
-                        {isRecording ? <Square className="h-4 w-4 fill-current" /> : <Mic className="h-4 w-4" />}
-                      </Button>
-                      <div className="min-w-0 flex-1">
-                        <Textarea
-                          value={draftMessage}
-                          onChange={(event) => handleDraftMessageChange(event.target.value)}
-                          onKeyDown={handleComposerKeyDown}
-                          placeholder={selectedConversationId ? 'Write a secure message' : 'Select a thread to start chatting'}
-                          className="min-h-[56px] resize-none rounded-[28px] border-white/10 bg-white/[0.04] px-5 py-4 text-white placeholder:text-slate-500"
-                          disabled={!selectedConversationId || isVoiceProcessing}
-                        />
-                      </div>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button
@@ -1395,12 +1352,12 @@ export default function PlatformChatPage() {
                             size="icon"
                             className="h-12 w-12 shrink-0 rounded-full border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
                             disabled={!selectedConversationId || isVoiceProcessing}
-                            aria-label="More actions"
+                            aria-label="Attachment actions"
                           >
-                            <Plus className="h-4 w-4" />
+                            <Paperclip className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="border-white/10 bg-[#091827] text-slate-100">
+                        <DropdownMenuContent align="start" className="border-white/10 bg-[#091827] text-slate-100">
                           <DropdownMenuItem onSelect={() => handleOpenAttachFiles()} disabled={!selectedConversationId || isVoiceProcessing}>
                             <Paperclip className="h-4 w-4" />
                             Attach File
@@ -1436,6 +1393,38 @@ export default function PlatformChatPage() {
                           </DropdownMenuCheckboxItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
+                      <div className="min-w-0 flex-1">
+                        <Textarea
+                          value={draftMessage}
+                          onChange={(event) => handleDraftMessageChange(event.target.value)}
+                          onKeyDown={handleComposerKeyDown}
+                          placeholder={selectedConversationId ? 'Write a secure message' : 'Select a thread to start chatting'}
+                          className="min-h-[56px] resize-none rounded-[28px] border-white/10 bg-white/[0.04] px-5 py-4 text-white placeholder:text-slate-500"
+                          disabled={!selectedConversationId || isVoiceProcessing}
+                        />
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        onClick={() => {
+                          if (isRecording) {
+                            stopRecording();
+                          } else {
+                            void startRecording();
+                          }
+                        }}
+                        className={cn(
+                          'h-12 w-12 shrink-0 rounded-full border text-slate-100',
+                          isRecording
+                            ? 'border-red-400/40 bg-red-500/15 hover:bg-red-500/25'
+                            : 'border-white/10 bg-white/[0.03] hover:bg-white/[0.08]',
+                        )}
+                        disabled={!selectedConversationId || isVoiceProcessing || !voiceRecordingSupported}
+                        aria-label={isRecording ? 'Stop recording voice note' : 'Record voice note'}
+                      >
+                        {isRecording ? <Square className="h-4 w-4 fill-current" /> : <Mic className="h-4 w-4" />}
+                      </Button>
                       <Button
                         type="button"
                         onClick={() => void handleSend()}
