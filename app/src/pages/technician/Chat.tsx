@@ -782,7 +782,6 @@ export default function TechnicianChatPage() {
                             <ChatListItem
                               key={`recent-${conversation.id}`}
                               title={conversation.channel_kind === 'group' ? conversation.title : conversation.technician_name}
-                              preview={conversation.last_message_preview || (conversation.channel_kind === 'group' ? conversation.member_names.join(', ') : 'No messages yet')}
                               timestamp={formatRelativeChatTime(conversation.last_message_at)}
                               statusLabel={`${getConversationTypeLabel(conversation)} · ${conversation.channel_kind === 'group'
                                 ? `${conversation.member_count} member${conversation.member_count === 1 ? '' : 's'}`
@@ -811,7 +810,6 @@ export default function TechnicianChatPage() {
                             <ChatListItem
                               key={conversation.id}
                               title={conversation.title}
-                              preview={conversation.last_message_preview || (conversation.channel_kind === 'group' ? conversation.member_names.join(', ') : 'No messages yet')}
                               timestamp={formatRelativeChatTime(conversation.last_message_at)}
                               statusLabel={`${getConversationTypeLabel(conversation)} · ${conversation.channel_kind === 'group'
                                 ? `${conversation.member_count} member${conversation.member_count === 1 ? '' : 's'}`

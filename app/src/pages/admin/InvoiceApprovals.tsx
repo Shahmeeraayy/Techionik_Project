@@ -929,62 +929,162 @@ export default function InvoiceApprovalsPage() {
                             <Sparkles className="h-3.5 w-3.5 text-cyan-200" />
                             Approval Control
                         </div>
-                        <div className="space-y-3">
-                            <h1 className="text-[2.35rem] font-semibold leading-none tracking-[-0.06em] text-slate-900 dark:text-white md:text-[2.8rem]" style={displayFontStyle}>
-                                Approvals
-                            </h1>
-                            <p className="max-w-2xl text-sm leading-7 text-slate-600 dark:text-slate-300 md:text-[15px]" style={bodyFontStyle}>
-                                Review invoices and blockers.
-                            </p>
-                        </div>
-                        <div className="flex flex-wrap items-center gap-2">
-                            <Badge variant="outline" className="h-9 rounded-full border-cyan-300/20 bg-cyan-300/10 px-3 text-cyan-100">
-                                <Activity className="mr-1.5 h-3.5 w-3.5" />
-                                {filteredInvoices.length} ready for approval
-                            </Badge>
-                            <Badge variant="outline" className="h-9 rounded-full border-amber-300/20 bg-amber-300/10 px-3 text-amber-100">
-                                <AlertTriangle className="mr-1.5 h-3.5 w-3.5" />
-                                {blockedInvoices.length} blocked
-                            </Badge>
-                            <Badge variant="outline" className="h-9 rounded-full border-emerald-300/20 bg-emerald-300/10 px-3 text-emerald-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-                                <DollarSign className="mr-1.5 h-3.5 w-3.5 text-emerald-200" />
-                                ${visibleEstimatedTotal.toFixed(2)} queue value
-                            </Badge>
-                        </div>
+                        <h1 className="text-[2.35rem] font-semibold leading-none tracking-[-0.06em] text-slate-900 dark:text-white md:text-[2.8rem]" style={displayFontStyle}>
+                            Approvals
+                        </h1>
                     </div>
-                    <div className="flex flex-wrap items-center gap-3 xl:justify-end">
-                        <div className="rounded-full border border-white/10 bg-[#0b1424] px-4 py-2 text-xs font-medium text-slate-300 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-                            Last updated: {new Date().toLocaleTimeString()}
+                    <div className="w-full max-w-[980px] xl:self-stretch">
+                        <div className="flex h-full flex-col gap-4 xl:items-end xl:justify-between">
+                            <div className="flex flex-wrap items-center gap-3 xl:justify-end">
+                                <div className="rounded-full border border-white/10 bg-[#0b1424] px-4 py-2 text-xs font-medium text-slate-300 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                                    Last updated: {new Date().toLocaleTimeString()}
+                                </div>
+                                <Button
+                                    type="button"
+                                    size="sm"
+                                    className="h-11 gap-2 rounded-2xl bg-[linear-gradient(135deg,#4f7cff,#22d3ee)] px-4 font-semibold text-white shadow-[0_18px_42px_rgba(79,124,255,0.24)] hover:brightness-105"
+                                    onClick={openManualInvoiceDialog}
+                                    disabled={manualInvoiceOptions.length === 0}
+                                >
+                                    <Plus className="h-4 w-4" />
+                                    Create Invoice
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-11 gap-2 rounded-2xl border-white/10 bg-[#0b1424] px-4 text-slate-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] hover:bg-[#122039] hover:text-white"
+                                    onClick={() => void fetchInvoicesData()}
+                                >
+                                    <RefreshCw className={cn('h-4 w-4 text-slate-500 dark:text-slate-300', loading && 'animate-spin')} />
+                                    Refresh
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-11 gap-2 rounded-2xl border-white/10 bg-[#0b1424] px-4 text-slate-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] hover:bg-[#122039] hover:text-white"
+                                    onClick={() => setExportModalOpen(true)}
+                                >
+                                    <Download className="h-4 w-4 text-slate-500 dark:text-slate-300" />
+                                    Export Excel
+                                </Button>
+                            </div>
+
+                            <div className="flex w-full flex-col gap-3 xl:max-w-[980px]">
+                                <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
+                                    <div className="relative min-w-0 flex-1">
+                                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+                                        <Input
+                                            placeholder="Search by job ID, location, technician name, or service..."
+                                            className="h-11 rounded-2xl border-white/10 bg-[#0b1424] pl-9 text-white placeholder:text-slate-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] focus-visible:border-cyan-300/35 focus-visible:ring-cyan-300/15"
+                                            value={searchQuery}
+                                            onChange={(e) => setSearchQuery(e.target.value)}
+                                        />
+                                    </div>
+                                    <div className="flex flex-wrap items-center gap-2">
+                                        <Select value={filterDealership} onValueChange={setFilterDealership}>
+                                            <SelectTrigger className="h-11 w-full rounded-2xl border-white/10 bg-[#0b1424] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] sm:w-[180px]">
+                                                <div className="flex items-center gap-2">
+                                                    <Filter className="h-4 w-4 text-slate-400" />
+                                                    <SelectValue placeholder="Dealership" />
+                                                </div>
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="all">All locations</SelectItem>
+                                                {dealershipOptions.map((location) => (
+                                                    <SelectItem key={location} value={location}>
+                                                        {location}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                        <Select value={filterTechnician} onValueChange={setFilterTechnician}>
+                                            <SelectTrigger className="h-11 w-full rounded-2xl border-white/10 bg-[#0b1424] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] sm:w-[170px]">
+                                                <div className="flex items-center gap-2">
+                                                    <User className="h-4 w-4 text-slate-400" />
+                                                    <SelectValue placeholder="Technician" />
+                                                </div>
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="all">All technicians</SelectItem>
+                                                {technicianOptions.map((technician) => (
+                                                    <SelectItem key={technician} value={technician}>
+                                                        {technician}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                        <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-[#0b1424] px-3 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                                            <Calendar className="h-4 w-4 text-slate-400" />
+                                            <div className="flex items-center gap-2">
+                                                <div className="flex items-center gap-2 rounded-xl border border-white/8 bg-white/[0.035] px-2 py-1">
+                                                    <span className="text-[11px] font-medium uppercase tracking-[0.18em] text-slate-500">From</span>
+                                                    <Input
+                                                        type="date"
+                                                        value={filterFromDate}
+                                                        onChange={(event) => setFilterFromDate(event.target.value)}
+                                                        className="h-7 w-[132px] border-0 bg-transparent p-0 text-sm text-white shadow-none focus-visible:ring-0"
+                                                        aria-label="Filter approvals from date"
+                                                    />
+                                                </div>
+                                                <div className="flex items-center gap-2 rounded-xl border border-white/8 bg-white/[0.035] px-2 py-1">
+                                                    <span className="text-[11px] font-medium uppercase tracking-[0.18em] text-slate-500">To</span>
+                                                    <Input
+                                                        type="date"
+                                                        value={filterToDate}
+                                                        onChange={(event) => setFilterToDate(event.target.value)}
+                                                        className="h-7 w-[132px] border-0 bg-transparent p-0 text-sm text-white shadow-none focus-visible:ring-0"
+                                                        aria-label="Filter approvals to date"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {(searchQuery || filterDealership !== 'all' || filterTechnician !== 'all' || filterFromDate || filterToDate) ? (
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={clearFilters}
+                                                className="h-11 rounded-2xl px-3 text-rose-200 hover:bg-rose-400/10 hover:text-rose-100"
+                                            >
+                                                <X className="mr-1 h-4 w-4" />
+                                                Clear
+                                            </Button>
+                                        ) : null}
+                                    </div>
+                                </div>
+
+                                <div className="flex flex-wrap items-center gap-2">
+                                    <Button
+                                        type="button"
+                                        variant={queueTab === 'approval' ? 'secondary' : 'outline'}
+                                        className={cn(
+                                            'h-10 rounded-2xl px-4',
+                                            queueTab === 'approval' ? 'border-cyan-300/25 bg-cyan-500/10 text-cyan-100' : 'border-white/10 bg-[#0b1424] text-slate-200 hover:bg-[#122039]',
+                                        )}
+                                        onClick={() => setQueueTab('approval')}
+                                    >
+                                        Approval Queue
+                                        <Badge variant="outline" className="ml-2 h-6 rounded-full border-current/15 bg-white/10 px-2 text-[10px] text-current">
+                                            {filteredInvoices.length}
+                                        </Badge>
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        variant={queueTab === 'blocked' ? 'secondary' : 'outline'}
+                                        className={cn(
+                                            'h-10 rounded-2xl px-4',
+                                            queueTab === 'blocked' ? 'border-red-300/25 bg-red-500/10 text-red-100' : 'border-white/10 bg-[#0b1424] text-slate-200 hover:bg-[#122039]',
+                                        )}
+                                        onClick={() => setQueueTab('blocked')}
+                                    >
+                                        Blocked Queue
+                                        <Badge variant="outline" className="ml-2 h-6 rounded-full border-current/15 bg-white/10 px-2 text-[10px] text-current">
+                                            {filteredBlockedInvoices.length}
+                                        </Badge>
+                                    </Button>
+                                </div>
+                            </div>
                         </div>
-                        <Button
-                            type="button"
-                            size="sm"
-                            className="h-11 gap-2 rounded-2xl bg-[linear-gradient(135deg,#4f7cff,#22d3ee)] px-4 font-semibold text-white shadow-[0_18px_42px_rgba(79,124,255,0.24)] hover:brightness-105"
-                            onClick={openManualInvoiceDialog}
-                            disabled={manualInvoiceOptions.length === 0}
-                        >
-                            <Plus className="h-4 w-4" />
-                            Create Invoice
-                        </Button>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-11 gap-2 rounded-2xl border-white/10 bg-[#0b1424] px-4 text-slate-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] hover:bg-[#122039] hover:text-white"
-                            onClick={() => void fetchInvoicesData()}
-                        >
-                            <RefreshCw className={cn('h-4 w-4 text-slate-500 dark:text-slate-300', loading && 'animate-spin')} />
-                            Refresh
-                        </Button>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-11 gap-2 rounded-2xl border-white/10 bg-[#0b1424] px-4 text-slate-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] hover:bg-[#122039] hover:text-white"
-                            onClick={() => setExportModalOpen(true)}
-                        >
-                            <Download className="h-4 w-4 text-slate-500 dark:text-slate-300" />
-                            Export Excel
-                        </Button>
-                    </div>
+                </div>
                 </div>
             </section>
 
@@ -1270,124 +1370,6 @@ export default function InvoiceApprovalsPage() {
                         </div>
                     );
                 })}
-            </div>
-
-            <div className="relative overflow-hidden rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(8,23,38,0.98),rgba(7,18,31,0.98))] shadow-[0_28px_90px_rgba(0,0,0,0.3)]">
-                <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-200/60 to-transparent" />
-                <div className="pointer-events-none absolute inset-x-0 top-0 h-14 bg-gradient-to-r from-[#2F8E92]/6 via-transparent to-amber-500/5" />
-                <div className="relative p-4 md:p-5">
-                    <div className="flex flex-col gap-4 xl:flex-row xl:items-center">
-                        <div className="relative min-w-0 flex-1">
-                            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
-                            <Input
-                                placeholder="Search by job ID, location, technician name, or service..."
-                                className="h-11 rounded-2xl border-white/10 bg-[#0b1424] pl-9 text-white placeholder:text-slate-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] focus-visible:border-cyan-300/35 focus-visible:ring-cyan-300/15"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                            />
-                        </div>
-                        <div className="flex flex-wrap items-center gap-2">
-                            <Select value={filterDealership} onValueChange={setFilterDealership}>
-                                <SelectTrigger className="h-11 w-full rounded-2xl border-white/10 bg-[#0b1424] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] sm:w-[180px]">
-                                    <div className="flex items-center gap-2">
-                                        <Filter className="h-4 w-4 text-slate-400" />
-                                        <SelectValue placeholder="Dealership" />
-                                    </div>
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="all">All locations</SelectItem>
-                                    {dealershipOptions.map((location) => (
-                                        <SelectItem key={location} value={location}>
-                                            {location}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                            <Select value={filterTechnician} onValueChange={setFilterTechnician}>
-                                <SelectTrigger className="h-11 w-full rounded-2xl border-white/10 bg-[#0b1424] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] sm:w-[170px]">
-                                    <div className="flex items-center gap-2">
-                                        <User className="h-4 w-4 text-slate-400" />
-                                        <SelectValue placeholder="Technician" />
-                                    </div>
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="all">All technicians</SelectItem>
-                                    {technicianOptions.map((technician) => (
-                                        <SelectItem key={technician} value={technician}>
-                                            {technician}
-                                        </SelectItem>
-                                    ))}
-                                    </SelectContent>
-                            </Select>
-                            <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-[#0b1424] px-3 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-                                <Calendar className="h-4 w-4 text-slate-400" />
-                                <div className="flex items-center gap-2">
-                                    <div className="flex items-center gap-2 rounded-xl border border-white/8 bg-white/[0.035] px-2 py-1">
-                                        <span className="text-[11px] font-medium uppercase tracking-[0.18em] text-slate-500">From</span>
-                                        <Input
-                                            type="date"
-                                            value={filterFromDate}
-                                            onChange={(event) => setFilterFromDate(event.target.value)}
-                                            className="h-7 w-[132px] border-0 bg-transparent p-0 text-sm text-white shadow-none focus-visible:ring-0"
-                                            aria-label="Filter approvals from date"
-                                        />
-                                    </div>
-                                    <div className="flex items-center gap-2 rounded-xl border border-white/8 bg-white/[0.035] px-2 py-1">
-                                        <span className="text-[11px] font-medium uppercase tracking-[0.18em] text-slate-500">To</span>
-                                        <Input
-                                            type="date"
-                                            value={filterToDate}
-                                            onChange={(event) => setFilterToDate(event.target.value)}
-                                            className="h-7 w-[132px] border-0 bg-transparent p-0 text-sm text-white shadow-none focus-visible:ring-0"
-                                            aria-label="Filter approvals to date"
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-                            {(searchQuery || filterDealership !== 'all' || filterTechnician !== 'all' || filterFromDate || filterToDate) ? (
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={clearFilters}
-                                    className="h-11 rounded-2xl px-3 text-rose-200 hover:bg-rose-400/10 hover:text-rose-100"
-                                >
-                                    <X className="mr-1 h-4 w-4" />
-                                    Clear
-                                </Button>
-                            ) : null}
-                        </div>
-                    </div>
-                    <div className="mt-4 flex flex-wrap items-center gap-2">
-                        <Button
-                            type="button"
-                            variant={queueTab === 'approval' ? 'secondary' : 'outline'}
-                            className={cn(
-                                'h-10 rounded-2xl px-4',
-                                queueTab === 'approval' ? 'border-cyan-300/25 bg-cyan-500/10 text-cyan-100' : 'border-white/10 bg-[#0b1424] text-slate-200 hover:bg-[#122039]',
-                            )}
-                            onClick={() => setQueueTab('approval')}
-                        >
-                            Approval Queue
-                            <Badge variant="outline" className="ml-2 h-6 rounded-full border-current/15 bg-white/10 px-2 text-[10px] text-current">
-                                {filteredInvoices.length}
-                            </Badge>
-                        </Button>
-                        <Button
-                            type="button"
-                            variant={queueTab === 'blocked' ? 'secondary' : 'outline'}
-                            className={cn(
-                                'h-10 rounded-2xl px-4',
-                                queueTab === 'blocked' ? 'border-red-300/25 bg-red-500/10 text-red-100' : 'border-white/10 bg-[#0b1424] text-slate-200 hover:bg-[#122039]',
-                            )}
-                            onClick={() => setQueueTab('blocked')}
-                        >
-                            Blocked Queue
-                            <Badge variant="outline" className="ml-2 h-6 rounded-full border-current/15 bg-white/10 px-2 text-[10px] text-current">
-                                {filteredBlockedInvoices.length}
-                            </Badge>
-                        </Button>
-                    </div>
-                </div>
             </div>
 
             <div className="relative flex min-h-[520px] flex-1 flex-col overflow-hidden rounded-[32px] border border-white/10 bg-[linear-gradient(180deg,rgba(8,22,39,0.98),rgba(5,15,28,0.99))] shadow-[0_34px_110px_rgba(0,0,0,0.34)]">

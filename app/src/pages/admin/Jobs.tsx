@@ -2478,65 +2478,7 @@ export default function JobsPage() {
                 onConfirm={handleExport}
             />
 
-            {/* 2. Filter Bar */}
-            <div className="admin-jobs-filters relative overflow-hidden rounded-[26px] border border-slate-200 bg-white shadow-[0_18px_48px_rgba(15,23,42,0.07)] dark:border-white/8 dark:bg-[linear-gradient(180deg,rgba(9,22,38,0.985),rgba(7,18,30,0.985))] dark:shadow-[0_20px_60px_rgba(0,0,0,0.24)]">
-                <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-slate-900/20 to-transparent dark:via-cyan-200/60" />
-                <div className="absolute inset-x-0 top-0 h-10 bg-gradient-to-r from-slate-100 via-transparent to-slate-50 pointer-events-none dark:from-[#2F8E92]/5 dark:to-blue-500/4" />
-                <div className="relative space-y-3 p-4 md:p-5">
-                    <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-                        <div className="flex min-w-0 flex-wrap items-center gap-2">
-                            {statusFilterOptions.map((option) => (
-                                <Button
-                                    key={option.key}
-                                    type="button"
-                                    variant={statusFilter === option.key ? 'secondary' : 'outline'}
-                                    size="sm"
-                                    onClick={() => {
-                                        setStatusFilter(option.key);
-                                        setPagination((prev) => ({ ...prev, page: 1 }));
-                                    }}
-                                    className={cn(
-                                        'h-8 rounded-full px-3 text-xs font-semibold shadow-none',
-                                        statusFilter === option.key
-                                            ? 'border-slate-900 bg-slate-900 text-white dark:border-cyan-300/25 dark:bg-cyan-500/[0.12] dark:text-cyan-100'
-                                            : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 dark:border-white/8 dark:bg-white/[0.03] dark:text-slate-200 dark:hover:bg-white/[0.08] dark:hover:text-white',
-                                    )}
-                                >
-                                    {option.label}
-                                </Button>
-                            ))}
-                        </div>
-                        <div className="flex flex-wrap items-center gap-2 text-xs">
-                            <Select value={jobSortMode} onValueChange={(value) => handleSortModeChange(value as JobSortMode)}>
-                                <SelectTrigger className="h-9 w-full rounded-full border-slate-200 bg-white text-slate-800 shadow-none sm:w-[170px] dark:border-white/8 dark:bg-white/[0.035] dark:text-white">
-                                    <div className="flex items-center gap-2 text-sm">
-                                        <TrendingUp className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400" />
-                                        <SelectValue placeholder="Sort by" />
-                                    </div>
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="rank">Rank</SelectItem>
-                                    <SelectItem value="created_newest">Created Date: Newest</SelectItem>
-                                    <SelectItem value="created_oldest">Created Date: Oldest</SelectItem>
-                                    <SelectItem value="urgency">Urgency</SelectItem>
-                                    <SelectItem value="status">Status</SelectItem>
-                                    <SelectItem value="job_id">Job ID</SelectItem>
-                                </SelectContent>
-                            </Select>
-                            <Badge variant="outline" className="h-8 rounded-full border-slate-200 bg-slate-50 px-3 text-slate-600 dark:border-white/10 dark:bg-[#0b1424] dark:text-slate-300 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-                                {jobSortBadgeLabel}
-                            </Badge>
-                            {activeFilterCount > 0 ? (
-                                <Badge variant="outline" className="h-8 rounded-full border-cyan-200 bg-cyan-50 px-3 text-cyan-700 dark:border-cyan-300/20 dark:bg-cyan-300/10 dark:text-cyan-100">
-                                    {activeFilterCount} active filter{activeFilterCount === 1 ? '' : 's'}
-                                </Badge>
-                            ) : null}
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* 3. Jobs Table */}
+            {/* 2. Jobs Table */}
             <div className="admin-jobs-board relative flex min-h-[620px] flex-1 flex-col overflow-hidden rounded-[28px] border border-white/8 bg-[linear-gradient(180deg,rgba(8,22,38,0.985),rgba(6,15,27,0.99))] shadow-[0_24px_72px_rgba(0,0,0,0.28)]">
                 <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-slate-900/20 to-transparent dark:via-cyan-300/70" />
                 <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(15,23,42,0.03),transparent_26%),radial-gradient(circle_at_bottom_left,rgba(15,23,42,0.02),transparent_24%)] dark:bg-[radial-gradient(circle_at_top_right,rgba(47,142,146,0.10),transparent_26%),radial-gradient(circle_at_bottom_left,rgba(59,130,246,0.06),transparent_24%)]" />
@@ -2556,17 +2498,72 @@ export default function JobsPage() {
                             </p>
                         </div>
                     </div>
-                    <div className="flex flex-wrap items-center gap-2 text-xs">
-                        <Badge variant="outline" className="h-9 rounded-full border-cyan-300/18 bg-cyan-300/10 px-3 text-cyan-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-                            <ClipboardList className="mr-1.5 h-3.5 w-3.5 text-cyan-200" />
-                            {pagination.total} total jobs
-                        </Badge>
-                        {selectedRows.size > 0 ? (
-                            <Badge variant="outline" className="h-9 rounded-full border-slate-700 bg-[#0b1424] px-3 text-slate-100 shadow-sm dark:border-white/10 dark:bg-[#0b1424] dark:text-slate-100">
-                                <Users className="mr-1.5 h-3.5 w-3.5" />
-                                {selectedRows.size} selected
-                            </Badge>
-                        ) : null}
+                    <div className="w-full max-w-[920px] lg:self-stretch">
+                        <div className="flex h-full flex-col gap-4 lg:items-end lg:justify-between">
+                            <div className="flex flex-wrap items-center gap-2 text-xs lg:justify-end">
+                                <Badge variant="outline" className="h-9 rounded-full border-cyan-300/18 bg-cyan-300/10 px-3 text-cyan-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                                    <ClipboardList className="mr-1.5 h-3.5 w-3.5 text-cyan-200" />
+                                    {pagination.total} total jobs
+                                </Badge>
+                                {selectedRows.size > 0 ? (
+                                    <Badge variant="outline" className="h-9 rounded-full border-slate-700 bg-[#0b1424] px-3 text-slate-100 shadow-sm dark:border-white/10 dark:bg-[#0b1424] dark:text-slate-100">
+                                        <Users className="mr-1.5 h-3.5 w-3.5" />
+                                        {selectedRows.size} selected
+                                    </Badge>
+                                ) : null}
+                            </div>
+
+                            <div className="flex w-full flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+                                <div className="flex min-w-0 flex-wrap items-center gap-2">
+                                    {statusFilterOptions.map((option) => (
+                                        <Button
+                                            key={option.key}
+                                            type="button"
+                                            variant={statusFilter === option.key ? 'secondary' : 'outline'}
+                                            size="sm"
+                                            onClick={() => {
+                                                setStatusFilter(option.key);
+                                                setPagination((prev) => ({ ...prev, page: 1 }));
+                                            }}
+                                            className={cn(
+                                                'h-8 rounded-full px-3 text-xs font-semibold shadow-none',
+                                                statusFilter === option.key
+                                                    ? 'border-slate-900 bg-slate-900 text-white dark:border-cyan-300/25 dark:bg-cyan-500/[0.12] dark:text-cyan-100'
+                                                    : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 dark:border-white/8 dark:bg-white/[0.03] dark:text-slate-200 dark:hover:bg-white/[0.08] dark:hover:text-white',
+                                            )}
+                                        >
+                                            {option.label}
+                                        </Button>
+                                    ))}
+                                </div>
+                                <div className="flex flex-wrap items-center gap-2 text-xs">
+                                    <Select value={jobSortMode} onValueChange={(value) => handleSortModeChange(value as JobSortMode)}>
+                                        <SelectTrigger className="h-9 w-full rounded-full border-slate-200 bg-white text-slate-800 shadow-none sm:w-[170px] dark:border-white/8 dark:bg-white/[0.035] dark:text-white">
+                                            <div className="flex items-center gap-2 text-sm">
+                                                <TrendingUp className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400" />
+                                                <SelectValue placeholder="Sort by" />
+                                            </div>
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="rank">Rank</SelectItem>
+                                            <SelectItem value="created_newest">Created Date: Newest</SelectItem>
+                                            <SelectItem value="created_oldest">Created Date: Oldest</SelectItem>
+                                            <SelectItem value="urgency">Urgency</SelectItem>
+                                            <SelectItem value="status">Status</SelectItem>
+                                            <SelectItem value="job_id">Job ID</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                    <Badge variant="outline" className="h-8 rounded-full border-slate-200 bg-slate-50 px-3 text-slate-600 dark:border-white/10 dark:bg-[#0b1424] dark:text-slate-300 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                                        {jobSortBadgeLabel}
+                                    </Badge>
+                                    {activeFilterCount > 0 ? (
+                                        <Badge variant="outline" className="h-8 rounded-full border-cyan-200 bg-cyan-50 px-3 text-cyan-700 dark:border-cyan-300/20 dark:bg-cyan-300/10 dark:text-cyan-100">
+                                            {activeFilterCount} active filter{activeFilterCount === 1 ? '' : 's'}
+                                        </Badge>
+                                    ) : null}
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 

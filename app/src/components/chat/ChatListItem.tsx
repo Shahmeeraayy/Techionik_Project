@@ -7,7 +7,6 @@ type ChatPresenceTone = 'online' | 'busy' | 'away' | 'offline' | 'neutral';
 
 export type ChatListItemProps = {
   title: string;
-  preview?: string | null;
   timestamp?: string | null;
   statusLabel?: string | null;
   statusTone?: ChatPresenceTone;
@@ -22,7 +21,6 @@ export type ChatListItemProps = {
 
 export function ChatListItem({
   title,
-  preview,
   timestamp,
   statusLabel,
   statusTone = 'neutral',
@@ -70,11 +68,6 @@ export function ChatListItem({
               </p>
               {favorite ? <Star className="h-3.5 w-3.5 shrink-0 fill-current text-amber-400" /> : null}
             </div>
-            {preview ? (
-              <p className="mt-0.5 line-clamp-1 text-[13px] leading-5 text-slate-500 dark:text-slate-400">
-                {preview}
-              </p>
-            ) : null}
           </div>
 
           <div className="flex shrink-0 items-center gap-2 pl-2">
