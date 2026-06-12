@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef, type CSSProperties } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback, type CSSProperties } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
     Activity,
@@ -222,6 +222,21 @@ type DealershipOption = {
 type SearchableSelectOption = {
     value: string;
     label: string;
+};
+
+type JobsRefreshState = {
+    technicianOptions: TechnicianOption[];
+    dealershipOptions: DealershipOption[];
+    serviceCatalog: Array<{ id: string; name: string }>;
+    dispatchRankingRules: PriorityRule[];
+    searchQuery: string;
+    urgencyFilter: string;
+    statusFilter: StatusFilterKey;
+    dateFilter: string;
+    activeQuickFilter: QuickFilterKey | null;
+    jobSortMode: JobSortMode;
+    pagination: Pick<PaginationState, 'page' | 'pageSize'>;
+    dataLength: number;
 };
 
 // --- Reference Data ---
@@ -1002,6 +1017,20 @@ export default function JobsPage() {
     const [urgencyFilter, setUrgencyFilter] = useState<string>('all');
     const [statusFilter, setStatusFilter] = useState<StatusFilterKey>('all');
     const [dateFilter, setDateFilter] = useState('');
+    const latestJobsRefreshStateRef = useRef<JobsRefreshState>({
+        technicianOptions: [],
+        dealershipOptions: [],
+        serviceCatalog: [],
+        dispatchRankingRules: [],
+        searchQuery: '',
+        urgencyFilter: 'all',
+        statusFilter: 'all',
+        dateFilter: '',
+        activeQuickFilter: null,
+        jobSortMode: 'rank',
+        pagination: { page: 1, pageSize: 25 },
+        dataLength: 0,
+    });
 
     useEffect(() => {
         const params = new URLSearchParams(location.search);
@@ -1010,6 +1039,40 @@ export default function JobsPage() {
             setSearchQuery(locationQuery);
         }
     }, [location.search]);
+
+    useEffect(() => {
+        latestJobsRefreshStateRef.current = {
+            technicianOptions,
+            dealershipOptions,
+            serviceCatalog,
+            dispatchRankingRules,
+            searchQuery,
+            urgencyFilter,
+            statusFilter,
+            dateFilter,
+            activeQuickFilter,
+            jobSortMode,
+            pagination: {
+                page: pagination.page,
+                pageSize: pagination.pageSize,
+            },
+            dataLength: data.length,
+        };
+    }, [
+        activeQuickFilter,
+        data.length,
+        dealershipOptions,
+        dateFilter,
+        dispatchRankingRules,
+        jobSortMode,
+        pagination.page,
+        pagination.pageSize,
+        searchQuery,
+        serviceCatalog,
+        statusFilter,
+        technicianOptions,
+        urgencyFilter,
+    ]);
 
     const assignJobZone = useMemo(() => {
         if (!jobToAssign) return '';
@@ -1187,115 +1250,141 @@ export default function JobsPage() {
         });
     }, [serviceNames]);
 
-    const syncLegacyConfirmedLocalJobsToBackend = async (
-        token: string,
-        backendRows: BackendAdminJob[],
-    ): Promise<BackendAdminJob[]> => {
-        const backendCodes = new Set(backendRows.map((row) => row.job_code));
-        const legacyScheduledJobs = loadPersistedJobs().filter((job) => (
-            !isBackendPersistedJobId(job.job_id)
-            && !backendCodes.has(job.job_code)
-            && job.job_status === 'scheduled'
-            && Boolean(job.assigned_technician_name?.trim())
-        ));
+    const syncLegacyConfirmedLocalJobsToBackend = useCallback(
+        async (
+            token: string,
+            backendRows: BackendAdminJob[],
+            technicianOptionsSnapshot: TechnicianOption[],
+        ): Promise<BackendAdminJob[]> => {
+            const backendCodes = new Set(backendRows.map((row) => row.job_code));
+            const legacyScheduledJobs = loadPersistedJobs().filter((job) => (
+                !isBackendPersistedJobId(job.job_id)
+                && !backendCodes.has(job.job_code)
+                && job.job_status === 'scheduled'
+                && Boolean(job.assigned_technician_name?.trim())
+            ));
 
-        if (legacyScheduledJobs.length === 0) {
-            return backendRows;
-        }
+            if (legacyScheduledJobs.length === 0) {
+                return backendRows;
+            }
 
-        let syncedAny = false;
-        for (const localJob of legacyScheduledJobs) {
-            const assignedName = localJob.assigned_technician_name?.trim();
-            if (!assignedName) continue;
+            let syncedAny = false;
+            for (const localJob of legacyScheduledJobs) {
+                const assignedName = localJob.assigned_technician_name?.trim();
+                if (!assignedName) continue;
 
-            const assignedTech = technicianOptions.find((tech) => tech.name === assignedName);
-            if (!assignedTech) continue;
+                const assignedTech = technicianOptionsSnapshot.find((tech) => tech.name === assignedName);
+                if (!assignedTech) continue;
+
+                try {
+                    const created = await createAdminJob(token, {
+                        job_code: localJob.job_code,
+                        dealership_name: localJob.dealership_name,
+                        service_name: localJob.service_name,
+                        service_names: localJob.service_names,
+                        vehicle_summary: localJob.vehicle_summary,
+                        pre_assigned_technician_id: assignedTech.id,
+                    });
+                    const confirmed = await confirmAdminJob(token, created.id);
+                    reconcilePersistedJobIdByCode(localJob.job_code, confirmed.id);
+                    syncedAny = true;
+                } catch (error) {
+                    console.warn('Failed to backfill local confirmed job to backend', localJob.job_code, error);
+                }
+            }
+
+            if (!syncedAny) {
+                return backendRows;
+            }
+
+            return fetchAdminJobs(token);
+        },
+        [],
+    );
+
+    const syncBackendJobsFromApi = useCallback(
+        async (showErrorToast = false) => {
+            const token = getStoredAdminToken();
+            if (!token) {
+                return false;
+            }
 
             try {
-                const created = await createAdminJob(token, {
-                    job_code: localJob.job_code,
-                    dealership_name: localJob.dealership_name,
-                    service_name: localJob.service_name,
-                    service_names: localJob.service_names,
-                    vehicle_summary: localJob.vehicle_summary,
-                    pre_assigned_technician_id: assignedTech.id,
-                });
-                const confirmed = await confirmAdminJob(token, created.id);
-                reconcilePersistedJobIdByCode(localJob.job_code, confirmed.id);
-                syncedAny = true;
-            } catch (error) {
-                console.warn('Failed to backfill local confirmed job to backend', localJob.job_code, error);
-            }
-        }
-
-        if (!syncedAny) {
-            return backendRows;
-        }
-
-        return fetchAdminJobs(token);
-    };
-
-    const syncBackendJobsFromApi = async (showErrorToast = false) => {
-        const token = getStoredAdminToken();
-        if (!token) {
-            return false;
-        }
-
-        try {
-            const existingJobCodes = new Set(loadPersistedJobs().map((job) => job.job_code));
-            const backendJobs = await fetchAdminJobs(token);
-            const syncedBackendJobs = await syncLegacyConfirmedLocalJobsToBackend(token, backendJobs);
-            const newMakeJobs = hasCompletedInitialBackendSyncRef.current
-                ? syncedBackendJobs.filter((row) => isMakeIntakeJob(row) && !existingJobCodes.has(row.job_code))
-                : [];
-            const didMerge = mergeBackendJobsIntoLocalStore(
-                syncedBackendJobs,
-                dealershipOptions,
-                serviceCatalog,
-                dispatchRankingRules,
-            );
-            if (didMerge) {
-                if (newMakeJobs.length > 0) {
-                    toast.info(
-                        newMakeJobs.length === 1 ? 'New Make.com job received' : `${newMakeJobs.length} new Make.com jobs received`,
-                        {
-                            description: formatNewMakeJobsDescription(newMakeJobs),
-                            duration: 10000,
-                        },
-                    );
+                const {
+                    dealershipOptions: currentDealershipOptions,
+                    serviceCatalog: currentServiceCatalog,
+                    dispatchRankingRules: currentDispatchRankingRules,
+                    technicianOptions: currentTechnicianOptions,
+                } = latestJobsRefreshStateRef.current;
+                const existingJobCodes = new Set(loadPersistedJobs().map((job) => job.job_code));
+                const backendJobs = await fetchAdminJobs(token);
+                const syncedBackendJobs = await syncLegacyConfirmedLocalJobsToBackend(
+                    token,
+                    backendJobs,
+                    currentTechnicianOptions,
+                );
+                const newMakeJobs = hasCompletedInitialBackendSyncRef.current
+                    ? syncedBackendJobs.filter((row) => isMakeIntakeJob(row) && !existingJobCodes.has(row.job_code))
+                    : [];
+                const didMerge = mergeBackendJobsIntoLocalStore(
+                    syncedBackendJobs,
+                    currentDealershipOptions,
+                    currentServiceCatalog,
+                    currentDispatchRankingRules,
+                );
+                if (didMerge) {
+                    if (newMakeJobs.length > 0) {
+                        toast.info(
+                            newMakeJobs.length === 1 ? 'New Make.com job received' : `${newMakeJobs.length} new Make.com jobs received`,
+                            {
+                                description: formatNewMakeJobsDescription(newMakeJobs),
+                                duration: 10000,
+                            },
+                        );
+                    }
+                    hasCompletedInitialBackendSyncRef.current = true;
                 }
-                hasCompletedInitialBackendSyncRef.current = true;
+                return didMerge;
+            } catch (error) {
+                if (showErrorToast) {
+                    const message = error instanceof Error ? error.message : 'Failed to refresh jobs from backend';
+                    toast.error(message);
+                }
+                return false;
             }
-            return didMerge;
-        } catch (error) {
-            if (showErrorToast) {
-                const message = error instanceof Error ? error.message : 'Failed to refresh jobs from backend';
-                toast.error(message);
-            }
-            return false;
-        }
-    };
+        },
+        [syncLegacyConfirmedLocalJobsToBackend],
+    );
 
-    const fetchData = ({ background = false }: { background?: boolean } = {}) => {
+    const fetchData = useCallback(({ background = false }: { background?: boolean } = {}) => {
         if (fetchTimerRef.current) {
             clearTimeout(fetchTimerRef.current);
             fetchTimerRef.current = null;
         }
 
-        if (!background || data.length === 0) {
+        if (!background || latestJobsRefreshStateRef.current.dataLength === 0) {
             setLoading(true);
         }
 
         // Simulate API Latency and Server-Side Filtering
         fetchTimerRef.current = setTimeout(() => {
+            const {
+                searchQuery: currentSearchQuery,
+                urgencyFilter: currentUrgencyFilter,
+                statusFilter: currentStatusFilter,
+                dateFilter: currentDateFilter,
+                activeQuickFilter: currentActiveQuickFilter,
+                jobSortMode: currentJobSortMode,
+                pagination: currentPagination,
+            } = latestJobsRefreshStateRef.current;
             const allJobs = [...loadPersistedJobs()];
             setQuickFilterCounts(calculateQuickFilterCounts(allJobs));
 
             let filtered = [...allJobs];
 
             // Filter logic (simulating backend)
-            if (searchQuery) {
-                const lower = searchQuery.toLowerCase();
+            if (currentSearchQuery) {
+                const lower = currentSearchQuery.toLowerCase();
                 filtered = filtered.filter(j =>
                     j.job_code.toLowerCase().includes(lower)
                     || j.job_id.toLowerCase().includes(lower)
@@ -1307,19 +1396,19 @@ export default function JobsPage() {
                     || j.vehicle_summary.toLowerCase().includes(lower)
                 );
             }
-            if (urgencyFilter !== 'all') filtered = filtered.filter(j => j.urgency === urgencyFilter);
-            if (statusFilter !== 'all') filtered = filtered.filter(j => matchesStatusFilter(j, statusFilter));
-            if (dateFilter) filtered = filtered.filter(j => toLocalDateFilterValue(j.created_at) === dateFilter);
-            if (activeQuickFilter) filtered = filtered.filter(j => matchesQuickFilter(j, activeQuickFilter));
+            if (currentUrgencyFilter !== 'all') filtered = filtered.filter(j => j.urgency === currentUrgencyFilter);
+            if (currentStatusFilter !== 'all') filtered = filtered.filter(j => matchesStatusFilter(j, currentStatusFilter));
+            if (currentDateFilter) filtered = filtered.filter(j => toLocalDateFilterValue(j.created_at) === currentDateFilter);
+            if (currentActiveQuickFilter) filtered = filtered.filter(j => matchesQuickFilter(j, currentActiveQuickFilter));
 
-            if (jobSortMode === 'created_newest') {
+            if (currentJobSortMode === 'created_newest') {
                 filtered = [...filtered].sort((a, b) => getSortableTimestamp(b.created_at) - getSortableTimestamp(a.created_at));
-            } else if (jobSortMode === 'created_oldest') {
+            } else if (currentJobSortMode === 'created_oldest') {
                 filtered = [...filtered].sort((a, b) => getSortableTimestamp(a.created_at) - getSortableTimestamp(b.created_at));
-            } else if (jobSortMode === 'urgency') {
+            } else if (currentJobSortMode === 'urgency') {
                 const urgencyRank: Record<Urgency, number> = { critical: 4, high: 3, normal: 2, low: 1 };
                 filtered = [...filtered].sort((a, b) => urgencyRank[b.urgency] - urgencyRank[a.urgency]);
-            } else if (jobSortMode === 'status') {
+            } else if (currentJobSortMode === 'status') {
                 const statusOrder: Record<JobStatus, number> = {
                     admin_preview: 1,
                     pending_admin_confirmation: 2,
@@ -1331,7 +1420,7 @@ export default function JobsPage() {
                     unknown: 8,
                 };
                 filtered = [...filtered].sort((a, b) => statusOrder[a.job_status] - statusOrder[b.job_status]);
-            } else if (jobSortMode === 'job_id') {
+            } else if (currentJobSortMode === 'job_id') {
                 filtered = [...filtered].sort((a, b) => a.job_id.localeCompare(b.job_id));
             } else {
                 filtered = [...filtered].sort((a, b) => {
@@ -1344,20 +1433,20 @@ export default function JobsPage() {
             }
 
             const total = filtered.length;
-            const computedTotalPages = Math.ceil(total / pagination.pageSize);
+            const computedTotalPages = Math.ceil(total / currentPagination.pageSize);
             const totalPages = total === 0 ? 1 : computedTotalPages;
-            const nextPage = total === 0 ? 1 : Math.min(pagination.page, totalPages);
-            const start = (nextPage - 1) * pagination.pageSize;
-            const paginatedData = filtered.slice(start, start + pagination.pageSize);
+            const nextPage = total === 0 ? 1 : Math.min(currentPagination.page, totalPages);
+            const start = (nextPage - 1) * currentPagination.pageSize;
+            const paginatedData = filtered.slice(start, start + currentPagination.pageSize);
 
             setData(paginatedData);
             setPagination(prev => ({ ...prev, page: nextPage, total, totalPages }));
             setLoading(false);
             fetchTimerRef.current = null;
         }, 600);
-    };
+    }, []);
 
-    const refreshJobs = ({
+    const refreshJobs = useCallback(({
         showErrorToast = false,
         background = true,
     }: {
@@ -1378,22 +1467,22 @@ export default function JobsPage() {
                 refreshInFlightRef.current = false;
             }
         })();
-    };
+    }, [fetchData, syncBackendJobsFromApi]);
 
     useEffect(() => {
         fetchData();
-    }, [pagination.page, pagination.pageSize, searchQuery, urgencyFilter, statusFilter, dateFilter, activeQuickFilter, jobSortMode]);
+    }, [activeQuickFilter, dateFilter, fetchData, jobSortMode, pagination.page, pagination.pageSize, searchQuery, statusFilter, urgencyFilter]);
 
     useEffect(() => {
         refreshJobs({ background: false });
-    }, []);
+    }, [refreshJobs]);
 
     useEffect(() => {
         if (dealershipOptions.length === 0 || dispatchRankingRules.length === 0) {
             return;
         }
         refreshJobs({ background: true });
-    }, [dealershipOptions, serviceCatalog, dispatchRankingRules]);
+    }, [dealershipOptions, dispatchRankingRules, refreshJobs, serviceCatalog]);
 
     useEffect(() => {
         const maybeRefreshInBackground = () => {
@@ -1422,7 +1511,7 @@ export default function JobsPage() {
             window.removeEventListener('focus', onFocus);
             window.removeEventListener(ADMIN_REFRESH_EVENT, onHeaderRefresh);
         };
-    }, []);
+    }, [refreshJobs]);
 
     useEffect(() => {
         return () => {
@@ -2051,25 +2140,6 @@ export default function JobsPage() {
             : visibleSelectedCount > 0
                 ? 'indeterminate'
                 : false;
-    const activeFilterCount = [
-        Boolean(searchQuery.trim()),
-        urgencyFilter !== 'all',
-        statusFilter !== 'all',
-        Boolean(dateFilter),
-        activeQuickFilter !== null,
-    ].filter(Boolean).length;
-    const jobSortBadgeLabel =
-        jobSortMode === 'created_newest'
-            ? 'Created newest first'
-            : jobSortMode === 'created_oldest'
-                ? 'Created oldest first'
-                : jobSortMode === 'urgency'
-                    ? 'Sorted by urgency'
-                    : jobSortMode === 'status'
-                        ? 'Sorted by status'
-                        : jobSortMode === 'job_id'
-                            ? 'Sorted by job ID'
-                            : 'Sorted by rank';
     const JobDetailsSortIcon =
         jobSortMode === 'created_newest'
             ? ArrowDown
@@ -2538,10 +2608,10 @@ export default function JobsPage() {
                                 </div>
                                 <div className="flex shrink-0 flex-col items-end gap-2 text-xs">
                                     <Select value={jobSortMode} onValueChange={(value) => handleSortModeChange(value as JobSortMode)}>
-                                        <SelectTrigger className="h-9 w-[170px] rounded-full border-slate-200 bg-white text-slate-800 shadow-none dark:border-white/8 dark:bg-white/[0.035] dark:text-white">
-                                            <div className="flex items-center gap-2 text-sm">
+                                        <SelectTrigger className="h-9 w-fit min-w-[12.5rem] max-w-full overflow-hidden rounded-full border-slate-200 bg-white text-slate-800 shadow-none dark:border-white/8 dark:bg-white/[0.035] dark:text-white">
+                                            <div className="flex min-w-0 flex-1 items-center gap-2 text-sm">
                                                 <TrendingUp className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400" />
-                                                <SelectValue placeholder="Sort by" />
+                                                <SelectValue className="min-w-0 flex-1 truncate" placeholder="Sort by" />
                                             </div>
                                         </SelectTrigger>
                                         <SelectContent>
@@ -2553,14 +2623,6 @@ export default function JobsPage() {
                                             <SelectItem value="job_id">Job ID</SelectItem>
                                         </SelectContent>
                                     </Select>
-                                    <Badge variant="outline" className="h-8 rounded-full border-slate-200 bg-slate-50 px-3 text-slate-600 dark:border-white/10 dark:bg-[#0b1424] dark:text-slate-300 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-                                        {jobSortBadgeLabel}
-                                    </Badge>
-                                    {activeFilterCount > 0 ? (
-                                        <Badge variant="outline" className="h-8 rounded-full border-cyan-200 bg-cyan-50 px-3 text-cyan-700 dark:border-cyan-300/20 dark:bg-cyan-300/10 dark:text-cyan-100">
-                                            {activeFilterCount} active filter{activeFilterCount === 1 ? '' : 's'}
-                                        </Badge>
-                                    ) : null}
                                 </div>
                             </div>
                         </div>
