@@ -667,6 +667,8 @@ class InvoiceService:
             "billing_email": str(identity["billing_email"]),
             "invoice_email": str(identity["invoice_email"]),
             "notification_email": str(identity["notification_email"]),
+            "invoice_email_subject": str(identity["invoice_email_subject"]),
+            "invoice_email_body": str(identity["invoice_email_body"]),
         }
 
     def _build_invoice_email_html(self, invoice: Invoice, recipient: str) -> str:

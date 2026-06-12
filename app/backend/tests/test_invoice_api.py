@@ -108,6 +108,7 @@ class InvoiceApiTests(unittest.TestCase):
         )
         self.assertEqual(create_res.status_code, 201, create_res.text)
         invoice = create_res.json()
+        support_email = template_update.json()["support_email"]
 
         send_res = self.client.post(
             f"/invoices/{invoice['id']}/send-email",
@@ -123,7 +124,7 @@ class InvoiceApiTests(unittest.TestCase):
             self.assertEqual(outbox.message_type, "invoice_email")
             self.assertIn(f"Invoice {invoice['invoice_number']} for", outbox.subject)
             self.assertIn(invoice["invoice_number"], outbox.body)
-            self.assertIn("Please reply to support@nexusops.com", outbox.body)
+            self.assertIn(f"Please reply to {support_email}", outbox.body)
             self.assertIn("Line items:", outbox.body)
 
     def _seed_completed_job(
