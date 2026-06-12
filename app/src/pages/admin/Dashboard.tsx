@@ -596,8 +596,8 @@ export default function Dashboard() {
           </div>
         </section>
 
-        <div className="grid grid-cols-1 2xl:grid-cols-[1.6fr_1fr] gap-6">
-          <section className="relative overflow-hidden rounded-[28px] border border-black/8 bg-[linear-gradient(180deg,#ffffff,#fafafa)] shadow-[0_28px_90px_rgba(15,23,42,0.06)] dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,23,38,0.98),rgba(7,18,31,0.98))] dark:shadow-[0_28px_90px_rgba(0,0,0,0.3)]">
+        <div className="grid grid-cols-1 gap-6 2xl:grid-cols-[1.6fr_1fr] 2xl:items-stretch">
+          <section className="relative flex h-full min-h-0 flex-col overflow-hidden rounded-[28px] border border-black/8 bg-[linear-gradient(180deg,#ffffff,#fafafa)] shadow-[0_28px_90px_rgba(15,23,42,0.06)] dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,23,38,0.98),rgba(7,18,31,0.98))] dark:shadow-[0_28px_90px_rgba(0,0,0,0.3)]">
             <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-slate-900/20 to-transparent dark:via-cyan-200/60" />
             <div className="flex items-center justify-between px-6 pb-4 pt-6">
               <div>
@@ -619,48 +619,48 @@ export default function Dashboard() {
               </Button>
             </div>
 
-            <div className="relative">
-            <ScrollArea className="h-[560px]">
-              <div className="px-6 pb-6">
-                {snapshot?.activity.length ? (
-                  <div className="space-y-4">
-                    {snapshot.activity.map((event, i) => (
-                      <div
-                        key={event.id}
-                        className="rounded-[22px] border border-black/8 bg-white px-5 py-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.92)] dark:border-white/10 dark:bg-white/[0.03] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"
-                        style={{ animation: 'slide-in-right 0.4s ease both', animationDelay: `${i * 50}ms` }}
-                      >
-                        <div className="flex items-start gap-4">
-                          <span className="relative mt-1.5 flex h-4 w-4 shrink-0">
-                            <span className="absolute inline-flex h-full w-full rounded-full opacity-75" style={{ backgroundColor: activityDotColor(event.tone), animation: 'live-ping 1.4s ease-out infinite', animationDelay: `${i * 200}ms` }} />
-                            <span className="relative inline-flex h-4 w-4 rounded-full" style={{ backgroundColor: activityDotColor(event.tone), boxShadow: `0 0 8px 3px ${activityDotColor(event.tone)}99` }} />
-                          </span>
-                          <div className="min-w-0 flex-1">
-                            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                              <div className="min-w-0">
-                                <p className="truncate text-sm font-semibold text-slate-900 dark:text-white">{event.title}</p>
-                                <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">{event.description}</p>
+            <div className="relative flex flex-1 min-h-0 flex-col">
+              <ScrollArea className="h-full">
+                <div className="px-6 pb-6">
+                  {snapshot?.activity.length ? (
+                    <div className="space-y-4">
+                      {snapshot.activity.map((event, i) => (
+                        <div
+                          key={event.id}
+                          className="rounded-[22px] border border-black/8 bg-white px-5 py-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.92)] dark:border-white/10 dark:bg-white/[0.03] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"
+                          style={{ animation: 'slide-in-right 0.4s ease both', animationDelay: `${i * 50}ms` }}
+                        >
+                          <div className="flex items-start gap-4">
+                            <span className="relative mt-1.5 flex h-4 w-4 shrink-0">
+                              <span className="absolute inline-flex h-full w-full rounded-full opacity-75" style={{ backgroundColor: activityDotColor(event.tone), animation: 'live-ping 1.4s ease-out infinite', animationDelay: `${i * 200}ms` }} />
+                              <span className="relative inline-flex h-4 w-4 rounded-full" style={{ backgroundColor: activityDotColor(event.tone), boxShadow: `0 0 8px 3px ${activityDotColor(event.tone)}99` }} />
+                            </span>
+                            <div className="min-w-0 flex-1">
+                              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                                <div className="min-w-0">
+                                  <p className="truncate text-sm font-semibold text-slate-900 dark:text-white">{event.title}</p>
+                                  <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">{event.description}</p>
+                                </div>
+                                <Badge variant="outline" className={activityBadgeClasses(event.tone)}>
+                                  {event.badge}
+                                </Badge>
                               </div>
-                              <Badge variant="outline" className={activityBadgeClasses(event.tone)}>
-                                {event.badge}
-                              </Badge>
-                            </div>
-                            <div className="mt-4 text-xs font-medium uppercase tracking-[0.22em] text-slate-400 dark:text-slate-500">
-                              {event.timestamp}
+                              <div className="mt-4 text-xs font-medium uppercase tracking-[0.22em] text-slate-400 dark:text-slate-500">
+                                {event.timestamp}
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="rounded-[22px] border border-black/8 bg-white px-5 py-6 text-sm text-slate-500 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-400">
-                    No recent activity found.
-                  </div>
-                )}
-              </div>
-            </ScrollArea>
-            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 rounded-b-[28px] bg-gradient-to-t from-[rgba(7,18,31,0.95)] to-transparent" />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="rounded-[22px] border border-black/8 bg-white px-5 py-6 text-sm text-slate-500 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-400">
+                      No recent activity found.
+                    </div>
+                  )}
+                </div>
+              </ScrollArea>
+              <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 rounded-b-[28px] bg-gradient-to-t from-[rgba(7,18,31,0.95)] to-transparent" />
             </div>
           </section>
 
