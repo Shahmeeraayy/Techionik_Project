@@ -96,14 +96,14 @@ function MessageBubble({
     <div className="group relative">
       <div
         className={cn(
-          'relative max-w-[min(70%,42rem)] rounded-[24px] border px-4 py-3 shadow-[0_10px_25px_rgba(0,0,0,0.14)]',
+          'relative max-w-[min(64%,39rem)] rounded-[18px] border px-3.5 py-3 shadow-none',
           isOutgoing
-            ? 'ml-auto border-cyan-300/25 bg-[linear-gradient(135deg,rgba(103,232,249,0.95),rgba(34,211,238,0.82))] text-slate-950'
-            : 'mr-auto border-white/10 bg-white/[0.04] text-white',
-          isImportantChatMessage(message) && 'ring-1 ring-amber-300/30',
+            ? 'ml-auto border-sky-300/20 bg-sky-500 text-white'
+            : 'mr-auto border-white/8 bg-[#111a2a] text-white',
+          isImportantChatMessage(message) && 'ring-1 ring-amber-300/20',
         )}
       >
-        <div className="absolute right-2 top-2 opacity-0 transition group-hover:opacity-100">
+        <div className="absolute right-1.5 top-1.5 opacity-0 transition group-hover:opacity-100">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
@@ -111,9 +111,9 @@ function MessageBubble({
                 size="icon"
                 variant="ghost"
                 className={cn(
-                  'h-8 w-8 rounded-full',
+                  'h-7 w-7 rounded-full',
                   isOutgoing
-                    ? 'text-slate-800 hover:bg-white/40 hover:text-slate-950'
+                    ? 'text-slate-950 hover:bg-white/20 hover:text-slate-950'
                     : 'text-slate-300 hover:bg-white/[0.08] hover:text-white',
                 )}
                 aria-label="Message actions"
@@ -159,24 +159,24 @@ function MessageBubble({
         <div className="space-y-2">
           {replySnippet ? (
             <div className={cn(
-              'rounded-2xl border px-3 py-2 text-xs',
+              'rounded-2xl border-l-2 px-3 py-2 text-xs',
               isOutgoing
-                ? 'border-white/20 bg-white/20 text-slate-900'
-                : 'border-white/10 bg-white/[0.03] text-slate-300',
+                ? 'border-white/40 bg-white/15 text-white'
+                : 'border-cyan-300/20 bg-white/[0.04] text-slate-300',
             )}>
               <div className="font-semibold">{replySnippet.sender}</div>
               <div className="line-clamp-2 opacity-80">{replySnippet.text}</div>
             </div>
           ) : null}
 
-          <div className="flex items-center gap-2">
-            {message.is_pinned ? <Pin className={cn('h-3.5 w-3.5', isOutgoing ? 'text-slate-900' : 'text-cyan-400')} /> : null}
+          <div className="flex items-center gap-2 text-[11px] text-slate-500">
+            {message.is_pinned ? <Pin className={cn('h-3.5 w-3.5', isOutgoing ? 'text-white' : 'text-cyan-300')} /> : null}
             {message.attachments.some((attachment) => attachment.attachment_type === 'voice') ? (
               <Badge
                 variant="outline"
                 className={cn(
                   'h-5 border-cyan-300/20 px-2 text-[10px]',
-                  isOutgoing ? 'bg-white/30 text-slate-900' : 'bg-cyan-300/10 text-cyan-100',
+                  isOutgoing ? 'bg-white/15 text-white' : 'bg-cyan-300/10 text-cyan-100',
                 )}
               >
                 Voice note
@@ -187,7 +187,7 @@ function MessageBubble({
                 variant="outline"
                 className={cn(
                   'h-5 border-emerald-300/20 px-2 text-[10px]',
-                  isOutgoing ? 'bg-white/30 text-slate-900' : 'bg-emerald-300/10 text-emerald-100',
+                  isOutgoing ? 'bg-white/15 text-white' : 'bg-emerald-300/10 text-emerald-100',
                 )}
               >
                 {conversation?.job_code || 'Job'}
@@ -204,7 +204,7 @@ function MessageBubble({
           />
 
           {message.text && (!message.metadata?.kind || message.metadata.kind === 'important' || message.metadata.kind === 'site_photo') ? (
-            <p className="text-sm leading-6">{message.text}</p>
+            <p className="text-[15px] leading-6">{message.text}</p>
           ) : null}
 
           {message.attachments.length > 0 ? (
@@ -230,7 +230,7 @@ function MessageBubble({
       </div>
 
       <div className={cn(
-        'mt-1 flex items-center gap-2 px-1 text-xs text-slate-500',
+        'mt-1 flex items-center gap-2 px-1 text-[11px] text-slate-500',
         isOutgoing ? 'justify-end' : 'justify-start',
       )}>
         <span>{formatConversationClock(message.created_at)}</span>
@@ -258,12 +258,12 @@ export function ChatMessageTimeline({
 
   if (groups.length === 0) {
     return (
-      <div className={cn('flex min-h-[320px] flex-col items-center justify-center py-12 text-center', className)}>
-        <div className="mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-white/[0.05]">
-          <Reply className="h-10 w-10 text-slate-500" />
+      <div className={cn('flex min-h-[320px] flex-col items-center justify-center py-10 text-center', className)}>
+        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-white/[0.04]">
+          <Reply className="h-8 w-8 text-slate-500" />
         </div>
-        <h3 className="text-xl font-semibold text-white">No messages yet</h3>
-        <p className="mt-2 max-w-md text-sm leading-7 text-slate-400">
+        <h3 className="text-lg font-semibold text-white">No messages yet</h3>
+        <p className="mt-2 max-w-md text-sm leading-6 text-slate-400">
           Start the thread with a secure message, file, or voice note.
         </p>
       </div>
@@ -271,22 +271,22 @@ export function ChatMessageTimeline({
   }
 
   return (
-    <div className={cn('space-y-4', className)}>
+    <div className={cn('space-y-3', className)}>
       {groups.map((group: ChatMessageGroup) => {
         const isOutgoing = group.senderRole === outgoingRole;
         return (
-          <div key={group.key} className="space-y-3">
+          <div key={group.key} className="space-y-2.5">
             <div className="flex items-center gap-3 py-1">
               <div className="h-px flex-1 bg-white/8" />
-              <span className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-[11px] font-medium uppercase tracking-[0.18em] text-slate-400">
+              <span className="rounded-full border border-white/8 bg-white/[0.03] px-3 py-1 text-[10px] font-medium uppercase tracking-[0.2em] text-slate-400">
                 {group.dateLabel}
               </span>
               <div className="h-px flex-1 bg-white/8" />
             </div>
             <div className={cn('flex', isOutgoing ? 'justify-end' : 'justify-start')}>
-              <div className="w-full max-w-[min(72%,44rem)] space-y-2">
+              <div className="w-full max-w-[min(68%,39rem)] space-y-2">
                 <p className={cn(
-                  'px-1 text-[11px] font-semibold uppercase tracking-[0.18em]',
+                  'px-1 text-[10px] font-semibold uppercase tracking-[0.18em]',
                   isOutgoing ? 'text-right text-slate-500' : 'text-left text-slate-400',
                 )}>
                   {group.senderName}

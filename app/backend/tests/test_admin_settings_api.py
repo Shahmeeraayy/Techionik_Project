@@ -63,6 +63,10 @@ class AdminSettingsApiTests(unittest.TestCase):
         self.assertEqual(payload["billing_email"], "billing@techionik-mail.com")
         self.assertEqual(payload["invoice_email"], "invoices@techionik-mail.com")
         self.assertEqual(payload["notification_email"], "notifications@techionik-mail.com")
+        self.assertIn("invoice_email_subject", payload)
+        self.assertIn("invoice_email_body", payload)
+        self.assertTrue(payload["invoice_email_subject"])
+        self.assertTrue(payload["invoice_email_body"])
 
         refreshed_response = self.client.get(
             "/admin/settings/email-identity",

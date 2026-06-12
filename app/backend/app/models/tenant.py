@@ -32,6 +32,8 @@ class Tenant(Base):
     billing_email = Column(String(255), nullable=True)
     invoice_email = Column(String(255), nullable=True)
     notification_email = Column(String(255), nullable=True)
+    invoice_email_subject = Column(Text, nullable=True)
+    invoice_email_body = Column(Text, nullable=True)
     email_notifications_enabled = Column(Boolean, nullable=False, server_default=text("true"))
     in_app_notifications_enabled = Column(Boolean, nullable=False, server_default=text("true"))
     browser_push_notifications_enabled = Column(Boolean, nullable=False, server_default=text("true"))

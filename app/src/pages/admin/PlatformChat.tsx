@@ -8,6 +8,8 @@ import {
   MapPin,
   MessageCircleMore,
   Mic,
+  MoreVertical,
+  Plus,
   Paperclip,
   Pin,
   RefreshCw,
@@ -35,9 +37,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { ChatContextPanel } from '@/components/chat/ChatContextPanel';
+import { ChatContextSidebar } from '@/components/chat/ChatContextSidebar';
 import { ChatListItem } from '@/components/chat/ChatListItem';
 import { ChatMessageTimeline } from '@/components/chat/ChatMessageTimeline';
+import { SharedConversationPanel } from '@/components/chat/SharedConversationPanel';
 import { useAuth } from '@/contexts/AuthContext';
 import { useVoiceNoteRecorder } from '@/hooks/use-voice-note-recorder';
 import {
@@ -52,6 +55,7 @@ import {
   formatMessageDayLabel,
   formatRelativeChatTime,
   getConversationStatusLine,
+  getConversationPresenceTone,
   getConversationTypeLabel,
   isImportantChatMessage,
   shouldRenderMessageDayDivider,
@@ -179,6 +183,7 @@ export default function PlatformChatPage() {
   const [typingParticipants, setTypingParticipants] = useState<BackendChatTypingParticipant[]>([]);
   const [loadingConversations, setLoadingConversations] = useState(true);
   const [loadingMessages, setLoadingMessages] = useState(false);
+  const [isContextSidebarOpen, setIsContextSidebarOpen] = useState(false);
   const [workspaceTab, setWorkspaceTab] = useState<ChatWorkspaceTab>('chat');
   const attachInputRef = useRef<HTMLInputElement | null>(null);
   const sitePhotoInputRef = useRef<HTMLInputElement | null>(null);
@@ -236,6 +241,11 @@ export default function PlatformChatPage() {
     { key: 'group', label: 'Technician Groups', items: groupedConversations.group },
     { key: 'job', label: 'Job Chats', items: groupedConversations.job },
   ]), [groupedConversations]);
+
+  const recentConversations = useMemo(
+    () => filteredConversations.filter((conversation) => !favorites.includes(conversation.id)),
+    [favorites, filteredConversations],
+  );
 
   const selectedConversationDraft = selectedConversationId ? (draftsByConversation[selectedConversationId] ?? '') : '';
   const selectedConversationPendingAttachments = selectedConversationId
@@ -803,7 +813,7 @@ export default function PlatformChatPage() {
     <div className="relative flex min-h-0 w-full flex-1 flex-col overflow-hidden">
       <div className="pointer-events-none absolute inset-x-0 top-0 h-28 rounded-[34px] bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.12),rgba(34,211,238,0)_34%),radial-gradient(circle_at_top_right,rgba(52,211,153,0.08),rgba(52,211,153,0)_30%)]" />
       <div className="relative flex min-h-0 flex-1 flex-col gap-4">
-        <section className="grid min-h-0 flex-1 gap-4 xl:grid-cols-[320px_minmax(0,1fr)_360px]">
+        <section className="grid min-h-0 flex-1 gap-4 xl:grid-cols-[320px_minmax(0,1fr)]">
             <Card className="flex min-h-0 flex-col overflow-hidden rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(9,24,39,0.96),rgba(6,17,29,0.96))] shadow-[0_24px_80px_rgba(0,0,0,0.28)]">
               <div className="shrink-0 border-b border-white/8 p-5">
                 <div className="space-y-3">
@@ -904,10 +914,10 @@ export default function PlatformChatPage() {
               </div>
             </div>
             <ScrollArea className="min-h-0 flex-1">
-              <div className="space-y-4 p-3">
+              <div className="space-y-3 px-2.5 py-2">
                 {favoriteConversations.length > 0 ? (
                   <section className="space-y-2">
-                    <div className="px-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">
+                    <div className="px-2 text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-500">
                       Favorites
                     </div>
                     <div className="space-y-2">
@@ -917,6 +927,12 @@ export default function PlatformChatPage() {
                           title={conversation.title}
                           preview={conversation.last_message_preview || getConversationTypeLabel(conversation)}
                           timestamp={formatRelativeChatTime(conversation.last_message_at)}
+                          statusLabel={`${getConversationTypeLabel(conversation)} · ${conversation.channel_kind === 'group'
+                            ? `${conversation.member_count} member${conversation.member_count === 1 ? '' : 's'}`
+                            : conversation.channel_kind === 'job'
+                              ? (conversation.job_status || 'Active job')
+                              : (conversation.technician_status || 'Offline')}`}
+                          statusTone={getConversationPresenceTone(conversation)}
                           initials={getConversationInitials(conversation)}
                           avatarUrl={conversation.technician_avatar || undefined}
                           active={selectedConversationId === conversation.id}
@@ -929,14 +945,44 @@ export default function PlatformChatPage() {
                   </section>
                 ) : null}
 
+                {recentConversations.length > 0 ? (
+                  <section className="space-y-2">
+                    <div className="px-2 text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-500">
+                      Recent
+                    </div>
+                    <div className="space-y-1">
+                      {recentConversations.slice(0, 6).map((conversation) => (
+                        <ChatListItem
+                          key={`recent-${conversation.id}`}
+                          title={conversation.channel_kind === 'group' ? conversation.title : conversation.technician_name}
+                          preview={conversation.last_message_preview || (conversation.channel_kind === 'group' ? conversation.member_names.join(', ') : 'No messages yet')}
+                          timestamp={formatRelativeChatTime(conversation.last_message_at)}
+                          statusLabel={`${getConversationTypeLabel(conversation)} · ${conversation.channel_kind === 'group'
+                            ? `${conversation.member_count} member${conversation.member_count === 1 ? '' : 's'}`
+                            : conversation.channel_kind === 'job'
+                              ? (conversation.job_status || 'Active job')
+                              : (conversation.technician_status || 'Offline')}`}
+                          statusTone={getConversationPresenceTone(conversation)}
+                          initials={getConversationInitials(conversation)}
+                          avatarUrl={conversation.channel_kind === 'group' ? undefined : (conversation.technician_avatar || undefined)}
+                          active={selectedConversationId === conversation.id}
+                          unreadCount={conversation.unread_count}
+                          favorite={favorites.includes(conversation.id)}
+                          onClick={() => setSelectedConversationId(conversation.id)}
+                        />
+                      ))}
+                    </div>
+                  </section>
+                ) : null}
+
                 {loadingConversations ? (
                   <div className="space-y-2 p-2">
                     {Array.from({ length: 6 }).map((_, index) => (
-                      <div key={index} className="h-20 animate-pulse rounded-2xl bg-white/[0.05]" />
+                      <div key={index} className="h-16 animate-pulse rounded-[14px] bg-white/[0.05]" />
                     ))}
                   </div>
                 ) : filteredConversations.length === 0 ? (
-                  <div className="rounded-[24px] border border-dashed border-white/10 px-5 py-12 text-center text-sm text-slate-400">
+                  <div className="px-4 py-10 text-center text-sm text-slate-400">
                     {contactSearch.trim().length > 0
                       ? 'No chats matched that search. Try a technician name, group, or job code.'
                       : activeFilter === 'all'
@@ -956,6 +1002,12 @@ export default function PlatformChatPage() {
                             title={conversation.channel_kind === 'group' ? conversation.title : conversation.technician_name}
                             preview={conversation.last_message_preview || (conversation.channel_kind === 'group' ? conversation.member_names.join(', ') : conversation.title)}
                             timestamp={formatRelativeChatTime(conversation.last_message_at)}
+                            statusLabel={`${getConversationTypeLabel(conversation)} · ${conversation.channel_kind === 'group'
+                              ? `${conversation.member_count} member${conversation.member_count === 1 ? '' : 's'}`
+                              : conversation.channel_kind === 'job'
+                                ? (conversation.job_status || 'Active job')
+                                : (conversation.technician_status || 'Offline')}`}
+                            statusTone={getConversationPresenceTone(conversation)}
                             initials={getConversationInitials(conversation)}
                             avatarUrl={conversation.channel_kind === 'group' ? undefined : (conversation.technician_avatar || undefined)}
                             active={selectedConversationId === conversation.id}
@@ -1048,273 +1100,317 @@ export default function PlatformChatPage() {
                       <Star className={cn('h-4 w-4', selectedConversation && favorites.includes(selectedConversation.id) && 'fill-current text-amber-300')} />
                       Favorite
                     </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={() => setIsContextSidebarOpen(true)}
+                      disabled={!selectedConversation}
+                      className="h-9 w-9 rounded-full border-white/10 bg-white/[0.03] text-slate-200 hover:bg-white/[0.08]"
+                      aria-label="Open conversation sidebar"
+                    >
+                      <MoreVertical className="h-4 w-4" />
+                    </Button>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="flex min-h-0 flex-1 flex-col bg-[linear-gradient(180deg,rgba(238,247,248,0.03),rgba(255,255,255,0.01))]">
-              <ScrollArea className="min-h-0 flex-1">
-                <div className="space-y-4 px-5 py-6">
-                  {loadingMessages ? (
-                    Array.from({ length: 4 }).map((_, index) => (
-                      <div
-                        key={index}
-                        className={cn(
-                          'h-16 w-[65%] animate-pulse rounded-[24px] bg-white/[0.05]',
-                          index % 2 === 0 ? 'ml-0' : 'ml-auto',
-                        )}
-                      />
-                    ))
-                  ) : messages.length === 0 ? (
-                    <div className="flex min-h-[320px] flex-col items-center justify-center py-12 text-center">
-                      <div className="mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-white/[0.05]">
-                        <MessageCircleMore className="h-10 w-10 text-slate-500" />
-                      </div>
-                      <h3 className="text-xl font-semibold text-white">
-                        {historySearch.trim() ? 'No messages matched this search' : 'No messages yet'}
-                      </h3>
-                      <p className="mt-2 max-w-md text-sm leading-7 text-slate-400">
-                        {historySearch.trim()
-                          ? 'Try a different keyword, sender, or job code.'
-                          : 'Send a message, attach a file, or record a voice note to start this secure conversation.'}
-                      </p>
-                    </div>
-                  ) : (
-                    <ChatMessageTimeline
-                      messages={messages}
-                      conversation={selectedConversation}
-                      token={token}
-                      viewerRole="admin"
-                      outgoingRole="admin"
-                      getSenderLabel={(message) => (
-                        message.sender_role === 'admin'
-                          ? 'Admin Dispatch'
-                          : (selectedConversation?.channel_kind === 'group'
-                            ? (selectedConversation.title || 'Technician Group')
-                            : (selectedConversation?.technician_name || 'Technician'))
-                      )}
-                      onOpenJob={handleOpenJob}
-                      onReply={handleReplyToMessage}
-                      onTogglePin={handleTogglePin}
-                      onMarkImportant={handleMarkImportantMessage}
-                    />
+            <div className="border-b border-white/8 px-5 pt-3">
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setWorkspaceTab('chat')}
+                  className={cn(
+                    'border-b-2 px-3 py-2 text-sm font-medium transition-colors',
+                    workspaceTab === 'chat'
+                      ? 'border-sky-400 text-white'
+                      : 'border-transparent text-slate-500 hover:text-slate-300',
                   )}
-                  <div ref={bottomRef} />
-                </div>
-              </ScrollArea>
-
-              <div className="shrink-0 border-t border-white/8 bg-[rgba(6,17,29,0.9)] p-5">
-                {typingLabel ? (
-                  <div className="mb-2 px-4 text-xs font-medium text-cyan-200">
-                    {typingLabel}
-                  </div>
-                ) : null}
-                {replyTarget ? (
-                  <div className="mb-3 flex items-start justify-between gap-3 rounded-3xl border border-cyan-300/20 bg-cyan-300/10 px-4 py-3 text-xs text-cyan-50">
-                    <div className="min-w-0">
-                      <p className="font-semibold">Replying to {replyTarget.sender_role === 'admin' ? 'Admin Dispatch' : (selectedConversation?.technician_name || 'Technician')}</p>
-                      <p className="mt-1 line-clamp-2 text-cyan-100/80">
-                        {replyTarget.text || replyTarget.attachments[0]?.name || 'Message'}
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setReplyTarget(null)}
-                      className="rounded-full p-1 text-cyan-100/80 hover:bg-cyan-100/10 hover:text-white"
-                      aria-label="Clear reply target"
-                    >
-                      <X className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                ) : null}
-                {selectedConversationPendingAttachments.length > 0 ? (
-                  <div className="mb-3 flex flex-wrap gap-2">
-                    {selectedConversationPendingAttachments.map((attachment) => (
-                      <div key={attachment.id} className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-slate-200">
-                        <span>{attachment.name}</span>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (!selectedConversationId) {
-                              return;
-                            }
-                            setPendingAttachmentsByConversation((prev) => {
-                              const current = prev[selectedConversationId] ?? [];
-                              const next = current.filter((item) => item.id !== attachment.id);
-                              if (next.length === 0) {
-                                const nextState = { ...prev };
-                                delete nextState[selectedConversationId];
-                                return nextState;
-                              }
-                              return {
-                                ...prev,
-                                [selectedConversationId]: next,
-                              };
-                            });
-                          }}
-                          className="rounded-full p-0.5 text-slate-400 hover:bg-white/[0.08] hover:text-white"
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                ) : null}
-
-                {isRecording || isVoiceProcessing ? (
-                  <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1.5 text-xs text-cyan-100">
-                    {isRecording ? <Square className="h-3.5 w-3.5 fill-current" /> : <RefreshCw className="h-3.5 w-3.5 animate-spin" />}
-                    <span>
-                      {isRecording
-                        ? `Recording voice note ${formatVoiceRecordingDuration(recordingSeconds)}`
-                        : 'Securing voice note...'}
-                    </span>
-                  </div>
-                ) : null}
-
-                {importantNextMessage ? (
-                  <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-amber-300/20 bg-amber-300/10 px-3 py-1.5 text-xs font-medium text-amber-100">
-                    <Star className="h-3.5 w-3.5 fill-current" />
-                    Important next message
-                    <button
-                      type="button"
-                      onClick={toggleImportantNextMessage}
-                      className="rounded-full p-0.5 text-amber-100/80 hover:bg-amber-200/10 hover:text-amber-50"
-                      aria-label="Clear important message flag"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </div>
-                ) : null}
-
-                <div className="flex items-end gap-3">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        className="h-12 w-12 shrink-0 rounded-full border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
-                        disabled={!selectedConversationId || isVoiceProcessing}
-                        aria-label="Attachment actions"
-                      >
-                        <Paperclip className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start" className="border-white/10 bg-[#091827] text-slate-100">
-                      <DropdownMenuItem onSelect={() => handleOpenAttachFiles()} disabled={!selectedConversationId || isVoiceProcessing}>
-                        <Paperclip className="h-4 w-4" />
-                        Attach File
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onSelect={() => handleOpenSitePhotoPicker()} disabled={!selectedConversationId || isVoiceProcessing}>
-                        <ImageIcon className="h-4 w-4" />
-                        Upload Site Photo
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onSelect={() => void handleShareLiveLocation()} disabled={!selectedConversationId || isVoiceProcessing}>
-                        <MapPin className="h-4 w-4" />
-                        Send Live Location
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onSelect={() => void handleRequestLocation()} disabled={!selectedConversation || selectedConversation.channel_kind === 'group' || requestingLocation || isVoiceProcessing}>
-                        <MapPin className="h-4 w-4" />
-                        Request Location
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onSelect={() => void handleRequestStatusUpdate()} disabled={!selectedConversation || selectedConversation.channel_kind === 'group' || isVoiceProcessing}>
-                        <MessageCircleMore className="h-4 w-4" />
-                        Request Status Update
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onSelect={() => void handleShareJobDetails()} disabled={!selectedConversation || selectedConversation.channel_kind !== 'job' || isVoiceProcessing}>
-                        <BriefcaseBusiness className="h-4 w-4" />
-                        Share Job Details
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator className="bg-white/10" />
-                      <DropdownMenuCheckboxItem
-                        checked={importantNextMessage}
-                        onCheckedChange={() => toggleImportantNextMessage()}
-                        disabled={!selectedConversationId || isVoiceProcessing}
-                      >
-                        <Star className="h-4 w-4" />
-                        Mark as Important
-                      </DropdownMenuCheckboxItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                  <div className="min-w-0 flex-1">
-                    <Textarea
-                      value={draftMessage}
-                      onChange={(event) => handleDraftMessageChange(event.target.value)}
-                      onKeyDown={handleComposerKeyDown}
-                      placeholder={selectedConversationId ? 'Write a secure message' : 'Select a thread to start chatting'}
-                      className="min-h-[56px] resize-none rounded-[28px] border-white/10 bg-white/[0.04] px-5 py-4 text-white placeholder:text-slate-500"
-                      disabled={!selectedConversationId || isVoiceProcessing}
-                    />
-                  </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    onClick={() => {
-                      if (isRecording) {
-                        stopRecording();
-                      } else {
-                        void startRecording();
-                      }
-                    }}
-                    className={cn(
-                      'h-12 w-12 shrink-0 rounded-full border text-slate-100',
-                      isRecording
-                        ? 'border-red-400/40 bg-red-500/15 hover:bg-red-500/25'
-                        : 'border-white/10 bg-white/[0.03] hover:bg-white/[0.08]',
-                    )}
-                    disabled={!selectedConversationId || isVoiceProcessing || !voiceRecordingSupported}
-                    aria-label={isRecording ? 'Stop recording voice note' : 'Record voice note'}
-                  >
-                    {isRecording ? <Square className="h-4 w-4 fill-current" /> : <Mic className="h-4 w-4" />}
-                  </Button>
-                  <Button
-                    type="button"
-                    onClick={() => void handleSend()}
-                    className="h-12 w-12 shrink-0 rounded-full bg-[#070f11] text-white shadow-[0_12px_30px_rgba(0,0,0,0.3)] hover:bg-[#0b1418]"
-                    disabled={!selectedConversationId || isVoiceProcessing}
-                  >
-                    <Send className="h-4 w-4" />
-                  </Button>
-                </div>
-                <input
-                  ref={attachInputRef}
-                  type="file"
-                  accept={CHAT_ATTACHMENT_ACCEPT}
-                  multiple
-                  className="hidden"
-                  onChange={(event) => void handleFileSelection(event, 'attach')}
-                />
-                <input
-                  ref={sitePhotoInputRef}
-                  type="file"
-                  accept="image/*"
-                  capture="environment"
-                  multiple
-                  className="hidden"
-                  onChange={(event) => void handleFileSelection(event, 'site_photo')}
-                />
+                >
+                  Chat
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setWorkspaceTab('shared')}
+                  className={cn(
+                    'border-b-2 px-3 py-2 text-sm font-medium transition-colors',
+                    workspaceTab === 'shared'
+                      ? 'border-sky-400 text-white'
+                      : 'border-transparent text-slate-500 hover:text-slate-300',
+                  )}
+                >
+                  Shared
+                </button>
               </div>
             </div>
-            </Card>
 
-            <div className="hidden min-h-0 xl:block">
-              <ChatContextPanel
-                conversation={selectedConversation}
-                messages={messages}
-                token={token}
-                viewerRole="admin"
-                currentUserName={user?.name ?? null}
-                canUpload={Boolean(selectedConversationId && !isVoiceProcessing)}
-                onUploadFiles={handleOpenAttachFiles}
-                className="h-full"
-              />
-            </div>
+            {workspaceTab === 'chat' ? (
+              <div className="flex min-h-0 flex-1 flex-col bg-transparent">
+                <ScrollArea className="min-h-0 flex-1">
+                  <div className="space-y-4 px-5 py-5">
+                    {loadingMessages ? (
+                      Array.from({ length: 4 }).map((_, index) => (
+                        <div
+                          key={index}
+                          className={cn(
+                            'h-14 w-[min(64%,39rem)] animate-pulse rounded-[18px] bg-white/[0.05]',
+                            index % 2 === 0 ? 'ml-0' : 'ml-auto',
+                          )}
+                        />
+                      ))
+                    ) : messages.length === 0 ? (
+                      <div className="flex min-h-[260px] flex-col items-center justify-center py-10 text-center">
+                        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-white/[0.04]">
+                          <MessageCircleMore className="h-8 w-8 text-slate-500" />
+                        </div>
+                        <h3 className="text-lg font-semibold text-white">
+                          {historySearch.trim() ? 'No messages matched this search' : 'No messages yet'}
+                        </h3>
+                        <p className="mt-2 max-w-md text-sm leading-6 text-slate-400">
+                          {historySearch.trim()
+                            ? 'Try a different keyword, sender, or job code.'
+                            : 'Send a message, attach a file, or record a voice note to start this secure conversation.'}
+                        </p>
+                      </div>
+                    ) : (
+                      <ChatMessageTimeline
+                        messages={messages}
+                        conversation={selectedConversation}
+                        token={token}
+                        viewerRole="admin"
+                        outgoingRole="admin"
+                        getSenderLabel={(message) => (
+                          message.sender_role === 'admin'
+                            ? 'Admin Dispatch'
+                            : (selectedConversation?.channel_kind === 'group'
+                              ? (selectedConversation.title || 'Technician Group')
+                              : (selectedConversation?.technician_name || 'Technician'))
+                        )}
+                        onOpenJob={handleOpenJob}
+                        onReply={handleReplyToMessage}
+                        onTogglePin={handleTogglePin}
+                        onMarkImportant={handleMarkImportantMessage}
+                      />
+                    )}
+                    <div ref={bottomRef} />
+                  </div>
+                </ScrollArea>
+
+                <div className="shrink-0 border-t border-white/8 bg-[#0b1220] px-4 py-4">
+                  {typingLabel ? (
+                    <div className="mb-2 px-2 text-xs font-medium text-sky-300">
+                      {typingLabel}
+                    </div>
+                  ) : null}
+                  {replyTarget ? (
+                    <div className="mb-3 flex items-start justify-between gap-3 rounded-2xl border border-sky-300/20 bg-sky-300/10 px-3 py-2 text-xs text-sky-50">
+                      <div className="min-w-0">
+                        <p className="font-semibold">Replying to {replyTarget.sender_role === 'admin' ? 'Admin Dispatch' : (selectedConversation?.technician_name || 'Technician')}</p>
+                        <p className="mt-1 line-clamp-2 text-sky-100/80">
+                          {replyTarget.text || replyTarget.attachments[0]?.name || 'Message'}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setReplyTarget(null)}
+                        className="rounded-full p-1 text-sky-100/80 hover:bg-sky-100/10 hover:text-white"
+                        aria-label="Clear reply target"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  ) : null}
+                  {selectedConversationPendingAttachments.length > 0 ? (
+                    <div className="mb-3 flex flex-wrap gap-2">
+                      {selectedConversationPendingAttachments.map((attachment) => (
+                        <div key={attachment.id} className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-slate-200">
+                          <span>{attachment.name}</span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (!selectedConversationId) {
+                                return;
+                              }
+                              setPendingAttachmentsByConversation((prev) => {
+                                const current = prev[selectedConversationId] ?? [];
+                                const next = current.filter((item) => item.id !== attachment.id);
+                                if (next.length === 0) {
+                                  const nextState = { ...prev };
+                                  delete nextState[selectedConversationId];
+                                  return nextState;
+                                }
+                                return {
+                                  ...prev,
+                                  [selectedConversationId]: next,
+                                };
+                              });
+                            }}
+                            className="rounded-full p-0.5 text-slate-400 hover:bg-white/[0.08] hover:text-white"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
+
+                  {isRecording || isVoiceProcessing ? (
+                    <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-sky-300/20 bg-sky-300/10 px-3 py-1.5 text-xs text-sky-100">
+                      {isRecording ? <Square className="h-3.5 w-3.5 fill-current" /> : <RefreshCw className="h-3.5 w-3.5 animate-spin" />}
+                      <span>
+                        {isRecording
+                          ? `Recording voice note ${formatVoiceRecordingDuration(recordingSeconds)}`
+                          : 'Securing voice note...'}
+                      </span>
+                    </div>
+                  ) : null}
+
+                  {importantNextMessage ? (
+                    <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-amber-300/20 bg-amber-300/10 px-3 py-1.5 text-xs font-medium text-amber-100">
+                      <Star className="h-3.5 w-3.5 fill-current" />
+                      Important next message
+                      <button
+                        type="button"
+                        onClick={toggleImportantNextMessage}
+                        className="rounded-full p-0.5 text-amber-100/80 hover:bg-amber-200/10 hover:text-amber-50"
+                        aria-label="Clear important message flag"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ) : null}
+
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={() => handleOpenAttachFiles()}
+                      disabled={!selectedConversationId || isVoiceProcessing}
+                      className="h-10 w-10 shrink-0 rounded-full border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
+                      aria-label="Attach files"
+                    >
+                      <Paperclip className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={() => {
+                        if (isRecording) {
+                          stopRecording();
+                        } else {
+                          void startRecording();
+                        }
+                      }}
+                      className={cn(
+                        'h-10 w-10 shrink-0 rounded-full border text-slate-100',
+                        isRecording
+                          ? 'border-red-400/40 bg-red-500/15 hover:bg-red-500/25'
+                          : 'border-white/10 bg-white/[0.03] hover:bg-white/[0.08]',
+                      )}
+                      disabled={!selectedConversationId || isVoiceProcessing || !voiceRecordingSupported}
+                      aria-label={isRecording ? 'Stop recording voice note' : 'Record voice note'}
+                    >
+                      {isRecording ? <Square className="h-4 w-4 fill-current" /> : <Mic className="h-4 w-4" />}
+                    </Button>
+                    <div className="min-w-0 flex-1">
+                      <Textarea
+                        value={draftMessage}
+                        onChange={(event) => handleDraftMessageChange(event.target.value)}
+                        onKeyDown={handleComposerKeyDown}
+                        placeholder={selectedConversationId ? 'Write a secure message' : 'Select a thread to start chatting'}
+                        className="min-h-[46px] resize-none rounded-full border-white/10 bg-white/[0.04] px-4 py-3 text-[14px] text-white placeholder:text-slate-500"
+                        disabled={!selectedConversationId || isVoiceProcessing}
+                      />
+                    </div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          className="h-10 w-10 shrink-0 rounded-full border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
+                          disabled={!selectedConversationId || isVoiceProcessing}
+                          aria-label="More actions"
+                        >
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="border-white/10 bg-[#091827] text-slate-100">
+                        <DropdownMenuItem onSelect={() => handleOpenSitePhotoPicker()} disabled={!selectedConversationId || isVoiceProcessing}>
+                          <ImageIcon className="h-4 w-4" />
+                          Upload Site Photo
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => void handleShareLiveLocation()} disabled={!selectedConversationId || isVoiceProcessing}>
+                          <MapPin className="h-4 w-4" />
+                          Send Live Location
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => void handleRequestLocation()} disabled={!selectedConversation || selectedConversation.channel_kind === 'group' || requestingLocation || isVoiceProcessing}>
+                          <MapPin className="h-4 w-4" />
+                          Request Location
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => void handleRequestStatusUpdate()} disabled={!selectedConversation || selectedConversation.channel_kind === 'group' || isVoiceProcessing}>
+                          <MessageCircleMore className="h-4 w-4" />
+                          Request Status Update
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => void handleShareJobDetails()} disabled={!selectedConversation || selectedConversation.channel_kind !== 'job' || isVoiceProcessing}>
+                          <BriefcaseBusiness className="h-4 w-4" />
+                          Share Job Details
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator className="bg-white/10" />
+                        <DropdownMenuCheckboxItem
+                          checked={importantNextMessage}
+                          onCheckedChange={() => toggleImportantNextMessage()}
+                          disabled={!selectedConversationId || isVoiceProcessing}
+                        >
+                          <Star className="h-4 w-4" />
+                          Mark as Important
+                        </DropdownMenuCheckboxItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                    <Button
+                      type="button"
+                      onClick={() => void handleSend()}
+                      className="h-10 w-10 shrink-0 rounded-full bg-sky-500 text-white hover:bg-sky-600"
+                      disabled={!selectedConversationId || isVoiceProcessing}
+                      aria-label="Send message"
+                    >
+                      <Send className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="flex min-h-0 flex-1 flex-col bg-transparent">
+                <SharedConversationPanel
+                  conversation={selectedConversation}
+                  messages={messages}
+                  token={token}
+                  viewerRole="admin"
+                  canUpload={Boolean(selectedConversationId && !isVoiceProcessing)}
+                  onUploadFiles={handleOpenAttachFiles}
+                  className="h-full rounded-none border-0 bg-transparent shadow-none"
+                />
+              </div>
+            )}
+          </Card>
 
         </section>
       </div>
+
+      <ChatContextSidebar
+        open={isContextSidebarOpen}
+        onOpenChange={setIsContextSidebarOpen}
+        conversation={selectedConversation}
+        messages={messages}
+        token={token}
+        viewerRole="admin"
+        currentUserName={user?.name ?? null}
+        canUpload={Boolean(selectedConversationId && !isVoiceProcessing)}
+        onUploadFiles={handleOpenAttachFiles}
+      />
     </div>
   );
 }

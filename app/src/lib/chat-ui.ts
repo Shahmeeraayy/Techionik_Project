@@ -9,6 +9,7 @@ export type ChatQuickFilter = 'all' | 'unread' | 'direct' | 'group' | 'job' | 'p
 export type ChatInsightTab = 'overview' | 'files' | 'pins' | 'members';
 export type ChatWorkspaceTab = 'chat' | 'shared';
 export type ChatSharedTab = 'files' | 'photos' | 'links' | 'important';
+export type ChatPresenceTone = 'online' | 'busy' | 'away' | 'offline' | 'neutral';
 
 export type SharedConversationAttachment = BackendChatAttachment & {
   created_at: string;
@@ -123,6 +124,24 @@ export function getConversationTypeLabel(conversation: BackendChatConversation |
   if (conversation.channel_kind === 'job') return 'Job Chat';
   if (conversation.channel_kind === 'group') return 'Technician Group';
   return 'Direct Chat';
+}
+
+export function getConversationPresenceTone(conversation: BackendChatConversation | null): ChatPresenceTone {
+  if (!conversation) return 'neutral';
+  if (conversation.channel_kind === 'group') return 'neutral';
+  if (conversation.channel_kind === 'job') {
+    const status = String(conversation.job_status ?? '').toLowerCase();
+    if (status.includes('progress')) return 'busy';
+    if (status.includes('pause') || status.includes('hold')) return 'away';
+    return 'online';
+  }
+
+  const status = String(conversation.technician_status ?? '').toLowerCase();
+  if (status.includes('available')) return 'online';
+  if (status.includes('progress')) return 'busy';
+  if (status.includes('office')) return 'away';
+  if (status.includes('offline')) return 'offline';
+  return 'neutral';
 }
 
 export function getConversationStatusLine(conversation: BackendChatConversation | null): string {

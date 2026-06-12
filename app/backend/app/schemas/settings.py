@@ -79,6 +79,8 @@ class TenantEmailIdentityResponse(BaseModel):
     billing_email: str
     invoice_email: str
     notification_email: str
+    invoice_email_subject: str
+    invoice_email_body: str
     email_domain: str
     email_sending_status: str
     email_verified: bool
@@ -90,6 +92,8 @@ class TenantEmailIdentityUpdatePayload(BaseModel):
     billing_email: Optional[EmailStr] = None
     invoice_email: Optional[EmailStr] = None
     notification_email: Optional[EmailStr] = None
+    invoice_email_subject: Optional[str] = Field(default=None, max_length=255)
+    invoice_email_body: Optional[str] = Field(default=None, max_length=5000)
 
     @field_validator("email_domain")
     @classmethod
@@ -102,6 +106,16 @@ class TenantEmailIdentityUpdatePayload(BaseModel):
         if value is None:
             return None
         return normalize_email_address(str(value))
+
+    @field_validator("invoice_email_subject", "invoice_email_body")
+    @classmethod
+    def _normalize_optional_text(cls, value: Optional[str]) -> Optional[str]:
+        if value is None:
+            return None
+        normalized = value.strip()
+        if not normalized:
+            raise ValueError("value cannot be blank")
+        return normalized
 
 
 class AdminCredentialSettingsUpdatePayload(BaseModel):

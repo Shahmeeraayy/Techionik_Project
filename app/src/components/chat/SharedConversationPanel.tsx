@@ -35,6 +35,7 @@ import {
   type SharedConversationAttachment,
   type SharedConversationLink,
 } from '@/lib/chat-ui';
+import { cn } from '@/lib/utils';
 import {
   fetchSecureChatAttachmentBlob,
   formatChatAttachmentSize,
@@ -52,6 +53,7 @@ type SharedConversationPanelProps = {
   viewerRole: ViewerRole;
   canUpload: boolean;
   onUploadFiles: () => void;
+  className?: string;
 };
 
 function getAttachmentKindLabel(attachment: SharedConversationAttachment): string {
@@ -137,6 +139,7 @@ export function SharedConversationPanel({
   viewerRole,
   canUpload,
   onUploadFiles,
+  className,
 }: SharedConversationPanelProps) {
   const [activeTab, setActiveTab] = useState<ChatSharedTab>('files');
   const [search, setSearch] = useState('');
@@ -274,100 +277,85 @@ export function SharedConversationPanel({
     const kindLabel = getAttachmentKindLabel(attachment);
 
     return (
-      <div
-        key={attachment.id}
-        className="rounded-[24px] border border-white/10 bg-white/[0.03] p-4 shadow-[0_12px_30px_rgba(0,0,0,0.16)]"
-      >
-        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-          <div className="flex min-w-0 items-start gap-3">
-            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-[#08131d] text-slate-100">
-              {isImageAttachment(attachment.mime_type) ? (
-                <ImageIcon className="h-6 w-6 text-cyan-300" />
-              ) : isAudioAttachment(attachment.mime_type) ? (
-                <AudioLines className="h-6 w-6 text-cyan-300" />
-              ) : (
-                <FileText className="h-6 w-6 text-slate-200" />
-              )}
-            </div>
-            <div className="min-w-0 space-y-2">
-              <div className="flex flex-wrap items-center gap-2">
-                <p className="truncate text-sm font-semibold text-white">{attachment.name}</p>
-                <Badge className="rounded-full bg-cyan-300/10 text-cyan-100">{kindLabel}</Badge>
-                <Badge variant="outline" className="border-white/10 bg-white/[0.03] text-[10px] text-slate-300">
-                  {attachment.mime_type}
-                </Badge>
-              </div>
-              <p className="text-xs text-slate-400">
-                {formatChatAttachmentSize(attachment.size_bytes)}
-                {' \u00B7 '}
-                {senderLabel}
-                {' \u00B7 '}
-                {formatSharedConversationTimestamp(attachment.created_at)}
-              </p>
-              {context ? (
-                <p className="line-clamp-2 max-w-3xl text-xs leading-6 text-slate-500">
-                  {context}
-                </p>
-              ) : null}
-            </div>
-          </div>
-
+      <div key={attachment.id} className="flex items-start gap-3 border-b border-white/8 py-4 last:border-b-0">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/[0.05] text-slate-100">
+          {isImageAttachment(attachment.mime_type) ? (
+            <ImageIcon className="h-5 w-5 text-cyan-300" />
+          ) : isAudioAttachment(attachment.mime_type) ? (
+            <AudioLines className="h-5 w-5 text-cyan-300" />
+          ) : (
+            <FileText className="h-5 w-5 text-slate-200" />
+          )}
+        </div>
+        <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              onClick={() => void handlePreviewAttachment(attachment)}
-              disabled={!canPreview}
-              className="h-9 gap-2 rounded-full border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
-            >
-              <Eye className="h-4 w-4" />
-              Preview
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              onClick={() => void handleDownloadAttachment(attachment)}
-              disabled={!canDownload}
-              className="h-9 gap-2 rounded-full border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
-            >
-              <Download className="h-4 w-4" />
-              Download
-            </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  type="button"
-                  size="icon"
-                  variant="outline"
-                  className="h-9 w-9 rounded-full border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
-                  aria-label={`More actions for ${attachment.name}`}
-                >
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="border-white/10 bg-[#091827] text-slate-100">
-                <DropdownMenuItem onSelect={() => void handlePreviewAttachment(attachment)} disabled={!canPreview}>
-                  <Eye className="h-4 w-4" />
-                  Preview file
-                </DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => void handleDownloadAttachment(attachment)} disabled={!canDownload}>
-                  <Download className="h-4 w-4" />
-                  Download file
-                </DropdownMenuItem>
-                <DropdownMenuSeparator className="bg-white/10" />
-                <DropdownMenuItem onSelect={() => void copyText(attachment.name)}>
-                  <Copy className="h-4 w-4" />
-                  Copy filename
-                </DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => void copyText(attachment.mime_type)}>
-                  <Copy className="h-4 w-4" />
-                  Copy MIME type
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <p className="truncate text-sm font-medium text-white">{attachment.name}</p>
+            <Badge className="rounded-full bg-cyan-300/10 px-2 py-0.5 text-[10px] text-cyan-100">{kindLabel}</Badge>
           </div>
+          <p className="mt-0.5 text-xs text-slate-500">
+            {formatChatAttachmentSize(attachment.size_bytes)}
+            {' · '}
+            {senderLabel}
+            {' · '}
+            {formatSharedConversationTimestamp(attachment.created_at)}
+          </p>
+          {context ? <p className="mt-1 line-clamp-2 text-xs leading-5 text-slate-400">{context}</p> : null}
+        </div>
+        <div className="flex shrink-0 items-center gap-1.5">
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            onClick={() => void handlePreviewAttachment(attachment)}
+            disabled={!canPreview}
+            className="h-8 rounded-full px-3 text-slate-200 hover:bg-white/[0.06]"
+          >
+            <Eye className="mr-1.5 h-3.5 w-3.5" />
+            Preview
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            onClick={() => void handleDownloadAttachment(attachment)}
+            disabled={!canDownload}
+            className="h-8 rounded-full px-3 text-slate-200 hover:bg-white/[0.06]"
+          >
+            <Download className="mr-1.5 h-3.5 w-3.5" />
+            Download
+          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                type="button"
+                size="icon"
+                variant="ghost"
+                className="h-8 w-8 rounded-full text-slate-300 hover:bg-white/[0.06] hover:text-white"
+                aria-label={`More actions for ${attachment.name}`}
+              >
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="border-white/10 bg-[#091827] text-slate-100">
+              <DropdownMenuItem onSelect={() => void handlePreviewAttachment(attachment)} disabled={!canPreview}>
+                <Eye className="h-4 w-4" />
+                Preview file
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => void handleDownloadAttachment(attachment)} disabled={!canDownload}>
+                <Download className="h-4 w-4" />
+                Download file
+              </DropdownMenuItem>
+              <DropdownMenuSeparator className="bg-white/10" />
+              <DropdownMenuItem onSelect={() => void copyText(attachment.name)}>
+                <Copy className="h-4 w-4" />
+                Copy filename
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => void copyText(attachment.mime_type)}>
+                <Copy className="h-4 w-4" />
+                Copy MIME type
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     );
@@ -379,83 +367,71 @@ export function SharedConversationPanel({
     const context = message?.text?.trim();
 
     return (
-      <div
-        key={link.id}
-        className="rounded-[24px] border border-white/10 bg-white/[0.03] p-4 shadow-[0_12px_30px_rgba(0,0,0,0.16)]"
-      >
-        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-          <div className="flex min-w-0 items-start gap-3">
-            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-[#08131d] text-cyan-300">
-              <Link2 className="h-6 w-6" />
-            </div>
-            <div className="min-w-0 space-y-2">
-              <div className="flex flex-wrap items-center gap-2">
-                <p className="truncate text-sm font-semibold text-white">{link.title}</p>
-                <Badge className="rounded-full bg-cyan-300/10 text-cyan-100">{link.domain || 'Link'}</Badge>
-              </div>
-              <p className="text-xs text-slate-400">
-                {senderLabel}
-                {' \u00B7 '}
-                {formatSharedConversationTimestamp(link.created_at)}
-              </p>
-              {context ? (
-                <p className="line-clamp-2 max-w-3xl text-xs leading-6 text-slate-500">
-                  {context}
-                </p>
-              ) : null}
-              <p className="truncate text-xs text-slate-500">{link.url}</p>
-            </div>
-          </div>
-
+      <div key={link.id} className="flex items-start gap-3 border-b border-white/8 py-4 last:border-b-0">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/[0.05] text-cyan-300">
+          <Link2 className="h-5 w-5" />
+        </div>
+        <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              onClick={() => void handleOpenLink(link)}
-              className="h-9 gap-2 rounded-full border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
-            >
-              <ExternalLink className="h-4 w-4" />
-              Open
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              onClick={() => void copyText(link.url)}
-              className="h-9 gap-2 rounded-full border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
-            >
-              <Copy className="h-4 w-4" />
-              Copy
-            </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  type="button"
-                  size="icon"
-                  variant="outline"
-                  className="h-9 w-9 rounded-full border-white/10 bg-white/[0.03] text-slate-100 hover:bg-white/[0.08]"
-                  aria-label={`More actions for ${link.title}`}
-                >
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="border-white/10 bg-[#091827] text-slate-100">
-                <DropdownMenuItem onSelect={() => void handleOpenLink(link)}>
-                  <ExternalLink className="h-4 w-4" />
-                  Open link
-                </DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => void copyText(link.url)}>
-                  <Copy className="h-4 w-4" />
-                  Copy URL
-                </DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => void copyText(link.domain)}>
-                  <Copy className="h-4 w-4" />
-                  Copy domain
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <p className="truncate text-sm font-medium text-white">{link.title}</p>
+            <Badge className="rounded-full bg-cyan-300/10 px-2 py-0.5 text-[10px] text-cyan-100">{link.domain || 'Link'}</Badge>
           </div>
+          <p className="mt-0.5 text-xs text-slate-500">
+            {senderLabel}
+            {' · '}
+            {formatSharedConversationTimestamp(link.created_at)}
+          </p>
+          {context ? <p className="mt-1 line-clamp-2 text-xs leading-5 text-slate-400">{context}</p> : null}
+          <p className="mt-1 truncate text-xs text-slate-500">{link.url}</p>
+        </div>
+        <div className="flex shrink-0 items-center gap-1.5">
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            onClick={() => void handleOpenLink(link)}
+            className="h-8 rounded-full px-3 text-slate-200 hover:bg-white/[0.06]"
+          >
+            <ExternalLink className="mr-1.5 h-3.5 w-3.5" />
+            Open
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            onClick={() => void copyText(link.url)}
+            className="h-8 rounded-full px-3 text-slate-200 hover:bg-white/[0.06]"
+          >
+            <Copy className="mr-1.5 h-3.5 w-3.5" />
+            Copy
+          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                type="button"
+                size="icon"
+                variant="ghost"
+                className="h-8 w-8 rounded-full text-slate-300 hover:bg-white/[0.06] hover:text-white"
+                aria-label={`More actions for ${link.title}`}
+              >
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="border-white/10 bg-[#091827] text-slate-100">
+              <DropdownMenuItem onSelect={() => void handleOpenLink(link)}>
+                <ExternalLink className="h-4 w-4" />
+                Open link
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => void copyText(link.url)}>
+                <Copy className="h-4 w-4" />
+                Copy URL
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => void copyText(link.domain)}>
+                <Copy className="h-4 w-4" />
+                Copy domain
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     );
@@ -470,7 +446,7 @@ export function SharedConversationPanel({
     <Tabs
       value={activeTab}
       onValueChange={(value) => setActiveTab(value as ChatSharedTab)}
-      className="flex min-h-0 flex-1 flex-col"
+      className={cn('flex min-h-0 flex-1 flex-col', className)}
     >
       <div className="shrink-0 border-b border-white/8 bg-[linear-gradient(180deg,rgba(9,24,39,0.98),rgba(6,17,29,0.98))] px-5 py-5">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
@@ -620,24 +596,24 @@ export function SharedConversationPanel({
               filteredImportantMessages.map((message) => {
                 const senderLabel = getConversationSenderLabel(viewerRole, conversation, message.sender_role);
                 return (
-                  <div key={message.id} className="rounded-[24px] border border-white/10 bg-white/[0.03] p-4 shadow-[0_12px_30px_rgba(0,0,0,0.16)]">
+                  <div key={message.id} className="border-b border-white/8 py-4 last:border-b-0">
                     <div className="flex items-start justify-between gap-4">
-                      <div className="min-w-0 space-y-2">
+                      <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
-                          <Badge className="rounded-full bg-amber-300/15 text-amber-100">
+                          <Badge className="rounded-full bg-amber-300/15 px-2 py-0.5 text-[10px] text-amber-100">
                             Important
                           </Badge>
                           {message.is_pinned ? (
-                            <Badge variant="outline" className="border-cyan-300/20 bg-cyan-300/10 text-[10px] text-cyan-100">
+                            <Badge variant="outline" className="border-cyan-300/20 bg-cyan-300/10 px-2 py-0.5 text-[10px] text-cyan-100">
                               Pinned
                             </Badge>
                           ) : null}
                         </div>
-                        <p className="text-sm font-semibold text-white">{senderLabel}</p>
-                        <p className="line-clamp-3 text-sm leading-6 text-slate-300">
+                        <p className="mt-1 text-sm font-medium text-white">{senderLabel}</p>
+                        <p className="mt-1 line-clamp-3 text-sm leading-6 text-slate-300">
                           {message.text || message.attachments[0]?.name || 'Important message'}
                         </p>
-                        <p className="text-xs text-slate-500">{formatSharedConversationTimestamp(message.created_at)}</p>
+                        <p className="mt-1 text-xs text-slate-500">{formatSharedConversationTimestamp(message.created_at)}</p>
                       </div>
                     </div>
                   </div>

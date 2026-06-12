@@ -3,6 +3,7 @@ from __future__ import annotations
 from html import escape
 from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal, ROUND_HALF_UP
+from string import Template
 import textwrap
 from typing import Iterable, List, Optional
 from uuid import UUID
@@ -47,7 +48,11 @@ from .invoice_branding_settings_service import (
 )
 from .job_services_service import JobServicesService
 from .email_service import EmailAttachment, send_platform_email
-from .tenant_email_identity import get_tenant_email_identity
+from .tenant_email_identity import (
+    DEFAULT_INVOICE_EMAIL_BODY,
+    DEFAULT_INVOICE_EMAIL_SUBJECT,
+    get_tenant_email_identity,
+)
 
 
 CENTS = Decimal("0.01")
@@ -585,6 +590,68 @@ class InvoiceService:
             f"Please reply to this email if you have any questions.\n\n"
             f"Thank you,\n{invoice.company_name}\n\n"
             f"Sent to: {recipient}"
+        )
+
+    def _invoice_email_context(
+        self,
+        *,
+        invoice: Invoice,
+        recipient: str,
+        dealership_name: Optional[str],
+        identity: dict[str, object],
+    ) -> dict[str, str]:
+        line_rows = [
+            f"- {item.product_service}: {item.quantity} x ${Decimal(str(item.rate)):.2f} = ${Decimal(str(item.amount)):.2f}"
+            for item in invoice.line_items
+        ]
+        line_items_summary = "\n".join(line_rows) if line_rows else "- No line items"
+        address_lines = [
+            invoice.bill_to_name,
+            invoice.bill_to_address,
+            " ".join(part for part in [invoice.bill_to_city, invoice.bill_to_state, invoice.bill_to_zip_code] if part),
+        ]
+        billing_address = "\n".join(part for part in address_lines if part) or "Not provided"
+        customer_name = (invoice.bill_to_name or dealership_name or recipient.split("@", 1)[0] or "Customer").strip()
+        invoice_date = invoice.invoice_date.isoformat() if getattr(invoice, "invoice_date", None) else ""
+        due_date = invoice.due_date.isoformat() if getattr(invoice, "due_date", None) else ""
+        invoice_total = f"${Decimal(str(invoice.total)):.2f}"
+        return {
+            "company_name": str(identity["company_name"]),
+            "customer_name": customer_name,
+            "recipient_email": recipient,
+            "reply_to_email": str(identity["support_email"]),
+            "support_email": str(identity["support_email"]),
+            "billing_email": str(identity["billing_email"]),
+            "invoice_email": str(identity["invoice_email"]),
+            "notification_email": str(identity["notification_email"]),
+            "invoice_number": invoice.invoice_number,
+            "invoice_date": invoice_date,
+            "due_date": due_date,
+            "invoice_total": invoice_total,
+            "invoice_subtotal": f"${Decimal(str(invoice.subtotal)):.2f}",
+            "invoice_tax": f"${Decimal(str(invoice.sales_tax)):.2f}",
+            "billing_address": billing_address,
+            "line_items_summary": line_items_summary,
+        }
+
+    @staticmethod
+    def _render_invoice_email_html(body: str) -> str:
+        rendered_body = escape(body).replace("\n", "<br />")
+        return (
+            "<!doctype html>"
+            "<html>"
+            "<body style=\"margin:0;background:#f1f5f9;font-family:Inter,Arial,sans-serif;color:#0f172a;\">"
+            "<div style=\"max-width:760px;margin:0 auto;padding:32px 20px;\">"
+            "<div style=\"border:1px solid #e2e8f0;border-radius:24px;background:#ffffff;box-shadow:0 20px 50px rgba(15,23,42,0.08);overflow:hidden;\">"
+            "<div style=\"padding:24px 28px;background:linear-gradient(135deg,#0f172a,#0e7490);color:#fff;\">"
+            "<div style=\"font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#bae6fd;font-weight:800;\">Invoice email</div>"
+            "<div style=\"margin-top:8px;font-size:26px;font-weight:700;line-height:1.2;\">Tenant template preview</div>"
+            "</div>"
+            f"<div style=\"padding:28px;font-size:15px;line-height:1.8;white-space:normal;\">{rendered_body}</div>"
+            "</div>"
+            "</div>"
+            "</body>"
+            "</html>"
         )
 
     def _tenant_email_identity(self) -> dict[str, str]:
@@ -1911,9 +1978,17 @@ class InvoiceService:
         identity = self._tenant_email_identity()
         sender = identity["billing_email"]
         reply_to = identity["support_email"]
-        subject = f"Invoice {invoice.invoice_number} from {identity['company_name']}"
-        body = self._build_invoice_email_body(invoice, recipient)
-        html_body = self._build_invoice_email_html(invoice, recipient)
+        context = self._invoice_email_context(
+            invoice=invoice,
+            recipient=recipient,
+            dealership_name=dealership_name,
+            identity=identity,
+        )
+        subject_template = str(identity.get("invoice_email_subject") or DEFAULT_INVOICE_EMAIL_SUBJECT)
+        body_template = str(identity.get("invoice_email_body") or DEFAULT_INVOICE_EMAIL_BODY)
+        subject = Template(subject_template).safe_substitute(context)
+        body = Template(body_template).safe_substitute(context)
+        html_body = self._render_invoice_email_html(body)
         pdf_attachment = EmailAttachment(
             filename=f"{invoice.invoice_number}.pdf",
             content=self._build_invoice_pdf_bytes(invoice),

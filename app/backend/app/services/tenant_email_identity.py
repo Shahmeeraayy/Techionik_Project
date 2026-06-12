@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import textwrap
 from urllib.parse import urlparse
 from uuid import UUID
 
@@ -19,9 +20,44 @@ TENANT_EMAIL_COLUMNS = {
     "billing_email": "VARCHAR(255)",
     "invoice_email": "VARCHAR(255)",
     "notification_email": "VARCHAR(255)",
+    "invoice_email_subject": "TEXT",
+    "invoice_email_body": "TEXT",
     "email_verified": "BOOLEAN DEFAULT false NOT NULL",
     "email_sending_status": "VARCHAR(32) DEFAULT 'demo' NOT NULL",
 }
+
+DEFAULT_INVOICE_EMAIL_SUBJECT = "Invoice ${invoice_number} from ${company_name}"
+DEFAULT_INVOICE_EMAIL_BODY = textwrap.dedent(
+    """\
+    Hello ${customer_name},
+
+    Your invoice ${invoice_number} from ${company_name} is ready.
+
+    Invoice date: ${invoice_date}
+    Due date: ${due_date}
+    Total due: ${invoice_total}
+
+    Bill to:
+    ${billing_address}
+
+    Line items:
+    ${line_items_summary}
+
+    A PDF copy is attached to this email.
+
+    Questions? Reply to ${reply_to_email} or ${billing_email}.
+
+    Thank you,
+    ${company_name}
+    """
+).strip()
+
+
+def build_default_invoice_email_template() -> dict[str, str]:
+    return {
+        "invoice_email_subject": DEFAULT_INVOICE_EMAIL_SUBJECT,
+        "invoice_email_body": DEFAULT_INVOICE_EMAIL_BODY,
+    }
 
 
 def _default_email_domain_for_slug(slug: str) -> str:
@@ -95,8 +131,13 @@ def ensure_tenant_email_identity(db: Session, tenant: Tenant) -> Tenant:
         identity = build_email_identity_for_slug(tenant.slug, tenant.email_domain)
     except ValueError:
         identity = build_email_identity_for_slug(tenant.slug)
+    template_defaults = build_default_invoice_email_template()
     changed = False
     for key, value in identity.items():
+        if not getattr(tenant, key, None):
+            setattr(tenant, key, value)
+            changed = True
+    for key, value in template_defaults.items():
         if not getattr(tenant, key, None):
             setattr(tenant, key, value)
             changed = True
@@ -118,6 +159,7 @@ def load_tenant_email_identity(db: Session, tenant_id: UUID) -> Tenant | None:
 
 
 def serialize_tenant_email_identity(tenant: Tenant) -> dict[str, object]:
+    template_defaults = build_default_invoice_email_template()
     return {
         "tenant_id": str(tenant.id),
         "company_name": tenant.name,
@@ -126,6 +168,8 @@ def serialize_tenant_email_identity(tenant: Tenant) -> dict[str, object]:
         "billing_email": tenant.billing_email,
         "invoice_email": tenant.invoice_email,
         "notification_email": tenant.notification_email,
+        "invoice_email_subject": tenant.invoice_email_subject or template_defaults["invoice_email_subject"],
+        "invoice_email_body": tenant.invoice_email_body or template_defaults["invoice_email_body"],
         "email_domain": tenant.email_domain,
         "email_sending_status": tenant.email_sending_status,
         "email_verified": bool(tenant.email_verified),
@@ -169,6 +213,12 @@ def apply_tenant_email_identity_update(
             current_value = getattr(tenant, field_name, None)
             if not current_value or current_value == before_generated[field_name]:
                 setattr(tenant, field_name, generated_after[field_name])
+
+    for field_name in ("invoice_email_subject", "invoice_email_body"):
+        if field_name in payload:
+            raw_value = payload.get(field_name)
+            if isinstance(raw_value, str):
+                setattr(tenant, field_name, raw_value.strip())
 
     after = serialize_tenant_email_identity(tenant)
     return before, after

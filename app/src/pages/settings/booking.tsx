@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { Copy, Link2, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -66,11 +66,6 @@ export default function SettingsBookingPage() {
   const bookingTenantSlug = workspace.bookingPortalSettings.tenant_slug || workspace.emailIdentity?.tenant_slug || 'workspace';
   const bookingUrl = workspace.bookingPortalSettings.public_booking_url || (typeof window !== 'undefined' ? `${window.location.origin}/book/${bookingTenantSlug}` : `/book/${bookingTenantSlug}`);
   const bookingStatusUrl = workspace.bookingPortalSettings.status_lookup_url || `${bookingUrl}/status`;
-  const visibleServices = useMemo(
-    () => workspace.services.filter((service) => service.status === 'active' && draft.visibleServiceIds.includes(service.id)),
-    [draft.visibleServiceIds, workspace.services],
-  );
-
   const handleSave = async () => {
     if (!workspace.canUseBackend) {
       toast.error('Connect an admin token to save booking settings.');
@@ -275,40 +270,6 @@ export default function SettingsBookingPage() {
           </div>
         </SectionCard>
 
-        <SectionCard
-          title="Service visibility"
-          description="Choose which services can be requested from the booking form."
-          action={
-            <Badge variant="outline" className="rounded-full">
-          {visibleServices.length}/{workspace.services.filter((service) => service.status === 'active').length || 0} on
-            </Badge>
-          }
-        >
-          <div className="space-y-3">
-            {workspace.services.length > 0 ? (
-              workspace.services.map((service) => (
-                <ToggleSwitch
-                  key={service.id}
-                  title={service.name}
-                  description={service.category}
-                  checked={draft.visibleServiceIds.includes(service.id)}
-                  onCheckedChange={(checked) =>
-                    setDraft((current) => ({
-                      ...current,
-                      visibleServiceIds: checked
-                        ? [...current.visibleServiceIds, service.id]
-                        : current.visibleServiceIds.filter((id) => id !== service.id),
-                    }))
-                  }
-                />
-              ))
-            ) : (
-              <div className="rounded-[24px] border border-dashed border-border/70 bg-muted/20 p-5 text-sm text-muted-foreground">
-                No active services were found.
-              </div>
-            )}
-          </div>
-        </SectionCard>
       </div>
     </div>
   );

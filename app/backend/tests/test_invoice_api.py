@@ -19,6 +19,7 @@ from app.main import app
 from app.models.base import Base
 from app.models.booking_request import BookingRequest
 from app.models.dealership import Dealership
+from app.models.email_outbox import EmailOutbox
 from app.models.invoice import Invoice, InvoiceLineItem
 from app.models.invoice_branding_settings import InvoiceBrandingSettings
 from app.models.job import Job
@@ -50,6 +51,7 @@ class InvoiceApiTests(unittest.TestCase):
 
     def setUp(self):
         with SessionLocal() as db:
+            db.query(EmailOutbox).delete()
             db.query(TechnicianAttendanceSession).delete()
             db.query(BookingRequest).delete()
             db.query(InvoiceLineItem).delete()
@@ -64,6 +66,65 @@ class InvoiceApiTests(unittest.TestCase):
             db.query(Technician).delete()
             db.query(Dealership).delete()
             db.commit()
+
+    def test_invoice_email_uses_custom_tenant_template(self):
+        template_update = self.client.put(
+            "/admin/settings/email-identity",
+            headers=self.auth_header,
+            json={
+                "invoice_email_subject": "Invoice ${invoice_number} for ${company_name}",
+                "invoice_email_body": (
+                    "Hello ${customer_name},\n\n"
+                    "Invoice ${invoice_number} totals ${invoice_total}.\n"
+                    "Please reply to ${reply_to_email} if you need help.\n\n"
+                    "Line items:\n"
+                    "${line_items_summary}\n\n"
+                    "Thank you,\n"
+                    "${company_name}"
+                ),
+            },
+        )
+        self.assertEqual(template_update.status_code, 200, template_update.text)
+
+        dealership = self._seed_dealership()
+        technician = self._seed_technician()
+        job_id = self._seed_completed_job(
+            code="SM2-2024-3001",
+            dealership=dealership,
+            service="Window Tint",
+            hours=Decimal("1.50"),
+            rate=Decimal("150.00"),
+            technician=technician,
+        )
+
+        create_res = self.client.post(
+            "/invoices",
+            headers=self.auth_header,
+            json={
+                "dispatch_job_ids": [job_id],
+                "terms": "NET_15",
+                "status": "draft",
+            },
+        )
+        self.assertEqual(create_res.status_code, 201, create_res.text)
+        invoice = create_res.json()
+
+        send_res = self.client.post(
+            f"/invoices/{invoice['id']}/send-email",
+            headers=self.auth_header,
+            json={},
+        )
+        self.assertEqual(send_res.status_code, 200, send_res.text)
+
+        with SessionLocal() as db:
+            outbox = db.query(EmailOutbox).order_by(EmailOutbox.created_at.desc()).first()
+            self.assertIsNotNone(outbox)
+            assert outbox is not None
+            self.assertEqual(outbox.message_type, "invoice_email")
+            self.assertIn(f"Invoice {invoice['invoice_number']} for", outbox.subject)
+            self.assertIn(invoice["invoice_number"], outbox.body)
+            self.assertIn("Please reply to support@nexusops.com", outbox.body)
+            self.assertIn("Line items:", outbox.body)
 
     def _seed_completed_job(
         self,

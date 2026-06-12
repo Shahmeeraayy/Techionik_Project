@@ -986,6 +986,8 @@ export type BackendTenantEmailIdentity = {
   billing_email: string;
   invoice_email: string;
   notification_email: string;
+  invoice_email_subject: string;
+  invoice_email_body: string;
   email_domain: string;
   email_sending_status: string;
   email_verified: boolean;
@@ -997,6 +999,8 @@ export type BackendTenantEmailIdentityUpdatePayload = {
   billing_email?: string | null;
   invoice_email?: string | null;
   notification_email?: string | null;
+  invoice_email_subject?: string | null;
+  invoice_email_body?: string | null;
 };
 
 export type BackendAdminBillingSettings = {
