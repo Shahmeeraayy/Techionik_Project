@@ -2498,7 +2498,7 @@ export default function JobsPage() {
                             </p>
                         </div>
                     </div>
-                    <div className="w-full max-w-[920px] lg:self-stretch">
+                    <div className="w-full max-w-[980px] lg:self-stretch">
                         <div className="flex h-full flex-col gap-4 lg:items-end lg:justify-between">
                             <div className="flex flex-wrap items-center gap-2 text-xs lg:justify-end">
                                 <Badge variant="outline" className="h-9 rounded-full border-cyan-300/18 bg-cyan-300/10 px-3 text-cyan-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
@@ -2513,8 +2513,8 @@ export default function JobsPage() {
                                 ) : null}
                             </div>
 
-                            <div className="flex w-full flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-                                <div className="flex min-w-0 flex-wrap items-center gap-2">
+                            <div className="flex w-full flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+                                <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
                                     {statusFilterOptions.map((option) => (
                                         <Button
                                             key={option.key}
@@ -2526,7 +2526,7 @@ export default function JobsPage() {
                                                 setPagination((prev) => ({ ...prev, page: 1 }));
                                             }}
                                             className={cn(
-                                                'h-8 rounded-full px-3 text-xs font-semibold shadow-none',
+                                                'h-8 shrink-0 rounded-full px-3 text-xs font-semibold whitespace-nowrap shadow-none',
                                                 statusFilter === option.key
                                                     ? 'border-slate-900 bg-slate-900 text-white dark:border-cyan-300/25 dark:bg-cyan-500/[0.12] dark:text-cyan-100'
                                                     : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 dark:border-white/8 dark:bg-white/[0.03] dark:text-slate-200 dark:hover:bg-white/[0.08] dark:hover:text-white',
@@ -2536,9 +2536,9 @@ export default function JobsPage() {
                                         </Button>
                                     ))}
                                 </div>
-                                <div className="flex flex-wrap items-center gap-2 text-xs">
+                                <div className="flex shrink-0 flex-col items-end gap-2 text-xs">
                                     <Select value={jobSortMode} onValueChange={(value) => handleSortModeChange(value as JobSortMode)}>
-                                        <SelectTrigger className="h-9 w-full rounded-full border-slate-200 bg-white text-slate-800 shadow-none sm:w-[170px] dark:border-white/8 dark:bg-white/[0.035] dark:text-white">
+                                        <SelectTrigger className="h-9 w-[170px] rounded-full border-slate-200 bg-white text-slate-800 shadow-none dark:border-white/8 dark:bg-white/[0.035] dark:text-white">
                                             <div className="flex items-center gap-2 text-sm">
                                                 <TrendingUp className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400" />
                                                 <SelectValue placeholder="Sort by" />

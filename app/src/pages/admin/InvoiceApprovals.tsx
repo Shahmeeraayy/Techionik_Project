@@ -935,41 +935,7 @@ export default function InvoiceApprovalsPage() {
                     </div>
                     <div className="w-full max-w-[980px] xl:self-stretch">
                         <div className="flex h-full flex-col gap-4 xl:items-end xl:justify-between">
-                            <div className="flex flex-wrap items-center gap-3 xl:justify-end">
-                                <div className="rounded-full border border-white/10 bg-[#0b1424] px-4 py-2 text-xs font-medium text-slate-300 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-                                    Last updated: {new Date().toLocaleTimeString()}
-                                </div>
-                                <Button
-                                    type="button"
-                                    size="sm"
-                                    className="h-11 gap-2 rounded-2xl bg-[linear-gradient(135deg,#4f7cff,#22d3ee)] px-4 font-semibold text-white shadow-[0_18px_42px_rgba(79,124,255,0.24)] hover:brightness-105"
-                                    onClick={openManualInvoiceDialog}
-                                    disabled={manualInvoiceOptions.length === 0}
-                                >
-                                    <Plus className="h-4 w-4" />
-                                    Create Invoice
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="h-11 gap-2 rounded-2xl border-white/10 bg-[#0b1424] px-4 text-slate-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] hover:bg-[#122039] hover:text-white"
-                                    onClick={() => void fetchInvoicesData()}
-                                >
-                                    <RefreshCw className={cn('h-4 w-4 text-slate-500 dark:text-slate-300', loading && 'animate-spin')} />
-                                    Refresh
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="h-11 gap-2 rounded-2xl border-white/10 bg-[#0b1424] px-4 text-slate-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] hover:bg-[#122039] hover:text-white"
-                                    onClick={() => setExportModalOpen(true)}
-                                >
-                                    <Download className="h-4 w-4 text-slate-500 dark:text-slate-300" />
-                                    Export Excel
-                                </Button>
-                            </div>
-
-                            <div className="flex w-full flex-col gap-3 xl:max-w-[980px]">
+                            <div className="flex w-full flex-col gap-3 xl:ml-auto xl:max-w-[980px]">
                                 <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
                                     <div className="relative min-w-0 flex-1">
                                         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
@@ -1082,6 +1048,40 @@ export default function InvoiceApprovalsPage() {
                                         </Badge>
                                     </Button>
                                 </div>
+                            </div>
+
+                            <div className="flex flex-wrap items-center gap-3 xl:justify-end">
+                                <div className="rounded-full border border-white/10 bg-[#0b1424] px-4 py-2 text-xs font-medium text-slate-300 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                                    Last updated: {new Date().toLocaleTimeString()}
+                                </div>
+                                <Button
+                                    type="button"
+                                    size="sm"
+                                    className="h-11 gap-2 rounded-2xl bg-[linear-gradient(135deg,#4f7cff,#22d3ee)] px-4 font-semibold text-white shadow-[0_18px_42px_rgba(79,124,255,0.24)] hover:brightness-105"
+                                    onClick={openManualInvoiceDialog}
+                                    disabled={manualInvoiceOptions.length === 0}
+                                >
+                                    <Plus className="h-4 w-4" />
+                                    Create Invoice
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-11 gap-2 rounded-2xl border-white/10 bg-[#0b1424] px-4 text-slate-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] hover:bg-[#122039] hover:text-white"
+                                    onClick={() => void fetchInvoicesData()}
+                                >
+                                    <RefreshCw className={cn('h-4 w-4 text-slate-500 dark:text-slate-300', loading && 'animate-spin')} />
+                                    Refresh
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-11 gap-2 rounded-2xl border-white/10 bg-[#0b1424] px-4 text-slate-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] hover:bg-[#122039] hover:text-white"
+                                    onClick={() => setExportModalOpen(true)}
+                                >
+                                    <Download className="h-4 w-4 text-slate-500 dark:text-slate-300" />
+                                    Export Excel
+                                </Button>
                             </div>
                         </div>
                 </div>
