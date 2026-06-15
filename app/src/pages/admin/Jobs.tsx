@@ -2693,8 +2693,8 @@ export default function JobsPage() {
                         </Button>
                     </div>
                 ) : (
-                    <div className="admin-jobs-table relative flex-1 overflow-x-hidden overflow-y-hidden">
-                        <Table className="w-full table-fixed">
+                    <div className="admin-jobs-table admin-dark-scrollbar relative flex-1 overflow-x-auto overflow-y-hidden">
+                        <Table className="w-full min-w-[1560px] table-fixed">
                             <TableHeader className="sticky top-0 z-10 border-b border-white/10 bg-[linear-gradient(180deg,rgba(9,24,40,0.98),rgba(8,19,33,0.94))] backdrop-blur-xl">
                                 <TableRow className="border-white/0 hover:bg-transparent">
                                     <TableHead className="w-[38px] pl-4" data-column="selection">
@@ -2703,27 +2703,27 @@ export default function JobsPage() {
                                             onCheckedChange={handleSelectAll}
                                         />
                                     </TableHead>
-                                    <TableHead className="w-[8rem] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400" data-column="job-id">
+                                    <TableHead className="w-[150px] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400" data-column="job-id">
                                         <Button
                                             variant="ghost"
                                             size="sm"
                                             type="button"
                                             onClick={() => handleSortModeChange('job_id')}
-                                            className="-ml-3 h-9 w-full justify-between rounded-2xl px-2.5 text-[11px] font-semibold uppercase tracking-[0.18em] hover:bg-white/[0.05] hover:text-white text-slate-400"
+                                            className="-ml-3 inline-flex h-9 max-w-full justify-start gap-1.5 rounded-2xl px-2.5 text-[11px] font-semibold uppercase tracking-[0.18em] hover:bg-white/[0.05] hover:text-white text-slate-400"
                                         >
                                             <span className="min-w-0 truncate">Job ID</span>
-                                            <ArrowUpDown className="ml-2 h-3.5 w-3.5" />
+                                            <ArrowUpDown className="h-3.5 w-3.5" />
                                         </Button>
                                     </TableHead>
-                                    <TableHead className="w-[11%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400" data-column="service">Service Type</TableHead>
-                                    <TableHead className="w-[12%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400" data-column="dealership">Dealership / Location</TableHead>
-                                    <TableHead className="w-[9%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400" data-column="vehicle">Vehicle</TableHead>
-                                    <TableHead className="w-[10%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400" data-column="technician">Assigned Tech</TableHead>
-                                    <TableHead className="hidden w-[5%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400 xl:table-cell" data-column="urgency">Urgency</TableHead>
-                                    <TableHead className="hidden w-[5%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400 xl:table-cell" data-column="rank">Rank</TableHead>
-                                    <TableHead className="w-[8%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400" data-column="status">Status</TableHead>
-                                    <TableHead className="w-[10%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400" data-column="dates">Dates</TableHead>
-                                    <TableHead className="sticky right-0 z-20 w-[96px] border-l border-white/10 pr-3 text-right text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400 bg-[linear-gradient(180deg,rgba(9,24,40,0.98),rgba(8,19,33,0.94))] backdrop-blur-xl" data-column="actions">Actions</TableHead>
+                                    <TableHead className="w-[230px] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400" data-column="service">Service Type</TableHead>
+                                    <TableHead className="w-[180px] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400" data-column="dealership">Dealership / Location</TableHead>
+                                    <TableHead className="w-[180px] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400" data-column="vehicle">Vehicle</TableHead>
+                                    <TableHead className="w-[190px] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400" data-column="technician">Assigned Tech</TableHead>
+                                    <TableHead className="hidden w-[92px] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400 xl:table-cell" data-column="urgency">Urgency</TableHead>
+                                    <TableHead className="hidden w-[96px] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400 xl:table-cell" data-column="rank">Rank</TableHead>
+                                    <TableHead className="w-[120px] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400" data-column="status">Status</TableHead>
+                                    <TableHead className="w-[150px] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400" data-column="dates">Dates</TableHead>
+                                    <TableHead className="sticky right-0 z-20 w-[128px] border-l border-white/10 pr-3 text-right text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400 bg-[linear-gradient(180deg,rgba(9,24,40,0.98),rgba(8,19,33,0.94))] backdrop-blur-xl" data-column="actions">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -2762,10 +2762,10 @@ export default function JobsPage() {
                                                 <button
                                                     type="button"
                                                     onClick={() => navigate(`/admin/jobs/${job.job_id}`)}
-                                                    className="group/id flex w-full min-w-0 items-center justify-between overflow-hidden rounded-2xl border border-cyan-300/15 bg-cyan-300/[0.06] px-2.5 py-1.5 text-left shadow-[0_10px_24px_rgba(8,145,178,0.08)] transition-all hover:border-cyan-300/35 hover:bg-cyan-300/[0.11] hover:shadow-[0_14px_30px_rgba(8,145,178,0.14)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/40"
+                                                    className="group/id inline-flex max-w-full min-w-0 items-center justify-start gap-1.5 overflow-hidden rounded-2xl border border-cyan-300/15 bg-cyan-300/[0.06] px-2.5 py-1.5 text-left shadow-[0_10px_24px_rgba(8,145,178,0.08)] transition-all hover:border-cyan-300/35 hover:bg-cyan-300/[0.11] hover:shadow-[0_14px_30px_rgba(8,145,178,0.14)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/40"
                                                     title="Open job details"
                                                 >
-                                                    <div className="flex min-w-0 items-center gap-1.5 text-xs font-semibold text-cyan-100 transition-colors group-hover/id:text-white" style={displayFontStyle}>
+                                                    <div className="inline-flex min-w-0 items-center gap-1.5 text-xs font-semibold text-cyan-100 transition-colors group-hover/id:text-white" style={displayFontStyle}>
                                                         <span className="min-w-0 truncate">{job.job_code}</span>
                                                         <ExternalLink className="h-3 w-3 shrink-0 text-cyan-200 opacity-80 transition group-hover/id:translate-x-0.5 group-hover/id:-translate-y-0.5 group-hover/id:opacity-100" />
                                                     </div>
@@ -2801,7 +2801,7 @@ export default function JobsPage() {
                                             </TableCell>
                                             <TableCell className="py-4 align-middle" data-column="technician">
                                                 {primaryTechnicianName ? (
-                                                <div className="inline-flex w-full max-w-[160px] items-center gap-2 rounded-2xl border border-emerald-300/16 bg-emerald-300/[0.07] px-2.5 py-2">
+                                                <div className="flex w-full min-w-0 items-center gap-2 rounded-2xl border border-emerald-300/16 bg-emerald-300/[0.07] px-2.5 py-2">
                                                         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-300/20 text-[10px] font-semibold uppercase tracking-[0.12em] text-emerald-100">
                                                             {primaryTechnicianName.substring(0, 2)}
                                                         </div>
@@ -2811,7 +2811,7 @@ export default function JobsPage() {
                                                         </div>
                                                     </div>
                                                 ) : pendingTechnicianName ? (
-                                                <div className="inline-flex w-full max-w-[160px] items-center gap-2 rounded-2xl border border-violet-300/18 bg-violet-300/[0.09] px-2.5 py-2">
+                                                <div className="flex w-full min-w-0 items-center gap-2 rounded-2xl border border-violet-300/18 bg-violet-300/[0.09] px-2.5 py-2">
                                                         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-violet-300/20 text-[10px] font-semibold uppercase tracking-[0.12em] text-violet-100">
                                                             {pendingTechnicianName.substring(0, 2)}
                                                         </div>
@@ -2821,7 +2821,7 @@ export default function JobsPage() {
                                                         </div>
                                                     </div>
                                                 ) : needsReassignment ? (
-                                                <div className="inline-flex w-full max-w-[160px] items-center gap-2 rounded-2xl border border-amber-300/18 bg-amber-300/[0.08] px-2.5 py-2">
+                                                <div className="flex w-full min-w-0 items-center gap-2 rounded-2xl border border-amber-300/18 bg-amber-300/[0.08] px-2.5 py-2">
                                                         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-amber-300/16 text-amber-100">
                                                             <AlertCircle className="h-3.5 w-3.5" />
                                                         </div>
@@ -2887,7 +2887,7 @@ export default function JobsPage() {
                                                 </div>
                                             </TableCell>
                                             <TableCell className="sticky right-0 z-10 border-l border-white/10 bg-inherit py-4 pr-3 text-right align-middle" data-column="actions">
-                                                <div className="ml-auto flex max-w-[96px] flex-col items-stretch gap-2">
+                                                <div className="ml-auto flex w-full max-w-[128px] flex-col items-stretch gap-2">
                                                     {(job.job_status === 'admin_preview' || job.job_status === 'pending_admin_confirmation') && Boolean(
                                                         (job.pending_assigned_technician_name ?? job.assigned_technician_name)?.trim()
                                                     ) ? (

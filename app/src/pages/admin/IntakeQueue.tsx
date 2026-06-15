@@ -52,6 +52,15 @@ const GRID_COLS: React.CSSProperties = {
   gridTemplateColumns: 'minmax(0,13%) minmax(0,21%) minmax(0,1fr) minmax(0,13%) minmax(0,18%) minmax(0,7%)',
 };
 
+const serviceSummaryPillClass = [
+  'request-queue-service-pill group inline-flex max-w-full items-center gap-1.5 overflow-hidden rounded-full',
+  'px-3 py-1 text-left text-xs font-semibold shadow-[0_10px_24px_rgba(8,145,178,0.10)] transition-all',
+].join(' ');
+
+const serviceCountPillClass = [
+  'request-queue-service-count-pill inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium transition-colors',
+].join(' ');
+
 const getBookingServices = (row: BackendBookingRequest) => {
   const names = row.service_names && row.service_names.length > 0 ? row.service_names : [row.service_name];
   return names.map((name) => name.trim()).filter(Boolean);
@@ -177,7 +186,7 @@ export default function IntakeQueuePage() {
   };
 
   return (
-    <div className="relative w-full space-y-6 pb-10">
+    <div className="admin-intake-queue-page relative w-full space-y-6 pb-10">
       {/* Hero header */}
       <section className="relative overflow-hidden rounded-[28px] border border-white/10 bg-[linear-gradient(135deg,rgba(7,25,42,0.98),rgba(6,18,32,0.98))] shadow-[0_34px_120px_rgba(0,0,0,0.34)] sm:rounded-[32px]">
         <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] bg-[size:120px_120px] opacity-20" />
@@ -280,17 +289,18 @@ export default function IntakeQueuePage() {
                     <button
                       type="button"
                       onClick={() => setServiceDetailRow(row)}
-                      className="group flex max-w-full items-start gap-1.5 text-left"
+                      className={serviceSummaryPillClass}
+                      title={serviceSummary}
                     >
-                      <Wrench className="mt-0.5 h-3.5 w-3.5 shrink-0 text-cyan-200/70 transition-colors group-hover:text-cyan-100" />
-                      <span className="line-clamp-2 text-sm font-medium text-slate-200 transition-colors group-hover:text-white">
+                      <Wrench className="h-3.5 w-3.5 shrink-0 text-current opacity-80 transition-opacity group-hover:opacity-100" />
+                      <span className="min-w-0 truncate transition-colors">
                         {serviceSummary}
                       </span>
                     </button>
                     <button
                       type="button"
                       onClick={() => setServiceDetailRow(row)}
-                      className="mt-1 inline-flex items-center gap-1 rounded-full border border-cyan-300/15 bg-cyan-300/10 px-2 py-0.5 text-[11px] font-medium text-cyan-100 hover:bg-cyan-300/15"
+                      className={cn('mt-2', serviceCountPillClass)}
                     >
                       <ListChecks className="h-3 w-3" />
                       {services.length} {services.length === 1 ? 'service' : 'services'}
@@ -380,17 +390,18 @@ export default function IntakeQueuePage() {
                   <button
                     type="button"
                     onClick={() => setServiceDetailRow(row)}
-                    className="flex w-full items-start gap-1.5 text-left"
+                    className={serviceSummaryPillClass}
+                    title={serviceSummary}
                   >
-                    <Wrench className="mt-0.5 h-3.5 w-3.5 shrink-0 text-cyan-200/70" />
-                    <span className="line-clamp-2 text-sm font-medium text-slate-200">
+                    <Wrench className="h-3.5 w-3.5 shrink-0 text-current opacity-80 transition-opacity group-hover:opacity-100" />
+                    <span className="min-w-0 truncate transition-colors">
                       {serviceSummary}
                     </span>
                   </button>
                   <button
                     type="button"
                     onClick={() => setServiceDetailRow(row)}
-                    className="mt-2 inline-flex items-center gap-1 rounded-full border border-cyan-300/15 bg-cyan-300/10 px-2 py-0.5 text-[11px] font-medium text-cyan-100"
+                    className={cn('mt-2', serviceCountPillClass)}
                   >
                     <ListChecks className="h-3 w-3" />
                     View {services.length} {services.length === 1 ? 'service' : 'services'}

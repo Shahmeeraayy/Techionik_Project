@@ -1900,7 +1900,7 @@
   }
 
   .admin-shell .admin-jobs-table [data-column="actions"] {
-    width: 96px !important;
+    width: 128px !important;
   }
 }
 
@@ -4931,6 +4931,133 @@
   border-color: rgba(96, 165, 250, 0.26) !important;
   color: #dbeafe !important;
   -webkit-text-fill-color: #dbeafe !important;
+}
+
+.admin-intake-queue-page .request-queue-service-pill,
+.admin-intake-queue-page .request-queue-service-count-pill {
+  border: 1px solid rgba(103, 232, 249, 0.22) !important;
+  background: rgba(34, 211, 238, 0.10) !important;
+  color: #cffafe !important;
+  -webkit-text-fill-color: #cffafe !important;
+  box-shadow: 0 12px 28px rgba(8, 145, 178, 0.12) !important;
+}
+
+.admin-intake-queue-page .request-queue-service-pill:is(:hover, :focus-visible),
+.admin-intake-queue-page .request-queue-service-count-pill:is(:hover, :focus-visible) {
+  border-color: rgba(103, 232, 249, 0.32) !important;
+  background: rgba(34, 211, 238, 0.16) !important;
+  color: #ecfeff !important;
+  -webkit-text-fill-color: #ecfeff !important;
+}
+
+.admin-intake-queue-page .request-queue-service-pill :is(svg, span),
+.admin-intake-queue-page .request-queue-service-count-pill :is(svg, span) {
+  color: inherit !important;
+  -webkit-text-fill-color: inherit !important;
+}
+
+.light .admin-intake-queue-page .request-queue-service-pill,
+.light .admin-intake-queue-page .request-queue-service-count-pill {
+  border-color: rgba(8, 145, 178, 0.22) !important;
+  background: rgba(236, 254, 255, 0.96) !important;
+  color: #0f766e !important;
+  -webkit-text-fill-color: #0f766e !important;
+  box-shadow: 0 10px 24px rgba(8, 145, 178, 0.10) !important;
+}
+
+.light .admin-intake-queue-page .request-queue-service-pill:is(:hover, :focus-visible),
+.light .admin-intake-queue-page .request-queue-service-count-pill:is(:hover, :focus-visible) {
+  border-color: rgba(14, 116, 144, 0.28) !important;
+  background: #cffafe !important;
+  color: #155e75 !important;
+  -webkit-text-fill-color: #155e75 !important;
+}
+
+.light .admin-intake-queue-page .request-queue-service-pill :is(svg, span),
+.light .admin-intake-queue-page .request-queue-service-count-pill :is(svg, span) {
+  color: inherit !important;
+  -webkit-text-fill-color: inherit !important;
+}
+
+.admin-invoice-approvals-page :is(button, [data-slot="button"]).invoice-approval-primary-button,
+.admin-invoice-approvals-page :is(button, [data-slot="button"]).invoice-approval-success-button {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+.admin-invoice-approvals-page :is(button, [data-slot="button"]).invoice-approval-primary-button :is(svg, span),
+.admin-invoice-approvals-page :is(button, [data-slot="button"]).invoice-approval-success-button :is(svg, span) {
+  color: inherit !important;
+  -webkit-text-fill-color: inherit !important;
+  opacity: 1 !important;
+}
+
+.light .admin-invoice-approvals-page :is(button, [data-slot="button"]).invoice-approval-primary-button,
+.dark .admin-invoice-approvals-page :is(button, [data-slot="button"]).invoice-approval-primary-button {
+  border-color: rgba(125, 176, 255, 0.4) !important;
+  background: linear-gradient(135deg, #4f7cff, #22d3ee) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  box-shadow: 0 18px 42px rgba(79, 124, 255, 0.24) !important;
+}
+
+.light .admin-invoice-approvals-page :is(button, [data-slot="button"]).invoice-approval-primary-button:is(:hover, :focus-visible):not(:disabled),
+.dark .admin-invoice-approvals-page :is(button, [data-slot="button"]).invoice-approval-primary-button:is(:hover, :focus-visible):not(:disabled) {
+  background: linear-gradient(135deg, #5c88ff, #3bd8ee) !important;
+  border-color: rgba(125, 176, 255, 0.52) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  box-shadow: 0 22px 46px rgba(79, 124, 255, 0.30) !important;
+}
+
+.light .admin-invoice-approvals-page :is(button, [data-slot="button"]).invoice-approval-primary-button:active:not(:disabled),
+.dark .admin-invoice-approvals-page :is(button, [data-slot="button"]).invoice-approval-primary-button:active:not(:disabled) {
+  background: linear-gradient(135deg, #3f69ec, #15c5dc) !important;
+  box-shadow: 0 12px 26px rgba(79, 124, 255, 0.24) !important;
+}
+
+.light .admin-invoice-approvals-page :is(button, [data-slot="button"]).invoice-approval-primary-button:disabled,
+.dark .admin-invoice-approvals-page :is(button, [data-slot="button"]).invoice-approval-primary-button:disabled {
+  border-color: rgba(125, 176, 255, 0.26) !important;
+  background: linear-gradient(135deg, rgba(79, 124, 255, 0.82), rgba(34, 211, 238, 0.74)) !important;
+  color: rgba(255, 255, 255, 0.94) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.94) !important;
+  box-shadow: 0 12px 24px rgba(79, 124, 255, 0.16) !important;
+  opacity: 1 !important;
+}
+
+.light .admin-invoice-approvals-page :is(button, [data-slot="button"]).invoice-approval-success-button,
+.dark .admin-invoice-approvals-page :is(button, [data-slot="button"]).invoice-approval-success-button {
+  border-color: rgba(52, 211, 153, 0.3) !important;
+  background: linear-gradient(135deg, #2f8e92, #1a6b6f) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  box-shadow: 0 16px 34px rgba(47, 142, 146, 0.22) !important;
+}
+
+.light .admin-invoice-approvals-page :is(button, [data-slot="button"]).invoice-approval-success-button:is(:hover, :focus-visible):not(:disabled),
+.dark .admin-invoice-approvals-page :is(button, [data-slot="button"]).invoice-approval-success-button:is(:hover, :focus-visible):not(:disabled) {
+  background: linear-gradient(135deg, #369ea3, #218085) !important;
+  border-color: rgba(52, 211, 153, 0.42) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  box-shadow: 0 20px 42px rgba(47, 142, 146, 0.26) !important;
+}
+
+.light .admin-invoice-approvals-page :is(button, [data-slot="button"]).invoice-approval-success-button:active:not(:disabled),
+.dark .admin-invoice-approvals-page :is(button, [data-slot="button"]).invoice-approval-success-button:active:not(:disabled) {
+  background: linear-gradient(135deg, #277b7f, #15595d) !important;
+  box-shadow: 0 10px 22px rgba(47, 142, 146, 0.2) !important;
+}
+
+.light .admin-invoice-approvals-page :is(button, [data-slot="button"]).invoice-approval-success-button:disabled,
+.dark .admin-invoice-approvals-page :is(button, [data-slot="button"]).invoice-approval-success-button:disabled {
+  border-color: rgba(52, 211, 153, 0.2) !important;
+  background: linear-gradient(135deg, rgba(47, 142, 146, 0.82), rgba(26, 107, 111, 0.76)) !important;
+  color: rgba(255, 255, 255, 0.92) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.92) !important;
+  box-shadow: 0 10px 22px rgba(47, 142, 146, 0.14) !important;
+  opacity: 1 !important;
 }
 
 /* Print Styles */

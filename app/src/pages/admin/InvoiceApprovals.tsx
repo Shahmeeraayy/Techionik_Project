@@ -93,6 +93,18 @@ const bodyFontStyle: CSSProperties = {
     fontFamily: '"Manrope", "Inter", system-ui, sans-serif',
 };
 
+const invoiceApprovalPrimaryButtonClass = [
+    'invoice-approval-primary-button rounded-2xl border border-[#7db0ff]/40',
+    'bg-[linear-gradient(135deg,#4f7cff,#22d3ee)] font-semibold text-white',
+    'shadow-[0_18px_42px_rgba(79,124,255,0.24)] hover:brightness-105',
+].join(' ');
+
+const invoiceApprovalSuccessButtonClass = [
+    'invoice-approval-success-button rounded-2xl border border-emerald-400/30',
+    'bg-[linear-gradient(135deg,#2F8E92,#1a6b6f)] font-semibold text-white',
+    'shadow-[0_16px_34px_rgba(47,142,146,0.22)] hover:brightness-105',
+].join(' ');
+
 type InvoiceMetricTone = 'amber' | 'cyan' | 'emerald' | 'violet';
 
 function invoiceMetricCardClasses(tone: InvoiceMetricTone): string {
@@ -915,7 +927,7 @@ export default function InvoiceApprovalsPage() {
     ];
 
     return (
-        <div className="flex h-full flex-col gap-6">
+        <div className="admin-invoice-approvals-page flex h-full flex-col gap-6">
             <section className="relative overflow-hidden rounded-[32px] border border-black/8 bg-[linear-gradient(135deg,#ffffff,#fbfbfb)] px-6 py-6 shadow-[0_32px_110px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-[linear-gradient(135deg,rgba(7,24,41,0.98),rgba(5,15,29,0.98))] dark:shadow-[0_32px_110px_rgba(0,0,0,0.32)]">
                 <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-slate-900/20 to-transparent dark:via-cyan-300/70" />
                 <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(15,23,42,0.05),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(15,23,42,0.03),transparent_26%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(47,142,146,0.14),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(245,158,11,0.12),transparent_26%)]" />
@@ -1053,12 +1065,12 @@ export default function InvoiceApprovalsPage() {
                                 <Button
                                     type="button"
                                     size="sm"
-                                    className="h-11 gap-2 rounded-2xl bg-[linear-gradient(135deg,#4f7cff,#22d3ee)] px-4 font-semibold text-white shadow-[0_18px_42px_rgba(79,124,255,0.24)] hover:brightness-105"
+                                    className={cn('h-11 gap-2 px-4', invoiceApprovalPrimaryButtonClass)}
                                     onClick={openManualInvoiceDialog}
                                     disabled={isCreatingManualInvoice}
                                 >
                                     <Plus className="h-4 w-4" />
-                                    Create Invoice
+                                    <span>Create Invoice</span>
                                 </Button>
                                 <Button
                                     variant="outline"
@@ -1338,12 +1350,12 @@ export default function InvoiceApprovalsPage() {
                         </Button>
                         <Button
                             type="button"
-                            className="min-h-11 gap-2 rounded-2xl bg-[linear-gradient(135deg,#4f7cff,#22d3ee)] px-5 font-semibold text-white hover:brightness-105 disabled:opacity-70"
+                            className={cn('min-h-11 gap-2 px-5 disabled:opacity-70', invoiceApprovalPrimaryButtonClass)}
                             onClick={() => void handleCreateManualInvoice()}
                             disabled={isCreatingManualInvoice || !selectedManualInvoice}
                         >
                             <Mail className="h-4 w-4" />
-                            {isCreatingManualInvoice ? 'Creating...' : 'Create & Send'}
+                            <span>{isCreatingManualInvoice ? 'Creating...' : 'Create & Send'}</span>
                         </Button>
                     </DialogFooter>
                 </DialogContent>
@@ -2033,11 +2045,11 @@ export default function InvoiceApprovalsPage() {
                                         <Dialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
                                             <DialogTrigger asChild>
                                             <Button
-                                                className="flex-[2] h-11 rounded-2xl border border-[#7db0ff]/40 bg-[linear-gradient(135deg,#4f7cff,#22d3ee)] text-white shadow-[0_16px_34px_rgba(79,124,255,0.22)] font-semibold hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60"
+                                                className={cn('flex-[2] h-11 disabled:cursor-not-allowed disabled:opacity-60', invoiceApprovalPrimaryButtonClass)}
                                                 disabled={approvalDisabled}
                                             >
                                                 <CheckCircle2 className="w-4 h-4 mr-2" />
-                                                Approve & Generate
+                                                <span>Approve & Generate</span>
                                             </Button>
                                             </DialogTrigger>
                                         <DialogContent className="border-white/10 bg-[linear-gradient(180deg,rgba(9,24,39,0.98),rgba(6,17,29,0.98))] text-slate-100 sm:max-w-md">
@@ -2062,9 +2074,9 @@ export default function InvoiceApprovalsPage() {
                                                 <Button
                                                     onClick={() => void handleApprove()}
                                                     disabled={isApproving}
-                                                    className="h-11 w-full rounded-2xl border border-emerald-400/30 bg-[linear-gradient(135deg,#2F8E92,#1a6b6f)] px-5 font-semibold text-white shadow-[0_16px_34px_rgba(47,142,146,0.22)] hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+                                                    className={cn('h-11 w-full px-5 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto', invoiceApprovalSuccessButtonClass)}
                                                 >
-                                                    {isApproving ? 'Processing...' : 'Yes, Create Invoice'}
+                                                    <span>{isApproving ? 'Processing...' : 'Yes, Create Invoice'}</span>
                                                 </Button>
                                             </DialogFooter>
                                         </DialogContent>
