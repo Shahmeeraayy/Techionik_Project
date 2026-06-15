@@ -2623,11 +2623,13 @@ export default function JobsPage() {
                                                         className={cn(
                                                             'inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full border transition-all duration-200',
                                                             isActiveStatusFilter
-                                                                ? '!border-white/30 !bg-white !text-slate-900 shadow-[0_0_0_3px_rgba(255,255,255,0.12)] dark:!border-cyan-100/30 dark:!bg-cyan-100 dark:!text-cyan-950 dark:shadow-[0_0_0_3px_rgba(34,211,238,0.16)]'
-                                                                : 'border-slate-300 text-transparent opacity-60 dark:border-white/20',
+                                                                ? '!border-cyan-500 !bg-cyan-500 !text-white shadow-[0_0_0_3px_rgba(34,211,238,0.16)] dark:!border-cyan-200 dark:!bg-cyan-200 dark:!text-cyan-950 dark:shadow-[0_0_0_3px_rgba(34,211,238,0.14)]'
+                                                                : 'border-slate-300 bg-transparent dark:border-white/20',
                                                         )}
                                                     >
-                                                        <Check className={cn('h-2.5 w-2.5 transition-opacity duration-200', isActiveStatusFilter ? 'opacity-100' : 'opacity-0')} />
+                                                        {isActiveStatusFilter ? (
+                                                            <Check className="h-2.5 w-2.5 stroke-[3.25]" />
+                                                        ) : null}
                                                     </span>
                                                     <span>{option.label}</span>
                                                 </span>
