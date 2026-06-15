@@ -259,6 +259,7 @@ const JOB_EXPORT_COLUMNS = [
     'LastUpdatedTime',
 ];
 const ADMIN_REFRESH_EVENT = 'sm-dispatch:admin-refresh';
+const ASSIGNMENT_SHEET_DATA_ATTR = 'true';
 const displayFontStyle: CSSProperties = {
     fontFamily: '"Space Grotesk", "Sora", system-ui, sans-serif',
 };
@@ -829,15 +830,19 @@ function StatusBadge({ status, type }: { status: string; type: 'job' | 'invoice'
     };
 
     const labels: Record<string, string> = {
-        admin_preview: 'Admin Preview',
-        pending_admin_confirmation: 'Pending Admin Confirmation',
-        pending: 'Pending', scheduled: 'Scheduled', in_progress: 'In Progress', completed: 'Completed', cancelled: 'Cancelled', needs_reassignment: 'Needs Reassignment', unknown: 'Unknown',
+        admin_preview: 'Preview',
+        pending_admin_confirmation: 'Pending Confirm',
+        pending: 'Pending', scheduled: 'Scheduled', in_progress: 'In Progress', completed: 'Completed', cancelled: 'Cancelled', needs_reassignment: 'Reassign', unknown: 'Unknown',
         draft: 'Draft', pending_approval: 'Needs Approval', approved: 'Approved', synced: 'Synced', failed: 'Failed', void: 'Void',
         low: 'Low', normal: 'Medium', high: 'High', critical: 'Critical'
     };
 
     return (
-        <Badge variant="outline" className={cn('h-8 rounded-full px-3 capitalize font-medium border shadow-sm backdrop-blur-md', styles[status] || 'border-white/10 bg-white/[0.05] text-white')}>
+        <Badge
+            variant="outline"
+            title={labels[status] || status.replace('_', ' ')}
+            className={cn('h-8 max-w-full rounded-full px-3 capitalize font-medium border shadow-sm backdrop-blur-md', styles[status] || 'border-white/10 bg-white/[0.05] text-white')}
+        >
             {labels[status] || status.replace('_', ' ')}
         </Badge>
     );
@@ -2411,7 +2416,11 @@ export default function JobsPage() {
                     }
                 }}
             >
-                <SheetContent side="right" className="w-full sm:max-w-2xl p-0">
+                <SheetContent
+                    side="right"
+                    className="w-full sm:max-w-2xl p-0"
+                    data-assignment-sheet={ASSIGNMENT_SHEET_DATA_ATTR}
+                >
                     <SheetHeader className="border-b px-5 py-4">
                         <SheetTitle>Assign Technician</SheetTitle>
                         <SheetDescription>
@@ -2443,16 +2452,16 @@ export default function JobsPage() {
                         <button
                             type="button"
                             onClick={() => setSelectedTechnicianName('unassigned')}
+                            data-assignment-option="true"
+                            data-selected={selectedTechnicianName === 'unassigned' ? 'true' : 'false'}
                             className={cn(
                                 'w-full text-left rounded-lg border p-3 transition-colors',
-                                selectedTechnicianName === 'unassigned'
-                                    ? 'border-[#2F8E92] bg-[#2F8E92]/5'
-                                    : 'border-border hover:bg-muted/40'
+                                'admin-assignment-option'
                             )}
                         >
                             <div className="flex items-center justify-between">
                                 <div className="font-medium text-sm">Unassigned</div>
-                                <Badge variant="outline" className="text-xs">No tech</Badge>
+                                <Badge variant="outline" className="text-xs" data-assignment-badge="neutral">No tech</Badge>
                             </div>
                         </button>
 
@@ -2473,18 +2482,20 @@ export default function JobsPage() {
                                 <button
                                     key={tech.id}
                                     type="button"
+                                    disabled={!tech.isActive}
                                     onClick={() => {
                                         if (!tech.isActive) {
                                             return;
                                         }
                                         setSelectedTechnicianName(tech.name);
                                     }}
+                                    data-assignment-option="true"
+                                    data-selected={selectedTechnicianName === tech.name ? 'true' : 'false'}
+                                    data-disabled={!tech.isActive ? 'true' : 'false'}
                                     className={cn(
                                         'w-full text-left rounded-lg border p-3 transition-colors',
-                                        !tech.isActive && 'cursor-not-allowed opacity-60 border-dashed bg-muted/20',
-                                        selectedTechnicianName === tech.name
-                                            ? 'border-[#2F8E92] bg-[#2F8E92]/5'
-                                            : 'border-border hover:bg-muted/40'
+                                        'admin-assignment-option',
+                                        !tech.isActive && 'cursor-not-allowed border-dashed opacity-100'
                                     )}
                                 >
                                     <div className="flex items-start justify-between gap-3">
@@ -2492,29 +2503,29 @@ export default function JobsPage() {
                                             <div className="font-semibold text-sm text-foreground flex items-center gap-2">
                                                 {tech.name}
                                                 {!tech.isActive ? (
-                                                    <Badge variant="outline" className="text-[10px] bg-amber-50 text-amber-700 border-amber-200">
+                                                    <Badge variant="outline" className="text-[10px]" data-assignment-badge="warning">
                                                         Inactive
                                                     </Badge>
                                                 ) : eligibleTechnicianIds.has(tech.id) ? (
-                                                    <Badge className="text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                                    <Badge variant="outline" className="text-[10px]" data-assignment-badge="success">
                                                         Recommended
                                                     </Badge>
                                                 ) : (
-                                                    <Badge variant="outline" className="text-[10px]">
+                                                    <Badge variant="outline" className="text-[10px]" data-assignment-badge="neutral">
                                                         Manual assign
                                                     </Badge>
                                                 )}
                                             </div>
                                             <div className="mt-2 flex flex-wrap gap-1.5">
                                                 {tech.zones.map((zone) => (
-                                                    <Badge key={`${tech.id}-zone-${zone}`} variant="outline" className="text-[10px]">
+                                                    <Badge key={`${tech.id}-zone-${zone}`} variant="outline" className="text-[10px]" data-assignment-badge="neutral">
                                                         {zone}
                                                     </Badge>
                                                 ))}
                                             </div>
                                             <div className="mt-2 flex flex-wrap gap-1.5">
                                                 {tech.skills.map((skill) => (
-                                                    <Badge key={`${tech.id}-skill-${skill}`} className="text-[10px] bg-blue-50 text-blue-700 border border-blue-200">
+                                                    <Badge key={`${tech.id}-skill-${skill}`} variant="outline" className="text-[10px]" data-assignment-badge="info">
                                                         {skill}
                                                     </Badge>
                                                 ))}
@@ -2680,37 +2691,37 @@ export default function JobsPage() {
                         </Button>
                     </div>
                 ) : (
-                    <div className="admin-jobs-table relative flex-1 overflow-x-auto overflow-y-hidden">
+                    <div className="admin-jobs-table relative flex-1 overflow-x-hidden overflow-y-hidden">
                         <Table className="w-full table-fixed">
                             <TableHeader className="sticky top-0 z-10 border-b border-white/10 bg-[linear-gradient(180deg,rgba(9,24,40,0.98),rgba(8,19,33,0.94))] backdrop-blur-xl">
                                 <TableRow className="border-white/0 hover:bg-transparent">
-                                    <TableHead className="w-[38px] pl-4">
+                                    <TableHead className="w-[38px] pl-4" data-column="selection">
                                         <Checkbox
                                             checked={headerCheckboxState}
                                             onCheckedChange={handleSelectAll}
                                         />
                                     </TableHead>
-                                    <TableHead className="w-[9%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+                                    <TableHead className="w-[8rem] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400" data-column="job-id">
                                         <Button
                                             variant="ghost"
                                             size="sm"
                                             type="button"
                                             onClick={() => handleSortModeChange('job_id')}
-                                            className="-ml-3 h-9 rounded-2xl px-3 text-[11px] font-semibold uppercase tracking-[0.24em] hover:bg-white/[0.05] hover:text-white text-slate-400"
+                                            className="-ml-3 h-9 w-full justify-between rounded-2xl px-2.5 text-[11px] font-semibold uppercase tracking-[0.18em] hover:bg-white/[0.05] hover:text-white text-slate-400"
                                         >
-                                            Job ID
+                                            <span className="min-w-0 truncate">Job ID</span>
                                             <ArrowUpDown className="ml-2 h-3.5 w-3.5" />
                                         </Button>
                                     </TableHead>
-                                    <TableHead className="w-[12%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Service Type</TableHead>
-                                    <TableHead className="w-[13%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Dealership / Location</TableHead>
-                                    <TableHead className="w-[10%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Vehicle</TableHead>
-                                    <TableHead className="w-[11%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Assigned Tech</TableHead>
-                                    <TableHead className="w-[6%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Urgency</TableHead>
-                                    <TableHead className="w-[6%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Rank</TableHead>
-                                    <TableHead className="w-[8%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Status</TableHead>
-                                    <TableHead className="w-[8%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Dates</TableHead>
-                                    <TableHead className="sticky right-0 z-20 w-[116px] border-l border-white/10 pr-4 text-right text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400 bg-[linear-gradient(180deg,rgba(9,24,40,0.98),rgba(8,19,33,0.94))] backdrop-blur-xl">Actions</TableHead>
+                                    <TableHead className="w-[11%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400" data-column="service">Service Type</TableHead>
+                                    <TableHead className="w-[12%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400" data-column="dealership">Dealership / Location</TableHead>
+                                    <TableHead className="w-[9%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400" data-column="vehicle">Vehicle</TableHead>
+                                    <TableHead className="w-[10%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400" data-column="technician">Assigned Tech</TableHead>
+                                    <TableHead className="hidden w-[5%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400 xl:table-cell" data-column="urgency">Urgency</TableHead>
+                                    <TableHead className="hidden w-[5%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400 xl:table-cell" data-column="rank">Rank</TableHead>
+                                    <TableHead className="w-[8%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400" data-column="status">Status</TableHead>
+                                    <TableHead className="w-[10%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400" data-column="dates">Dates</TableHead>
+                                    <TableHead className="sticky right-0 z-20 w-[96px] border-l border-white/10 pr-3 text-right text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400 bg-[linear-gradient(180deg,rgba(9,24,40,0.98),rgba(8,19,33,0.94))] backdrop-blur-xl" data-column="actions">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -2745,20 +2756,20 @@ export default function JobsPage() {
                                                     onCheckedChange={(checked) => handleSelectRow(job.job_id, checked as boolean)}
                                                 />
                                             </TableCell>
-                                            <TableCell className="py-4 align-middle">
+                                            <TableCell className="py-4 align-middle" data-column="job-id">
                                                 <button
                                                     type="button"
                                                     onClick={() => navigate(`/admin/jobs/${job.job_id}`)}
-                                                    className="group/id rounded-2xl border border-cyan-300/15 bg-cyan-300/[0.06] px-3 py-2 text-left shadow-[0_10px_24px_rgba(8,145,178,0.08)] transition-all hover:border-cyan-300/35 hover:bg-cyan-300/[0.11] hover:shadow-[0_14px_30px_rgba(8,145,178,0.14)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/40"
+                                                    className="group/id flex w-full min-w-0 items-center justify-between overflow-hidden rounded-2xl border border-cyan-300/15 bg-cyan-300/[0.06] px-2.5 py-1.5 text-left shadow-[0_10px_24px_rgba(8,145,178,0.08)] transition-all hover:border-cyan-300/35 hover:bg-cyan-300/[0.11] hover:shadow-[0_14px_30px_rgba(8,145,178,0.14)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/40"
                                                     title="Open job details"
                                                 >
-                                                    <div className="flex items-center gap-2 text-sm font-semibold text-cyan-100 transition-colors group-hover/id:text-white" style={displayFontStyle}>
-                                                        <span>{job.job_code}</span>
-                                                        <ExternalLink className="h-3.5 w-3.5 text-cyan-200 opacity-80 transition group-hover/id:translate-x-0.5 group-hover/id:-translate-y-0.5 group-hover/id:opacity-100" />
+                                                    <div className="flex min-w-0 items-center gap-1.5 text-xs font-semibold text-cyan-100 transition-colors group-hover/id:text-white" style={displayFontStyle}>
+                                                        <span className="min-w-0 truncate">{job.job_code}</span>
+                                                        <ExternalLink className="h-3 w-3 shrink-0 text-cyan-200 opacity-80 transition group-hover/id:translate-x-0.5 group-hover/id:-translate-y-0.5 group-hover/id:opacity-100" />
                                                     </div>
                                                 </button>
                                             </TableCell>
-                                            <TableCell className="py-4 align-middle">
+                                            <TableCell className="py-4 align-middle" data-column="service">
                                                 <div className="min-w-0 border-l border-white/10 pl-3">
                                                     <OverflowText text={job.service_name} className="max-w-full text-sm font-semibold text-white" />
                                                     <div className="mt-1 text-xs text-slate-500">
@@ -2766,7 +2777,7 @@ export default function JobsPage() {
                                                     </div>
                                                 </div>
                                             </TableCell>
-                                            <TableCell className="py-4 align-middle">
+                                            <TableCell className="py-4 align-middle" data-column="dealership">
                                                 <div className="flex min-w-0 items-start gap-3">
                                                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl border border-cyan-300/12 bg-cyan-300/[0.08] text-cyan-100 shadow-[0_14px_24px_rgba(8,145,178,0.12)]">
                                                         <Building2Icon className="h-4 w-4" />
@@ -2780,13 +2791,13 @@ export default function JobsPage() {
                                                     </div>
                                                 </div>
                                             </TableCell>
-                                            <TableCell className="py-4 align-middle">
+                                            <TableCell className="py-4 align-middle" data-column="vehicle">
                                                 <div className="min-w-0">
                                                     <OverflowText text={job.vehicle_summary} className="max-w-full text-sm font-semibold text-slate-100" />
                                                     <div className="mt-1 text-xs text-slate-500">Vehicle profile</div>
                                                 </div>
                                             </TableCell>
-                                            <TableCell className="py-4 align-middle">
+                                            <TableCell className="py-4 align-middle" data-column="technician">
                                                 {primaryTechnicianName ? (
                                                 <div className="inline-flex w-full max-w-[160px] items-center gap-2 rounded-2xl border border-emerald-300/16 bg-emerald-300/[0.07] px-2.5 py-2">
                                                         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-300/20 text-[10px] font-semibold uppercase tracking-[0.12em] text-emerald-100">
@@ -2827,10 +2838,10 @@ export default function JobsPage() {
                                                     </div>
                                                 )}
                                             </TableCell>
-                                            <TableCell className="py-4 align-middle">
+                                            <TableCell className="hidden py-4 align-middle xl:table-cell" data-column="urgency">
                                                 <StatusBadge status={job.urgency} type="urgency" />
                                             </TableCell>
-                                            <TableCell className="py-4 align-middle">
+                                            <TableCell className="hidden py-4 align-middle xl:table-cell" data-column="rank">
                                                 <Popover>
                                                     <PopoverTrigger asChild>
                                                         <button
@@ -2858,10 +2869,10 @@ export default function JobsPage() {
                                                     </PopoverContent>
                                                 </Popover>
                                             </TableCell>
-                                            <TableCell className="py-4 align-middle">
+                                            <TableCell className="py-4 align-middle" data-column="status">
                                                 <StatusBadge status={needsReassignment ? 'needs_reassignment' : job.job_status} type="job" />
                                             </TableCell>
-                                            <TableCell className="py-4 align-middle">
+                                            <TableCell className="py-4 align-middle" data-column="dates">
                                                 <div className="space-y-2 border-l border-white/10 pl-3">
                                                     <div>
                                                         <div className="text-sm font-semibold text-slate-100">{formatJobDate(job.created_at)}</div>
@@ -2873,14 +2884,14 @@ export default function JobsPage() {
                                                     </div>
                                                 </div>
                                             </TableCell>
-                                            <TableCell className="sticky right-0 z-10 border-l border-white/10 bg-inherit py-4 pr-4 text-right align-middle">
-                                                <div className="ml-auto flex max-w-[112px] flex-col items-stretch gap-2">
+                                            <TableCell className="sticky right-0 z-10 border-l border-white/10 bg-inherit py-4 pr-3 text-right align-middle" data-column="actions">
+                                                <div className="ml-auto flex max-w-[96px] flex-col items-stretch gap-2">
                                                     {(job.job_status === 'admin_preview' || job.job_status === 'pending_admin_confirmation') && Boolean(
                                                         (job.pending_assigned_technician_name ?? job.assigned_technician_name)?.trim()
                                                     ) ? (
                                                         <Button
                                                             size="sm"
-                                                            className="h-8 w-full rounded-2xl bg-[linear-gradient(135deg,#36d6dd,#2d9fe5)] px-2 text-[11px] text-white shadow-[0_16px_28px_rgba(36,196,203,0.28)] hover:brightness-105"
+                                                            className="h-8 w-full rounded-2xl bg-[linear-gradient(135deg,#36d6dd,#2d9fe5)] px-2 text-[10px] text-white shadow-[0_16px_28px_rgba(36,196,203,0.28)] hover:brightness-105"
                                                             onClick={() => void handleConfirmJob(job)}
                                                         >
                                                             <Check className="mr-2 h-3.5 w-3.5" />
@@ -2891,7 +2902,7 @@ export default function JobsPage() {
                                                         <Button
                                                             size="sm"
                                                             variant="outline"
-                                                            className="h-8 w-full justify-start rounded-2xl border-white/10 bg-[linear-gradient(135deg,rgba(148,163,184,0.10),rgba(30,41,59,0.16))] px-2.5 text-[11px] text-slate-100 hover:bg-white/[0.08] hover:text-white"
+                                                            className="h-8 w-full justify-start rounded-2xl border-white/10 bg-[linear-gradient(135deg,rgba(148,163,184,0.10),rgba(30,41,59,0.16))] px-2 text-[10px] text-slate-100 hover:bg-white/[0.08] hover:text-white"
                                                             onClick={() => handleAssignTechnician(job)}
                                                         >
                                                             <User className="mr-1.5 h-3.5 w-3.5" />
@@ -2903,7 +2914,7 @@ export default function JobsPage() {
                                                     <Button
                                                         size="sm"
                                                         variant="outline"
-                                                        className="h-8 w-full justify-start rounded-2xl border-cyan-300/18 bg-cyan-300/[0.06] px-2.5 text-[11px] text-cyan-50 hover:bg-cyan-300/[0.14] hover:text-white"
+                                                        className="h-8 w-full justify-start rounded-2xl border-cyan-300/18 bg-cyan-300/[0.06] px-2 text-[10px] text-cyan-50 hover:bg-cyan-300/[0.14] hover:text-white"
                                                         onClick={() => navigate(`/admin/jobs/${job.job_id}`)}
                                                     >
                                                         <ExternalLink className="mr-1.5 h-3.5 w-3.5" />
