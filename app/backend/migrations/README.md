@@ -24,6 +24,10 @@ The active migration chain is defined by `app/backend/scripts/migrate.py`.
 - `018_job_internal_notes.sql`: internal notes for jobs
 - `019_attendance_live_tracking.sql`: attendance, live tracking, geo-fencing, and chatter location requests
 - `020_postgres_runtime_alignment.sql`: runtime-to-migration alignment for PostgreSQL-only backend fields
+- `021_notifications_v1.sql`: core notification tables
+- `022_tenant_notification_controls.sql`: tenant notification delivery controls
+- `023_technician_profile_v1_alignment.sql`: technician profile alignment cleanup
+- `024_auth_security.sql`: shared auth lockout state and admin password reset requests
 
 ## How to run
 

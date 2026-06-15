@@ -2,16 +2,17 @@ from datetime import datetime, timedelta, timezone
 from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from sqlalchemy.orm import Session
 
 from ...api import deps
 from ...core.config import APP_ENV, DEFAULT_TENANT_ID, DEFAULT_TENANT_NAME, DEFAULT_TENANT_SLUG
 from ...core.enums import UserRole
-from ...core.passwords import is_password_hash, verify_password
+from ...core.passwords import is_password_hash, validate_strong_password, verify_password
 from ...core.security import AuthenticatedUser, create_access_token
 from ...models.tenant import Tenant
 from ...repositories.technician_repository import TechnicianRepository
+from ...services.auth_security_service import AuthSecurityService, DEFAULT_ACCOUNT_LOCKOUT_MINUTES, DEFAULT_LOGIN_ATTEMPT_LIMIT
 from ...services.admin_credential_settings_service import AdminCredentialSettingsService
 from ...services.access_policy_service import AccessPolicyService
 from ...services.super_admin_service import SuperAdminService
@@ -67,7 +68,12 @@ class AdminSignupRequest(BaseModel):
     workspace_slug: str = Field(..., min_length=3, max_length=96)
     full_name: str = Field(..., min_length=1, max_length=255)
     email: str = Field(..., min_length=3, max_length=255)
-    password: str = Field(..., min_length=6, max_length=255)
+    password: str = Field(..., min_length=12, max_length=255)
+
+    @field_validator("password")
+    @classmethod
+    def _validate_password(cls, value: str) -> str:
+        return validate_strong_password(value)
 
 
 def _assert_tenant_accessible(db: Session, tenant_id: UUID | None) -> None:
@@ -116,7 +122,15 @@ def _verify_technician_credentials(*, email: str, password: str, db: Session):
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Technician password is not configured. Contact admin.",
         )
+    security = AuthSecurityService(db)
+    security.ensure_login_allowed(identity_type="technician", email=normalized_email)
     if not verify_password(normalized_password, stored_password, allow_plaintext_fallback=True):
+        security.record_failed_attempt(
+            identity_type="technician",
+            email=normalized_email,
+            attempt_limit=DEFAULT_LOGIN_ATTEMPT_LIMIT,
+            lockout_minutes=DEFAULT_ACCOUNT_LOCKOUT_MINUTES,
+        )
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid technician credentials")
 
     if not is_password_hash(stored_password):
@@ -127,6 +141,7 @@ def _verify_technician_credentials(*, email: str, password: str, db: Session):
             },
         )
         db.commit()
+    security.record_success(identity_type="technician", email=normalized_email)
 
     return technician
 

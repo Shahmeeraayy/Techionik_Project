@@ -29,6 +29,7 @@ from .tenant_email_identity import (
     apply_tenant_email_identity_update,
     serialize_tenant_email_identity,
 )
+from .auth_security_service import AuthSecurityService, DEFAULT_ACCOUNT_LOCKOUT_MINUTES, DEFAULT_LOGIN_ATTEMPT_LIMIT
 from .access_policy_service import AccessPolicyService, PLAN_FEATURE_MATRIX
 
 
@@ -209,12 +210,21 @@ class SuperAdminService:
         row = self._get_platform_user_by_email(normalized_email)
         if row is None or row.status != "active":
             return None
+        security = AuthSecurityService(self.db)
+        security.ensure_login_allowed(identity_type="super_admin", email=normalized_email)
         if not verify_password(normalized_password, row.password_hash):
+            security.record_failed_attempt(
+                identity_type="super_admin",
+                email=normalized_email,
+                attempt_limit=DEFAULT_LOGIN_ATTEMPT_LIMIT,
+                lockout_minutes=DEFAULT_ACCOUNT_LOCKOUT_MINUTES,
+            )
             return None
 
         row.last_login_at = datetime.now(timezone.utc)
         self.db.commit()
         self.db.refresh(row)
+        security.record_success(identity_type="super_admin", email=normalized_email)
         return row
 
     def _require_platform_permission(self, current_user: AuthenticatedUser, permission: str) -> PlatformUser:

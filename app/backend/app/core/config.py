@@ -1,6 +1,8 @@
 import os
 from pathlib import Path
 
+from .passwords import validate_strong_password
+
 
 def _strip_optional_quotes(value: str) -> str:
     if len(value) >= 2 and value[0] == value[-1] and value[0] in {"'", '"'}:
@@ -120,9 +122,9 @@ COMPANY_EMAIL = get_env("COMPANY_EMAIL", "muhamamd.daniyal@techionik.com")
 COMPANY_WEBSITE = get_env("COMPANY_WEBSITE", "https://www.nexusops.com")
 CUSTOMER_PORTAL_BASE_URL = get_env("CUSTOMER_PORTAL_BASE_URL", COMPANY_WEBSITE)
 ADMIN_EMAIL = get_env("ADMIN_EMAIL", "admin@nexusops.com").strip().lower()
-ADMIN_DEFAULT_PASSWORD = get_env("ADMIN_DEFAULT_PASSWORD", "admin123")
+ADMIN_DEFAULT_PASSWORD = get_env("ADMIN_DEFAULT_PASSWORD", "NexusOps!Admin2026")
 SUPER_ADMIN_EMAIL = get_env("SUPER_ADMIN_EMAIL", "root@nexusops.com").strip().lower()
-SUPER_ADMIN_DEFAULT_PASSWORD = get_env("SUPER_ADMIN_DEFAULT_PASSWORD", "superadmin123")
+SUPER_ADMIN_DEFAULT_PASSWORD = get_env("SUPER_ADMIN_DEFAULT_PASSWORD", "NexusOps!Root2026")
 SUPER_ADMIN_FULL_NAME = get_env("SUPER_ADMIN_FULL_NAME", "Platform Owner").strip() or "Platform Owner"
 DEFAULT_TENANT_ID = get_env("DEFAULT_TENANT_ID", "00000000-0000-0000-0000-000000000001")
 DEFAULT_TENANT_SLUG = get_env("DEFAULT_TENANT_SLUG", "default")
@@ -154,3 +156,6 @@ CHAT_INLINE_URL_TTL_SECONDS = int(get_env("CHAT_INLINE_URL_TTL_SECONDS", "0"))
 
 if not IS_LOCAL_APP_ENV and JWT_SECRET_KEY.startswith("change-me"):
     raise RuntimeError("JWT_SECRET_KEY must be set to a secure value outside development")
+
+validate_strong_password(ADMIN_DEFAULT_PASSWORD)
+validate_strong_password(SUPER_ADMIN_DEFAULT_PASSWORD)

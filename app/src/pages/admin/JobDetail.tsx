@@ -62,7 +62,7 @@ import { formatPhoneForDisplay, formatUsPhoneInput, phoneExampleFormat, toUsPhon
 import {
     confirmAdminJob,
     deleteAdminJob,
-    fetchAdminJob,
+    fetchAdminJobs,
     fetchAdminTechnicians,
     getStoredAdminToken,
     updateAdminJob,
@@ -301,6 +301,27 @@ function mapTimelineActor(actorType?: string | null): TimelineEvent['actor'] {
     }
 }
 
+const INTERNAL_NOTES_STORAGE_KEY = 'nexusops_admin_job_internal_notes';
+
+function getStoredInternalNotes(): Record<string, string> {
+    try {
+        const raw = localStorage.getItem(INTERNAL_NOTES_STORAGE_KEY);
+        return raw ? JSON.parse(raw) as Record<string, string> : {};
+    } catch {
+        return {};
+    }
+}
+
+function setStoredInternalNote(jobId: string, note: string) {
+    try {
+        const notes = getStoredInternalNotes();
+        notes[jobId] = note;
+        localStorage.setItem(INTERNAL_NOTES_STORAGE_KEY, JSON.stringify(notes));
+    } catch {
+        // Ignore storage failures and keep the note editable in memory.
+    }
+}
+
 function mapBackendTimelineEvent(event: BackendAdminJobTimelineEvent): TimelineEvent {
     const payload = event.payload_json ?? {};
     const changedFields = Array.isArray(payload.changed_fields)
@@ -471,6 +492,44 @@ function buildTimeline(source: BackendAdminJobDetail): TimelineEvent[] {
     return (source.timeline ?? []).map(mapBackendTimelineEvent);
 }
 
+function buildFallbackTimeline(source: BackendAdminJob): TimelineEvent[] {
+    const timeline: TimelineEvent[] = [
+        {
+            id: `${source.id}-created`,
+            type: 'STATUS_CHANGED',
+            title: 'Job Loaded',
+            actor: 'SYSTEM',
+            timestamp: new Date(source.created_at).toLocaleString(),
+            description: `Current status is ${normalizeJobStatus(source.status).replace(/_/g, ' ')}.`,
+            payload: source.source_metadata ?? undefined,
+        },
+    ];
+
+    if (source.assigned_technician_name) {
+        timeline.unshift({
+            id: `${source.id}-tech`,
+            type: 'TECH_ASSIGNED',
+            title: 'Technician Assigned',
+            actor: 'ADMIN',
+            timestamp: new Date(source.updated_at).toLocaleString(),
+            description: `${source.assigned_technician_name} is currently assigned to this job.`,
+        });
+    }
+
+    if (source.updated_at !== source.created_at) {
+        timeline.unshift({
+            id: `${source.id}-updated`,
+            type: 'DETAILS_UPDATED',
+            title: 'Job Updated',
+            actor: 'SYSTEM',
+            timestamp: new Date(source.updated_at).toLocaleString(),
+            description: 'Job details were refreshed from the backend.',
+        });
+    }
+
+    return timeline;
+}
+
 function mapBackendJobToDetail(source: BackendAdminJob | BackendAdminJobDetail): JobDetail {
     const serviceNames = Array.from(
         new Set(
@@ -520,7 +579,7 @@ function mapBackendJobToDetail(source: BackendAdminJob | BackendAdminJobDetail):
             total: 0,
         },
         allowed_actions: buildAllowedActions(source),
-        timeline: 'timeline' in source ? buildTimeline(source) : [],
+        timeline: 'timeline' in source ? buildTimeline(source) : buildFallbackTimeline(source),
         source_system: source.source_system,
         source_metadata: source.source_metadata ?? null,
     };
@@ -665,8 +724,8 @@ export default function JobDetailPage() {
         vehicleStock: source.vehicle.stock
     });
 
-    const applyBackendJobDetail = useCallback((
-        backendJob: BackendAdminJobDetail,
+    const applyBackendJobSnapshot = useCallback((
+        backendJob: BackendAdminJob | BackendAdminJobDetail,
         overrides?: {
             dealershipPhone?: string;
             vehicleVin?: string;
@@ -684,7 +743,9 @@ export default function JobDetailPage() {
             mapped.vehicle.stock = overrides.vehicleStock;
         }
         setJob(mapped);
-        setInternalNote(backendJob.internal_notes || '');
+        setInternalNote('internal_notes' in backendJob
+            ? (backendJob.internal_notes || '')
+            : (getStoredInternalNotes()[mapped.job_id] || ''));
     }, []);
 
     const loadJob = useCallback((background = false) => {
@@ -710,9 +771,13 @@ export default function JobDetailPage() {
 
         setLoadError(null);
 
-        void fetchAdminJob(adminToken, jobId)
-            .then((backendJob) => {
-                applyBackendJobDetail(backendJob);
+        void fetchAdminJobs(adminToken)
+            .then((jobs) => {
+                const matchedJob = jobs.find((item) => item.id === jobId || item.job_code === jobId);
+                if (!matchedJob) {
+                    throw new Error('Job not found.');
+                }
+                applyBackendJobSnapshot(matchedJob);
             })
             .catch((error) => {
                 const message = error instanceof Error ? error.message : 'Unable to load job details.';
@@ -725,7 +790,7 @@ export default function JobDetailPage() {
                 setLoading(false);
                 setRefreshing(false);
             });
-    }, [applyBackendJobDetail, jobId]);
+    }, [applyBackendJobSnapshot, jobId]);
 
     useEffect(() => {
         loadJob(false);
@@ -796,12 +861,26 @@ export default function JobDetailPage() {
             toast.error('Admin session missing. Please login again.');
             return;
         }
+        const selectedTech = eligibleTechnicians.find((tech) => tech.id === techId);
 
         setActionBusy(`assign-${techId}`);
         try {
-            await updateAdminJobAssignment(token, job.job_id, { assigned_technician_id: techId });
-            const refreshed = await fetchAdminJob(token, job.job_id);
-            applyBackendJobDetail(refreshed);
+            const updated = await updateAdminJobAssignment(token, job.job_id, { assigned_technician_id: techId });
+            const mappedUpdated = mapBackendJobToDetail(updated);
+            setJob((prev) => prev ? ({
+                ...mappedUpdated,
+                timeline: [
+                    {
+                        id: Date.now().toString(),
+                        type: prev.technician ? 'TECH_REASSIGNED' : 'TECH_ASSIGNED',
+                        title: prev.technician ? 'Technician Reassigned' : 'Technician Assigned',
+                        actor: 'ADMIN',
+                        timestamp: 'Just now',
+                        description: `Assigned ${selectedTech?.name || 'technician'} to job.`,
+                    },
+                    ...prev.timeline,
+                ],
+            }) : null);
             toast.success('Technician assigned.');
             setAssignModalOpen(false);
         } catch (error) {
@@ -846,18 +925,36 @@ export default function JobDetailPage() {
         ].filter(Boolean);
 
         try {
-            await updateAdminJob(token, job.job_id, {
+            const updated = await updateAdminJob(token, job.job_id, {
                 dealership_name: editForm.dealershipName.trim(),
                 service_name: serviceNames[0],
                 service_names: serviceNames,
                 vehicle_summary: vehicleParts.join(' '),
             });
-            const refreshed = await fetchAdminJob(token, job.job_id);
-            applyBackendJobDetail(refreshed, {
-                dealershipPhone: formattedDealershipPhone,
-                vehicleVin: editForm.vehicleVin,
-                vehicleStock: editForm.vehicleStock,
-            });
+            const mappedUpdated = mapBackendJobToDetail(updated);
+            setJob((prev) => prev ? ({
+                ...mappedUpdated,
+                dealership: {
+                    ...mappedUpdated.dealership,
+                    contact_phone: formattedDealershipPhone,
+                },
+                vehicle: {
+                    ...mappedUpdated.vehicle,
+                    vin: editForm.vehicleVin,
+                    stock: editForm.vehicleStock,
+                },
+                timeline: [
+                    {
+                        id: Date.now().toString(),
+                        type: 'DETAILS_UPDATED',
+                        title: 'Job Details Updated',
+                        actor: 'ADMIN',
+                        timestamp: 'Just now',
+                        description: 'Admin manually updated job details.',
+                    },
+                    ...prev.timeline,
+                ],
+            }) : null);
             setIsEditing(false);
             toast.success('Job details updated.');
         } catch (error) {
@@ -920,9 +1017,22 @@ export default function JobDetailPage() {
 
         setActionBusy('push');
         try {
-            await confirmAdminJob(token, job.job_id);
-            const refreshed = await fetchAdminJob(token, job.job_id);
-            applyBackendJobDetail(refreshed);
+            const updated = await confirmAdminJob(token, job.job_id);
+            const mappedUpdated = mapBackendJobToDetail(updated);
+            setJob((prev) => prev ? ({
+                ...mappedUpdated,
+                timeline: [
+                    {
+                        id: Date.now().toString(),
+                        type: 'STATUS_CHANGED',
+                        title: 'Pushed to Queue',
+                        actor: 'ADMIN',
+                        timestamp: 'Just now',
+                        description: 'Job was promoted into the live technician queue.',
+                    },
+                    ...prev.timeline,
+                ],
+            }) : null);
             toast.success('Job pushed to technician queue.');
         } catch (error) {
             toast.error(error instanceof Error ? error.message : 'Assign a technician before pushing this job.');
@@ -960,10 +1070,11 @@ export default function JobDetailPage() {
 
         setActionBusy('notes');
         try {
+            setStoredInternalNote(job.job_id, internalNote);
             const refreshed = await updateAdminJobInternalNotes(token, job.job_id, {
                 internal_notes: internalNote,
             });
-            applyBackendJobDetail(refreshed);
+            applyBackendJobSnapshot(refreshed);
             toast.success('Internal note saved.');
         } catch (error) {
             toast.error(error instanceof Error ? error.message : 'Failed to save internal note.');

@@ -1868,15 +1868,16 @@
   border-color: rgba(255, 255, 255, 0.1) !important;
 }
 
-/* Jobs board: fixed table, no white scroll rail in dark mode. */
+/* Jobs board: fluid table, no unnecessary horizontal scroll in dark mode. */
 .dark .admin-shell .admin-jobs-table {
   background: linear-gradient(180deg, rgba(8, 16, 30, 0.98), rgba(6, 12, 23, 0.98)) !important;
   overflow-x: auto !important;
 }
 
 .dark .admin-shell .admin-jobs-table table {
-  width: max(100%, 1480px) !important;
-  min-width: 1480px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
   table-layout: fixed !important;
 }
 
@@ -1985,7 +1986,7 @@
   }
 
   .admin-shell .admin-jobs-table table {
-    table-layout: auto !important;
+    table-layout: fixed !important;
   }
 
   .admin-shell .admin-jobs-table th,

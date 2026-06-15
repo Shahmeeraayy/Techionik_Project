@@ -3,6 +3,7 @@ from typing import Literal, Optional
 
 from pydantic import BaseModel, EmailStr, Field, TypeAdapter, field_validator
 
+from ..core.passwords import validate_strong_password
 from ..services.tenant_email_identity import normalize_email_address, normalize_email_domain
 
 
@@ -44,7 +45,7 @@ class InvoiceBrandingSettingsResponse(InvoiceBrandingSettingsPayload):
 
 class AdminPasswordChangePayload(BaseModel):
     current_password: str = Field(..., min_length=1, max_length=255)
-    new_password: str = Field(..., min_length=6, max_length=255)
+    new_password: str = Field(..., min_length=12, max_length=255)
 
     @field_validator("current_password", "new_password")
     @classmethod
@@ -53,6 +54,11 @@ class AdminPasswordChangePayload(BaseModel):
         if not normalized:
             raise ValueError("value cannot be blank")
         return normalized
+
+    @field_validator("new_password")
+    @classmethod
+    def _validate_strength(cls, value: str) -> str:
+        return validate_strong_password(value)
 
 
 class AdminPasswordChangeResponse(BaseModel):
@@ -122,7 +128,7 @@ class AdminCredentialSettingsUpdatePayload(BaseModel):
     full_name: Optional[str] = Field(default=None, min_length=1, max_length=255)
     admin_email: str = Field(..., min_length=3, max_length=255)
     current_password: str = Field(..., min_length=1, max_length=255)
-    new_password: Optional[str] = Field(default=None, min_length=6, max_length=255)
+    new_password: Optional[str] = Field(default=None, min_length=12, max_length=255)
 
     @field_validator("full_name")
     @classmethod
@@ -155,6 +161,13 @@ class AdminCredentialSettingsUpdatePayload(BaseModel):
             return None
         normalized = value.strip()
         return normalized or None
+
+    @field_validator("new_password")
+    @classmethod
+    def _validate_optional_password_strength(cls, value: Optional[str]) -> Optional[str]:
+        if value is None:
+            return None
+        return validate_strong_password(value)
 
 
 class PriorityRuleCreatePayload(BaseModel):
@@ -242,7 +255,7 @@ class AdminUserResponse(BaseModel):
 class AdminUserCreatePayload(BaseModel):
     full_name: str = Field(..., min_length=1, max_length=255)
     email: str = Field(..., min_length=3, max_length=255)
-    password: str = Field(..., min_length=6, max_length=255)
+    password: str = Field(..., min_length=12, max_length=255)
     tenant_role: Literal["owner", "admin", "dispatcher", "viewer"] = "admin"
 
     @field_validator("full_name", "password")
@@ -261,11 +274,16 @@ class AdminUserCreatePayload(BaseModel):
             raise ValueError("value cannot be blank")
         return str(_EMAIL_ADAPTER.validate_python(normalized)).lower()
 
+    @field_validator("password")
+    @classmethod
+    def _validate_password_strength(cls, value: str) -> str:
+        return validate_strong_password(value)
+
 
 class AdminUserUpdatePayload(BaseModel):
     full_name: Optional[str] = Field(default=None, min_length=1, max_length=255)
     email: Optional[str] = Field(default=None, min_length=3, max_length=255)
-    password: Optional[str] = Field(default=None, min_length=6, max_length=255)
+    password: Optional[str] = Field(default=None, min_length=12, max_length=255)
     tenant_role: Optional[Literal["owner", "admin", "dispatcher", "viewer"]] = None
     status: Optional[Literal["active", "deactivated"]] = None
 
@@ -288,3 +306,10 @@ class AdminUserUpdatePayload(BaseModel):
         if not normalized:
             raise ValueError("value cannot be blank")
         return str(_EMAIL_ADAPTER.validate_python(normalized)).lower()
+
+    @field_validator("password")
+    @classmethod
+    def _validate_optional_password_strength(cls, value: Optional[str]) -> Optional[str]:
+        if value is None:
+            return None
+        return validate_strong_password(value)

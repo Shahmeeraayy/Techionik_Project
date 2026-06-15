@@ -55,7 +55,7 @@ class ChatApiTestCase(unittest.TestCase):
                 "workspace_slug": "tenant-one",
                 "full_name": "Owner One",
                 "email": "owner1@nexusops.local",
-                "password": "owner12345",
+                "password": "NexusOps!Admin2026",
             },
         )
         assert tenant_one_signup.status_code == 201, tenant_one_signup.text
@@ -70,7 +70,7 @@ class ChatApiTestCase(unittest.TestCase):
                 "workspace_slug": "tenant-two",
                 "full_name": "Owner Two",
                 "email": "owner2@nexusops.local",
-                "password": "owner12345",
+                "password": "NexusOps!Admin2026",
             },
         )
         assert tenant_two_signup.status_code == 201, tenant_two_signup.text

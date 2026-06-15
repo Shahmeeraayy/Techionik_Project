@@ -37,7 +37,7 @@ class TechnicianProfileApiTests(unittest.TestCase):
         cls.client = TestClient(app)
         admin_token_response = cls.client.post(
             "/auth/dev/admin-token",
-            json={"email": "admin@nexusops.com", "password": "admin123"},
+            json={"email": "admin@nexusops.com", "password": "NexusOps!Admin2026"},
         )
         assert admin_token_response.status_code == 200
         cls.admin_auth_header = {"Authorization": f"Bearer {admin_token_response.json()['access_token']}"}

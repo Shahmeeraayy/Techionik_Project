@@ -17,6 +17,7 @@ from app.main import app
 from app.models.admin_user import AdminUser
 from app.models.audit_log import AuditLog
 from app.models.base import Base
+from app.models.auth_login_state import AuthLoginState
 from app.models.job import Job
 from app.models.notification import Notification
 from app.models.platform_audit_log import PlatformAuditLog
@@ -42,6 +43,7 @@ class SuperAdminApiTests(unittest.TestCase):
 
     def setUp(self):
         with engine.begin() as conn:
+            conn.execute(AuthLoginState.__table__.delete())
             conn.execute(TenantFeatureOverride.__table__.delete())
             conn.execute(PlatformSettings.__table__.delete())
             conn.execute(PlatformAuditLog.__table__.delete())
@@ -62,7 +64,7 @@ class SuperAdminApiTests(unittest.TestCase):
                 "workspace_slug": workspace_slug,
                 "full_name": "Avery Stone",
                 "email": email,
-                "password": "owner123",
+                "password": "NexusOps!Admin2026",
             },
         )
         self.assertEqual(response.status_code, 201, response.text)
@@ -73,7 +75,7 @@ class SuperAdminApiTests(unittest.TestCase):
             "/auth/super-admin-token",
             json={
                 "email": "root@nexusops.com",
-                "password": "superadmin123",
+                "password": "NexusOps!Root2026",
             },
         )
         self.assertEqual(response.status_code, 200, response.text)
@@ -172,6 +174,28 @@ class SuperAdminApiTests(unittest.TestCase):
         self.assertEqual(payload["platform_role"], "super_admin")
         self.assertEqual(payload["user_email"], "root@nexusops.com")
 
+    def test_super_admin_login_locks_out_after_repeated_failed_attempts(self):
+        wrong_password = "WrongPass!2026"
+        for attempt in range(4):
+            response = self.client.post(
+                "/auth/super-admin-token",
+                json={
+                    "email": "root@nexusops.com",
+                    "password": wrong_password,
+                },
+            )
+            self.assertEqual(response.status_code, 401, response.text)
+
+        lockout_response = self.client.post(
+            "/auth/super-admin-token",
+            json={
+                "email": "root@nexusops.com",
+                "password": wrong_password,
+            },
+        )
+        self.assertEqual(lockout_response.status_code, 423, lockout_response.text)
+        self.assertIn("Too many failed sign-in attempts", lockout_response.text)
+
     def test_super_admin_login_rejects_tenant_credentials(self):
         self._signup_tenant_owner(workspace_slug="not-platform", email="owner@notplatform.com")
 
@@ -179,7 +203,7 @@ class SuperAdminApiTests(unittest.TestCase):
             "/auth/super-admin-token",
             json={
                 "email": "owner@notplatform.com",
-                "password": "owner123",
+                "password": "NexusOps!Admin2026",
             },
         )
         self.assertEqual(login_response.status_code, 401, login_response.text)
@@ -198,7 +222,7 @@ class SuperAdminApiTests(unittest.TestCase):
 
         login_response = self.client.post(
             "/auth/admin-token",
-            json={"email": "owner@suspendme.com", "password": "owner123"},
+            json={"email": "owner@suspendme.com", "password": "NexusOps!Admin2026"},
         )
         self.assertEqual(login_response.status_code, 403, login_response.text)
 

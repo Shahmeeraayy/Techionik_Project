@@ -2,6 +2,7 @@ import os
 import unittest
 from decimal import Decimal
 from uuid import UUID
+from uuid import uuid4
 
 from fastapi.testclient import TestClient
 
@@ -31,14 +32,23 @@ class NotificationsApiTests(unittest.TestCase):
         Base.metadata.create_all(bind=engine)
         cls.client = TestClient(app)
 
+        unique_suffix = uuid4().hex[:8]
+        unique_code_suffix = unique_suffix.upper()
+        cls.tenant_one_slug = f"tenant-one-{unique_suffix}"
+        cls.tenant_two_slug = f"tenant-two-{unique_suffix}"
+        cls.owner_one_email = f"owner1-{unique_suffix}@nexusops.local"
+        cls.owner_two_email = f"owner2-{unique_suffix}@nexusops.local"
+        cls.tech_one_email = f"taylor.tech-{unique_suffix}@nexusops.local"
+        cls.tech_other_email = f"jordan.other-{unique_suffix}@nexusops.local"
+
         tenant_one_signup = cls.client.post(
             "/auth/admin-signup",
             json={
-                "company_name": "Tenant One",
-                "workspace_slug": "tenant-one",
+                "company_name": f"Tenant One {unique_suffix}",
+                "workspace_slug": cls.tenant_one_slug,
                 "full_name": "Owner One",
-                "email": "owner1@nexusops.local",
-                "password": "owner12345",
+                "email": cls.owner_one_email,
+                "password": "NexusOps!Admin2026",
             },
         )
         assert tenant_one_signup.status_code == 201, tenant_one_signup.text
@@ -50,11 +60,11 @@ class NotificationsApiTests(unittest.TestCase):
         tenant_two_signup = cls.client.post(
             "/auth/admin-signup",
             json={
-                "company_name": "Tenant Two",
-                "workspace_slug": "tenant-two",
+                "company_name": f"Tenant Two {unique_suffix}",
+                "workspace_slug": cls.tenant_two_slug,
                 "full_name": "Owner Two",
-                "email": "owner2@nexusops.local",
-                "password": "owner12345",
+                "email": cls.owner_two_email,
+                "password": "NexusOps!Admin2026",
             },
         )
         assert tenant_two_signup.status_code == 201, tenant_two_signup.text
@@ -71,7 +81,7 @@ class NotificationsApiTests(unittest.TestCase):
             technician_one = Technician(
                 name="Taylor Tech",
                 full_name="Taylor Tech",
-                email="taylor.tech@nexusops.local",
+                email=cls.tech_one_email,
                 password="tech123",
                 status="active",
                 manual_availability=True,
@@ -80,14 +90,14 @@ class NotificationsApiTests(unittest.TestCase):
             db.flush()
 
             job_one = Job(
-                job_code="NOTIFY-JOB-001",
+                job_code=f"NOTIFY-JOB-001-{unique_code_suffix}",
                 status="pending",
                 source_system="admin_ui",
             )
             db.add(job_one)
 
             service = ServiceCatalog(
-                code="WIN-TINT",
+                code=f"WIN-TINT-{unique_code_suffix}",
                 name="Window Tint",
                 category="Automotive",
                 default_price=Decimal("0"),
@@ -102,7 +112,7 @@ class NotificationsApiTests(unittest.TestCase):
             technician_other = Technician(
                 name="Jordan Other",
                 full_name="Jordan Other",
-                email="jordan.other@nexusops.local",
+                email=cls.tech_other_email,
                 password="tech123",
                 status="active",
                 manual_availability=True,
@@ -115,8 +125,8 @@ class NotificationsApiTests(unittest.TestCase):
             cls.job_one_id = str(job_one.id)
             cls.service_id = str(service.id)
 
-        cls.tech_one_headers = {"Authorization": f"Bearer {cls._technician_token('taylor.tech@nexusops.local')}"}
-        cls.tech_other_headers = {"Authorization": f"Bearer {cls._technician_token('jordan.other@nexusops.local')}"}
+        cls.tech_one_headers = {"Authorization": f"Bearer {cls._technician_token(cls.tech_one_email)}"}
+        cls.tech_other_headers = {"Authorization": f"Bearer {cls._technician_token(cls.tech_other_email)}"}
 
     @classmethod
     def tearDownClass(cls):
@@ -237,7 +247,7 @@ class NotificationsApiTests(unittest.TestCase):
 
         submit = self.client.post(
             "/booking-portal/submit",
-            headers={"x-tenant-slug": "tenant-one"},
+            headers={"x-tenant-slug": self.tenant_one_slug},
             json={
                 "customer_full_name": "Alex Client",
                 "phone_number": "+1 (586) 555-0101",

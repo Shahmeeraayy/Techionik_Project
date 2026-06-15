@@ -11,6 +11,7 @@ import { HomeRoute, PublicOnly, RequireRole } from '@/components/auth/RouteGuard
 const SettingsLayout = lazy(() => import('@/components/settings/Layout'));
 const AdminLoginPage = lazy(() => import('@/pages/auth/AdminLogin'));
 const AdminSignupPage = lazy(() => import('@/pages/auth/AdminSignup'));
+const AdminPasswordResetPage = lazy(() => import('@/pages/auth/AdminPasswordReset'));
 const TechnicianLoginPage = lazy(() => import('@/pages/auth/TechnicianLogin'));
 const TechnicianPasswordResetPage = lazy(() => import('@/pages/auth/TechnicianPasswordReset'));
 const TechnicianSignupPage = lazy(() => import('@/pages/auth/TechnicianSignup'));
@@ -50,6 +51,7 @@ const TechnicianChatPage = lazy(() => import('@/pages/technician/Chat'));
 const TechnicianAttendancePage = lazy(() => import('@/pages/technician/Attendance'));
 
 const SuperAdminDashboardPage = lazy(() => import('@/pages/super-admin/Dashboard'));
+const SuperAdminLoginPage = lazy(() => import('@/pages/super-admin/Login'));
 const SuperAdminTenantsPage = lazy(() => import('@/pages/super-admin/Tenants'));
 const SuperAdminTenantDetailPage = lazy(() => import('@/pages/super-admin/TenantDetail'));
 const SuperAdminPoliciesPage = lazy(() => import('@/pages/super-admin/Policies'));
@@ -81,9 +83,10 @@ function App() {
 
           {/* Login Portals */}
           <Route path="/login" element={<PublicOnly><AdminLoginPage /></PublicOnly>} />
-          <Route path="/super-admin/login" element={<PublicOnly><AdminLoginPage /></PublicOnly>} />
+          <Route path="/super-admin/login" element={<PublicOnly><SuperAdminLoginPage /></PublicOnly>} />
           <Route path="/admin/login" element={<PublicOnly><AdminLoginPage /></PublicOnly>} />
           <Route path="/admin/signup" element={<PublicOnly><AdminSignupPage /></PublicOnly>} />
+          <Route path="/admin/reset-password/:requestId" element={<AdminPasswordResetPage />} />
           <Route path="/tech/login" element={<PublicOnly><TechnicianLoginPage /></PublicOnly>} />
           <Route path="/tech/signup" element={<PublicOnly><TechnicianSignupPage /></PublicOnly>} />
           <Route path="/tech/reset-password/:requestId" element={<TechnicianPasswordResetPage />} />

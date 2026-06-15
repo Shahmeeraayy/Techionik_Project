@@ -1,7 +1,26 @@
+import re
 import hashlib
 import hmac
 
 import bcrypt
+
+ADMIN_PASSWORD_MIN_LENGTH = 12
+COMMON_WEAK_PASSWORDS = {
+    "admin",
+    "admin123",
+    "password",
+    "password123",
+    "passw0rd",
+    "qwerty",
+    "qwerty123",
+    "root",
+    "root123",
+    "superadmin",
+    "superadmin123",
+    "letmein",
+    "welcome",
+    "changeme",
+}
 
 
 def hash_password(password: str) -> str:
@@ -43,3 +62,36 @@ def verify_password(password: str, stored_hash: str, *, allow_plaintext_fallback
         iterations,
     ).hex()
     return hmac.compare_digest(computed, digest)
+
+
+def validate_strong_password(
+    password: str,
+    *,
+    min_length: int = ADMIN_PASSWORD_MIN_LENGTH,
+) -> str:
+    normalized = password.strip()
+
+    if len(normalized) < min_length:
+        raise ValueError(
+            f"Password must be at least {min_length} characters and include uppercase, lowercase, number, and symbol characters."
+        )
+    if not re.search(r"[A-Z]", normalized):
+        raise ValueError(
+            f"Password must be at least {min_length} characters and include uppercase, lowercase, number, and symbol characters."
+        )
+    if not re.search(r"[a-z]", normalized):
+        raise ValueError(
+            f"Password must be at least {min_length} characters and include uppercase, lowercase, number, and symbol characters."
+        )
+    if not re.search(r"\d", normalized):
+        raise ValueError(
+            f"Password must be at least {min_length} characters and include uppercase, lowercase, number, and symbol characters."
+        )
+    if not re.search(r"[^A-Za-z0-9]", normalized):
+        raise ValueError(
+            f"Password must be at least {min_length} characters and include uppercase, lowercase, number, and symbol characters."
+        )
+    if normalized.lower() in COMMON_WEAK_PASSWORDS:
+        raise ValueError("Password must not be a common password.")
+
+    return normalized

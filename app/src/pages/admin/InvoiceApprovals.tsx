@@ -1094,7 +1094,7 @@ export default function InvoiceApprovalsPage() {
             />
 
             <Dialog open={manualInvoiceOpen} onOpenChange={setManualInvoiceOpen}>
-                <DialogContent className="max-h-[92vh] w-[calc(100vw-2rem)] !max-w-[calc(100vw-2rem)] overflow-hidden border-white/10 bg-[#07121f] p-0 text-white shadow-[0_30px_90px_rgba(0,0,0,0.55)] xl:!max-w-[980px]">
+                <DialogContent className="max-h-[92vh] w-[calc(100vw-2rem)] !max-w-[calc(100vw-2rem)] overflow-hidden border-white/10 bg-[#07121f] p-0 text-white shadow-[0_30px_90px_rgba(0,0,0,0.55)] xl:!max-w-[1180px]">
                     <DialogHeader className="border-b border-white/10 px-6 py-5">
                         <DialogTitle className="flex items-center gap-2 text-xl tracking-[-0.03em] sm:text-2xl" style={displayFontStyle}>
                             <Mail className="h-5 w-5 text-cyan-200" />
@@ -1150,8 +1150,8 @@ export default function InvoiceApprovalsPage() {
                             <div className="grid gap-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)]">
                                 <div className="rounded-3xl border border-white/10 bg-white/[0.035] p-5">
                                     <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Bill To</div>
-                                    <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                                        <div className="space-y-1.5 sm:col-span-2">
+                                    <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                                        <div className="space-y-1.5 sm:col-span-2 lg:col-span-3">
                                             <Label htmlFor="manual-bill-name" className="text-slate-200">Customer or company name</Label>
                                             <Input
                                                 id="manual-bill-name"
@@ -1161,7 +1161,7 @@ export default function InvoiceApprovalsPage() {
                                                 placeholder="Acme Motors"
                                             />
                                         </div>
-                                        <div className="space-y-1.5 sm:col-span-2">
+                                        <div className="space-y-1.5 sm:col-span-2 lg:col-span-3">
                                             <Label htmlFor="manual-bill-street" className="text-slate-200">Street address</Label>
                                             <Input
                                                 id="manual-bill-street"

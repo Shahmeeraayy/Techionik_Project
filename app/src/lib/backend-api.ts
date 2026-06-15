@@ -54,6 +54,21 @@ type SuperAdminTokenResponse = {
   platform_role: 'super_admin' | 'platform_support' | 'billing_admin' | 'security_admin' | 'read_only_auditor';
 };
 
+type AdminPasswordResetRequestResponse = {
+  message: string;
+};
+
+type AdminPasswordResetLinkValidationResponse = {
+  request_id: string;
+  admin_name?: string | null;
+  admin_email: string;
+  expires_at: string;
+};
+
+type AdminPasswordResetCompleteResponse = {
+  message: string;
+};
+
 export type BackendSuperAdminSession = {
   role: 'super_admin';
   tenant_id?: null;
@@ -1916,6 +1931,31 @@ export async function signupAdminOwner(payload: {
   password: string;
 }): Promise<AdminTokenResponse> {
   return requestJson<AdminTokenResponse>('/auth/admin-signup', {
+    method: 'POST',
+    body: payload,
+  });
+}
+
+export async function requestAdminPasswordReset(payload: {
+  email: string;
+}): Promise<AdminPasswordResetRequestResponse> {
+  return requestJson<AdminPasswordResetRequestResponse>('/auth/admin-password-reset-request', {
+    method: 'POST',
+    body: payload,
+  });
+}
+
+export async function fetchAdminPasswordResetLink(requestId: string): Promise<AdminPasswordResetLinkValidationResponse> {
+  return requestJson<AdminPasswordResetLinkValidationResponse>(`/auth/admin-password-reset-request/${requestId}`);
+}
+
+export async function completeAdminPasswordReset(
+  requestId: string,
+  payload: {
+    new_password: string;
+  },
+): Promise<AdminPasswordResetCompleteResponse> {
+  return requestJson<AdminPasswordResetCompleteResponse>(`/auth/admin-password-reset-request/${requestId}/complete`, {
     method: 'POST',
     body: payload,
   });

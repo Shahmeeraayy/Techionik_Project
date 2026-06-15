@@ -2585,26 +2585,44 @@ export default function JobsPage() {
 
                             <div className="flex w-full flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
                                 <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
-                                    {statusFilterOptions.map((option) => (
-                                        <Button
-                                            key={option.key}
-                                            type="button"
-                                            variant={statusFilter === option.key ? 'secondary' : 'outline'}
-                                            size="sm"
-                                            onClick={() => {
-                                                setStatusFilter(option.key);
-                                                setPagination((prev) => ({ ...prev, page: 1 }));
-                                            }}
-                                            className={cn(
-                                                'h-8 shrink-0 rounded-full px-3 text-xs font-semibold whitespace-nowrap shadow-none',
-                                                statusFilter === option.key
-                                                    ? 'border-slate-900 bg-slate-900 text-white dark:border-cyan-300/25 dark:bg-cyan-500/[0.12] dark:text-cyan-100'
-                                                    : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 dark:border-white/8 dark:bg-white/[0.03] dark:text-slate-200 dark:hover:bg-white/[0.08] dark:hover:text-white',
-                                            )}
-                                        >
-                                            {option.label}
-                                        </Button>
-                                    ))}
+                                    {statusFilterOptions.map((option) => {
+                                        const isActiveStatusFilter = statusFilter === option.key;
+
+                                        return (
+                                            <Button
+                                                key={option.key}
+                                                type="button"
+                                                variant="outline"
+                                                size="sm"
+                                                aria-pressed={isActiveStatusFilter}
+                                                onClick={() => {
+                                                    setStatusFilter(option.key);
+                                                    setPagination((prev) => ({ ...prev, page: 1 }));
+                                                }}
+                                                className={cn(
+                                                    'h-8 shrink-0 rounded-full px-3 text-xs font-semibold whitespace-nowrap shadow-none transition-all duration-200',
+                                                    isActiveStatusFilter
+                                                        ? '!border-slate-900 !bg-slate-900 !text-white shadow-[0_12px_24px_rgba(15,23,42,0.18)] ring-1 ring-slate-900/10 dark:!border-cyan-300/35 dark:!bg-cyan-400/15 dark:!text-cyan-50 dark:ring-cyan-300/20'
+                                                        : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 dark:border-white/8 dark:bg-white/[0.03] dark:text-slate-200 dark:hover:bg-white/[0.08] dark:hover:text-white',
+                                                )}
+                                            >
+                                                <span className="inline-flex items-center gap-1.5">
+                                                    <span
+                                                        aria-hidden="true"
+                                                        className={cn(
+                                                            'inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full border transition-all duration-200',
+                                                            isActiveStatusFilter
+                                                                ? '!border-white/30 !bg-white !text-slate-900 shadow-[0_0_0_3px_rgba(255,255,255,0.12)] dark:!border-cyan-100/30 dark:!bg-cyan-100 dark:!text-cyan-950 dark:shadow-[0_0_0_3px_rgba(34,211,238,0.16)]'
+                                                                : 'border-slate-300 text-transparent opacity-60 dark:border-white/20',
+                                                        )}
+                                                    >
+                                                        <Check className={cn('h-2.5 w-2.5 transition-opacity duration-200', isActiveStatusFilter ? 'opacity-100' : 'opacity-0')} />
+                                                    </span>
+                                                    <span>{option.label}</span>
+                                                </span>
+                                            </Button>
+                                        );
+                                    })}
                                 </div>
                                 <div className="flex shrink-0 flex-col items-end gap-2 text-xs">
                                     <Select value={jobSortMode} onValueChange={(value) => handleSortModeChange(value as JobSortMode)}>
@@ -2663,7 +2681,7 @@ export default function JobsPage() {
                     </div>
                 ) : (
                     <div className="admin-jobs-table relative flex-1 overflow-x-auto overflow-y-hidden">
-                        <Table className="min-w-[1480px] table-fixed">
+                        <Table className="w-full table-fixed">
                             <TableHeader className="sticky top-0 z-10 border-b border-white/10 bg-[linear-gradient(180deg,rgba(9,24,40,0.98),rgba(8,19,33,0.94))] backdrop-blur-xl">
                                 <TableRow className="border-white/0 hover:bg-transparent">
                                     <TableHead className="w-[38px] pl-4">
@@ -2672,7 +2690,7 @@ export default function JobsPage() {
                                             onCheckedChange={handleSelectAll}
                                         />
                                     </TableHead>
-                                    <TableHead className="w-[11%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+                                    <TableHead className="w-[9%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
                                         <Button
                                             variant="ghost"
                                             size="sm"
@@ -2684,15 +2702,15 @@ export default function JobsPage() {
                                             <ArrowUpDown className="ml-2 h-3.5 w-3.5" />
                                         </Button>
                                     </TableHead>
-                                    <TableHead className="w-[14%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Service Type</TableHead>
-                                    <TableHead className="w-[16%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Dealership / Location</TableHead>
-                                    <TableHead className="w-[11%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Vehicle</TableHead>
-                                    <TableHead className="w-[13%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Assigned Tech</TableHead>
+                                    <TableHead className="w-[12%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Service Type</TableHead>
+                                    <TableHead className="w-[13%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Dealership / Location</TableHead>
+                                    <TableHead className="w-[10%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Vehicle</TableHead>
+                                    <TableHead className="w-[11%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Assigned Tech</TableHead>
                                     <TableHead className="w-[6%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Urgency</TableHead>
-                                    <TableHead className="w-[7%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Rank</TableHead>
-                                    <TableHead className="w-[9%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Status</TableHead>
-                                    <TableHead className="w-[9%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Dates</TableHead>
-                                    <TableHead className="w-[10%] pr-4 text-right text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Actions</TableHead>
+                                    <TableHead className="w-[6%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Rank</TableHead>
+                                    <TableHead className="w-[8%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Status</TableHead>
+                                    <TableHead className="w-[8%] text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Dates</TableHead>
+                                    <TableHead className="sticky right-0 z-20 w-[116px] border-l border-white/10 pr-4 text-right text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400 bg-[linear-gradient(180deg,rgba(9,24,40,0.98),rgba(8,19,33,0.94))] backdrop-blur-xl">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -2770,7 +2788,7 @@ export default function JobsPage() {
                                             </TableCell>
                                             <TableCell className="py-4 align-middle">
                                                 {primaryTechnicianName ? (
-                                                    <div className="inline-flex w-full max-w-[190px] items-center gap-2 rounded-2xl border border-emerald-300/16 bg-emerald-300/[0.07] px-2.5 py-2">
+                                                <div className="inline-flex w-full max-w-[160px] items-center gap-2 rounded-2xl border border-emerald-300/16 bg-emerald-300/[0.07] px-2.5 py-2">
                                                         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-300/20 text-[10px] font-semibold uppercase tracking-[0.12em] text-emerald-100">
                                                             {primaryTechnicianName.substring(0, 2)}
                                                         </div>
@@ -2780,7 +2798,7 @@ export default function JobsPage() {
                                                         </div>
                                                     </div>
                                                 ) : pendingTechnicianName ? (
-                                                    <div className="inline-flex w-full max-w-[190px] items-center gap-2 rounded-2xl border border-violet-300/18 bg-violet-300/[0.09] px-2.5 py-2">
+                                                <div className="inline-flex w-full max-w-[160px] items-center gap-2 rounded-2xl border border-violet-300/18 bg-violet-300/[0.09] px-2.5 py-2">
                                                         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-violet-300/20 text-[10px] font-semibold uppercase tracking-[0.12em] text-violet-100">
                                                             {pendingTechnicianName.substring(0, 2)}
                                                         </div>
@@ -2790,7 +2808,7 @@ export default function JobsPage() {
                                                         </div>
                                                     </div>
                                                 ) : needsReassignment ? (
-                                                    <div className="inline-flex w-full max-w-[190px] items-center gap-2 rounded-2xl border border-amber-300/18 bg-amber-300/[0.08] px-2.5 py-2">
+                                                <div className="inline-flex w-full max-w-[160px] items-center gap-2 rounded-2xl border border-amber-300/18 bg-amber-300/[0.08] px-2.5 py-2">
                                                         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-amber-300/16 text-amber-100">
                                                             <AlertCircle className="h-3.5 w-3.5" />
                                                         </div>
@@ -2855,8 +2873,8 @@ export default function JobsPage() {
                                                     </div>
                                                 </div>
                                             </TableCell>
-                                            <TableCell className="py-4 pr-4 text-right align-middle">
-                                                <div className="ml-auto flex max-w-[132px] flex-col items-stretch gap-2">
+                                            <TableCell className="sticky right-0 z-10 border-l border-white/10 bg-inherit py-4 pr-4 text-right align-middle">
+                                                <div className="ml-auto flex max-w-[112px] flex-col items-stretch gap-2">
                                                     {(job.job_status === 'admin_preview' || job.job_status === 'pending_admin_confirmation') && Boolean(
                                                         (job.pending_assigned_technician_name ?? job.assigned_technician_name)?.trim()
                                                     ) ? (

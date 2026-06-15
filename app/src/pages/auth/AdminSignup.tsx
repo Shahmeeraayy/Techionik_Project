@@ -144,9 +144,9 @@ export default function AdminSignupPage() {
               <Label htmlFor="owner-password" className={authLabelClass}>
                 Password
               </Label>
-            <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#9fb1cf]">
-              6+ characters
-            </span>
+              <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#9fb1cf]">
+                12+ characters
+              </span>
             </div>
             <div className="relative">
               <Input
@@ -156,6 +156,7 @@ export default function AdminSignupPage() {
                 onChange={(event) => setPassword(event.target.value)}
                 autoComplete="new-password"
                 required
+                minLength={12}
                 placeholder="Create a secure password"
                 className={`${authInputClass} pr-12`}
                 style={authInputStyle}
@@ -169,6 +170,9 @@ export default function AdminSignupPage() {
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
+            <p className="text-xs leading-5 text-[#9fb1cf]">
+              Use at least 12 characters with uppercase, lowercase, a number, and a symbol.
+            </p>
           </div>
         </div>
 

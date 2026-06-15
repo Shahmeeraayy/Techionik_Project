@@ -16,6 +16,7 @@ from .api.endpoints import (
     admin_reports,
     admin_services,
     admin_settings,
+    admin_password_reset_requests,
     admin_technicians,
     auth,
     booking_portal,
@@ -129,6 +130,7 @@ app.include_router(admin_reports.router)
 app.include_router(admin_services.router)
 app.include_router(admin_services.catalog_router)
 app.include_router(admin_settings.router)
+app.include_router(admin_password_reset_requests.router)
 app.include_router(notifications.router)
 app.include_router(technician_profile.router)
 app.include_router(technician_chat.router)

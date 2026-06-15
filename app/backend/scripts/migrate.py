@@ -52,6 +52,7 @@ MIGRATIONS: list[Migration] = [
     Migration("021_notifications_v1.sql"),
     Migration("022_tenant_notification_controls.sql"),
     Migration("023_technician_profile_v1_alignment.sql"),
+    Migration("024_auth_security.sql"),
 ]
 
 
@@ -200,6 +201,7 @@ def ensure_multi_tenant_columns(conn) -> None:
     tenant_tables = [
         "admin_credential_settings",
         "admin_users",
+        "admin_password_reset_requests",
         "audit_logs",
         "booking_portal_settings",
         "booking_requests",

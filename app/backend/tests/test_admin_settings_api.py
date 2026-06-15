@@ -11,10 +11,12 @@ os.environ["APP_ENV"] = "development"
 os.environ["ALLOW_SQLITE_FOR_TESTS"] = "1"
 os.environ["DATABASE_URL"] = f"sqlite:///{_TEST_DB_FILE.replace(os.sep, '/')}"
 
-from app.api.deps import engine
+from app.api.deps import SessionLocal, engine
 from app.main import app
 from app.models.admin_credential_settings import AdminCredentialSettings
+from app.models.admin_password_reset_request import AdminPasswordResetRequest
 from app.models.admin_user import AdminUser
+from app.models.auth_login_state import AuthLoginState
 from app.models.base import Base
 from app.models.tenant import Tenant, TenantMembership
 
@@ -33,12 +35,14 @@ class AdminSettingsApiTests(unittest.TestCase):
 
     def setUp(self):
         with engine.begin() as conn:
+            conn.execute(AuthLoginState.__table__.delete())
+            conn.execute(AdminPasswordResetRequest.__table__.delete())
             conn.execute(TenantMembership.__table__.delete())
             conn.execute(AdminUser.__table__.delete())
             conn.execute(AdminCredentialSettings.__table__.delete())
             conn.execute(Tenant.__table__.delete())
 
-    def _admin_token(self, email: str = "admin@nexusops.com", password: str = "admin123") -> str:
+    def _admin_token(self, email: str = "admin@nexusops.com", password: str = "NexusOps!Admin2026") -> str:
         response = self.client.post(
             "/auth/admin-token",
             json={"email": email, "password": password},
@@ -97,8 +101,8 @@ class AdminSettingsApiTests(unittest.TestCase):
             headers={"Authorization": f"Bearer {token}"},
             json={
                 "admin_email": "owner@nexusops.com",
-                "current_password": "admin123",
-                "new_password": "newpass123",
+                "current_password": "NexusOps!Admin2026",
+                "new_password": "NexusOps!Reset2026",
             },
         )
 
@@ -120,9 +124,60 @@ class AdminSettingsApiTests(unittest.TestCase):
 
         new_login_response = self.client.post(
             "/auth/admin-token",
-            json={"email": "owner@nexusops.com", "password": "newpass123"},
+            json={"email": "owner@nexusops.com", "password": "NexusOps!Reset2026"},
         )
         self.assertEqual(new_login_response.status_code, 200, new_login_response.text)
+
+    def test_admin_login_locks_out_and_can_be_recovered_via_reset_link(self):
+        wrong_password = "WrongPass!2026"
+        for attempt in range(4):
+            response = self.client.post(
+                "/auth/admin-token",
+                json={"email": "admin@nexusops.com", "password": wrong_password},
+            )
+            self.assertEqual(response.status_code, 401, response.text)
+
+        lockout_response = self.client.post(
+            "/auth/admin-token",
+            json={"email": "admin@nexusops.com", "password": wrong_password},
+        )
+        self.assertEqual(lockout_response.status_code, 423, lockout_response.text)
+        self.assertIn("Too many failed sign-in attempts", lockout_response.text)
+
+        with SessionLocal() as db:
+            row = db.query(AuthLoginState).filter(AuthLoginState.identity_type == "admin", AuthLoginState.email == "admin@nexusops.com").first()
+            self.assertIsNotNone(row)
+            self.assertEqual(row.failed_attempts, 5)
+            self.assertIsNotNone(row.locked_until)
+
+        request_response = self.client.post(
+            "/auth/admin-password-reset-request",
+            json={"email": "admin@nexusops.com"},
+        )
+        self.assertEqual(request_response.status_code, 202, request_response.text)
+
+        with SessionLocal() as db:
+            reset_row = db.query(AdminPasswordResetRequest).first()
+            self.assertIsNotNone(reset_row)
+            self.assertEqual(reset_row.status, "PENDING")
+            request_id = str(reset_row.id)
+
+        validate_response = self.client.get(f"/auth/admin-password-reset-request/{request_id}")
+        self.assertEqual(validate_response.status_code, 200, validate_response.text)
+        self.assertEqual(validate_response.json()["admin_email"], "admin@nexusops.com")
+
+        complete_response = self.client.post(
+            f"/auth/admin-password-reset-request/{request_id}/complete",
+            json={"new_password": "NexusOps!Recovered2026"},
+        )
+        self.assertEqual(complete_response.status_code, 200, complete_response.text)
+        self.assertIn("password has been reset", complete_response.json()["message"].lower())
+
+        login_response = self.client.post(
+            "/auth/admin-token",
+            json={"email": "admin@nexusops.com", "password": "NexusOps!Recovered2026"},
+        )
+        self.assertEqual(login_response.status_code, 200, login_response.text)
 
     def test_owner_can_create_second_admin_and_new_admin_can_login(self):
         token = self._admin_token()
@@ -133,7 +188,7 @@ class AdminSettingsApiTests(unittest.TestCase):
             json={
                 "full_name": "Dispatch Manager",
                 "email": "manager@nexusops.com",
-                "password": "manager123",
+                "password": "NexusOps!Admin2026",
                 "tenant_role": "admin",
             },
         )
@@ -152,14 +207,14 @@ class AdminSettingsApiTests(unittest.TestCase):
 
         login_response = self.client.post(
             "/auth/admin-token",
-            json={"email": "manager@nexusops.com", "password": "manager123"},
+            json={"email": "manager@nexusops.com", "password": "NexusOps!Admin2026"},
         )
         self.assertEqual(login_response.status_code, 200, login_response.text)
 
     def test_dev_admin_token_stays_development_only(self):
         response = self.client.post(
             "/auth/dev/admin-token",
-            json={"email": "admin@nexusops.com", "password": "admin123"},
+            json={"email": "admin@nexusops.com", "password": "NexusOps!Admin2026"},
         )
         self.assertNotEqual(response.status_code, 404, response.text)
 
@@ -171,7 +226,7 @@ class AdminSettingsApiTests(unittest.TestCase):
                 "workspace_slug": "northstar-dispatch",
                 "full_name": "Avery Stone",
                 "email": "avery@northstar.com",
-                "password": "owner123",
+                "password": "NexusOps!Admin2026",
             },
         )
 
@@ -183,7 +238,7 @@ class AdminSettingsApiTests(unittest.TestCase):
 
         login_response = self.client.post(
             "/auth/admin-token",
-            json={"email": "avery@northstar.com", "password": "owner123"},
+            json={"email": "avery@northstar.com", "password": "NexusOps!Admin2026"},
         )
         self.assertEqual(login_response.status_code, 200, login_response.text)
 
@@ -195,7 +250,7 @@ class AdminSettingsApiTests(unittest.TestCase):
                 "workspace_slug": "northstar-dispatch",
                 "full_name": "Avery Stone",
                 "email": "avery@northstar.com",
-                "password": "owner123",
+                "password": "NexusOps!Admin2026",
             },
         )
         self.assertEqual(first_signup.status_code, 201, first_signup.text)
@@ -207,7 +262,7 @@ class AdminSettingsApiTests(unittest.TestCase):
                 "workspace_slug": "other-dispatch",
                 "full_name": "Avery Stone",
                 "email": "avery@northstar.com",
-                "password": "owner123",
+                "password": "NexusOps!Admin2026",
             },
         )
         self.assertEqual(duplicate_email.status_code, 409, duplicate_email.text)
@@ -219,7 +274,7 @@ class AdminSettingsApiTests(unittest.TestCase):
                 "workspace_slug": "northstar-dispatch",
                 "full_name": "Casey Harper",
                 "email": "casey@other.com",
-                "password": "owner123",
+                "password": "NexusOps!Admin2026",
             },
         )
         self.assertEqual(duplicate_slug.status_code, 409, duplicate_slug.text)

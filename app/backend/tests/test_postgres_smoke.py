@@ -79,6 +79,8 @@ def _reset_postgres_test_database() -> None:
 class PostgresSmokeTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        if engine.dialect.name != "postgresql":
+            raise unittest.SkipTest("PostgreSQL smoke tests require a PostgreSQL engine")
         _reset_postgres_test_database()
         cls.client = TestClient(app)
 
@@ -228,22 +230,22 @@ class PostgresSmokeTests(unittest.TestCase):
             workspace_slug=tenant_one_slug,
             full_name="Owner One",
             email=owner_one_email,
-            password="owner12345",
+            password="NexusOps!Admin2026",
         )
         tenant_two = self._signup_admin(
             company_name="Tenant Two Automotive",
             workspace_slug=tenant_two_slug,
             full_name="Owner Two",
             email=owner_two_email,
-            password="owner12345",
+            password="NexusOps!Admin2026",
         )
 
-        admin_one_headers = self._login_admin(email=owner_one_email, password="owner12345")
-        admin_two_headers = self._login_admin(email=owner_two_email, password="owner12345")
+        admin_one_headers = self._login_admin(email=owner_one_email, password="NexusOps!Admin2026")
+        admin_two_headers = self._login_admin(email=owner_two_email, password="NexusOps!Admin2026")
 
         super_admin_token = self.client.post(
             "/auth/super-admin-token",
-            json={"email": "root@nexusops.com", "password": "superadmin123"},
+            json={"email": "root@nexusops.com", "password": "NexusOps!Root2026"},
         )
         self.assertEqual(super_admin_token.status_code, 200, super_admin_token.text)
         super_admin_headers = {"Authorization": f"Bearer {super_admin_token.json()['access_token']}"}

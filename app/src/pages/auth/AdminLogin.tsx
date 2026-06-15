@@ -12,7 +12,16 @@ import {
   Users,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { requestAdminPasswordReset } from '@/lib/backend-api';
 import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
@@ -38,8 +47,20 @@ export default function AdminLoginPage() {
   const [rememberSession, setRememberSession] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotMessage, setForgotMessage] = useState<string | null>(null);
+  const [forgotError, setForgotError] = useState<string | null>(null);
+  const [isForgotSubmitting, setIsForgotSubmitting] = useState(false);
 
   const from = (location.state as NavigationState | null)?.from;
+
+  const resetForgotPasswordState = (nextEmail?: string) => {
+    setForgotEmail((nextEmail ?? email).trim());
+    setForgotMessage(null);
+    setForgotError(null);
+    setIsForgotSubmitting(false);
+  };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -47,20 +68,35 @@ export default function AdminLoginPage() {
     setIsSubmitting(true);
 
     try {
-      try {
-        await login(email, password, 'super_admin', { remember: rememberSession });
-        const destination = from && from.startsWith('/super-admin') ? from : '/super-admin';
-        navigate(destination, { replace: true });
-        return;
-      } catch {
-        await login(email, password, 'admin', { remember: rememberSession });
-        const destination = from && from.startsWith('/admin') ? from : '/admin';
-        navigate(destination, { replace: true });
-      }
+      await login(email, password, 'admin', { remember: rememberSession });
+      const destination = from && from.startsWith('/admin') ? from : '/admin';
+      navigate(destination, { replace: true });
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'Sign in failed.');
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleForgotPasswordRequest = async () => {
+    setForgotError(null);
+    setForgotMessage(null);
+
+    const normalizedEmail = forgotEmail.trim().toLowerCase();
+    if (!normalizedEmail) {
+      setForgotError('Enter your admin email address.');
+      return;
+    }
+
+    setIsForgotSubmitting(true);
+    try {
+      const response = await requestAdminPasswordReset({ email: normalizedEmail });
+      setForgotEmail(normalizedEmail);
+      setForgotMessage(response.message);
+    } catch (error) {
+      setForgotError(error instanceof Error ? error.message : 'Unable to send password reset request.');
+    } finally {
+      setIsForgotSubmitting(false);
     }
   };
 
@@ -81,7 +117,7 @@ export default function AdminLoginPage() {
           </h1>
 
           <p className="mt-5 max-w-lg text-base leading-8 text-slate-300">
-            Sign in with admin or Super Admin credentials and NexusOps will open the right portal.
+            Sign in with your organization admin credentials, or use the Super Admin link if you manage the platform.
           </p>
 
           <div className="mt-8 grid max-w-lg gap-3">
@@ -112,7 +148,7 @@ export default function AdminLoginPage() {
                 </span>
               </Link>
               <span className="hidden rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs font-semibold text-slate-300 sm:inline-flex">
-                Admin / Super Admin
+                Organization Admin
               </span>
             </div>
 
@@ -125,7 +161,7 @@ export default function AdminLoginPage() {
                 Sign in
               </h2>
               <p className="mt-4 text-sm leading-7 text-slate-400">
-                Enter your organization admin or platform owner credentials.
+                Enter your organization admin credentials.
               </p>
             </div>
 
@@ -152,9 +188,87 @@ export default function AdminLoginPage() {
                   <Label htmlFor="admin-password" className={authLabelClass}>
                     Password
                   </Label>
-                  <a href="mailto:support@nexusops.com?subject=Admin%20password%20support" className="text-xs font-semibold text-cyan-200 hover:text-cyan-100">
-                    Forgot password?
-                  </a>
+                  <Dialog
+                    open={isForgotPasswordOpen}
+                    onOpenChange={(open) => {
+                      setIsForgotPasswordOpen(open);
+                      if (open) {
+                        resetForgotPasswordState();
+                      }
+                    }}
+                  >
+                    <DialogTrigger asChild>
+                      <button type="button" className="text-xs font-semibold text-cyan-200 hover:text-cyan-100">
+                        Forgot password?
+                      </button>
+                    </DialogTrigger>
+                    <DialogContent className="auth-lock-dark-dialog rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(14,23,40,0.98),rgba(8,12,20,0.98))] p-0 text-white shadow-[0_30px_80px_rgba(0,0,0,0.45)] sm:max-w-[520px]">
+                      <div className="p-6 sm:p-7">
+                        <DialogHeader>
+                          <DialogTitle className="text-[1.7rem] font-semibold tracking-[-0.04em] text-white">
+                            Reset your admin password
+                          </DialogTitle>
+                          <DialogDescription className="text-sm leading-6 text-white/78">
+                            Send a password reset link to your admin inbox.
+                          </DialogDescription>
+                        </DialogHeader>
+
+                        <div className="mt-5 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="forgot-admin-email" className={authLabelClass}>
+                              Admin email
+                            </Label>
+                            <Input
+                              id="forgot-admin-email"
+                              type="email"
+                              value={forgotEmail}
+                              onChange={(event) => setForgotEmail(event.target.value)}
+                              autoComplete="email"
+                              required
+                              placeholder="admin@company.com"
+                              className={cn(authInputClass, 'h-14')}
+                              style={authInputStyle}
+                            />
+                          </div>
+
+                          <p className="mt-3 text-xs leading-5 text-slate-400">
+                            We'll email a time-limited link to reset the password for this admin account.
+                          </p>
+                        </div>
+
+                        {forgotMessage ? (
+                          <div className="mt-4 rounded-2xl border border-emerald-400/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
+                            {forgotMessage}
+                          </div>
+                        ) : null}
+
+                        {forgotError ? (
+                          <div className="mt-4 rounded-2xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-sm text-red-100">
+                            {forgotError}
+                          </div>
+                        ) : null}
+
+                        <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:justify-end">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            className="rounded-2xl border border-white/10 bg-white/[0.03] text-slate-200 hover:bg-white/[0.06] hover:text-white"
+                            onClick={() => setIsForgotPasswordOpen(false)}
+                          >
+                            Close
+                          </Button>
+                          <Button
+                            type="button"
+                            onClick={handleForgotPasswordRequest}
+                            disabled={isForgotSubmitting}
+                            className="rounded-2xl bg-[linear-gradient(135deg,#4f7cff,#22d3ee)] text-white shadow-[0_18px_42px_rgba(79,124,255,0.28)] hover:brightness-105"
+                          >
+                            {isForgotSubmitting ? 'Sending...' : 'Send reset link'}
+                          </Button>
+                        </div>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
                 </div>
                 <div className="relative">
                   <Input
@@ -229,6 +343,13 @@ export default function AdminLoginPage() {
               >
                 Technician login
                 <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+
+            <div className="mt-4 text-center text-sm text-slate-400">
+              Need platform owner access?{' '}
+              <Link to="/super-admin/login" className="font-semibold text-cyan-200 hover:text-cyan-100">
+                Go to Super Admin login
               </Link>
             </div>
 

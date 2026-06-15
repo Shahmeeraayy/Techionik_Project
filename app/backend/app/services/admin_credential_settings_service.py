@@ -10,7 +10,7 @@ from sqlalchemy import case, text
 from uuid import UUID
 
 from ..core.config import ADMIN_DEFAULT_PASSWORD, ADMIN_EMAIL, DATABASE_URL, DEFAULT_TENANT_ID, EMAIL_ENABLED
-from ..core.passwords import hash_password, verify_password
+from ..core.passwords import hash_password, validate_strong_password, verify_password
 from ..core.security import AuthenticatedUser
 from ..models.admin_credential_settings import AdminCredentialSettings
 from ..models.admin_user import AdminUser
@@ -24,6 +24,7 @@ from .tenant_email_identity import (
     serialize_tenant_email_identity,
 )
 from .access_policy_service import AccessPolicyService
+from .auth_security_service import AuthSecurityService, DEFAULT_ACCOUNT_LOCKOUT_MINUTES, DEFAULT_LOGIN_ATTEMPT_LIMIT
 from .super_admin_service import DEFAULT_PLATFORM_SETTINGS, PLATFORM_SETTINGS_KEY
 
 
@@ -149,7 +150,15 @@ class AdminCredentialSettingsService:
         user = self._get_admin_user_by_email(normalized_email)
         if user is None or user.status != "active":
             return None
+        security = AuthSecurityService(self.db)
+        security.ensure_login_allowed(identity_type="admin", email=normalized_email)
         if not verify_password(normalized_password, user.password_hash):
+            security.record_failed_attempt(
+                identity_type="admin",
+                email=normalized_email,
+                attempt_limit=DEFAULT_LOGIN_ATTEMPT_LIMIT,
+                lockout_minutes=DEFAULT_ACCOUNT_LOCKOUT_MINUTES,
+            )
             return None
 
         last_login_at = datetime.now(timezone.utc)
@@ -179,6 +188,9 @@ class AdminCredentialSettingsService:
             tenant_db.close()
 
         user.last_login_at = last_login_at
+        self.db.commit()
+        self.db.refresh(user)
+        security.record_success(identity_type="admin", email=normalized_email)
         return user
 
     def signup_owner_account(
@@ -206,11 +218,12 @@ class AdminCredentialSettingsService:
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail="Full name is required",
             )
-        if len(normalized_password) < 6:
+        if len(normalized_password) < 12:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail="Password must be at least 6 characters",
+                detail="Password must be at least 12 characters and include uppercase, lowercase, number, and symbol characters.",
             )
+        normalized_password = validate_strong_password(normalized_password)
 
         ensure_tenant_email_columns(self.db)
         if self._get_admin_user_by_email(normalized_email) is not None:
@@ -357,6 +370,8 @@ class AdminCredentialSettingsService:
         if actor.tenant_role != "owner" and tenant_role == "owner":
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only owners can create another owner account")
 
+        password = validate_strong_password(password)
+
         row = AdminUser(
             full_name=full_name.strip(),
             email=normalized_email,
@@ -386,8 +401,8 @@ class AdminCredentialSettingsService:
             raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Current password is required")
         if not normalized_admin_email:
             raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Admin email is required")
-        if normalized_new_password is not None and len(normalized_new_password) < 6:
-            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="New password must be at least 6 characters")
+        if normalized_new_password is not None:
+            normalized_new_password = validate_strong_password(normalized_new_password)
 
         admin_user = self._get_admin_user_by_id(current_user.user_id)
         if admin_user is None:
@@ -400,6 +415,7 @@ class AdminCredentialSettingsService:
         if duplicate is not None and duplicate.id != admin_user.id:
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Another admin account already uses this email")
 
+        previous_email = admin_user.email
         admin_user.email = normalized_admin_email
         if full_name is not None and full_name.strip():
             admin_user.full_name = full_name.strip()
@@ -413,6 +429,9 @@ class AdminCredentialSettingsService:
         self._sync_settings_row_from_admin(admin_user)
         self.db.commit()
         self.db.refresh(admin_user)
+        security = AuthSecurityService(self.db)
+        security.clear_state(identity_type="admin", email=previous_email)
+        security.clear_state(identity_type="admin", email=admin_user.email)
         return self._serialize_admin(admin_user)
 
     def change_password(self, current_user: AuthenticatedUser, current_password: str, new_password: str) -> dict[str, str]:
@@ -484,6 +503,7 @@ class AdminCredentialSettingsService:
             target.full_name = full_name.strip()
 
         if password is not None:
+            password = validate_strong_password(password)
             target.password_hash = hash_password(password)
             target.password_changed_at = datetime.now(timezone.utc)
 
@@ -512,4 +532,6 @@ class AdminCredentialSettingsService:
         )
         self.db.commit()
         self.db.refresh(target)
+        if password is not None:
+            AuthSecurityService(self.db).clear_state(identity_type="admin", email=target.email)
         return self._serialize_admin(target)

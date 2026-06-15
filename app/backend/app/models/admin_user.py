@@ -1,6 +1,7 @@
 from uuid import uuid4
 
 from sqlalchemy import CheckConstraint, Column, DateTime, String, UniqueConstraint, Uuid, text
+from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
 from .base import Base, TenantScopedMixin
@@ -19,6 +20,12 @@ class AdminUser(TenantScopedMixin, Base):
     password_changed_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
     created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
     updated_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now())
+
+    password_reset_requests = relationship(
+        "AdminPasswordResetRequest",
+        back_populates="admin_user",
+        cascade="all, delete-orphan",
+    )
 
     __table_args__ = (
         UniqueConstraint("tenant_id", "email", name="admin_users_tenant_email_uq"),
