@@ -350,19 +350,17 @@ export default function SettingsProfilePage() {
               </div>
             </div>
 
-            <div className="grid gap-3 rounded-2xl border border-white/10 bg-white/5 p-4 text-sm">
-              <div className="flex items-center justify-between gap-3">
-                <span className="text-white/60">Industry</span>
-                <span className="font-medium">{form.industryType || 'General'}</span>
-              </div>
-              <div className="flex items-center justify-between gap-3">
-                <span className="text-white/60">Phone</span>
-                <span className="font-medium">{previewBranding.phone}</span>
-              </div>
-              <div className="flex items-center justify-between gap-3">
-                <span className="text-white/60">Footer</span>
-                <span className="max-w-[55%] truncate text-right font-medium">{form.pdfFooter || 'No footer set'}</span>
-              </div>
+            <div className="grid grid-cols-[minmax(0,88px)_minmax(0,1fr)] gap-x-4 gap-y-3 rounded-2xl border border-white/10 bg-white/5 p-4 text-sm">
+              <span className="text-white/60">Industry</span>
+              <span className="text-right font-medium">{form.industryType || 'General'}</span>
+
+              <span className="text-white/60">Phone</span>
+              <span className="text-right font-medium break-words">{previewBranding.phone}</span>
+
+              <span className="pt-0.5 text-white/60">Footer</span>
+              <span className="text-right font-medium leading-snug whitespace-normal break-words">
+                {form.pdfFooter || 'No footer set'}
+              </span>
             </div>
 
             <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
